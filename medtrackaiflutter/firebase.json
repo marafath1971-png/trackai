@@ -1,0 +1,55 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "medai-3ce9c",
+                    "appId": "1:883005184689:android:0f3227f98c0b14f196e090",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "ios": {
+                "default": {
+                    "projectId": "medai-3ce9c",
+                    "appId": "1:883005184689:ios:73d1061bb98980e996e090",
+                    "uploadDebugSymbols": false,
+                    "fileOutput": "ios/Runner/GoogleService-Info.plist"
+                }
+            },
+            "macos": {
+                "default": {
+                    "projectId": "medai-3ce9c",
+                    "appId": "1:883005184689:ios:73d1061bb98980e996e090",
+                    "uploadDebugSymbols": false,
+                    "fileOutput": "macos/Runner/GoogleService-Info.plist"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "medai-3ce9c",
+                    "configurations": {
+                        "android": "1:883005184689:android:0f3227f98c0b14f196e090",
+                        "ios": "1:883005184689:ios:73d1061bb98980e996e090",
+                        "macos": "1:883005184689:ios:73d1061bb98980e996e090"
+                    }
+                }
+            }
+        }
+    },
+    "firestore": {
+        "rules": "firestore.rules",
+        "indexes": "firestore.indexes.json"
+    },
+    "functions": [
+        {
+            "source": "functions",
+            "codebase": "default",
+            "ignore": [
+                "node_modules",
+                ".git",
+                "firebase-debug.log",
+                "*.local"
+            ]
+        }
+    ]
+}

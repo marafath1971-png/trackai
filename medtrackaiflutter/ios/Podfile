@@ -1,0 +1,91 @@
+platform :ios, '15.5'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  use_frameworks!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
+      config.build_settings.delete 'EXCLUDED_ARCHS'
+      config.build_settings['ONLY_ACTIVE_ARCH'] = 'YES'
+    end
+  end
+
+  # ── Fix CocoaPods base-config override warning ────────────────────────
+  # CocoaPods sometimes cannot set the baseConfigurationReference on the
+  # Runner target when it already has a custom xcconfig. This loop manually
+  # wires the Pods-Runner xcconfig as a #include inside Flutter's xcconfigs
+  # so all linker flags (including -framework "Pods_Runner") are inherited.
+  runner_project = installer.aggregate_targets
+    .find { |t| t.name == 'Pods-Runner' }&.user_project
+  return unless runner_project
+
+  config_map = {
+    'Debug'   => 'Pods-Runner.debug.xcconfig',
+    'Release' => 'Pods-Runner.release.xcconfig',
+    'Profile' => 'Pods-Runner.profile.xcconfig',
+  }
+
+  pods_xcconfig_dir = "${SRCROOT}/Pods/Target Support Files/Pods-Runner"
+
+  runner_project.targets.each do |target|
+    next unless target.name == 'Runner'
+    target.build_configurations.each do |config|
+      xcconfig_filename = config_map[config.name]
+      next unless xcconfig_filename
+
+      xcconfig_path = File.join(
+        installer.sandbox.root,
+        'Target Support Files',
+        'Pods-Runner',
+        xcconfig_filename
+      )
+
+      # Find the PBXFileReference for this xcconfig in the Pods project
+      pods_xcconfig_ref = installer.pods_project.files.find do |f|
+        f.path == xcconfig_filename
+      end
+      next unless pods_xcconfig_ref
+
+      # Set it as the baseConfigurationReference for the Runner build config
+      config.base_configuration_reference = pods_xcconfig_ref
+    end
+  end
+
+  runner_project.save
+end
+

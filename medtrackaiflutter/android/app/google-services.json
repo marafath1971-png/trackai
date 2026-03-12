@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "883005184689",
+    "project_id": "medai-3ce9c",
+    "storage_bucket": "medai-3ce9c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:883005184689:android:0f3227f98c0b14f196e090",
+        "android_client_info": {
+          "package_name": "com.medtracker.medtrackaiflutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuUwODLNwZ-M3WI9WyuK3pOQUXkMUo5dA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

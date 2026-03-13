@@ -16,13 +16,15 @@ import '../core/utils/logger.dart';
 class GeminiService {
   static String get _apiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 
-  static const List<String> _modelNames = [
-    'gemini-2.0-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-1.5-flash',
+  /// Tried models and their preferred API versions in order of reliability.
+  static const List<Map<String, String>> _scanModels = [
+    {'model': 'gemini-2.5-flash', 'version': 'v1beta'},
+    {'model': 'gemini-flash-latest', 'version': 'v1beta'},
+    {'model': 'gemini-2.0-flash-lite', 'version': 'v1beta'},
+    {'model': 'gemini-2.0-flash', 'version': 'v1beta'},
   ];
 
-  static GenerativeModel _getModel(String modelName) {
+  static GenerativeModel _getModel(String modelName, {String apiVersion = 'v1'}) {
     if (_apiKey.isEmpty) {
       appLogger.w(
           '[GeminiService] Warning: GEMINI_API_KEY is empty. API calls will fail.');
@@ -30,21 +32,24 @@ class GeminiService {
     return GenerativeModel(
       model: modelName,
       apiKey: _apiKey,
-      requestOptions: const RequestOptions(apiVersion: 'v1'),
+      requestOptions: RequestOptions(apiVersion: apiVersion),
     );
   }
 
   /// Scans a medicine image label using Gemini Flash to extract structural medication data.
-  /// Falls back through multiple Gemini model versions if one fails.
+  /// Falls back through multiple Gemini model versions and API versions if one fails.
   static Future<Result<ScanResult>> scanMedicine(File imageFile,
       {String? hint}) async {
     appLogger.d('[GeminiService] Starting scan with hint: $hint');
     String lastError = '';
 
-    for (final modelName in _modelNames) {
+    for (final config in _scanModels) {
+      final modelName = config['model']!;
+      final apiVersion = config['version']!;
+      
       try {
-        appLogger.d('[GeminiService] Trying $modelName (v1 API)...');
-        final model = _getModel(modelName);
+        appLogger.d('[GeminiService] Trying $modelName on $apiVersion...');
+        final model = _getModel(modelName, apiVersion: apiVersion);
         final bytes = await imageFile.readAsBytes();
 
         final content = [
@@ -55,14 +60,23 @@ class GeminiService {
         ];
 
         final response = await _withRetry(() => model.generateContent(content));
-        return Success(_parseScanResponse(response.text ?? ''));
+        final responseText = response.text ?? '';
+        appLogger.d('[GeminiService] Raw Response: $responseText');
+        
+        if (responseText.isEmpty) {
+          throw const FormatException('Empty response from AI');
+        }
+
+        return Success(_parseScanResponse(responseText));
       } catch (e) {
         lastError = e.toString();
-        appLogger.e('[GeminiService] Failed with $modelName', error: e);
+        appLogger.e('[GeminiService] Failed with $modelName ($apiVersion): $e');
+        
+        // If it's a quota error on one model, we continue to the next
       }
     }
 
-    return Error(ScanFailure(lastError));
+    return Error(ScanFailure("The AI couldn't identify this medicine. Please try again with a clearer photo of the label. ($lastError)"));
   }
 
   /// Uses Gemini to generate a short, friendly, personalized health tip.
@@ -73,16 +87,20 @@ class GeminiService {
     required double adherence,
     required List<Map<String, dynamic>> latencyData,
   }) async {
-    final models = [
-      'gemini-2.0-flash',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-flash'
+    final configs = [
+      {'model': 'gemini-2.5-flash', 'version': 'v1beta'},
+      {'model': 'gemini-flash-latest', 'version': 'v1beta'},
+      {'model': 'gemini-2.0-flash-lite', 'version': 'v1beta'},
+      {'model': 'gemini-2.0-flash', 'version': 'v1beta'},
     ];
     String lastError = '';
 
-    for (final modelName in models) {
+    for (final config in configs) {
+      final modelName = config['model']!;
+      final apiVersion = config['version']!;
+
       try {
-        final model = _getModel(modelName);
+        final model = _getModel(modelName, apiVersion: apiVersion);
         final prompt =
             _buildInsightPrompt(meds, streak, adherence, latencyData);
         final response = await _withRetry(
@@ -92,7 +110,7 @@ class GeminiService {
         }
       } catch (e) {
         lastError = e.toString();
-        appLogger.w('[GeminiService] Insight failed with $modelName: $e');
+        appLogger.w('[GeminiService] Insight failed with $modelName ($apiVersion): $e');
       }
     }
 
@@ -115,51 +133,25 @@ class GeminiService {
   // ── Helper Prompt Generators ───────────────────────────────────────────────
 
   static String _buildScanPrompt(String? hint) {
-    String type =
-        (hint == 'Beauty') ? 'beauty product (skincare/cosmetic)' : 'medicine';
     return '''
-You are an expert clinical pharmacist with 20 years of experience reading medicine labels. 
-Carefully examine EVERY part of this $type packaging image — front, back, sides, any visible text.
-User hint: "$hint".
-
-Extract ALL information and return ONLY a valid JSON object (no markdown, no explanation):
+You are an expert pharmacist and clinical image analyst. 
+Examine the provided $hint medicine packaging image and extract key details.
+Return ONLY valid JSON (no markdown):
 {
   "identified": true,
-  "name": "INN/generic name of active ingredient (e.g. Amoxicillin, Metformin, Paracetamol)",
-  "brand": "brand/trade name on box (e.g. Augmentin, Glucophage, Tylenol)",
-  "form": "exact form: tablet|capsule|syrup|liquid|inhaler|drops|cream|injection|powder|patch|other",
-  "dose": "strength per unit WITH units (e.g. 500mg, 250mg/5ml, 10mg, 0.5%)",
-  "dosePerTake": "quantity per dose (e.g. 1 tablet, 2 capsules, 5ml, 1 puff)",
-  "frequency": "how often (e.g. twice daily, every 8 hours, once at bedtime)",
-  "howToTake": "complete administration instructions visible on label",
-  "withFood": true if label says take with food/meal, false otherwise,
-  "mealTiming": "Before meal|After meal|With meal|With milk|Empty stomach|Anytime",
-  "withWater": "With full glass of water|With small sip|Do not take with water|Any",
-  "storage": "exact storage conditions from label (e.g. Store below 25°C, Refrigerate 2-8°C, Keep away from light)",
-  "warnings": "ALL warnings, contraindications, side effects visible on packaging",
-  "category": "Prescription|OTC|Supplement|Vitamin|Herbal",
-  "indication": "what condition/disease this treats (use medical knowledge if not on label)",
-  "activeIngredients": "all active ingredients listed",
+  "name": "Generic name",
+  "brand": "Brand name",
+  "form": "tablet|syrup|capsule|liquid|inhaler|drops|cream|other",
+  "dose": "Strength (e.g. 500mg)",
+  "dosePerTake": "Quantity (e.g. 1 tablet)",
+  "frequency": "How often (e.g. twice daily)",
+  "howToTake": "Brief instructions",
+  "withFood": true|false,
+  "category": "Prescription|OTC|Supplement",
   "pillCount": 30,
-  "packSize": 30,
-  "isLiquid": true if syrup/suspension/drops/liquid, false otherwise,
-  "volumeAmount": 0,
-  "volumeUnit": "ml" if liquid else "",
-  "confidence": "high|medium",
-  "isAntibiotic": true if antibiotic/antifungal/short-course treatment,
-  "courseDurationDays": 7, 
-  "courseType": "fixed|ongoing|as-needed",
-  "scheduleSlots": [{"label": "Morning", "h": 8, "m": 0}],
-  "refillAlert": 7
+  "isLiquid": true|false,
+  "confidence": "high|medium"
 }
-
-ACCURACY RULES:
-1. Read text character by character, do not guess spellings.
-2. If strength says "500mg" write exactly "500mg" not "500 mg".
-3. For antibiotics: courseType="fixed", courseDurationDays=typical length.
-4. For chronic meds: courseType="ongoing", courseDurationDays=0.
-5. Identify medication even if packaging is partially obscured.
-6. Return ONLY the JSON object. No other text.
 ''';
   }
 
@@ -205,10 +197,13 @@ Return ONLY a JSON object:
       }
 
       String jsonStr = jsonMatch.group(0)!;
-      // Clean up common AI artifacts
-      jsonStr = jsonStr.replaceAll(
-          RegExp(r'//.*$', multiLine: true), ''); // remove comments
-
+      // Aggressive cleaning of markdown and potential junk
+      jsonStr = jsonStr
+          .replaceAll('```json', '')
+          .replaceAll('```', '')
+          .replaceAll('//', '') // Remove comments if any
+          .trim();
+      
       final data = json.decode(jsonStr) as Map<String, dynamic>;
       return ScanResult.fromJson(data);
     } catch (e) {

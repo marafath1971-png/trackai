@@ -94,9 +94,10 @@ class ScanResult {
           ? self._parseInt(j['courseDurationDays'], 0)
           : null,
       courseType: j['courseType'] ?? 'ongoing',
-      scheduleSlots: (j['scheduleSlots'] as List?)
-              ?.map((e) => e as Map<String, dynamic>)
-              .toList() ??
+      scheduleSlots: (j['scheduleSlots'] as List?)?.map((e) {
+            if (e is Map) return Map<String, dynamic>.from(e);
+            return <String, dynamic>{};
+          }).toList() ??
           [],
       withFood: j['withFood'] ?? false,
       warnings: j['warnings'] ?? '',

@@ -15,9 +15,7 @@ import 'widgets/missed_dose_sheet.dart';
 
 class HomeTab extends StatefulWidget {
   final VoidCallback onScan;
-  final VoidCallback onViewDashboard;
-  const HomeTab(
-      {super.key, required this.onScan, required this.onViewDashboard});
+  const HomeTab({super.key, required this.onScan});
 
   @override
   State<HomeTab> createState() => _HomeTabState();
@@ -79,7 +77,6 @@ class _HomeTabState extends State<HomeTab> {
                   remaining: remaining,
                   dosePct: dosePct,
                   ringCol: ringCol,
-                  onViewDetails: widget.onViewDashboard,
                 ),
               ),
 

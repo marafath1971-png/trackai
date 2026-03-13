@@ -10,6 +10,11 @@ import '../../domain/entities/scan_result.dart';
 import '../../theme/app_theme.dart';
 import '../../services/gemini_service.dart';
 import '../../core/utils/date_formatter.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
+import 'package:path/path.dart' as p;
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class ScanTab extends StatefulWidget {
   final void Function(Medicine)? onSave;
@@ -46,6 +51,8 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     {'name': 'Beauty', 'icon': Icons.auto_awesome_rounded},
   ];
 
+  FlashMode _flashMode = FlashMode.off;
+
   @override
   void initState() {
     super.initState();
@@ -63,10 +70,12 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
         _cameras![0],
         ResolutionPreset.high,
         enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg,
       );
 
       try {
         await _controller!.initialize();
+        await _controller!.setFlashMode(_flashMode);
         if (mounted) {
           setState(() {
             _isCameraInitialized = true;
@@ -75,6 +84,22 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
       } catch (e) {
         debugPrint('Camera initialization error: $e');
       }
+    }
+  }
+
+  Future<void> _toggleFlash() async {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+    
+    final modes = [FlashMode.off, FlashMode.auto, FlashMode.always];
+    final nextIndex = (modes.indexOf(_flashMode) + 1) % modes.length;
+    final nextMode = modes[nextIndex];
+
+    try {
+      await _controller!.setFlashMode(nextMode);
+      setState(() => _flashMode = nextMode);
+      HapticFeedback.selectionClick();
+    } catch (e) {
+      debugPrint('Flash error: $e');
     }
   }
 
@@ -89,6 +114,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     if (_controller == null || !_controller!.value.isInitialized) return;
 
     try {
+      HapticFeedback.mediumImpact();
       final XFile image = await _controller!.takePicture();
       _processImage(File(image.path));
     } catch (e) {
@@ -104,28 +130,51 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     }
   }
 
+  Future<File?> _compressImage(File file) async {
+    final tempDir = await path_provider.getTemporaryDirectory();
+    final targetPath = p.join(tempDir.path, "${DateTime.now().millisecondsSinceEpoch}_comp.jpg");
+    
+    final result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      targetPath,
+      quality: 80,
+      minWidth: 1024,
+      minHeight: 1024,
+    );
+    
+    return result != null ? File(result.path) : null;
+  }
+
   Future<void> _processImage(File file) async {
     setState(() {
       _imageFile = file;
       _isScanning = true;
     });
 
-    final response = await GeminiService.scanMedicine(file);
+    final compressedFile = await _compressImage(file);
+    final fileToScan = compressedFile ?? file;
+    
+    final response = await GeminiService.scanMedicine(fileToScan);
 
     if (!mounted) return;
 
     response.fold(
       (success) {
-        setState(() {
-          _isScanning = false;
-        });
-        _showResultModal(
-            success.copyWith(imageUrl: file.path, category: _selectedCategory));
+        setState(() => _isScanning = false);
+        _showResultModal(success.copyWith(
+          imageUrl: file.path, 
+          category: _selectedCategory,
+          description: success.name
+        ));
       },
       (failure) {
         setState(() => _isScanning = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
+          SnackBar(
+            content: Text("Scan Error: ${failure.message}"),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       },
     );
@@ -173,22 +222,22 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                   child: CameraPreview(_controller!),
                 ),
               ),
-            )
+            ).animate().fadeIn(duration: 400.ms)
           else
             const Center(child: CircularProgressIndicator(color: Colors.white)),
 
           // 2. Scan Frame Brackets
           Center(
             child: Container(
-              margin: const EdgeInsets.only(bottom: 60), // Offset slightly up
-              width: size.width * 0.78,
-              height: size.width * 0.78,
+              margin: const EdgeInsets.only(bottom: 100), // Offset slightly up
+              width: size.width * 0.8,
+              height: size.width * 0.8,
               child: CustomPaint(
                 painter: ScanFramePainter(category: _selectedCategory),
                 child: _buildScanningLine(),
               ),
             ),
-          ),
+          ).animate().scale(begin: const Offset(0.9, 0.9), delay: 200.ms),
 
           // 3. Header Controls
           Positioned(
@@ -204,25 +253,25 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
               ),
               child: _buildHeader(),
             ),
-          ),
+          ).animate().fadeIn(delay: 300.ms).slideY(begin: -0.2, end: 0),
 
           // 4. Bottom Controls Cluster (Category + Shutter)
           Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + 90,
+            bottom: MediaQuery.of(context).padding.bottom + 60, // Raised slightly more
             left: 0,
             right: 0,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildCategoryPill(),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: _buildBottomControls(),
                 ),
               ],
             ),
-          ),
+          ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
         ],
       ),
     );
@@ -482,7 +531,10 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
               children: _categories.map((cat) {
                 final isSelected = _selectedCategory == cat['name'];
                 return GestureDetector(
-                  onTap: () => setState(() => _selectedCategory = cat['name']),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _selectedCategory = cat['name']);
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 10),
@@ -531,6 +583,21 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
   }
 
   Widget _buildBottomControls() {
+    IconData flashIcon;
+    switch (_flashMode) {
+      case FlashMode.off:
+        flashIcon = Icons.flash_off_rounded;
+        break;
+      case FlashMode.auto:
+        flashIcon = Icons.flash_auto_rounded;
+        break;
+      case FlashMode.always:
+        flashIcon = Icons.flash_on_rounded;
+        break;
+      default:
+        flashIcon = Icons.flash_off_rounded;
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -541,11 +608,11 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
         GestureDetector(
           onTap: _capturePhoto,
           child: Container(
-            width: 84,
-            height: 84,
+            width: 88,
+            height: 88,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 3.5),
+              border: Border.all(color: Colors.white, width: 4),
             ),
             child: Padding(
               padding: const EdgeInsets.all(6.0),
@@ -556,11 +623,19 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                 ),
               ),
             ),
-          ),
+          )
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .scale(
+                begin: const Offset(1, 1),
+                end: const Offset(1.05, 1.05),
+                duration: 1000.ms,
+                curve: Curves.easeInOut,
+              )
+              .shimmer(delay: 2000.ms, duration: 1500.ms, color: Colors.white24),
         ),
         _buildCircularBlurBtn(
-          icon: Icons.flash_off_rounded,
-          onTap: () {},
+          icon: flashIcon,
+          onTap: _toggleFlash,
         ),
       ],
     );
@@ -642,18 +717,29 @@ class _ResultModalState extends State<_ResultModal> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFA3E635).withValues(alpha: 0.15),
+                    color: (widget.result.identified
+                            ? const Color(0xFFA3E635)
+                            : Colors.orange)
+                        .withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.verified_rounded,
-                          color: Color(0xFFA3E635), size: 16),
-                      SizedBox(width: 6),
+                      Icon(
+                          widget.result.identified
+                              ? Icons.verified_rounded
+                              : Icons.help_outline_rounded,
+                          color: widget.result.identified
+                              ? const Color(0xFFA3E635)
+                              : Colors.orange,
+                          size: 16),
+                      const SizedBox(width: 6),
                       Text(
-                        "Identified",
+                        widget.result.identified ? "Identified" : "Not Certain",
                         style: TextStyle(
-                          color: Color(0xFFA3E635),
+                          color: widget.result.identified
+                              ? const Color(0xFFA3E635)
+                              : Colors.orange,
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.5,

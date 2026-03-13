@@ -11,7 +11,7 @@ import 'home/home_tab.dart';
 import 'scan/scan_tab.dart';
 import 'alarms/alarms_tab.dart';
 import 'family/family_tab.dart';
-import 'history/history_tab.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 // ══════════════════════════════════════════════
 // APP SHELL — Bottom nav + FAB + overlays
@@ -26,7 +26,7 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell>
     with SingleTickerProviderStateMixin {
-  int _tab = 0; // 0=home, 1=history, 2=alarms, 3=family
+  int _tab = 0; // 0=home, 1=alarms, 2=family
   bool _showScan = false;
   bool _hideBanner = false;
 
@@ -116,18 +116,14 @@ class _AppShellState extends State<AppShell>
       case 0:
         return HomeTab(
           onScan: () => setState(() => _showScan = true),
-          onViewDashboard: () => setState(() => _tab = 1),
         );
       case 1:
-        return const HistoryTab();
-      case 2:
         return const AlarmsTab();
-      case 3:
+      case 2:
         return const FamilyTab();
       default:
         return HomeTab(
           onScan: () => setState(() => _showScan = true),
-          onViewDashboard: () => setState(() => _tab = 1),
         );
     }
   }
@@ -135,77 +131,90 @@ class _AppShellState extends State<AppShell>
   Widget _buildBottomNav(AppThemeColors L, int unseenAlerts) {
     final state = context.watch<AppState>();
     final isDark = state.darkMode;
-    final bg = isDark ? const Color(0xF7121218) : const Color(0xF7FFFFFF);
+    final bg = isDark ? const Color(0xFF111111) : Colors.white;
     final borderCol = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.08);
+        ? Colors.white.withOpacity(0.1)
+        : Colors.black.withOpacity(0.1);
 
-    return Stack(
-      clipBehavior: Clip.none,
-      alignment: Alignment.centerRight,
-      children: [
-        ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-            child: Container(
-              decoration: BoxDecoration(
-                color: bg,
-                border: Border(top: BorderSide(color: borderCol, width: 1)),
-              ),
-              padding: EdgeInsets.only(
-                top: 10,
-                bottom: 28 + MediaQuery.of(context).padding.bottom,
-                left: 0,
-                right: 80, // Space for the FAB on the right
-              ),
-              child: Row(
-                children: [
-                  _buildNavItem(0, 'Home', Icons.home_rounded, L, unseenAlerts),
-                  _buildNavItem(
-                      1, 'History', Icons.history_rounded, L, unseenAlerts),
-                  _buildNavItem(2, 'Alarms', Icons.notifications_rounded, L,
-                      unseenAlerts),
-                  _buildNavItem(
-                      3, 'Family', Icons.people_rounded, L, unseenAlerts),
-                ],
-              ),
-            ),
-          ),
-        ),
-        // ── Right Side FAB
-        Positioned(
-          right: 16,
-          top: -25, // Floats above the bar
-          child: GestureDetector(
-          onTap: () => setState(() => _showScan = true),
-            child: Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: const Color(0xFF111111),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: const Center(
-                child: Icon(Icons.add, color: Colors.white, size: 28),
+    return Container(
+      margin: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        bottom: 24 + MediaQuery.of(context).padding.bottom,
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.centerRight, // Changed to right
+        children: [
+          // Nav Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(32),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                height: 72,
+                margin: const EdgeInsets.only(right: 40), // Offset for FAB on right
+                decoration: BoxDecoration(
+                  color: bg.withOpacity(0.85),
+                  borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(32), right: Radius.circular(16)),
+                  border: Border.all(color: borderCol, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 0, 40, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildNavItem(0, 'Home', Icons.grid_view_rounded, L, unseenAlerts),
+                    _buildNavItem(1, 'Alarms', Icons.notifications_active_rounded, L, unseenAlerts),
+                    _buildNavItem(2, 'Family', Icons.people_alt_rounded, L, unseenAlerts),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
+          // ── Right-positioned FAB
+          Positioned(
+            right: 0,
+            top: -20, // Slightly higher
+            child: GestureDetector(
+              onTap: () => setState(() => _showScan = true),
+              child: Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF111111), // Black color
+                  shape: BoxShape.circle,
+                  border: Border.all(color: borderCol, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Icon(Icons.add_rounded, color: Colors.white, size: 36),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildNavItem(int index, String label, IconData icon, AppThemeColors L,
       int unseenAlerts) {
     final selected = _tab == index;
-    final cnt = index == 3 ? unseenAlerts : 0;
+    final cnt = index == 2 ? unseenAlerts : 0;
 
     return Expanded(
       child: GestureDetector(
@@ -214,56 +223,51 @@ class _AppShellState extends State<AppShell>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              width: 26,
-              height: 26,
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  Icon(icon, size: 22, color: selected ? L.text : L.sub),
-                  if (cnt > 0)
-                    Positioned(
-                      top: -3,
-                      right: -6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 2),
-                        constraints:
-                            const BoxConstraints(minWidth: 14, minHeight: 14),
-                        decoration: BoxDecoration(
-                          color: AppColors.lRed,
-                          borderRadius: BorderRadius.circular(7),
-                          border: Border.all(color: L.bg, width: 2),
-                        ),
-                        child: Center(
-                          child: Text(
-                            cnt > 9 ? '9+' : cnt.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: FontWeight.w800,
-                              fontFamily: 'Inter',
-                              height: 1.0,
-                            ),
-                          ),
+            Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 26,
+                  color: selected ? const Color(0xFFA3E635) : L.sub,
+                )
+                    .animate(target: selected ? 1 : 0)
+                    .scale(begin: const Offset(1, 1), end: const Offset(1.15, 1.15))
+                    .shimmer(delay: 400.ms, duration: 1200.ms),
+                if (cnt > 0)
+                  Positioned(
+                    top: -5,
+                    right: -5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.lRed,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: L.bg, width: 2),
+                      ),
+                      child: Text(
+                        cnt > 9 ? '9+' : cnt.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
-                    ),
-                ],
-              ),
+                    ).animate().scale().fadeIn(),
+                  ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                fontFamily: 'Inter',
                 fontSize: 10,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? L.text : L.sub,
-                height: 1.0,
-                letterSpacing: -0.1,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                color: selected ? L.text : L.sub.withOpacity(0.7),
+                letterSpacing: -0.2,
               ),
-            ),
+            ).animate(target: selected ? 1 : 0).fadeIn(delay: 100.ms),
           ],
         ),
       ),
@@ -271,8 +275,6 @@ class _AppShellState extends State<AppShell>
   }
 }
 
-// ══════════════════════════════════════════════
-// LOW STOCK BANNER
 // ══════════════════════════════════════════════
 // LOW STOCK BANNER
 // ══════════════════════════════════════════════
@@ -294,7 +296,7 @@ class LowStockBanner extends StatelessWidget {
         border: Border.all(color: const Color(0xFFFBD0AF), width: 1),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 4)),
         ],

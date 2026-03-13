@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+ import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
 
@@ -146,7 +147,7 @@ class StreakModal extends StatelessWidget {
                                   Text('$streak',
                                       style: const TextStyle(
                                           fontFamily: ff,
-                                          fontSize: 56,
+                                          fontSize: 64,
                                           fontWeight: FontWeight.w900,
                                           color: Colors.white,
                                           letterSpacing: -3,
@@ -155,7 +156,7 @@ class StreakModal extends StatelessWidget {
                                   Text('day${streak != 1 ? "s" : ""} in a row',
                                       style: TextStyle(
                                           fontFamily: ff,
-                                          fontSize: 13,
+                                          fontSize: 14,
                                           fontWeight: FontWeight.w600,
                                           color: Colors.white
                                               .withValues(alpha: 0.55))),
@@ -165,12 +166,12 @@ class StreakModal extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   _MiniStat(label: 'BEST', val: '$best'),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 12),
                                   _MiniStat(
                                       label: 'ADHERENCE', val: '$overallAdh%'),
                                 ]),
                           ]),
-                        ),
+                        ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0).scale(begin: const Offset(0.95, 0.95)),
                         const SizedBox(height: 16),
                         // Stats grid
                         Row(children: [
@@ -179,21 +180,21 @@ class StreakModal extends StatelessWidget {
                                   label: 'Days Tracked',
                                   val: '$totalDaysTracked',
                                   emoji: '📅',
-                                  L: L)),
+                                  L: L).animate().fade(delay: 100.ms).slideY(begin: 0.2, end: 0)),
                           const SizedBox(width: 8),
                           Expanded(
                               child: _StatBox(
                                   label: 'Doses Taken',
                                   val: '$totalTaken',
                                   emoji: '✅',
-                                  L: L)),
+                                  L: L).animate().fade(delay: 200.ms).slideY(begin: 0.2, end: 0)),
                           const SizedBox(width: 8),
                           Expanded(
                               child: _StatBox(
                                   label: 'Total Logged',
                                   val: '$totalDoses',
                                   emoji: '💊',
-                                  L: L)),
+                                  L: L).animate().fade(delay: 300.ms).slideY(begin: 0.2, end: 0)),
                         ]),
                         const SizedBox(height: 16),
                         // Milestone progress
@@ -351,22 +352,35 @@ class StreakModal extends StatelessWidget {
                           final n = m['d'] as int;
                           final achieved = streak >= n;
                           return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
+                            margin: const EdgeInsets.only(bottom: 10),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 10),
+                                horizontal: 16, vertical: 14),
                             decoration: BoxDecoration(
                                 color:
                                     achieved ? const Color(0xFF111111) : L.fill,
-                                borderRadius: BorderRadius.circular(14)),
+                                borderRadius: BorderRadius.circular(16),
+                                border: achieved 
+                                  ? null 
+                                  : Border.all(color: L.border.withValues(alpha: 0.5))),
                             child: Row(children: [
-                              Text(m['e'] as String,
-                                  style: TextStyle(
-                                      fontSize: 22,
-                                      color: achieved
-                                          ? null
-                                          : Colors.grey
-                                              .withValues(alpha: 0.3))),
-                              const SizedBox(width: 12),
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: achieved ? Colors.white.withValues(alpha: 0.1) : L.bg,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(m['e'] as String,
+                                      style: TextStyle(
+                                          fontSize: 22,
+                                          color: achieved
+                                              ? null
+                                              : Colors.grey
+                                                  .withValues(alpha: 0.3))),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
                               Expanded(
                                   child: Column(
                                       crossAxisAlignment:
@@ -375,28 +389,29 @@ class StreakModal extends StatelessWidget {
                                     Text(m['l'] as String,
                                         style: TextStyle(
                                             fontFamily: ff,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 14,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 15,
                                             color: achieved
                                                 ? Colors.white
                                                 : L.text)),
+                                    const SizedBox(height: 2),
                                     Text(
                                         achieved
-                                            ? 'Achieved ✓'
-                                            : '${n - streak} days away',
+                                            ? 'Unleashed ✓'
+                                            : '${n - streak} days remaining',
                                         style: TextStyle(
                                             fontFamily: ff,
-                                            fontSize: 11,
+                                            fontSize: 12,
                                             color: achieved
                                                 ? Colors.white
-                                                    .withValues(alpha: 0.5)
+                                                    .withValues(alpha: 0.6)
                                                 : L.sub)),
                                   ])),
                               if (achieved)
-                                const Icon(Icons.check_rounded,
-                                    color: Colors.white, size: 16),
+                                const Icon(Icons.check_circle_rounded,
+                                    color: Color(0xFFA3E635), size: 20),
                             ]),
-                          );
+                          ).animate().fade(delay: (400 + milestones.indexOf(m) * 50).ms).slideX(begin: 0.1, end: 0);
                         }),
                       ]),
                 )),

@@ -134,24 +134,43 @@ class GeminiService {
 
   static String _buildScanPrompt(String? hint) {
     return '''
-You are an expert pharmacist and clinical image analyst. 
-Examine the provided $hint medicine packaging image and extract key details.
-Return ONLY valid JSON (no markdown):
+You are an expert pharmacist and clinical image analyst.
+Examine the provided ${hint ?? ''} medicine packaging image carefully and extract all key medical details.
+Return ONLY valid JSON with NO markdown formatting, NO code fences, NO explanations:
 {
   "identified": true,
-  "name": "Generic name",
-  "brand": "Brand name",
-  "form": "tablet|syrup|capsule|liquid|inhaler|drops|cream|other",
-  "dose": "Strength (e.g. 500mg)",
-  "dosePerTake": "Quantity (e.g. 1 tablet)",
-  "frequency": "How often (e.g. twice daily)",
-  "howToTake": "Brief instructions",
-  "withFood": true|false,
+  "name": "Generic medicine name",
+  "brand": "Brand/trade name",
+  "form": "tablet|syrup|capsule|liquid|inhaler|drops|cream|patch|injection|other",
+  "dose": "Strength e.g. 500mg, 250mg/5ml",
+  "dosePerTake": "Quantity per dose e.g. 1 tablet, 5ml",
+  "frequency": "e.g. twice daily, every 8 hours, once at bedtime",
+  "howToTake": "Detailed instructions e.g. Swallow whole with a full glass of water. Do not crush.",
+  "whenToTake": "Specific timing guidance e.g. Take in the morning before breakfast. Avoid taking at night.",
+  "withFood": true,
+  "sideEffects": "Common side effects: nausea, headache, dizziness. Rare: allergic reaction.",
+  "interactions": "Avoid with: alcohol, blood thinners, antacids. Consult doctor if taking NSAIDs.",
+  "warnings": "Do not use if pregnant or breastfeeding. Avoid driving if drowsy. Keep out of reach of children.",
+  "storage": "Store below 25°C away from light and moisture. Keep refrigerated after opening.",
   "category": "Prescription|OTC|Supplement",
+  "isAntibiotic": false,
+  "isOngoing": false,
+  "courseType": "fixed|ongoing|as-needed",
+  "courseDurationDays": 7,
   "pillCount": 30,
-  "isLiquid": true|false,
-  "confidence": "high|medium"
+  "packSize": 30,
+  "isLiquid": false,
+  "volumeAmount": 0,
+  "volumeUnit": "ml",
+  "scheduleSlots": [
+    {"label": "Morning", "h": 8, "m": 0, "days": [0,1,2,3,4,5,6]},
+    {"label": "Evening", "h": 20, "m": 0, "days": [0,1,2,3,4,5,6]}
+  ],
+  "confidence": "high|medium|low"
 }
+Note: scheduleSlots days use JavaScript day index (0=Sun, 1=Mon...6=Sat). 
+Generate realistic scheduleSlots based on the frequency field (once daily = morning only, twice = morning+evening, three times = morning+noon+night etc.)
+If identification is not possible, set identified to false and return best guesses.
 ''';
   }
 

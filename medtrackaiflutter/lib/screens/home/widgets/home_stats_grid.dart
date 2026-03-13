@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../providers/app_state.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/shared/shared_widgets.dart';
@@ -24,7 +25,7 @@ class HomeStatsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    const adherence = 100;
+    final adherence = (state.getAdherenceScore() * 100).round();
     final adhColor = adherence >= 80
         ? L.green
         : adherence >= 50
@@ -95,7 +96,7 @@ class HomeStatsGrid extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
+            ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0),
           ),
           const SizedBox(width: 16),
           // Card 2: Adherence Score
@@ -165,7 +166,7 @@ class HomeStatsGrid extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
+            ).animate(delay: 150.ms).fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0),
           ),
         ],
       ),

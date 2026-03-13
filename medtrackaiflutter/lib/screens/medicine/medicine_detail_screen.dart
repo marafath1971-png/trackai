@@ -4,6 +4,9 @@ import '../../providers/app_state.dart';
 import '../../domain/entities/entities.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/shared/shared_widgets.dart';
+import '../../widgets/common/modern_time_picker.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class MedicineDetailScreen extends StatefulWidget {
   final int medId;
@@ -273,34 +276,45 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionLabel('Instructions'),
+        const SectionLabel('📌 Instructions'),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: medColor.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(20),
-            border:
-                Border.all(color: medColor.withValues(alpha: 0.15), width: 1.5),
+            color: medColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: medColor.withValues(alpha: 0.2), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: medColor.withValues(alpha: 0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(children: [
-                Icon(Icons.info_outline_rounded, color: medColor, size: 20),
-                const SizedBox(width: 10),
-                Text('How to take',
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: medColor, shape: BoxShape.circle),
+                  child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 16),
+                ),
+                const SizedBox(width: 12),
+                Text('How & When to Take',
                     style: TextStyle(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w900,
                         color: L.text,
-                        fontSize: 16)),
+                        fontSize: 17,
+                        letterSpacing: -0.3)),
               ]),
-              const SizedBox(height: 12),
-              Text(
-                  med.notes.isEmpty
-                      ? 'Take as prescribed by your doctor. Ensure you follow the schedule strictly.'
-                      : med.notes,
-                  style: TextStyle(color: L.sub, fontSize: 14, height: 1.5)),
+              const SizedBox(height: 20),
+              _buildInstructionRow("📖 Instruction", med.notes.isNotEmpty ? med.notes : "Take as prescribed by your doctor.", L),
+              const Divider(height: 32, thickness: 0.5),
+              _buildInstructionRow("🥛 How to take", "Take with water, ideally after meals for better absorption.", L),
+              const Divider(height: 32, thickness: 0.5),
+              _buildInstructionRow("⏰ Best time", "Consistent timing is key for effective results.", L),
             ],
           ),
         ),
@@ -356,6 +370,27 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
           ),
         ),
         const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  Widget _buildInstructionRow(String label, String content, AppThemeColors L) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label.toUpperCase(),
+            style: TextStyle(
+                color: L.sub,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2)),
+        const SizedBox(height: 6),
+        Text(content,
+            style: TextStyle(
+                color: L.text.withValues(alpha: 0.8),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                height: 1.5)),
       ],
     );
   }
@@ -437,55 +472,194 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
   }
 
   Widget _buildRemindersTab(Medicine med, AppThemeColors L) {
+    final state = context.watch<AppState>();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionLabel('Current Schedule'),
-        ...med.schedule
-            .map((s) => Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                      color: L.card,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: L.border)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const SectionLabel('Current Schedule'),
+            TextButton.icon(
+              onPressed: () async {
+                HapticFeedback.lightImpact();
+                final result = await ModernTimePicker.show(
+                  context,
+                  initialTime: const TimeOfDay(hour: 12, minute: 0),
+                  title: "Add Reminder",
+                );
+                if (result != null) {
+                  final newEntry = ScheduleEntry(
+                    h: result.hour,
+                    m: result.minute,
+                    label: _getAutoLabel(result.hour),
+                    days: [0, 1, 2, 3, 4, 5, 6],
+                  );
+                  state.addSchedule(med.id, newEntry);
+                }
+              },
+              icon: Icon(Icons.add_circle_outline_rounded, color: L.green, size: 18),
+              label: Text('Add New',
+                  style: TextStyle(
+                      color: L.green, fontWeight: FontWeight.w800, fontSize: 13)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (med.schedule.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: L.card,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: L.border.withValues(alpha: 0.5)),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.notifications_off_rounded, color: L.sub, size: 40),
+                const SizedBox(height: 16),
+                Text('No reminders set for this medicine.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: L.sub, fontSize: 14, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          )
+        else
+          ...med.schedule.asMap().entries.map((e) {
+            final idx = e.key;
+            final s = e.value;
+            final medColor = hexToColor(med.color);
+
+            return Animate(
+              effects: [
+                FadeEffect(duration: 400.ms, curve: Curves.easeOut),
+                SlideEffect(begin: const Offset(0, 0.05), duration: 400.ms, curve: Curves.easeOut),
+              ],
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: L.card,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: L.border.withValues(alpha: 0.5)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: IntrinsicHeight(
                   child: Row(children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                          color: L.fill,
-                          borderRadius: BorderRadius.circular(12)),
-                      child: Icon(Icons.alarm_rounded, color: L.text, size: 20),
-                    ),
-                    const SizedBox(width: 16),
+                    Container(width: 6, color: medColor),
                     Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
                         child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                          Text(s.label,
-                              style: TextStyle(
-                                  color: L.text,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16)),
-                          Text(
-                              '${s.h.toString().padLeft(2, '0')}:${s.m.toString().padLeft(2, '0')}',
-                              style: TextStyle(color: L.sub, fontSize: 13)),
-                        ])),
-                    AppToggle(
-                        value: s.enabled,
-                        onChanged: (v) {}), // Needs state implementation
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(children: [
+                                  Text(
+                                      '${s.h.toString().padLeft(2, '0')}:${s.m.toString().padLeft(2, '0')}',
+                                      style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w900,
+                                          color: s.enabled ? L.text : L.sub,
+                                          letterSpacing: -1.0)),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: L.fill,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(s.label.toUpperCase(),
+                                        style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w800,
+                                            color: L.sub,
+                                            letterSpacing: 0.5)),
+                                  ),
+                                ]),
+                                AppToggle(
+                                    value: s.enabled,
+                                    onChanged: (v) {
+                                      HapticFeedback.lightImpact();
+                                      state.toggleSchedule(med.id, idx);
+                                    }),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                // Days Indicator
+                                Wrap(
+                                  spacing: 4,
+                                  children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+                                      .asMap()
+                                      .entries
+                                      .map((e) {
+                                    final isScheduled = s.days.contains(e.key);
+                                    return Container(
+                                      width: 18,
+                                      height: 18,
+                                      decoration: BoxDecoration(
+                                        color: isScheduled
+                                            ? const Color(0xFF111111)
+                                            : Colors.transparent,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: isScheduled ? const Color(0xFF111111) : L.border,
+                                            width: 1),
+                                      ),
+                                      child: Center(
+                                          child: Text(e.value,
+                                              style: TextStyle(
+                                                  fontFamily: 'Inter',
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: isScheduled ? Colors.white : L.sub))),
+                                    );
+                                  }).toList(),
+                                ),
+                                const Spacer(),
+                                IconButton(
+                                  onPressed: () {
+                                    HapticFeedback.mediumImpact();
+                                    state.removeSchedule(med.id, idx);
+                                  },
+                                  icon: Icon(Icons.delete_outline_rounded,
+                                      size: 18, color: L.red.withValues(alpha: 0.7)),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ]),
-                ))
-            ,
-        const SizedBox(height: 24),
-        _ActionBtn(
-            label: 'Add Reminder',
-            onTap: () {},
-            color: L.text,
-            icon: Icons.add_rounded),
+                ),
+              ),
+            );
+          }),
+        const SizedBox(height: 40),
       ],
     );
+  }
+
+  String _getAutoLabel(int h) {
+    if (h >= 5 && h < 12) return 'Morning';
+    if (h >= 12 && h < 17) return 'Afternoon';
+    if (h >= 17 && h < 21) return 'Evening';
+    return 'Night';
   }
 
   Widget _buildEditForm(Medicine med, AppState state, AppThemeColors L) {
@@ -714,7 +888,7 @@ class _ActionBtn extends StatelessWidget {
             color: isGhost ? Colors.transparent : color,
             borderRadius: BorderRadius.circular(14),
             border: isGhost
-                ? Border.all(color: color.withOpacity(0.3), width: 1.5)
+                ? Border.all(color: color.withValues(alpha: 0.3), width: 1.5)
                 : null,
           ),
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [

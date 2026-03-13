@@ -1,8 +1,8 @@
 class ScheduleEntry {
-  final int h;
-  final int m;
-  final String label;
-  final List<int> days;
+  int h;
+  int m;
+  String label;
+  List<int> days;
   bool enabled;
 
   ScheduleEntry({

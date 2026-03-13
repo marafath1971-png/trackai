@@ -12,6 +12,8 @@ class ScanResult {
   String sideEffects;
   String interactions;
   String storage;
+  String whenToTake;
+  String frequency;
   int pillCount;
   int packSize;
   int refillAlert;
@@ -44,6 +46,8 @@ class ScanResult {
     this.sideEffects = '',
     this.interactions = '',
     this.storage = '',
+    this.whenToTake = '',
+    this.frequency = '',
     this.pillCount = 30,
     this.packSize = 30,
     this.refillAlert = 7,
@@ -82,6 +86,8 @@ class ScanResult {
       sideEffects: j['sideEffects'] ?? '',
       interactions: j['interactions'] ?? '',
       storage: j['storage'] ?? '',
+      whenToTake: j['whenToTake'] ?? '',
+      frequency: j['frequency'] ?? '',
       pillCount: self._parseInt(j['pillCount'], 30),
       packSize: self._parseInt(j['packSize'], 30),
       refillAlert: self._parseInt(j['refillAlert'], 7),
@@ -117,7 +123,10 @@ class ScanResult {
     String? description,
     String? howToTake,
     String? sideEffects,
+    String? interactions,
     String? storage,
+    String? whenToTake,
+    String? frequency,
     int? pillCount,
     int? packSize,
     int? refillAlert,
@@ -145,7 +154,10 @@ class ScanResult {
         description: description ?? this.description,
         howToTake: howToTake ?? this.howToTake,
         sideEffects: sideEffects ?? this.sideEffects,
+        interactions: interactions ?? this.interactions,
         storage: storage ?? this.storage,
+        whenToTake: whenToTake ?? this.whenToTake,
+        frequency: frequency ?? this.frequency,
         pillCount: pillCount ?? this.pillCount,
         packSize: packSize ?? this.packSize,
         refillAlert: refillAlert ?? this.refillAlert,

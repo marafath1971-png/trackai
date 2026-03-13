@@ -40,7 +40,7 @@ class _HomeTabState extends State<HomeTab> {
     final remaining = doses.length - takenCount;
     final dosePct = doses.isNotEmpty ? takenCount / doses.length : 0.0;
     final ringCol =
-        dosePct == 1.0 ? L.green : (dosePct > 0.5 ? L.amber : L.blue);
+        dosePct == 1.0 ? L.green : (dosePct > 0.0 ? L.green.withValues(alpha: 0.5) : L.border);
 
     final mainContent = Scaffold(
       backgroundColor: L.bg,
@@ -409,13 +409,13 @@ class _HomeTabState extends State<HomeTab> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: L.amber.withValues(alpha: 0.1),
+        color: L.green.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: L.amber.withValues(alpha: 0.3)),
+        border: Border.all(color: L.green.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(Icons.inventory_2_outlined, color: L.amber, size: 20),
+          Icon(Icons.inventory_2_outlined, color: L.green, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

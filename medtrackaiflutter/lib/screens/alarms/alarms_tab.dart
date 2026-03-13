@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
-import '../../models/models.dart';
+import '../../domain/entities/entities.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/shared/shared_widgets.dart';
+import '../../widgets/common/modern_time_picker.dart';
 import '../../core/utils/date_formatter.dart';
+import 'dart:ui';
+import 'package:flutter_animate/flutter_animate.dart';
 
 // ══════════════════════════════════════════════
 // ALARMS TAB
@@ -134,11 +137,12 @@ class _AlarmsTabState extends State<AlarmsTab> {
               else
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: ListView.builder(
+                  child: ListView.separated(
                     padding: EdgeInsets.zero,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: state.meds.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, idx) => _MedAlarmContainer(
                       med: state.meds[idx],
                       state: state,
@@ -152,61 +156,70 @@ class _AlarmsTabState extends State<AlarmsTab> {
           ),
         ),
 
-        // Fixed Glassmorphic Header
+        // Fixed Premium Header
         Positioned(
           top: 0,
           left: 0,
           right: 0,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 54, 20, 16),
-            color: L.bg,
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Reminders',
-                            style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                                color: L.text,
-                                letterSpacing: -0.8)),
-                        const SizedBox(height: 4),
-                        Text(
-                            activeCount > 0
-                                ? '$activeCount active reminder${activeCount != 1 ? "s" : ""}'
-                                : (state.meds.isEmpty
-                                    ? 'Add medicines to set reminders'
-                                    : 'No reminders set yet'),
-                            style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 13,
-                                color: L.sub,
-                                fontWeight: FontWeight.w500)),
-                      ]),
-                  if (activeCount > 0)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 7),
-                      decoration: BoxDecoration(
-                          color: const Color(0xFF111111),
-                          borderRadius: BorderRadius.circular(99)),
-                      child: Row(children: [
-                        const Icon(Icons.notifications_active_rounded,
-                            color: Colors.white, size: 13),
-                        const SizedBox(width: 5),
-                        Text('$activeCount',
-                            style: const TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white)),
-                      ]),
-                    ),
-                ]),
+          child: ClipRRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                padding: EdgeInsets.fromLTRB(24, 60 + MediaQuery.of(context).padding.top, 24, 20),
+                decoration: BoxDecoration(
+                  color: L.bg.withValues(alpha: 0.8),
+                  border: Border(
+                    bottom: BorderSide(color: L.border.withValues(alpha: 0.5), width: 0.5),
+                  ),
+                ),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Reminders',
+                                style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w900,
+                                    color: L.text,
+                                    letterSpacing: -1.2)),
+                            const SizedBox(height: 4),
+                            Text(
+                                activeCount > 0
+                                    ? 'You have $activeCount scheduled doses'
+                                    : (state.meds.isEmpty
+                                        ? 'Start by adding a medicine'
+                                        : 'No active reminders'),
+                                style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                    color: L.sub,
+                                    fontWeight: FontWeight.w600)),
+                          ]),
+                      if (activeCount > 0)
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                              color: const Color(0xFF111111),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFA3E635).withValues(alpha: 0.2),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                )
+                              ]),
+                          child: const Center(
+                            child: Icon(Icons.notifications_active_rounded,
+                                color: Color(0xFFA3E635), size: 22),
+                          ),
+                        ),
+                    ]),
+              ),
+            ),
           ),
         ),
 
@@ -310,86 +323,120 @@ class _NextDoseIndicator extends StatelessWidget {
     final s = sch.sched as ScheduleEntry;
     final medColor = hexToColor(med.color);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 15,
-              offset: const Offset(0, 8))
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('NEXT REMINDER',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white.withValues(alpha: 0.5),
-                      letterSpacing: 1.2)),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                    color: const Color(0xFFA3E635),
-                    borderRadius: BorderRadius.circular(99)),
-                child: const Text('COMING UP',
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF111111))),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                    color: medColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(16)),
-                child: Center(
-                    child: const Text('💊',
-                        style: TextStyle(fontSize: 24))),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
+    final now = DateTime.now();
+    final schedTime = DateTime(now.year, now.month, now.day, s.h, s.m);
+    var target = schedTime;
+    if (target.isBefore(now)) {
+      target = target.add(const Duration(days: 1));
+    }
+    final diff = target.difference(now);
+    final hours = diff.inHours;
+    final mins = diff.inMinutes % 60;
+    final diffStr = hours > 0 ? 'in ${hours}h ${mins}m' : 'in ${mins}m';
+
+    return Animate(
+      effects: [
+        FadeEffect(duration: 500.ms, curve: Curves.easeOut),
+        ScaleEffect(begin: const Offset(0.95, 0.95), duration: 500.ms, curve: Curves.easeOut),
+      ],
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: const Color(0xFF111111),
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFA3E635).withValues(alpha: 0.15),
+              blurRadius: 30,
+              offset: const Offset(0, 10),
+            )
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(med.name,
-                        style: const TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: -0.5)),
-                    const SizedBox(height: 2),
-                    Text('${fmtTime(s.h, s.m)} · ${s.label}',
+                    Text('NEXT REMINDER',
                         style: TextStyle(
                             fontFamily: 'Inter',
-                            fontSize: 14,
-                            color: Colors.white.withValues(alpha: 0.7),
-                            fontWeight: FontWeight.w500)),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFFA3E635),
+                            letterSpacing: 1.5)),
+                    const SizedBox(height: 4),
+                    Text(diffStr,
+                        style: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.5)),
                   ],
                 ),
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(Icons.timer_outlined, color: const Color(0xFFA3E635), size: 24),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(20),
               ),
-              const Icon(Icons.arrow_forward_ios_rounded,
-                  color: Colors.white, size: 16),
-            ],
-          ),
-        ],
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: medColor.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                        child: Text(med.form == 'tablet' ? '💊' : '💧',
+                            style: const TextStyle(fontSize: 22))),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(med.name,
+                            style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: -0.3)),
+                        Text('${s.label} · ${fmtTime(s.h, s.m)}',
+                            style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13,
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -448,161 +495,169 @@ class _TimelineAlarmCard extends StatelessWidget {
     final s = sch.sched as ScheduleEntry;
     final medColor = hexToColor(med.color);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: L.border),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 1))
-        ],
-      ),
-      child: Row(children: [
-        // Colored icon
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-              color: medColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(14)),
-          child: Center(
-              child: Icon(Icons.notifications_active_rounded,
-                  size: 18, color: medColor)),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Text(fmtTime(s.h, s.m),
-                style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: L.text,
-                    letterSpacing: -0.5)),
-            const SizedBox(width: 8),
-            Expanded(
-                child: Text(s.label,
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: L.sub,
-                        overflow: TextOverflow.ellipsis))),
-          ]),
-          const SizedBox(height: 3),
-          Row(children: [
-            Container(
-                width: 6,
-                height: 6,
-                decoration:
-                    BoxDecoration(color: medColor, shape: BoxShape.circle)),
-            const SizedBox(width: 6),
-            Expanded(
-                child: Text(med.name,
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: L.sub,
-                        overflow: TextOverflow.ellipsis))),
-          ]),
-          if (s.enabled) ...[
-            const SizedBox(height: 10),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(children: [
-                _SnoozeBtn(
-                    label: '10m',
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      state.showToast('Snoozed ${med.name} for 10m',
-                          type: 'info');
-                    },
-                    L: L),
-                const SizedBox(width: 8),
-                _SnoozeBtn(
-                    label: '30m',
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      state.showToast('Snoozed ${med.name} for 30m',
-                          type: 'info');
-                    },
-                    L: L),
-                const SizedBox(width: 8),
-                _SnoozeBtn(
-                    label: '1h',
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      state.showToast('Snoozed ${med.name} for 1h',
-                          type: 'info');
-                    },
-                    L: L),
-              ]),
-            ),
+    return Animate(
+      effects: [
+        FadeEffect(duration: 400.ms, curve: Curves.easeOut),
+        SlideEffect(begin: const Offset(0, 0.05), duration: 400.ms, curve: Curves.easeOut),
+      ],
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: L.card,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: L.border.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
           ],
-          // Days strip
-          const SizedBox(height: 6),
-          SizedBox(
-            width: double.infinity,
-            child: FittedBox(
-              alignment: Alignment.centerLeft,
-              fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-                    .asMap()
-                    .entries
-                    .map((e) {
-                  final isScheduled = s.days.contains(e.key);
-                  return Container(
-                    width: 20,
-                    height: 20,
-                    margin: const EdgeInsets.only(right: 3),
-                    decoration: BoxDecoration(
-                      color: isScheduled
-                          ? const Color(0xFF111111)
-                          : Colors.transparent,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color:
-                              isScheduled ? const Color(0xFF111111) : L.border,
-                          width: 1.5),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: IntrinsicHeight(
+          child: Row(children: [
+            // Left Accent Bar
+            Container(width: 6, color: medColor),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(children: [
+                          Text(fmtTime(s.h, s.m),
+                              style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w900,
+                                  color: L.text,
+                                  letterSpacing: -1.0)),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: L.fill,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(s.label.toUpperCase(),
+                                style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    color: L.sub,
+                                    letterSpacing: 0.5)),
+                          ),
+                        ]),
+                        _PremiumToggle(
+                            value: s.enabled,
+                            onChanged: (v) {
+                              HapticFeedback.lightImpact();
+                              onToggle();
+                            }),
+                      ],
                     ),
-                    child: Center(
-                        child: Text(e.value,
-                            style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 8,
-                                fontWeight: FontWeight.w700,
-                                color: isScheduled ? Colors.white : L.sub))),
-                  );
-                }).toList(),
+                    const SizedBox(height: 8),
+                    Row(children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                            color: medColor.withValues(alpha: 0.1),
+                            shape: BoxShape.circle),
+                        child: Center(
+                            child: Icon(Icons.medication_rounded,
+                                size: 16, color: medColor)),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(med.name,
+                                style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: L.text,
+                                    letterSpacing: -0.3)),
+                            Text(med.dose,
+                                style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 12,
+                                    color: L.sub,
+                                    fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: onRemove,
+                        icon: Icon(Icons.delete_outline_rounded, size: 18, color: L.red.withValues(alpha: 0.7)),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ]),
+                    if (s.enabled) ...[
+                      const SizedBox(height: 16),
+                      Row(children: [
+                        _SnoozeBtn(
+                            label: '10m',
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              state.showToast('Snoozed ${med.name} for 10m', type: 'info');
+                            },
+                            L: L),
+                        const SizedBox(width: 8),
+                        _SnoozeBtn(
+                            label: '1h',
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              state.showToast('Snoozed ${med.name} for 1h', type: 'info');
+                            },
+                            L: L),
+                        const Spacer(),
+                        // Days Indicator
+                        Wrap(
+                          spacing: 4,
+                          children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+                              .asMap()
+                              .entries
+                              .map((e) {
+                            final isScheduled = s.days.contains(e.key);
+                            return Container(
+                              width: 18,
+                              height: 18,
+                              decoration: BoxDecoration(
+                                color: isScheduled
+                                    ? const Color(0xFF111111)
+                                    : Colors.transparent,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                    color: isScheduled ? const Color(0xFF111111) : L.border,
+                                    width: 1),
+                              ),
+                              child: Center(
+                                  child: Text(e.value,
+                                      style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w800,
+                                          color: isScheduled ? Colors.white : L.sub))),
+                            );
+                          }).toList(),
+                        ),
+                      ]),
+                    ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ])),
-        const SizedBox(width: 10),
-        _PremiumToggle(
-            value: s.enabled,
-            onChanged: (v) {
-              HapticFeedback.lightImpact();
-              onToggle();
-            }),
-        const SizedBox(width: 8),
-        IconButton(
-          onPressed: onRemove,
-          icon: Icon(Icons.close_rounded, size: 15, color: L.sub),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
+          ]),
         ),
-      ]),
+      ),
     );
   }
 }
@@ -668,32 +723,25 @@ class _MedAlarmContainer extends StatelessWidget {
     final count = med.schedule.length;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: L.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: L.border),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 1))
-        ],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: L.border.withValues(alpha: 0.5)),
       ),
       child: Column(children: [
         Row(children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
                 color: medColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(14)),
             child: Center(
-                child: const Text('💊',
-                    style: TextStyle(fontSize: 20))),
+                child: Text(med.form == 'tablet' ? '💊' : '💧',
+                    style: const TextStyle(fontSize: 22))),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -701,59 +749,65 @@ class _MedAlarmContainer extends StatelessWidget {
                 Text(med.name,
                     style: TextStyle(
                         fontFamily: 'Inter',
-                        fontSize: 15,
+                        fontSize: 17,
                         fontWeight: FontWeight.w800,
                         color: L.text,
+                        letterSpacing: -0.5,
                         overflow: TextOverflow.ellipsis)),
                 Text(
-                    '${med.dose}${count > 0 ? " · $count reminder${count != 1 ? "s" : ""}" : " · No reminders"}',
+                    '${med.dose}${count > 0 ? " · $count schedule${count != 1 ? "s" : ""}" : " · No schedules"}',
                     style: TextStyle(
-                        fontFamily: 'Inter', fontSize: 12, color: L.sub)),
+                        fontFamily: 'Inter', fontSize: 13, color: L.sub, fontWeight: FontWeight.w500)),
               ])),
           GestureDetector(
-              onTap: onAdd,
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                onAdd();
+              },
               child: Container(
-                  width: 32,
-                  height: 32,
+                  width: 36,
+                  height: 36,
                   decoration: const BoxDecoration(
                       color: Color(0xFF111111), shape: BoxShape.circle),
                   child: const Icon(Icons.add_rounded,
-                      color: Colors.white, size: 14))),
+                      color: Color(0xFFA3E635), size: 20))),
         ]),
         if (med.schedule.isNotEmpty) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           ...med.schedule.asMap().entries.map((e) {
             final idx = e.key;
             final s = e.value;
-            return Opacity(
-              opacity: s.enabled ? 1 : 0.5,
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 6),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                    color: L.fill, borderRadius: BorderRadius.circular(12)),
-                child: Row(children: [
-                  Text(fmtTime(s.h, s.m),
-                      style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: L.text,
-                          letterSpacing: -0.3)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: Text(s.label,
-                          style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 12,
-                              color: L.sub,
-                              fontWeight: FontWeight.w500))),
-                  _PremiumToggle(
-                      value: s.enabled,
-                      onChanged: (v) => state.toggleSchedule(med.id, idx)),
-                ]),
-              ),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                  color: L.fill.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: L.border.withValues(alpha: 0.3))),
+              child: Row(children: [
+                Text(fmtTime(s.h, s.m),
+                    style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: s.enabled ? L.text : L.sub,
+                        letterSpacing: -0.5)),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: Text(s.label,
+                        style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 13,
+                            color: L.sub,
+                            fontWeight: FontWeight.w600))),
+                _PremiumToggle(
+                    value: s.enabled,
+                    onChanged: (v) {
+                      HapticFeedback.lightImpact();
+                      state.toggleSchedule(med.id, idx);
+                    }),
+              ]),
             );
           }),
         ],
@@ -978,7 +1032,7 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Time pickers
+                    // Time select
                     Text('Time',
                         style: TextStyle(
                             fontFamily: 'Inter',
@@ -987,75 +1041,91 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                             color: L.sub,
                             letterSpacing: 0.8)),
                     const SizedBox(height: 10),
-                    Row(children: [
-                      Expanded(
-                          child: _TimeInput(
-                              label: 'Hour',
-                              value: _h.toString().padLeft(2, '0'),
-                              onInc: () => setState(() {
-                                    if (_h < 23) _h++;
-                                  }),
-                              onDec: () => setState(() {
-                                    if (_h > 0) _h--;
-                                  }))),
-                      const SizedBox(width: 8),
-                      const Padding(
-                          padding: EdgeInsets.only(top: 14),
-                          child: Text(':',
+                    GestureDetector(
+                      onTap: () async {
+                        final res = await ModernTimePicker.show(
+                          context,
+                          initialTime: TimeOfDay(hour: _h, minute: _m),
+                          title: "Select Time",
+                        );
+                        if (res != null) {
+                          setState(() {
+                            _h = res.hour;
+                            _m = res.minute;
+                            // Update label if it's one of the defaults
+                            if (_label == 'Morning' || _label == 'Afternoon' || _label == 'Evening' || _label == 'Night') {
+                              if (_h >= 5 && _h < 12) _label = 'Morning';
+                              else if (_h >= 12 && _h < 17) _label = 'Afternoon';
+                              else if (_h >= 17 && _h < 21) _label = 'Evening';
+                              else _label = 'Night';
+                            }
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        decoration: BoxDecoration(
+                            color: L.fill,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: L.border.withValues(alpha: 0.5))),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              fmtTime(_h, _m),
                               style: TextStyle(
+                                  fontFamily: 'Inter',
                                   fontSize: 28,
                                   fontWeight: FontWeight.w800,
-                                  color: Color(0xFF999999)))),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          child: _TimeInput(
-                              label: 'Min',
-                              value: _m.toString().padLeft(2, '0'),
-                              onInc: () => setState(() {
-                                    if (_m < 59) _m++;
-                                  }),
-                              onDec: () => setState(() {
-                                    if (_m > 0) _m--;
-                                  }))),
-                      const SizedBox(width: 12),
-                      Expanded(
-                          flex: 2,
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Label',
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        color: L.sub,
-                                        letterSpacing: 0.8)),
-                                const SizedBox(height: 4),
-                                Container(
-                                  decoration: BoxDecoration(
-                                      color: L.fill,
-                                      borderRadius: BorderRadius.circular(12)),
-                                  child: TextField(
-                                    controller: TextEditingController(
-                                        text: _label)
-                                      ..selection = TextSelection.fromPosition(
-                                          TextPosition(offset: _label.length)),
-                                    onChanged: (v) => _label = v,
-                                    decoration: const InputDecoration(
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 14),
-                                        isDense: true),
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w700,
-                                        color: L.text),
-                                  ),
-                                ),
-                              ])),
-                    ]),
+                                  color: L.text,
+                                  letterSpacing: -0.5),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                  color: const Color(0xFF111111),
+                                  shape: BoxShape.circle),
+                              child: const Icon(Icons.access_time_filled_rounded,
+                                  color: Color(0xFFA3E635), size: 20),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 20),
+
+                    Text('Label',
+                        style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: L.sub,
+                            letterSpacing: 0.8)),
+                    const SizedBox(height: 10),
+                    Container(
+                      decoration: BoxDecoration(
+                          color: L.fill,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: L.border.withValues(alpha: 0.5))),
+                      child: TextField(
+                        controller: TextEditingController(text: _label)
+                          ..selection = TextSelection.fromPosition(
+                              TextPosition(offset: _label.length)),
+                        onChanged: (v) => _label = v,
+                        decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 16),
+                            isDense: true,
+                            hintText: 'e.g. After Breakfast'),
+                        style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: L.text),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
 
                     // Day picker
                     Text('Repeat',

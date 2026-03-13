@@ -6,6 +6,7 @@ import '../../models/models.dart';
 import '../../models/constants.dart';
 import '../../theme/app_theme.dart';
 import '../../services/notification_service.dart';
+import '../../widgets/common/modern_time_picker.dart';
 
 // ══════════════════════════════════════════════
 // ONBOARDING SCREEN
@@ -1227,17 +1228,17 @@ class _NotifStep extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 40, 24, 0),
       child: Column(children: [
+        const SizedBox(height: 48),
         Container(
-            width: 90,
-            height: 90,
-            decoration: BoxDecoration(
-                color: oLime.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                    color: oLime.withValues(alpha: 0.3), width: 1.5)),
-            child: const Center(
-                child: Text('🔔', style: TextStyle(fontSize: 44)))),
-        const SizedBox(height: 24),
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: oLime.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Center(child: Icon(Icons.notifications_active_rounded, color: oLime, size: 40)),
+        ),
+        const SizedBox(height: 32),
         Text('Enable Reminders',
             style: TextStyle(
                 fontFamily: 'Inter',
@@ -1251,42 +1252,7 @@ class _NotifStep extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontFamily: 'Inter', fontSize: 15, color: oSub, height: 1.5)),
-        const SizedBox(height: 32),
         const Spacer(),
-        GestureDetector(
-          onTap: () async {
-            final granted = await NotificationService.requestPermission();
-            onChanged('notifPerm', granted);
-            onNext();
-          },
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            decoration: BoxDecoration(
-                color: oLime, borderRadius: BorderRadius.circular(16)),
-            child: const Center(
-                child: Text('Allow Notifications →',
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.black))),
-          ),
-        ),
-        const SizedBox(height: 16),
-        GestureDetector(
-          onTap: () {
-            onChanged('notifPerm', false);
-            onNext();
-          },
-          child: Text('Skip for now',
-              style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: oSub,
-                  fontWeight: FontWeight.w600)),
-        ),
-        const SizedBox(height: 12),
       ]),
     );
   }
@@ -1734,13 +1700,13 @@ class _PaywallFeatures extends StatelessWidget {
                   borderSide: BorderSide(
                       color: appliedPromo != null
                           ? oLime
-                          : (promoError ? Colors.red : AppColors.oBorder))),
+                          : (promoError ? const Color(0xFFFF453A) : AppColors.oBorder))),
               enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
                       color: appliedPromo != null
                           ? oLime
-                          : (promoError ? Colors.red : AppColors.oBorder))),
+                          : (promoError ? const Color(0xFFFF453A) : AppColors.oBorder))),
             ),
           )),
           const SizedBox(width: 8),

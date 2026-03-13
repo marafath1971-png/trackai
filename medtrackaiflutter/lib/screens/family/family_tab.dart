@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../providers/app_state.dart';
@@ -260,7 +261,7 @@ class _HubView extends StatelessWidget {
                                       color: L.sub,
                                       fontWeight: FontWeight.w500)),
                           ],
-                        ),
+                        ).animate().fade(duration: 400.ms).slideX(begin: -0.1, end: 0),
                       ),
                       Row(
                         children: [
@@ -280,7 +281,7 @@ class _HubView extends StatelessWidget {
                             bg: L.blue,
                           ),
                         ],
-                      ),
+                      ).animate().fade(delay: 200.ms).slideX(begin: 0.1, end: 0),
                     ],
                   ),
                   if (unseenCount > 0)
@@ -335,21 +336,21 @@ class _HubView extends StatelessWidget {
                             emoji: '👥',
                             label: 'Active',
                             value: activeCount,
-                            color: L.green)),
+                            color: L.green).animate().fade(delay: 300.ms).slideY(begin: 0.2, end: 0)),
                     const SizedBox(width: 10),
                     Expanded(
                         child: _FamStatJSX(
                             emoji: '⏳',
                             label: 'Pending',
                             value: pendingCount,
-                            color: L.amber)),
+                            color: L.amber).animate().fade(delay: 400.ms).slideY(begin: 0.2, end: 0)),
                     const SizedBox(width: 10),
                     Expanded(
                         child: _FamStatJSX(
                             emoji: '⚠️',
                             label: 'Alerts',
                             value: state.missedAlerts.length,
-                            color: L.red)),
+                            color: L.red).animate().fade(delay: 500.ms).slideY(begin: 0.2, end: 0)),
                   ],
                 ),
               ),
@@ -385,7 +386,7 @@ class _HubView extends StatelessWidget {
                     state: state,
                     L: L,
                     onDashboard: () => onDashboard(state.caregivers[index]),
-                  ),
+                  ).animate().fade(delay: (600 + index * 100).ms).slideX(begin: 0.05, end: 0),
                 ),
               ),
               const SizedBox(height: 24),
@@ -421,7 +422,7 @@ class _HubView extends StatelessWidget {
                     alert: state.missedAlerts[index],
                     L: L,
                     onTap: () => onAlertDetail(state.missedAlerts[index]),
-                  ),
+                  ).animate().fade(delay: (400 + index * 50).ms).slideY(begin: 0.1, end: 0),
                 ),
               ),
             ],
@@ -555,8 +556,8 @@ class _FamStatJSX extends StatelessWidget {
                 fontFamily: 'Inter',
                 fontSize: 10,
                 color: L.sub,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.04)),
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.0)),
       ]),
     );
   }
@@ -688,9 +689,9 @@ class _CaregiverCardState extends State<_CaregiverCard> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: isActive ? L.green.withValues(alpha: 0.45) : L.border,
+              color: isActive ? L.green.withValues(alpha: 0.5) : L.border,
               width: 1.5)),
       child: Column(children: [
         GestureDetector(

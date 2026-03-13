@@ -70,23 +70,23 @@ class _SettingsModalState extends State<SettingsModal> {
                         Text('Settings',
                             style: TextStyle(
                                 fontFamily: ff,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
                                 color: L.text,
-                                letterSpacing: -0.5)),
+                                letterSpacing: -0.7)),
                         GestureDetector(
                           onTap: widget.onClose,
                           child: Container(
-                            width: 32,
-                            height: 32,
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
                                 color: L.fill, shape: BoxShape.circle),
                             child: Center(
                                 child: Icon(Icons.close_rounded,
-                                    color: L.sub, size: 20)),
+                                    color: L.sub, size: 22)),
                           ),
                         ),
-                      ]),
+                      ]).animate().fade(duration: 400.ms).slideY(begin: -0.1, end: 0),
                 ),
                 // Tab Bar
                 SingleChildScrollView(
@@ -96,31 +96,35 @@ class _SettingsModalState extends State<SettingsModal> {
                   child: Row(
                       children: tabs.map((t) {
                     final isAct = _activeTab == t['id'];
+                    final idx = tabs.indexOf(t);
                     return Padding(
-                      padding: const EdgeInsets.only(right: 6),
+                      padding: const EdgeInsets.only(right: 8),
                       child: GestureDetector(
                         onTap: () =>
                             setState(() => _activeTab = t['id'] as String),
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
+                          duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 8),
+                              horizontal: 16, vertical: 10),
                           decoration: BoxDecoration(
                               color: isAct ? const Color(0xFF111111) : L.fill,
-                              borderRadius: BorderRadius.circular(99)),
+                              borderRadius: BorderRadius.circular(99),
+                              border: Border.all(
+                                color: isAct ? Colors.white.withValues(alpha: 0.1) : Colors.transparent
+                              )),
                           child: Row(children: [
                             Text(t['icon']!,
-                                style: const TextStyle(fontSize: 13)),
-                            const SizedBox(width: 6),
+                                style: const TextStyle(fontSize: 14)),
+                            const SizedBox(width: 8),
                             Text(t['label']!,
                                 style: TextStyle(
                                     fontFamily: ff,
                                     fontSize: 13,
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: FontWeight.w800,
                                     color: isAct ? Colors.white : L.text)),
                           ]),
                         ),
-                      ),
+                      ).animate().fade(delay: (idx * 50).ms).scale(begin: const Offset(0.9, 0.9)),
                     );
                   }).toList()),
                 ),
@@ -243,11 +247,11 @@ class Section extends StatelessWidget {
       Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: L.border, width: 0.5)),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: L.border.withValues(alpha: 0.8), width: 1.0)),
         child: child,
       ),
-      const SizedBox(height: 20),
+      const SizedBox(height: 24),
     ]);
   }
 }
@@ -360,8 +364,8 @@ class _ProfileTabState extends State<_ProfileTab> {
                 ),
               ),
           ]),
-        ),
-        const SizedBox(height: 16),
+        ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0),
+        const SizedBox(height: 20),
 
         if (_editing) ...[
           Section(
@@ -662,19 +666,20 @@ class _StatsTab extends StatelessWidget {
               Text('$overallAdh%',
                   style: TextStyle(
                       fontFamily: ff,
-                      fontSize: 48,
+                      fontSize: 56,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
-                      letterSpacing: -2,
+                      letterSpacing: -3,
                       height: 1.0)),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Text(overallAdh >= 80 ? 'Great' : 'Keep going',
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(overallAdh >= 80 ? 'EXCELLENT' : (overallAdh >= 60 ? 'STABLE' : 'KEEP GOING'),
                     style: TextStyle(
                         fontFamily: ff,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
                         color: overallAdh >= 80
                             ? const Color(0xFF34C759)
                             : (overallAdh >= 60
@@ -714,30 +719,30 @@ class _StatsTab extends StatelessWidget {
                 sub: 'of $total total',
                 emoji: '✅',
                 L: L,
-                ff: ff),
+                ff: ff).animate().fade(delay: 100.ms).slideY(begin: 0.2, end: 0),
             _StatCard(
                 label: '7-Day Rate',
                 val: '$last7Adh%',
                 sub: 'Last 7 days',
                 emoji: '📈',
                 L: L,
-                ff: ff),
+                ff: ff).animate().fade(delay: 200.ms).slideY(begin: 0.2, end: 0),
             _StatCard(
                 label: 'Current Streak',
                 val: '${streak}d',
                 sub: 'days in a row',
                 emoji: '🔥',
                 L: L,
-                ff: ff),
-            _StatCard(
-                label: 'Days Tracked',
-                val: '$daysTracked',
-                sub: 'days of data',
-                emoji: '📅',
-                L: L,
-                ff: ff),
-          ],
-        ),
+                ff: ff).animate().fade(delay: 300.ms).slideY(begin: 0.2, end: 0),
+                _StatCard(
+                    label: 'Days Tracked',
+                    val: '$daysTracked',
+                    sub: 'days of data',
+                    emoji: '📅',
+                    L: L,
+                    ff: ff).animate().fade(delay: 400.ms).slideY(begin: 0.2, end: 0),
+              ],
+            ),
         const SizedBox(height: 16),
 
         // Weekly Bar Chart

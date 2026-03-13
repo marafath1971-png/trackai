@@ -7,43 +7,42 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
   // Light theme
-  static const Color lBg = Color(0xFFF5F5F5);
-  static const Color lCard = Color(0xFFFFFFFF);
-  static const Color lCard2 = Color(0xFFFAFAFA);
-  static const Color lBorder = Color(0x14000000); // rgba(0,0,0,0.08)
-  static const Color lText = Color(0xFF111111);
-  static const Color lSub = Color(0x72000000); // rgba(0,0,0,0.45)
-  static const Color lFill = Color(0x0F000000); // rgba(0,0,0,0.06)
+  static const Color lBg = Color(0xFFFFFFFF);
+  static const Color lCard = Color(0xFFF9F9FB);
+  static const Color lCard2 = Color(0xFFF0F0F2);
+  static const Color lBorder = Color(0x14000000); 
+  static const Color lText = Color(0xFF000000);
+  static const Color lSub = Color(0x99000000); 
+  static const Color lFill = Color(0x0F000000); 
 
-  static const Color lGreen = Color(0xFF22C55E);
-  static const Color lGreenDark = Color(0xFF16A34A);
-  static const Color lGreenLight = Color(0xFFDCFCE7);
-  static const Color lRed = Color(0xFFEF4444);
-  static const Color lRedLight = Color(0xFFFEE2E2);
-  static const Color lAmber = Color(0xFFF97316);
-  static const Color lAmberLight = Color(0xFFFFF0E6);
-  static const Color lBlue = Color(0xFF3B82F6);
-  static const Color lBlueLight = Color(0xFFEFF6FF);
-  static const Color lPurple = Color(0xFF8B5CF6);
-  static const Color lPurpleLight = Color(0xFFEDE9FE);
-  static const Color lIndigo = Color(0xFF6366F1);
-  static const Color lPink = Color(0xFFEC4899);
-  static const Color lTeal = Color(0xFF06B6D4);
-  static const Color lAccent = Color(0xFF111111);
+  static const Color lGreen = Color(0xFFA3E635);
+  static const Color lGreenDark = Color(0xFF84CC16);
+  static const Color lGreenLight = Color(0x26A3E635);
+  static const Color lRed = Color(0xFFFF453A);
+  static const Color lRedLight = Color(0x1AFF453A);
+  static const Color lAmber = Color(0xFFFF9F0A);
+  static const Color lAmberLight = Color(0x1AFF9F0A);
+  static const Color lBlue = Color(0xFF007AFF);
+  static const Color lBlueLight = Color(0x1A007AFF);
+  static const Color lPurple = Color(0xFF5856D6);
+  static const Color lIndigo = Color(0xFF5856D6);
+  static const Color lPink = Color(0xFFFF2D55);
+  static const Color lTeal = Color(0xFF5AC8FA);
+  static const Color lAccent = Color(0xFF000000);
   static const Color lAccentText = Color(0xFFFFFFFF);
 
   // Dark theme
-  static const Color dBg = Color(0xFF0A0A0F);
-  static const Color dCard = Color(0xFF1C1C1E);
-  static const Color dCard2 = Color(0xFF2C2C2E);
-  static const Color dBorder = Color(0x1FFFFFFF); // rgba(255,255,255,0.12)
+  static const Color dBg = Color(0xFF000000);
+  static const Color dCard = Color(0xFF111111);
+  static const Color dCard2 = Color(0xFF1C1C1E);
+  static const Color dBorder = Color(0x1FFFFFFF); 
   static const Color dText = Color(0xFFFFFFFF);
-  static const Color dSub = Color(0x8CFFFFFF); // rgba(255,255,255,0.55)
-  static const Color dFill = Color(0x14FFFFFF); // rgba(255,255,255,0.08)
+  static const Color dSub = Color(0x99FFFFFF); 
+  static const Color dFill = Color(0x14FFFFFF); 
 
-  static const Color dGreen = Color(0xFF34C759);
-  static const Color dGreenDark = Color(0xFF248A3D);
-  static const Color dGreenLight = Color(0x2634C759); // 0.15 opacity
+  static const Color dGreen = Color(0xFFA3E635);
+  static const Color dGreenDark = Color(0xFF84CC16);
+  static const Color dGreenLight = Color(0x26A3E635);
   static const Color dRed = Color(0xFFFF453A);
   static const Color dRedLight = Color(0x2EFF453A);
   static const Color dAmber = Color(0xFFFF9F0A);
@@ -51,24 +50,25 @@ class AppColors {
   static const Color dBlue = Color(0xFF0A84FF);
   static const Color dBlueLight = Color(0x260A84FF);
   static const Color dPurple = Color(0xFFBF5AF2);
-  static const Color dPurpleLight = Color(0x26BF5AF2);
   static const Color dTeal = Color(0xFF5AC8FA);
   static const Color dIndigo = Color(0xFF5E5CE6);
   static const Color dPink = Color(0xFFFF375F);
 
-  // Onboarding dark theme (D object)
-  static const Color oBg = Color(0xFF0A0A0F);
-  static const Color oCard = Color(0xFF13131A);
-  static const Color oBorder = Color(0xFF1E1E2A);
-  static const Color oText = Color(0xFFF0F0F5);
-  static const Color oSub = Color(0xFF8080A0);
+  // Onboarding dark theme aliased to new brand
+  static const Color oBg = Color(0xFF000000);
+  static const Color oCard = Color(0xFF111111);
+  static const Color oBorder = Color(0x1FFFFFFF);
+  static const Color oText = Color(0xFFFFFFFF);
+  static const Color oSub = Color(0x99FFFFFF);
   static const Color oLime = Color(0xFFA3E635);
   static const Color oLimeDark = Color(0xFF84CC16);
-  static const Color oLimeDim = Color(0x1FA3E635); // rgba(163,230,53,0.12)
+  static const Color oLimeDim = Color(0x1FA3E635);
   static const Color oGreen = Color(0xFF10B981);
 
-  // Black (Cal AI style)
-  static const Color black = Color(0xFF111111);
+  static const Color lPurpleLight = Color(0x1A5856D6);
+  static const Color dPurpleLight = Color(0x26BF5AF2);
+
+  static const Color black = Color(0xFF000000);
   static const Color white = Color(0xFFFFFFFF);
 }
 

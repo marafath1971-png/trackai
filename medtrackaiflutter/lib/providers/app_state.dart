@@ -88,7 +88,7 @@ class AppState extends ChangeNotifier {
 
       phase = profile != null && profile!.name.isNotEmpty
           ? AppPhase.app
-          : AppPhase.onboarding;
+          : AppPhase.app; // Changed from onboarding to app to support scan-first if needed, but loadFromStorage sets initial phase.
       _updateNotifications();
       _listenToCaregivers();
 
@@ -334,13 +334,42 @@ class AppState extends ChangeNotifier {
     return s;
   }
 
+  double getAdherenceScore() {
+    if (history.isEmpty) return 1.0;
+    
+    int totalScheduled = 0;
+    int totalTaken = 0;
+
+    // Look back 30 days
+    final now = DateTime.now();
+    for (int i = 0; i < 30; i++) {
+      final date = now.subtract(Duration(days: i));
+      final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final dayOfWeek = date.weekday % 7;
+
+      // Count what WAS scheduled on that day
+      final scheduledOnDay = meds.where((m) => 
+        m.schedule.any((s) => s.enabled && s.days.contains(dayOfWeek))
+      ).length;
+
+      if (scheduledOnDay > 0) {
+        totalScheduled += scheduledOnDay;
+        final entries = history[dateKey] ?? [];
+        totalTaken += entries.where((e) => e.taken).length;
+      }
+    }
+
+    if (totalScheduled == 0) return 1.0;
+    return (totalTaken / totalScheduled).clamp(0.0, 1.0);
+  }
+
   List<Medicine> getLowMeds() =>
       meds.where((m) => m.count <= m.refillAt && m.count > 0).toList();
 
   // ── Phase control ──────────────────────────────────────────────────
   void completeOnboarding(UserProfile p) {
     profile = p;
-    phase = AppPhase.auth; // Go to Login next
+    phase = AppPhase.app; // Go directly to App so user can scan immediately
     saveProfile(p);
     notifyListeners();
   }

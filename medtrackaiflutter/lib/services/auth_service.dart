@@ -13,6 +13,7 @@ class AuthService {
   static Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   // Current user
+  static bool get isLoggedIn => currentUser != null;
   static User? get currentUser => _auth.currentUser;
   static String? get uid => currentUser?.uid;
   static String? get email => currentUser?.email;

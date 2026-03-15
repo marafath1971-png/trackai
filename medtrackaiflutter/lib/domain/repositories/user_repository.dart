@@ -20,4 +20,9 @@ abstract class IUserRepository {
   Future<Map<String, dynamic>?> getRawInvite(String code);
   Future<void> deleteInvite(String code);
   Future<void> saveFcmToken(String token);
+
+  // ── Monitoring ──
+  Stream<List<Map<String, dynamic>>> getMonitoringPatientsStream();
+  Stream<List<Medicine>> getPatientMedsStream(String patientUid);
+  Stream<Map<String, List<DoseEntry>>> getPatientHistoryStream(String patientUid);
 }

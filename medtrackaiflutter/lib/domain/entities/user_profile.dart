@@ -23,6 +23,12 @@ class UserProfile {
   final String? promoCode;
   final Map<String, dynamic>? appliedPromo;
   final String avatar;
+  final bool biometricEnabled;
+  final String accentColor;
+  final String appIcon;
+  final String reminderSound;
+  final int scansUsed;
+  final bool isPremium;
 
   const UserProfile({
     this.name = '',
@@ -49,6 +55,12 @@ class UserProfile {
     this.promoCode,
     this.appliedPromo,
     this.avatar = '😊',
+    this.biometricEnabled = false,
+    this.accentColor = '111111',
+    this.appIcon = 'classic',
+    this.reminderSound = 'default',
+    this.scansUsed = 0,
+    this.isPremium = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -76,6 +88,12 @@ class UserProfile {
         'promoCode': promoCode,
         'appliedPromo': appliedPromo,
         'avatar': avatar,
+        'biometricEnabled': biometricEnabled,
+        'accentColor': accentColor,
+        'appIcon': appIcon,
+        'reminderSound': reminderSound,
+        'scansUsed': scansUsed,
+        'isPremium': isPremium,
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> j) => UserProfile(
@@ -104,6 +122,12 @@ class UserProfile {
         promoCode: j['promoCode'],
         appliedPromo: j['appliedPromo'],
         avatar: j['avatar'] ?? '😊',
+        biometricEnabled: j['biometricEnabled'] ?? false,
+        accentColor: j['accentColor'] ?? '111111',
+        appIcon: j['appIcon'] ?? 'classic',
+        reminderSound: j['reminderSound'] ?? 'default',
+        scansUsed: j['scansUsed'] ?? 0,
+        isPremium: j['isPremium'] ?? false,
       );
 
   UserProfile copyWith({
@@ -116,6 +140,12 @@ class UserProfile {
     bool? notifPerm,
     bool? notifSound,
     bool? notifRefill,
+    bool? biometricEnabled,
+    String? accentColor,
+    String? appIcon,
+    String? reminderSound,
+    int? scansUsed,
+    bool? isPremium,
   }) =>
       UserProfile(
         name: name ?? this.name,
@@ -142,5 +172,11 @@ class UserProfile {
         promoCode: promoCode,
         appliedPromo: appliedPromo,
         avatar: avatar ?? this.avatar,
+        biometricEnabled: biometricEnabled ?? this.biometricEnabled,
+        accentColor: accentColor ?? this.accentColor,
+        appIcon: appIcon ?? this.appIcon,
+        reminderSound: reminderSound ?? this.reminderSound,
+        scansUsed: scansUsed ?? this.scansUsed,
+        isPremium: isPremium ?? this.isPremium,
       );
 }

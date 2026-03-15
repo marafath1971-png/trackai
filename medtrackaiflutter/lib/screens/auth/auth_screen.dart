@@ -105,30 +105,34 @@ class _AuthScreenState extends State<AuthScreen> {
     return Scaffold(
       backgroundColor: L.bg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Column(
+        child: Scrollbar(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: topPad + 40),
 
               // ── Logo ───────────────────────────────────────────────
               Container(
-                width: 56,
-                height: 56,
+                width: 72,
+                height: 72,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF111111),
-                  borderRadius: BorderRadius.circular(18),
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   boxShadow: [
                     BoxShadow(
                         color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4))
+                        blurRadius: 20,
+                        offset: const Offset(0, 8))
                   ],
                 ),
                 child: const Center(
                     child: Text('💊',
-                        style: TextStyle(fontSize: 28, height: 1.0))),
+                        style: TextStyle(fontSize: 34, height: 1.0))),
               ),
               const SizedBox(height: 24),
 
@@ -228,7 +232,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                       color: L.redLight,
-                      borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(16)),
                   child: Row(children: [
                     Icon(Icons.error_outline_rounded, color: L.red, size: 16),
                     const SizedBox(width: 8),
@@ -289,13 +293,14 @@ class _AuthScreenState extends State<AuthScreen> {
                           fontFamily: 'Inter', fontSize: 13, color: L.sub)),
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 120),
             ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ── Reusable widgets ──────────────────────────────────────────────────
@@ -312,11 +317,11 @@ class _GoogleBtn extends StatelessWidget {
       onTap: loading ? null : onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: L.card,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: L.border),
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           // Google G logo
@@ -365,9 +370,9 @@ class _AuthField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: L.border),
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: TextField(
         controller: controller,
@@ -402,6 +407,7 @@ class _PrimaryBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final L = context.L;
     return GestureDetector(
       onTap: loading ? null : onTap,
       child: AnimatedContainer(
@@ -409,13 +415,13 @@ class _PrimaryBtn extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF111111),
-          borderRadius: BorderRadius.circular(14),
+          color: L.green,
+          borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
-                blurRadius: 12,
-                offset: const Offset(0, 4))
+                color: L.green.withValues(alpha: 0.25),
+                blurRadius: 20,
+                offset: const Offset(0, 8))
           ],
         ),
         child: Center(
@@ -429,8 +435,8 @@ class _PrimaryBtn extends StatelessWidget {
                   style: const TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white)),
+                      fontWeight: FontWeight.w900,
+                      color: Colors.black)),
         ),
       ),
     );

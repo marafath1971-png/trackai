@@ -90,9 +90,10 @@ class StreakModal extends StatelessWidget {
               constraints:
                   BoxConstraints(maxHeight: size.height * 0.9, maxWidth: 430),
               decoration: BoxDecoration(
-                  color: L.card,
+                  color: L.bg,
                   borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(24))),
+                      const BorderRadius.vertical(top: Radius.circular(32)),
+                  border: Border.all(color: L.border, width: 1.5)),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 const SizedBox(height: 12),
                 Center(
@@ -103,7 +104,7 @@ class StreakModal extends StatelessWidget {
                             color: L.border,
                             borderRadius: BorderRadius.circular(99)))),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                   child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -111,25 +112,27 @@ class StreakModal extends StatelessWidget {
                             style: TextStyle(
                                 fontFamily: ff,
                                 fontSize: 22,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w900,
                                 color: L.text,
-                                letterSpacing: -0.5)),
+                                letterSpacing: -0.8)),
                         GestureDetector(
                           onTap: onClose,
                           child: Container(
-                            width: 32,
-                            height: 32,
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
                                 color: L.fill, shape: BoxShape.circle),
                             child: Center(
                                 child: Icon(Icons.close_rounded,
-                                    color: L.sub, size: 20)),
+                                    color: L.sub, size: 22)),
                           ),
                         ),
                       ]),
                 ),
                 Flexible(
+                  child: Scrollbar(
                     child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,7 +142,15 @@ class StreakModal extends StatelessWidget {
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                               color: const Color(0xFF111111),
-                              borderRadius: BorderRadius.circular(20)),
+                              borderRadius: BorderRadius.circular(32),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: L.green.withValues(alpha: 0.2),
+                                  blurRadius: 40,
+                                  offset: const Offset(0, 20),
+                                  spreadRadius: -10,
+                                ),
+                              ]),
                           child: Row(children: [
                             Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,7 +214,7 @@ class StreakModal extends StatelessWidget {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                                 color: L.fill,
-                                borderRadius: BorderRadius.circular(16)),
+                                borderRadius: BorderRadius.circular(24)),
                             child: Column(children: [
                               Row(children: [
                                 Text(nextM['e'] as String,
@@ -248,7 +259,7 @@ class StreakModal extends StatelessWidget {
                                     value: progressToNext.clamp(0.0, 1.0),
                                     minHeight: 6,
                                     backgroundColor: L.border,
-                                    color: const Color(0xFF111111)),
+                                    color: L.green),
                               ),
                             ]),
                           ),
@@ -268,17 +279,17 @@ class StreakModal extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                                color: const Color(0xFFEFF6FF),
-                                borderRadius: BorderRadius.circular(16),
+                                color: L.green.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(24),
                                 border:
-                                    Border.all(color: const Color(0xFFBFDBFE))),
+                                    Border.all(color: L.green.withValues(alpha: 0.3))),
                             child: Row(children: [
                               Container(
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                    color: const Color(0xFF3B82F6),
-                                    borderRadius: BorderRadius.circular(12)),
+                                    color: L.green,
+                                    borderRadius: BorderRadius.circular(16)),
                                 child: const Center(
                                     child: Text('🧊',
                                         style: TextStyle(fontSize: 20))),
@@ -294,12 +305,12 @@ class StreakModal extends StatelessWidget {
                                             fontFamily: ff,
                                             fontWeight: FontWeight.w700,
                                             fontSize: 14,
-                                            color: Color(0xFF1D4ED8))),
+                                            color: Color(0xFF111111))),
                                     Text('Protect your streak for 1 missed day',
                                         style: TextStyle(
                                             fontFamily: ff,
                                             fontSize: 12,
-                                            color: const Color(0xFF3B82F6)
+                                            color: const Color(0xFF111111)
                                                 .withValues(alpha: 0.8))),
                                   ])),
                               GestureDetector(
@@ -308,8 +319,8 @@ class StreakModal extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 9),
                                   decoration: BoxDecoration(
-                                      color: const Color(0xFF3B82F6),
-                                      borderRadius: BorderRadius.circular(10)),
+                                      color: const Color(0xFF111111),
+                                       borderRadius: BorderRadius.circular(24)),
                                   child: const Text('Use Freeze',
                                       style: TextStyle(
                                           fontFamily: ff,
@@ -326,7 +337,7 @@ class StreakModal extends StatelessWidget {
                                 horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
                                 color: L.fill,
-                                borderRadius: BorderRadius.circular(14)),
+                                borderRadius: BorderRadius.circular(24)),
                             child: Row(children: [
                               const Text('🧊', style: TextStyle(fontSize: 18)),
                               const SizedBox(width: 10),
@@ -357,8 +368,8 @@ class StreakModal extends StatelessWidget {
                                 horizontal: 16, vertical: 14),
                             decoration: BoxDecoration(
                                 color:
-                                    achieved ? const Color(0xFF111111) : L.fill,
-                                borderRadius: BorderRadius.circular(16),
+                                    achieved ? L.green.withValues(alpha: 0.15) : L.fill,
+                                borderRadius: BorderRadius.circular(24),
                                 border: achieved 
                                   ? null 
                                   : Border.all(color: L.border.withValues(alpha: 0.5))),
@@ -376,8 +387,7 @@ class StreakModal extends StatelessWidget {
                                           fontSize: 22,
                                           color: achieved
                                               ? null
-                                              : Colors.grey
-                                                  .withValues(alpha: 0.3))),
+                                              : L.sub.withValues(alpha: 0.3))),
                                 ),
                               ),
                               const SizedBox(width: 14),
@@ -392,7 +402,7 @@ class StreakModal extends StatelessWidget {
                                             fontWeight: FontWeight.w800,
                                             fontSize: 15,
                                             color: achieved
-                                                ? Colors.white
+                                                ? L.text
                                                 : L.text)),
                                     const SizedBox(height: 2),
                                     Text(
@@ -408,13 +418,15 @@ class StreakModal extends StatelessWidget {
                                                 : L.sub)),
                                   ])),
                               if (achieved)
-                                const Icon(Icons.check_circle_rounded,
-                                    color: Color(0xFFA3E635), size: 20),
+                                Icon(Icons.check_circle_rounded,
+                                    color: L.green, size: 20),
                             ]),
                           ).animate().fade(delay: (400 + milestones.indexOf(m) * 50).ms).slideX(begin: 0.1, end: 0);
                         }),
                       ]),
-                )),
+                    ),
+                  ),
+                ),
               ]),
             ),
           ),
@@ -461,7 +473,7 @@ class _StatBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
       decoration:
-          BoxDecoration(color: L.fill, borderRadius: BorderRadius.circular(14)),
+          BoxDecoration(color: L.fill, borderRadius: BorderRadius.circular(24)),
       child: Column(children: [
         Text(emoji, style: const TextStyle(fontSize: 18)),
         const SizedBox(height: 4),
@@ -524,7 +536,7 @@ class _Heatmap extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(16),
             border: isT
                 ? Border.all(color: const Color(0xFF111111), width: 2)
                 : null,

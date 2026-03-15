@@ -1,16 +1,15 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
-import '../domain/entities/entities.dart';
-import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared/shared_widgets.dart';
 import 'home/home_tab.dart';
 import 'scan/scan_tab.dart';
 import 'alarms/alarms_tab.dart';
 import 'family/family_tab.dart';
+import 'dashboard/dashboard_tab.dart';
+import 'security/lock_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 // ══════════════════════════════════════════════
@@ -41,9 +40,11 @@ class _AppShellState extends State<AppShell>
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-      child: Scaffold(
-        backgroundColor: L.bg,
-        body: Stack(children: [
+      child: state.isLocked 
+        ? const LockScreen()
+        : Scaffold(
+            backgroundColor: L.bg,
+            body: Stack(children: [
           // ── Main content (Animated Transitions)
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 350),
@@ -52,11 +53,10 @@ class _AppShellState extends State<AppShell>
             transitionBuilder: (Widget child, Animation<double> animation) {
               return FadeTransition(
                 opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.05),
-                    end: Offset.zero,
-                  ).animate(animation),
+                child: ScaleTransition(
+                  scale: Tween<double>(begin: 0.98, end: 1.0).animate(
+                    CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+                  ),
                   child: child,
                 ),
               );
@@ -120,6 +120,8 @@ class _AppShellState extends State<AppShell>
       case 1:
         return const AlarmsTab();
       case 2:
+        return const DashboardTab();
+      case 3:
         return const FamilyTab();
       default:
         return HomeTab(
@@ -129,81 +131,93 @@ class _AppShellState extends State<AppShell>
   }
 
   Widget _buildBottomNav(AppThemeColors L, int unseenAlerts) {
-    final state = context.watch<AppState>();
-    final isDark = state.darkMode;
-    final bg = isDark ? const Color(0xFF111111) : Colors.white;
-    final borderCol = isDark
-        ? Colors.white.withOpacity(0.1)
-        : Colors.black.withOpacity(0.1);
-
+    final bg = L.card;
     return Container(
       margin: EdgeInsets.only(
         left: 20,
         right: 20,
-        bottom: 24 + MediaQuery.of(context).padding.bottom,
+        bottom: 20 + MediaQuery.of(context).padding.bottom,
       ),
       child: Stack(
         clipBehavior: Clip.none,
-        alignment: Alignment.centerRight, // Changed to right
+        alignment: Alignment.centerRight,
         children: [
           // Nav Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(32),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Container(
-                height: 72,
-                margin: const EdgeInsets.only(right: 40), // Offset for FAB on right
-                decoration: BoxDecoration(
-                  color: bg.withOpacity(0.85),
-                  borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(32), right: Radius.circular(16)),
-                  border: Border.all(color: borderCol, width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+          Container(
+            height: 68,
+            margin: const EdgeInsets.only(right: 36),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: L.border, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 32,
+                  offset: const Offset(0, 16),
+                  spreadRadius: -8,
                 ),
-                padding: const EdgeInsets.fromLTRB(20, 0, 40, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildNavItem(0, 'Home', Icons.grid_view_rounded, L, unseenAlerts),
-                    _buildNavItem(1, 'Alarms', Icons.notifications_active_rounded, L, unseenAlerts),
-                    _buildNavItem(2, 'Family', Icons.people_alt_rounded, L, unseenAlerts),
-                  ],
-                ),
-              ),
+              ],
+            ),
+            padding: const EdgeInsets.fromLTRB(16, 0, 36, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildNavItem(0, 'Home', Icons.grid_view_rounded, L, unseenAlerts),
+                _buildNavItem(1, 'Alarms', Icons.alarm_rounded, L, unseenAlerts),
+                _buildNavItem(2, 'Insights', Icons.analytics_rounded, L, unseenAlerts),
+                _buildNavItem(3, 'Family', Icons.people_alt_rounded, L, unseenAlerts),
+              ],
             ),
           ),
-          // ── Right-positioned FAB
+          // FAB — scan/add button
           Positioned(
             right: 0,
-            top: -20, // Slightly higher
+            top: -18,
             child: GestureDetector(
-              onTap: () => setState(() => _showScan = true),
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                setState(() => _showScan = true);
+              },
               child: Container(
-                width: 70,
-                height: 70,
+                width: 66,
+                height: 66,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF111111), // Black color
+                  gradient: LinearGradient(
+                    colors: [L.green, L.green.withValues(alpha: 0.8)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   shape: BoxShape.circle,
-                  border: Border.all(color: borderCol, width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 15,
+                      color: L.green.withValues(alpha: 0.3),
+                      blurRadius: 25,
                       offset: const Offset(0, 8),
+                      spreadRadius: 2,
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.4),
+                      blurRadius: 15,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: const Center(
-                  child: Icon(Icons.add_rounded, color: Colors.white, size: 36),
+                  child: Icon(Icons.add_rounded,
+                      color: Colors.black, size: 36),
                 ),
-              ),
+              ).animate(onPlay: (c) => c.repeat(reverse: true))
+                .scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.05, 1.05),
+                  duration: 2000.ms,
+                  curve: Curves.easeInOut,
+                )
+                .shimmer(
+                  color: L.green.withValues(alpha: 0.2),
+                  duration: 3000.ms,
+                ),
             ),
           ),
         ],
@@ -214,66 +228,84 @@ class _AppShellState extends State<AppShell>
   Widget _buildNavItem(int index, String label, IconData icon, AppThemeColors L,
       int unseenAlerts) {
     final selected = _tab == index;
-    final cnt = index == 2 ? unseenAlerts : 0;
+    final cnt = index == 3 ? unseenAlerts : 0;
 
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _tab = index),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          setState(() => _tab = index);
+        },
         behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 26,
-                  color: selected ? const Color(0xFFA3E635) : L.sub,
-                )
-                    .animate(target: selected ? 1 : 0)
-                    .scale(begin: const Offset(1, 1), end: const Offset(1.15, 1.15))
-                    .shimmer(delay: 400.ms, duration: 1200.ms),
-                if (cnt > 0)
-                  Positioned(
-                    top: -5,
-                    right: -5,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.lRed,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: L.bg, width: 2),
-                      ),
-                      child: Text(
-                        cnt > 9 ? '9+' : cnt.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ).animate().scale().fadeIn(),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? L.green.withValues(alpha: 0.1)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 22,
+                      color: selected ? L.green : L.sub,
+                    ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                color: selected ? L.text : L.sub.withOpacity(0.7),
-                letterSpacing: -0.2,
+                  if (cnt > 0)
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.lRed,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: L.bg, width: 1.5),
+                        ),
+                        child: Text(
+                          cnt > 9 ? '9+' : cnt.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ).animate().scale().fadeIn(),
+                    ),
+                ],
               ),
-            ).animate(target: selected ? 1 : 0).fadeIn(delay: 100.ms),
-          ],
+              const SizedBox(height: 2),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 10,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                  color: selected ? L.green : L.sub,
+                  letterSpacing: -0.1,
+                ),
+                child: Text(label),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
 
 // ══════════════════════════════════════════════
 // LOW STOCK BANNER
@@ -287,18 +319,20 @@ class LowStockBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final L = context.L;
     final firstName = meds.isNotEmpty ? meds.first.name : '';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF0E6),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFBD0AF), width: 1),
+        color: L.card2,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: L.green.withValues(alpha: 0.3), width: 1.5),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4)),
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+              spreadRadius: -2),
         ],
       ),
       child: Row(children: [
@@ -306,19 +340,20 @@ class LowStockBanner extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
             child: Text(
-          '${meds.length > 1 ? "${meds.length} medicines" : firstName} running low — time to refill',
-          style: const TextStyle(
+          '${meds.length > 1 ? "${meds.length} medicines" : firstName} running low',
+          style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFFC2410C)),
+              fontWeight: FontWeight.w700,
+              color: L.text),
         )),
         const SizedBox(width: 8),
         GestureDetector(
           onTap: onDismiss,
-          child: const Icon(Icons.close, size: 16, color: Color(0xFFC2410C)),
+          child: Icon(Icons.close_rounded, size: 16, color: L.sub),
         ),
       ]),
     );
   }
 }
+

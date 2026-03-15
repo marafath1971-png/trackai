@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Medtrackaiflutter</string>
+	<string>Med AI</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>medtrackaiflutter</string>
+	<string>Med AI</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -70,5 +70,47 @@
 	<string>This app requires access to the photo library to select images for analysis.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app requires access to the camera to take photos for analysis.</string>
+	<key>CFBundleIcons</key>
+	<dict>
+		<key>CFBundleAlternateIcons</key>
+		<dict>
+			<key>blue</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>blue</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>dark</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>dark</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+			<key>gold</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>gold</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+		</dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon</string>
+			</array>
+			<key>UIPrerenderedIcon</key>
+			<false/>
+		</dict>
+	</dict>
 </dict>
 </plist>

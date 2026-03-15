@@ -65,7 +65,7 @@ class _ModernTimePickerState extends State<ModernTimePicker> {
             height: 6,
             decoration: BoxDecoration(
               color: L.border.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
           const SizedBox(height: 24),
@@ -139,9 +139,9 @@ class _ModernTimePickerState extends State<ModernTimePicker> {
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFA3E635),
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                backgroundColor: context.L.text,
+                foregroundColor: context.L.bg,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                 elevation: 0,
               ),
               child: const Text(

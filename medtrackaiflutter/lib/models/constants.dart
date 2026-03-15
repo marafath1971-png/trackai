@@ -14,7 +14,7 @@ const Map<String, Map<String, dynamic>> kPromoCodes = {
     'type': 'percent'
   },
   'PILL30': {'discount': 30, 'label': '30% off', 'type': 'percent'},
-  'MEDTRACK': {'discount': 100, 'label': 'Free 14 days', 'type': 'trial'},
+  'MEDAI': {'discount': 100, 'label': 'Free 14 days', 'type': 'trial'},
   'FRIEND': {'discount': 20, 'label': '20% off forever', 'type': 'forever'},
 };
 
@@ -185,7 +185,10 @@ const List<String> kCgRelations = [
 const List<String> kMedForms = [
   'tablet',
   'capsule',
+  'pill',
+  'liquid',
   'syrup',
+  'spray',
   'inhaler',
   'drops',
   'cream',

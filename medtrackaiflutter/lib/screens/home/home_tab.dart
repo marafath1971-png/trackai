@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'widgets/home_insight_card.dart';
 import '../../providers/app_state.dart';
 import '../../domain/entities/entities.dart';
 import '../../theme/app_theme.dart';
@@ -12,6 +13,9 @@ import 'widgets/home_dose_section.dart';
 import 'widgets/home_meds_section.dart';
 import 'widgets/med_card.dart';
 import 'widgets/missed_dose_sheet.dart';
+import '../../widgets/modals/dose_celebration_modal.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class HomeTab extends StatefulWidget {
   final VoidCallback onScan;
@@ -26,6 +30,21 @@ class _HomeTabState extends State<HomeTab> {
   bool _showSettings = false;
   Medicine? _viewingMed;
   bool _startInEditMode = false;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToMeds() {
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: 600.ms,
+      curve: Curves.easeOutBack,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,16 +59,20 @@ class _HomeTabState extends State<HomeTab> {
     final remaining = doses.length - takenCount;
     final dosePct = doses.isNotEmpty ? takenCount / doses.length : 0.0;
     final ringCol =
-        dosePct == 1.0 ? L.green : (dosePct > 0.0 ? L.green.withValues(alpha: 0.5) : L.border);
+        dosePct == 1.0 ? L.text : (dosePct > 0.0 ? L.text.withValues(alpha: 0.5) : L.border);
 
     final mainContent = Scaffold(
       backgroundColor: L.bg,
       body: Stack(children: [
-        SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            children: [
-              SizedBox(height: 140 + MediaQuery.of(context).padding.top),
+        Scrollbar(
+          controller: _scrollController,
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
+            child: Column(
+              children: [
+              SizedBox(height: 190 + MediaQuery.of(context).padding.top),
 
               // --- 1. MISSED ALERTS ---
               if (state.missedAlerts.any((a) => !a.seen))
@@ -80,18 +103,24 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
 
+              // --- 3.1 AI HEALTH INSIGHTS ---
+              HomeInsightCard(
+                state: state,
+                onLoadInsight: () => state.refreshHealthInsights(),
+              ),
+
               // --- 4. TODAY'S DOSES & NEXT DOSE (Timeline) ---
               if (doses.isNotEmpty) ...[
                 Padding(
                   padding: const EdgeInsets.only(
-                      left: 20, right: 20, top: 24, bottom: 8),
+                      left: 20, right: 20, top: 24, bottom: 4),
                   child: Text("Today's Schedule",
                       style: TextStyle(
                           fontFamily: 'Inter',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
                           color: L.text,
-                          letterSpacing: -0.3)),
+                          letterSpacing: -0.5)),
                 ),
                 ..._buildGroupedTimeline(context, doses, state, L),
                 const SizedBox(height: 32),
@@ -137,6 +166,7 @@ class _HomeTabState extends State<HomeTab> {
 
               const SizedBox(height: 120),
             ],
+        ),
           ),
         ),
         Positioned(
@@ -269,23 +299,23 @@ class _HomeTabState extends State<HomeTab> {
       final isCurrent = period == currentPeriod;
 
       widgets.add(Padding(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 8),
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 4),
         child: Row(
           children: [
             Text(period.toUpperCase(),
                 style: TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w900,
-                    color: isCurrent ? L.green : L.sub,
-                    letterSpacing: 1.0)),
+                    color: isCurrent ? L.text : L.sub.withValues(alpha: 0.5),
+                    letterSpacing: 1.2)),
             if (isCurrent) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Container(
-                  width: 4,
-                  height: 4,
+                  width: 3,
+                  height: 3,
                   decoration:
-                      BoxDecoration(color: L.green, shape: BoxShape.circle)),
+                      BoxDecoration(color: L.text, shape: BoxShape.circle)),
             ],
           ],
         ),
@@ -318,22 +348,22 @@ class _HomeTabState extends State<HomeTab> {
                           margin: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
                             color: taken
-                                ? L.green
-                                : (overdue ? L.red : L.border),
+                                ? L.text
+                                : (overdue ? L.text : L.border),
                             shape: BoxShape.circle,
                             border: taken
                                 ? null
                                 : Border.all(
-                                    color: overdue ? L.red : L.sub, width: 2),
+                                    color: overdue ? L.text : L.sub.withValues(alpha: 0.3), width: 1.5),
                           ),
                         ),
                         if (!isLast)
                           Expanded(
                               child: Container(
-                                  width: 2,
+                                  width: 1,
                                   color: taken
-                                      ? L.green.withValues(alpha: 0.3)
-                                      : L.border)),
+                                      ? L.text.withValues(alpha: 0.3)
+                                      : L.border.withValues(alpha: 0.1))),
                       ],
                     ),
                   ),
@@ -345,12 +375,28 @@ class _HomeTabState extends State<HomeTab> {
                       overdue: overdue,
                       isNext: d == absoluteNextDose,
                       L: L,
+                      onTake: () {
+                        if (!taken) {
+                          state.toggleDose(d);
+                          DoseCelebrationModal.show(context, d.med.name);
+                        }
+                      },
+                      onSnooze: () {
+                        if (!taken) {
+                          MissedDoseProtocolSheet.show(
+                              context, d, (nowM - schedM).toInt());
+                        }
+                      },
                       onTap: () {
                         if (overdue) {
                           MissedDoseProtocolSheet.show(
                               context, d, (nowM - schedM).toInt());
                         } else {
+                          final wasTaken = state.takenToday[d.key] ?? false;
                           state.toggleDose(d);
+                          if (!wasTaken) {
+                            DoseCelebrationModal.show(context, d.med.name);
+                          }
                         }
                       },
                     ),
@@ -371,66 +417,127 @@ class _HomeTabState extends State<HomeTab> {
 
 
   Widget _buildMissedAlertsBanner(AppState state, AppThemeColors L) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: L.red.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: L.red.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.warning_rounded, color: L.red, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text('Unresolved missed doses!',
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        state.markAlertsAsSeen();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: L.text,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: L.bg.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.priority_high_rounded, color: L.bg, size: 18),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Action Required',
+                      style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: L.bg,
+                          letterSpacing: -0.2)),
+                  Text('Unresolved alerts detected',
+                      style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          color: L.bg.withValues(alpha: 0.7),
+                          fontWeight: FontWeight.w400)),
+                ],
+              ),
+            ),
+            Text('RESOLVE',
                 style: TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: L.text)),
-          ),
-          GestureDetector(
-            onTap: () => state.markAlertsAsSeen(),
-            child: Text('Clear',
-                style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: L.red)),
-          ),
-        ],
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: L.bg,
+                    letterSpacing: 0.5)),
+          ],
+        ),
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95));
   }
 
   Widget _buildLowStockBanner(AppState state, AppThemeColors L) {
     final lowMeds = state.getLowMeds();
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: L.green.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: L.green.withValues(alpha: 0.3)),
+        color: L.card,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.0),
       ),
       child: Row(
         children: [
-          Icon(Icons.inventory_2_outlined, color: L.green, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              '${lowMeds.length} ${lowMeds.length == 1 ? 'medicine' : 'medicines'} running low',
-              style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: L.text),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: L.text.withValues(alpha: 0.05),
+              shape: BoxShape.circle,
             ),
+            child: Icon(Icons.inventory_2_rounded, color: L.text, size: 18),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Supply Status',
+                  style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: L.text,
+                      letterSpacing: -0.2),
+                ),
+                Text(
+                  '${lowMeds.length} items low',
+                  style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: L.sub,
+                      fontWeight: FontWeight.w400),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              HapticFeedback.mediumImpact();
+              _scrollToMeds();
+            },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              backgroundColor: L.text,
+              foregroundColor: L.bg,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('REFILL', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11)),
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
   }
-
-
 }

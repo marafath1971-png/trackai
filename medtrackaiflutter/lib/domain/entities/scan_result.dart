@@ -5,6 +5,7 @@ class ScanResult {
   String dose;
   String form;
   bool isLiquid;
+  bool isSpray;
   bool isAntibiotic;
   String category;
   String description;
@@ -22,6 +23,7 @@ class ScanResult {
   String dosePerTake;
   String confidence;
   String? imageUrl;
+  String unit; // NEW: 'tablets', 'ml', 'puffs'
 
   // Phase 3 additions:
   int? courseDurationDays;
@@ -39,6 +41,7 @@ class ScanResult {
     this.dose = '',
     this.form = 'tablet',
     this.isLiquid = false,
+    this.isSpray = false,
     this.isAntibiotic = false,
     this.category = '',
     this.description = '',
@@ -56,6 +59,7 @@ class ScanResult {
     this.dosePerTake = '',
     this.confidence = 'low',
     this.imageUrl,
+    this.unit = 'units',
     this.courseDurationDays,
     this.courseType = 'ongoing',
     this.scheduleSlots = const [],
@@ -79,6 +83,7 @@ class ScanResult {
       dose: j['dose'] ?? '',
       form: j['form'] ?? 'tablet',
       isLiquid: j['isLiquid'] ?? false,
+      isSpray: j['isSpray'] ?? false,
       isAntibiotic: j['isAntibiotic'] ?? false,
       category: j['category'] ?? '',
       description: j['description'] ?? '',
@@ -96,6 +101,7 @@ class ScanResult {
       dosePerTake: j['dosePerTake'] ?? '',
       confidence: j['confidence'] ?? 'low',
       imageUrl: j['imageUrl'],
+      unit: j['unit'] ?? j['volumeUnit'] ?? 'units',
       courseDurationDays: j['courseDurationDays'] != null
           ? self._parseInt(j['courseDurationDays'], 0)
           : null,
@@ -118,6 +124,7 @@ class ScanResult {
     String? dose,
     String? form,
     bool? isLiquid,
+    bool? isSpray,
     bool? isAntibiotic,
     String? category,
     String? description,
@@ -135,6 +142,7 @@ class ScanResult {
     String? dosePerTake,
     String? confidence,
     String? imageUrl,
+    String? unit,
     int? courseDurationDays,
     String? courseType,
     List<Map<String, dynamic>>? scheduleSlots,
@@ -149,6 +157,7 @@ class ScanResult {
         dose: dose ?? this.dose,
         form: form ?? this.form,
         isLiquid: isLiquid ?? this.isLiquid,
+        isSpray: isSpray ?? this.isSpray,
         isAntibiotic: isAntibiotic ?? this.isAntibiotic,
         category: category ?? this.category,
         description: description ?? this.description,
@@ -166,6 +175,7 @@ class ScanResult {
         dosePerTake: dosePerTake ?? this.dosePerTake,
         confidence: confidence ?? this.confidence,
         imageUrl: imageUrl ?? this.imageUrl,
+        unit: unit ?? this.unit,
         courseDurationDays: courseDurationDays ?? this.courseDurationDays,
         courseType: courseType ?? this.courseType,
         scheduleSlots: scheduleSlots ?? this.scheduleSlots,

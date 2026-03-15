@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -7,6 +8,7 @@ import 'dart:io';
 import '../../../providers/app_state.dart';
 import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
+import '../../../core/utils/color_utils.dart';
 import '../../../widgets/shared/shared_widgets.dart';
 import '../../settings/privacy_policy_screen.dart';
 import '../../../services/export_service.dart';
@@ -51,7 +53,8 @@ class _SettingsModalState extends State<SettingsModal> {
               decoration: BoxDecoration(
                   color: L.bg,
                   borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(24))),
+                      const BorderRadius.vertical(top: Radius.circular(32)),
+                  border: Border.all(color: L.border, width: 1.5)),
               child: Column(children: [
                 const SizedBox(height: 10),
                 Center(
@@ -90,6 +93,7 @@ class _SettingsModalState extends State<SettingsModal> {
                 ),
                 // Tab Bar
                 SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                   scrollDirection: Axis.horizontal,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -107,10 +111,10 @@ class _SettingsModalState extends State<SettingsModal> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 10),
                           decoration: BoxDecoration(
-                              color: isAct ? const Color(0xFF111111) : L.fill,
+                              color: isAct ? const Color(0xFF111111) : Colors.white.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(99),
                               border: Border.all(
-                                color: isAct ? Colors.white.withValues(alpha: 0.1) : Colors.transparent
+                                color: isAct ? Colors.white.withValues(alpha: 0.15) : L.border.withValues(alpha: 0.3)
                               )),
                           child: Row(children: [
                             Text(t['icon']!,
@@ -173,7 +177,11 @@ class SRow extends StatelessWidget {
       this.sub,
       this.right,
       this.onClick,
-      this.border = true});
+      this.border = true,
+      this.first = false,
+      this.last = false});
+
+  final bool first, last;
 
   @override
   Widget build(BuildContext context) {
@@ -183,9 +191,15 @@ class SRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         decoration: BoxDecoration(
-          color: L.card,
+          color: Colors.white.withValues(alpha: 0.02),
+          borderRadius: BorderRadius.only(
+            topLeft: first ? const Radius.circular(30) : Radius.zero,
+            topRight: first ? const Radius.circular(30) : Radius.zero,
+            bottomLeft: last ? const Radius.circular(30) : Radius.zero,
+            bottomRight: last ? const Radius.circular(30) : Radius.zero,
+          ),
           border: border
-              ? Border(bottom: BorderSide(color: L.border, width: 0.5))
+              ? Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.3), width: 0.5))
               : null,
         ),
         child: Row(children: [
@@ -193,7 +207,7 @@ class SRow extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-                color: iconBg, borderRadius: BorderRadius.circular(10)),
+                color: iconBg, borderRadius: BorderRadius.circular(16)),
             child: Center(
                 child: icon is String
                     ? Text(icon as String, style: const TextStyle(fontSize: 16))
@@ -247,8 +261,9 @@ class Section extends StatelessWidget {
       Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: L.border.withValues(alpha: 0.8), width: 1.0)),
+            color: L.card,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: L.border.withValues(alpha: 0.3), width: 1.0)),
         child: child,
       ),
       const SizedBox(height: 24),
@@ -308,6 +323,7 @@ class _ProfileTabState extends State<_ProfileTab> {
     final ff = widget.ff;
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
       child: Column(children: [
         // Avatar + Name Hero
@@ -315,7 +331,7 @@ class _ProfileTabState extends State<_ProfileTab> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
               color: L.card,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(color: L.border, width: 0.5)),
           child: Row(children: [
             Container(
@@ -323,7 +339,7 @@ class _ProfileTabState extends State<_ProfileTab> {
               height: 60,
               decoration: BoxDecoration(
                   color: const Color(0xFF111111),
-                  borderRadius: BorderRadius.circular(18)),
+                  borderRadius: BorderRadius.circular(24)),
               child: Center(
                   child: Text(p?.avatar ?? '😊',
                       style: const TextStyle(fontSize: 28))),
@@ -354,7 +370,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                       color: const Color(0xFF111111),
-                      borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(24)),
                   child: const Text('Edit',
                       style: TextStyle(
                           fontFamily: 'Inter',
@@ -398,6 +414,8 @@ class _ProfileTabState extends State<_ProfileTab> {
                           onClick: () => setState(() => _genderInput = e.value),
                           L: L,
                           ff: ff,
+                          first: e.key == 0,
+                          last: e.key == genders.length - 1,
                           border: e.key < genders.length - 1))
                       .toList())),
           Section(
@@ -412,6 +430,8 @@ class _ProfileTabState extends State<_ProfileTab> {
                           onClick: () => setState(() => _goalInput = e.value),
                           L: L,
                           ff: ff,
+                          first: e.key == 0,
+                          last: e.key == goals.length - 1,
                           border: e.key < goals.length - 1))
                       .toList())),
           Row(children: [
@@ -427,7 +447,7 @@ class _ProfileTabState extends State<_ProfileTab> {
               child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   decoration: BoxDecoration(
-                      color: L.fill, borderRadius: BorderRadius.circular(13)),
+                      color: L.fill, borderRadius: BorderRadius.circular(24)),
                   child: Center(
                       child: Text('Cancel',
                           style: TextStyle(
@@ -461,7 +481,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       decoration: BoxDecoration(
                           color: const Color(0xFF111111),
-                          borderRadius: BorderRadius.circular(13)),
+                          borderRadius: BorderRadius.circular(24)),
                       child: const Center(
                           child: Text('Save Changes',
                               style: TextStyle(
@@ -479,6 +499,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                     icon: '🎯',
                     label: 'Health Goal',
                     sub: p?.goal ?? 'Not set',
+                    first: true,
                     border: true),
                 SRow(
                     icon: '🩺',
@@ -498,6 +519,7 @@ class _ProfileTabState extends State<_ProfileTab> {
                     icon: '🧬',
                     label: 'Gender',
                     sub: p?.gender ?? 'Not set',
+                    last: true,
                     border: false),
               ])),
         ],
@@ -571,7 +593,11 @@ class _SelectRow extends StatelessWidget {
       required this.onClick,
       required this.L,
       required this.ff,
-      this.border = true});
+      this.border = true,
+      this.first = false,
+      this.last = false});
+
+  final bool first, last;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -579,7 +605,13 @@ class _SelectRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         decoration: BoxDecoration(
-            color: L.card,
+            color: Colors.transparent,
+            borderRadius: BorderRadius.only(
+              topLeft: first ? const Radius.circular(30) : Radius.zero,
+              topRight: first ? const Radius.circular(30) : Radius.zero,
+              bottomLeft: last ? const Radius.circular(30) : Radius.zero,
+              bottomRight: last ? const Radius.circular(30) : Radius.zero,
+            ),
             border: border
                 ? Border(bottom: BorderSide(color: L.border, width: 0.5))
                 : null),
@@ -644,6 +676,7 @@ class _StatsTab extends StatelessWidget {
     });
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
       child: Column(children: [
         // Adherence Hero
@@ -651,7 +684,7 @@ class _StatsTab extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
               color: const Color(0xFF111111),
-              borderRadius: BorderRadius.circular(18)),
+              borderRadius: BorderRadius.circular(24)),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('OVERALL ADHERENCE',
@@ -799,7 +832,7 @@ class _StatCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(color: L.border, width: 0.5)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(emoji, style: const TextStyle(fontSize: 20)),
@@ -855,6 +888,7 @@ class _AppTabState extends State<_AppTab> {
     final state = widget.state;
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
       child: Column(children: [
         Section(
@@ -873,6 +907,7 @@ class _AppTabState extends State<_AppTab> {
                               state.profile!.copyWith(notifPerm: v));
                         }
                       }),
+                  first: true,
                   border: true),
               SRow(
                   icon: Icons.flash_on_outlined,
@@ -901,6 +936,7 @@ class _AppTabState extends State<_AppTab> {
                               state.profile!.copyWith(notifRefill: v));
                         }
                       }),
+                  last: true,
                   border: false),
             ])),
         Section(
@@ -914,6 +950,8 @@ class _AppTabState extends State<_AppTab> {
                   onClick: () => setState(() => _leadMins = o['v'] as int),
                   L: L,
                   ff: ff,
+                  first: e.key == 0,
+                  last: e.key == _leadOpts.length - 1,
                   border: e.key < _leadOpts.length - 1);
             }).toList())),
         Section(
@@ -930,6 +968,219 @@ class _AppTabState extends State<_AppTab> {
                 right: AppToggle(
                     value: state.darkMode,
                     onChanged: (_) => state.toggleDarkMode()),
+                border: false)),
+        Section(
+            title: 'Personalization',
+            child: Column(children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                color: L.card,
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('ACCENT COLOR',
+                              style: TextStyle(
+                                  fontFamily: ff,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: L.sub,
+                                  letterSpacing: 0.5)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                                color: L.green.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4)),
+                            child: Text('PREMIUM',
+                                style: TextStyle(
+                                    fontFamily: ff,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: L.green)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        height: 44,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            'A3E635', // Lime
+                            '3B82F6', // Blue
+                            '8B5CF6', // Purple
+                            'EC4899', // Pink
+                            'EF4444', // Red
+                            'F59E0B', // Amber
+                            '10B981', // Emerald
+                            '06B6D4', // Cyan
+                          ].map((hex) {
+                            final isSel =
+                                state.profile?.accentColor == hex;
+                            return GestureDetector(
+                              onTap: () => state.updateAccentColor(hex),
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                margin: const EdgeInsets.only(right: 10),
+                                decoration: BoxDecoration(
+                                    color: hexToColor(hex),
+                                    shape: BoxShape.circle,
+                                    border: isSel
+                                        ? Border.all(
+                                            color: L.text, width: 2.5)
+                                        : null,
+                                    boxShadow: isSel
+                                        ? [
+                                            BoxShadow(
+                                                color: hexToColor(hex)
+                                                    .withValues(alpha: 0.4),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 4))
+                                          ]
+                                        : null),
+                                child: isSel
+                                    ? Center(
+                                        child: Icon(Icons.check_rounded,
+                                            color: hex == 'A3E635'
+                                                ? Colors.black
+                                                : Colors.white,
+                                            size: 20))
+                                    : null,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ]),
+              ),
+              Container(
+                padding: const EdgeInsets.all(16),
+                color: L.card,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('APP ICON',
+                        style: TextStyle(
+                            fontFamily: ff,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: L.sub,
+                            letterSpacing: 0.5)),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      height: 100,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          {'id': 'default', 'label': 'Default', 'path': 'assets/images/app_icon.png'},
+                          {'id': 'gold', 'label': 'Premium Gold', 'path': 'assets/images/app_icon_gold.png'},
+                          {'id': 'blue', 'label': 'Deep Blue', 'path': 'assets/images/app_icon_blue.png'},
+                          {'id': 'dark', 'label': 'Classic Dark', 'path': 'assets/images/app_icon_dark.png'},
+                        ].map((icon) {
+                          final isSel = (state.profile?.appIcon ?? 'default') == icon['id'];
+                          return GestureDetector(
+                            onTap: () => state.updateAppIcon(icon['id'] as String),
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 12),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    width: 64,
+                                    height: 64,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: isSel ? Border.all(color: L.green, width: 3) : null,
+                                      image: DecorationImage(
+                                        image: AssetImage(icon['path'] as String),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(icon['label'] as String,
+                                      style: TextStyle(
+                                          fontFamily: ff,
+                                          fontSize: 10,
+                                          fontWeight: isSel ? FontWeight.w800 : FontWeight.w500,
+                                          color: isSel ? L.green : L.sub)),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                color: L.card,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('REMINDER SOUND',
+                        style: TextStyle(
+                            fontFamily: ff,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: L.sub,
+                            letterSpacing: 0.5)),
+                    const SizedBox(height: 14),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          'Default', 'Chime', 'Pulse', 'Digital', 'Zen', 'Alert'
+                        ].map((sound) {
+                          final isSel = (state.profile?.reminderSound ?? 'Default') == sound;
+                          return GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              state.updateReminderSound(sound);
+                            },
+                            child: AnimatedContainer(
+                              duration: 300.ms,
+                              curve: Curves.easeOutCubic,
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isSel ? const Color(0xFF111111) : L.fill,
+                                borderRadius: BorderRadius.circular(99),
+                                border: Border.all(
+                                  color: isSel ? L.green.withValues(alpha: 0.3) : Colors.transparent
+                                )
+                              ),
+                              child: Text(sound,
+                                  style: TextStyle(
+                                      fontFamily: ff,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      color: isSel ? L.green : L.text)),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ])),
+        Section(
+            title: 'Security',
+            child: SRow(
+                icon: Icons.fingerprint_rounded,
+                iconBg: const Color(0xFF111111),
+                label: 'Biometric Lock',
+                sub: 'Unlock with FaceID / Fingerprint',
+                right: AppToggle(
+                    value: state.profile?.biometricEnabled ?? false,
+                    onChanged: (v) => state.toggleBiometricLock(v)),
                 border: false)),
         Section(
             title: 'Support & Feedback',
@@ -972,6 +1223,7 @@ class _AppTabState extends State<_AppTab> {
                 ),
                 const SizedBox(height: 16),
                 GestureDetector(
+                  // ignore: deprecated_member_use
                   onTap: () => Share.share(
                       'I\'m using Med AI to stay on top of my medications! 💊'),
                   child: Container(
@@ -979,7 +1231,7 @@ class _AppTabState extends State<_AppTab> {
                         horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
                         color: const Color(0xFF111111),
-                        borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(24)),
                     child: const Text('Share with friends',
                         style: TextStyle(
                             fontFamily: 'Inter',
@@ -1044,9 +1296,10 @@ class _DataTabState extends State<_DataTab> {
     final sb = state.exportDataCSV();
     try {
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/medtrack_export.csv');
+      final file = File('${dir.path}/med_ai_export.csv');
       await file.writeAsString(sb);
-      await Share.shareXFiles([XFile(file.path)], text: 'MedTrackAI Export');
+      // ignore: deprecated_member_use
+      await Share.shareXFiles([XFile(file.path)], text: 'Med AI Export');
     } catch (_) {}
   }
 
@@ -1061,6 +1314,7 @@ class _DataTabState extends State<_DataTab> {
     final daysTracked = state.history.keys.length;
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
       child: Column(children: [
         // Data Summary Hero
@@ -1068,7 +1322,7 @@ class _DataTabState extends State<_DataTab> {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
               color: const Color(0xFF111111),
-              borderRadius: BorderRadius.circular(18)),
+              borderRadius: BorderRadius.circular(24)),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('YOUR DATA SUMMARY',
@@ -1134,7 +1388,7 @@ class _DataTabState extends State<_DataTab> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
                 color: L.red.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: L.red.withValues(alpha: 0.2))),
             child: Column(children: [
               Text('Delete All Data?',
@@ -1157,7 +1411,7 @@ class _DataTabState extends State<_DataTab> {
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
                                 color: L.fill,
-                                borderRadius: BorderRadius.circular(10)),
+                                borderRadius: BorderRadius.circular(24)),
                             child: Center(
                                 child: Text('Cancel',
                                     style: TextStyle(
@@ -1174,7 +1428,7 @@ class _DataTabState extends State<_DataTab> {
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
                                 color: L.red,
-                                borderRadius: BorderRadius.circular(10)),
+                                borderRadius: BorderRadius.circular(24)),
                             child: const Center(
                                 child: Text('Delete Everything',
                                     style: TextStyle(
@@ -1199,7 +1453,7 @@ class _SummaryBox extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12)),
+          borderRadius: BorderRadius.circular(16)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(v,
             style: TextStyle(

@@ -26,7 +26,7 @@ class ExportService {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('MedTrack Report',
+                  pw.Text('Med AI Report',
                       style: pw.TextStyle(
                           fontSize: 24, fontWeight: pw.FontWeight.bold)),
                   pw.Text('Generated: $todayStr',
@@ -77,7 +77,8 @@ class ExportService {
     final file = File('${output.path}/med_report_$todayStr.pdf');
     await file.writeAsBytes(await pdf.save());
 
-    await Share.shareXFiles([XFile(file.path)], text: 'My Medication Report');
+    // ignore: deprecated_member_use
+    await Share.shareXFiles([XFile(file.path)], text: 'Med AI Export Data');
   }
 
   static pw.Widget _buildAdherenceLog(AppState state) {

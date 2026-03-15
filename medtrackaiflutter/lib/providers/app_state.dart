@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/entities/entities.dart';
 import '../domain/repositories/medication_repository.dart';
 import '../domain/repositories/user_repository.dart';
@@ -10,6 +9,10 @@ import '../services/notification_service.dart';
 import '../services/auth_service.dart';
 import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_dynamic_icon_plus/flutter_dynamic_icon_plus.dart';
+import 'package:audioplayers/audioplayers.dart';
+import '../services/gemini_service.dart';
+import '../services/biometric_service.dart';
 
 enum AppPhase { loading, onboarding, auth, app }
 
@@ -39,14 +42,17 @@ class AppState extends ChangeNotifier {
   Map<String, bool> takenToday = {};
   StreakData streakData = const StreakData();
   List<Caregiver> caregivers = [];
+  List<Map<String, dynamic>> monitoredPatients = [];
   List<MissedAlert> missedAlerts = [];
   bool darkMode = false;
   String? toast;
   String? toastType;
   String? healthInsights;
   bool loadingInsight = false;
+  bool isLocked = false;
   StreamSubscription? _cgSub;
   StreamSubscription? _notifSub;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   AppState({required this.medRepo, required this.userRepo}) {
     _notifSub = NotificationService.actionStream.stream
@@ -91,9 +97,15 @@ class AppState extends ChangeNotifier {
           : AppPhase.app; // Changed from onboarding to app to support scan-first if needed, but loadFromStorage sets initial phase.
       _updateNotifications();
       _listenToCaregivers();
+      _listenToMonitoring();
 
       if (AuthService.uid != null) {
         _initPushNotifications();
+      }
+
+      // Check for biometric lock
+      if (profile?.biometricEnabled ?? false) {
+        isLocked = true;
       }
 
       notifyListeners();
@@ -120,8 +132,21 @@ class AppState extends ChangeNotifier {
   @override
   void dispose() {
     _cgSub?.cancel();
+    _monitoringSub?.cancel();
     _notifSub?.cancel();
+    _audioPlayer.dispose();
     super.dispose();
+  }
+
+  void _listenToMonitoring() {
+    _monitoringSub?.cancel();
+    final uid = AuthService.uid;
+    if (uid == null) return;
+
+    _monitoringSub = userRepo.getMonitoringPatientsStream().listen((patients) {
+      monitoredPatients = patients;
+      notifyListeners();
+    });
   }
 
   void _handleNotificationAction(String payloadStr) {
@@ -209,6 +234,112 @@ class AppState extends ChangeNotifier {
     await userRepo.saveProfile(p);
     notifyListeners();
   }
+
+  Future<void> incrementScanCount() async {
+    if (profile == null) return;
+    final newCount = profile!.scansUsed + 1;
+    await saveProfile(profile!.copyWith(scansUsed: newCount));
+  }
+
+  Future<void> unlockPremium() async {
+    if (profile == null) return;
+    await saveProfile(profile!.copyWith(isPremium: true));
+    showToast('Premium Unlocked! Full access granted 💎✨', type: 'success');
+  }
+
+  Future<void> toggleBiometricLock(bool enabled) async {
+    if (profile == null) return;
+    
+    if (enabled) {
+      // Verify they CAN use biometrics before enabling
+      final canUse = await BiometricService.canCheckBiometrics();
+      if (!canUse) {
+        showToast('Biometrics are not available on this device', type: 'error');
+        return;
+      }
+      
+      // Force an authentication check before enabling
+      final authenticated = await BiometricService.authenticate();
+      if (!authenticated) {
+        showToast('Authentication failed. Biometric lock not enabled.', type: 'error');
+        return;
+      }
+    }
+    
+    await saveProfile(profile!.copyWith(biometricEnabled: enabled));
+    showToast(enabled ? 'Biometric lock enabled 🛡️' : 'Biometric lock disabled', type: 'info');
+  }
+
+  Future<void> unlockApp() async {
+    if (!(profile?.biometricEnabled ?? false)) {
+      isLocked = false;
+      notifyListeners();
+      return;
+    }
+
+    final authenticated = await BiometricService.authenticate();
+    if (authenticated) {
+      isLocked = false;
+      notifyListeners();
+    } else {
+      showToast('Authentication failed', type: 'error');
+    }
+  }
+
+  void lockApp() {
+    if (profile?.biometricEnabled ?? false) {
+      isLocked = true;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateAccentColor(String colorHex) async {
+    if (profile == null) return;
+    await saveProfile(profile!.copyWith(accentColor: colorHex));
+    showToast('Theme accent updated! ✨');
+  }
+
+  Future<void> updateAppIcon(String iconKey) async {
+    if (profile == null) return;
+    await saveProfile(profile!.copyWith(appIcon: iconKey));
+    
+    try {
+      if (await FlutterDynamicIconPlus.supportsAlternateIcons) {
+        // iconKey would be 'gold', 'blue', 'dark' or null (for default)
+        final iconName = iconKey == 'default' ? null : iconKey;
+        await FlutterDynamicIconPlus.setAlternateIconName(iconName: iconName);
+        showToast('App icon updated! 📲');
+      } else {
+        showToast('Dynamic icons not supported on this device', type: 'info');
+      }
+    } catch (e) {
+      debugPrint('Failed to update app icon: $e');
+      showToast('App icon selection saved ✨');
+    }
+  }
+
+  Future<void> updateReminderSound(String soundKey) async {
+    if (profile == null) return;
+    await saveProfile(profile!.copyWith(reminderSound: soundKey));
+    _updateNotifications(); // Refresh notifications with new sound
+    showToast('Reminder sound updated! 🎵');
+    
+    // Play the preview automatically when selected
+    playReminderSoundPreview(soundKey);
+  }
+
+  Future<void> playReminderSoundPreview(String soundKey) async {
+    try {
+      await _audioPlayer.stop();
+      if (soundKey == 'Default') return; // Don't play default for now or use a specific asset
+      
+      final fileName = soundKey.toLowerCase();
+      await _audioPlayer.play(AssetSource('audio/$fileName.mp3'));
+    } catch (e) {
+      debugPrint('Failed to play sound preview: $e');
+    }
+  }
+
 
   Future<void> _updateNotifications() async {
     await NotificationService.cancelAll();
@@ -395,17 +526,66 @@ class AppState extends ChangeNotifier {
     _processingDoses[key] = true;
 
     try {
-      final todayKey = todayStr();
+      final key = dose.key;
       final wasTaken = takenToday[key] ?? false;
       takenToday = {...takenToday, key: !wasTaken};
 
       // Optimistic UI update instantly for perceived speed.
       notifyListeners();
 
+      final todayKey = todayStr();
       if (!wasTaken) {
         showToast('✓ ${dose.med.name} taken');
+        
+        // Update stock
+        final medIdx = meds.indexWhere((m) => m.id == dose.med.id);
+        if (medIdx != -1) {
+          final m = meds[medIdx];
+          if (m.count > 0) {
+            final updatedMed = m.copyWith(count: m.count - 1);
+            meds[medIdx] = updatedMed;
+            medRepo.updateMedicine(updatedMed);
+          }
+        }
+
+        // --- V2: Record history entry with timestamp ---
+        final now = DateTime.now();
+        final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+        
+        final entry = DoseEntry(
+          medId: dose.med.id,
+          label: dose.sched.label,
+          time: timeStr,
+          taken: true,
+          takenAt: now.toIso8601String(),
+        );
+
+        history = {
+          ...history,
+          todayKey: [
+            ...(history[todayKey] ?? []).where((e) => e.label != dose.sched.label || e.medId != dose.med.id),
+            entry,
+          ],
+        };
       } else {
         showToast('Dose unmarked', type: 'info');
+        
+        // Revert stock
+        final medIdx = meds.indexWhere((m) => m.id == dose.med.id);
+        if (medIdx != -1) {
+          final m = meds[medIdx];
+          final updatedMed = m.copyWith(count: m.count + 1);
+          meds[medIdx] = updatedMed;
+          medRepo.updateMedicine(updatedMed);
+        }
+
+        // Remove from history if unmarked
+        history = {
+          ...history,
+          todayKey: (history[todayKey] ?? [])
+              .where((e) => e.label != dose.sched.label || e.medId != dose.med.id)
+              .toList(),
+        };
       }
 
       // updateNotifs: true forces the cancellation of any immediate pending alarms for THIS dose today.
@@ -467,6 +647,7 @@ class AppState extends ChangeNotifier {
     String? color,
     int? refillAt,
     String? notes,
+    String? intakeInstructions,
     List<ScheduleEntry>? schedule,
     String? courseStartDate,
     bool updateNotifs = true,
@@ -484,6 +665,7 @@ class AppState extends ChangeNotifier {
         color: color,
         refillAt: refillAt,
         notes: notes,
+        intakeInstructions: intakeInstructions,
         schedule: schedule,
       );
       medRepo.updateMedicine(updated);
@@ -532,7 +714,76 @@ class AppState extends ChangeNotifier {
   }
 
 
-  // ── Alarms ────────────────────────────────────────────────────────
+  // ── Dashboard Data & Insights ──────────────────────────────────────
+
+  Future<void> fetchHealthInsights() async {
+    if (meds.isEmpty) return;
+    loadingInsight = true;
+    notifyListeners();
+
+    try {
+      final adherence = getAdherenceScore();
+      final streak = getStreak();
+      final latency = getLatencyData();
+      
+      final result = await GeminiService.getHealthInsight(
+        meds: meds,
+        streak: streak,
+        adherence: adherence,
+        latencyData: latency,
+      );
+
+      result.fold(
+        (val) {
+          healthInsights = val;
+        },
+        (failure) {
+          // Failure handled by service's fallback to static tips,
+          // but we could set an error state here if needed.
+        },
+      );
+    } catch (e) {
+      debugPrint('Error fetching health insights: $e');
+    } finally {
+      loadingInsight = false;
+      notifyListeners();
+    }
+  }
+
+  List<Map<String, dynamic>> getLatencyData() {
+    final List<Map<String, dynamic>> latency = [];
+    final now = DateTime.now();
+
+    // Last 7 days
+    for (int i = 0; i < 7; i++) {
+        final date = now.subtract(Duration(days: i));
+        final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+        final entries = history[dateKey] ?? [];
+
+        for (final e in entries) {
+            if (e.taken && e.takenAt != null) {
+                try {
+                    final actual = DateTime.parse(e.takenAt!);
+                    // Parse scheduled time from 'HH:mm'
+                    final timeParts = e.time.split(':');
+                    final scheduled = DateTime(
+                        actual.year, actual.month, actual.day, 
+                        int.parse(timeParts[0]), int.parse(timeParts[1])
+                    );
+                    
+                    final diffMins = actual.difference(scheduled).inMinutes;
+                    latency.add({
+                        'date': dateKey,
+                        'time': e.time,
+                        'latency': diffMins,
+                        'medName': meds.firstWhere((m) => m.id == e.medId, orElse: () => Medicine(id: 0, name: 'Unknown', count: 0, totalCount: 0, courseStartDate: '')).name,
+                    });
+                } catch (_) {}
+            }
+        }
+    }
+    return latency;
+  }
   void addSchedule(int medId, ScheduleEntry s) {
     final med = meds.firstWhere((m) => m.id == medId);
     updateMed(medId, schedule: [...med.schedule, s]);
@@ -610,19 +861,48 @@ class AppState extends ChangeNotifier {
   Future<void> joinForce(String patientUid, int cgId) async {
     try {
       await userRepo.joinCaregiver(patientUid, cgId);
+      
       // Ensure it's in our local list or refreshed
       final match = caregivers.where((c) => c.id == cgId).firstOrNull;
       if (match != null) {
         activateCaregiver(cgId);
       } else {
-        // If not found (rare), reload
         await userRepo.getCaregivers();
       }
+
+      // Add to monitoring list if we are the one joining (caregiver role)
+      // In a production app, this would be handled by a cloud function or batch write.
+      // For now, we'll manually refresh our monitoring list.
+      await initMonitoring();
+      
       showToast('Joined successfully! ✓');
     } catch (_) {
-      // Direct join fallback
       activateCaregiver(cgId);
     }
+  }
+
+  // ── Monitoring Logic ──
+
+  StreamSubscription? _monitoringSub;
+
+  Future<void> initMonitoring() async {
+    _monitoringSub?.cancel();
+    final uid = AuthService.uid;
+    if (uid == null) return;
+
+    _monitoringSub = userRepo.getMonitoringPatientsStream().listen((patients) {
+      monitoredPatients = patients;
+      notifyListeners();
+    });
+  }
+
+  // Helper to get real-time patient data (to be used in UI)
+  Stream<List<Medicine>> getPatientMeds(String patientUid) {
+    return userRepo.getPatientMedsStream(patientUid);
+  }
+
+  Stream<Map<String, List<DoseEntry>>> getPatientHistory(String patientUid) {
+    return userRepo.getPatientHistoryStream(patientUid);
   }
 
   void addMissedAlert(MissedAlert alert) {
@@ -703,5 +983,69 @@ class AppState extends ChangeNotifier {
     });
 
     return sb.toString();
+  }
+
+  // ── Health Insights ────────────────────────────────────────────────
+  Future<void> refreshHealthInsights() async {
+    if (meds.isEmpty) return;
+    
+    loadingInsight = true;
+    notifyListeners();
+
+    try {
+      // 1. Calculate Adherence for last 14 days
+      final now = DateTime.now();
+      int totalScheduled = 0;
+      int totalTaken = 0;
+      final List<Map<String, dynamic>> latencyData = [];
+
+      for (int i = 0; i < 14; i++) {
+        final date = now.subtract(Duration(days: i));
+        final dateKey = formatDateKey(date);
+        final dayHistory = history[dateKey] ?? [];
+        
+        // We need to know how many were scheduled for that day.
+        // For simplicity, we'll use current schedule as proxy for historical schedule.
+        final dayDoses = getDoses(); 
+        totalScheduled += dayDoses.length;
+        
+        for (final entry in dayHistory) {
+          if (entry.taken) {
+            totalTaken++;
+            // Calculate latency if we have a way to know when it WAS scheduled vs when it was taken
+            // For now, we'll simulate some latency data for the AI if not explicitly tracked
+            latencyData.add({
+              'time': entry.time,
+              'latency': 0, // Placeholder
+            });
+          }
+        }
+      }
+
+      final adherence = totalScheduled > 0 ? (totalTaken / totalScheduled) * 100 : 100.0;
+      final streak = getStreak();
+
+      // 2. Call Gemini
+      final response = await GeminiService.getHealthInsight(
+        meds: meds,
+        streak: streak,
+        adherence: adherence,
+        latencyData: latencyData,
+      );
+
+      response.fold(
+        (success) {
+          healthInsights = success;
+        },
+        (failure) {
+          debugPrint('Health Insight Error: ${failure.message}');
+        },
+      );
+    } catch (e) {
+      debugPrint('Error refreshing health insights: $e');
+    } finally {
+      loadingInsight = false;
+      notifyListeners();
+    }
   }
 }

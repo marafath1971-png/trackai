@@ -1,0 +1,39 @@
+Analyzing medtrackaiflutter...                                  
+
+  error • Expected to find ']' • lib/screens/alarms/alarms_tab.dart:395:11 • expected_token
+  error • Expected an identifier • lib/screens/alarms/alarms_tab.dart:441:11 • missing_identifier
+  error • Expected to find ')' • lib/screens/alarms/alarms_tab.dart:441:11 • expected_token
+  error • Expected to find ';' • lib/screens/alarms/alarms_tab.dart:443:7 • expected_token
+warning • Dead code • lib/screens/alarms/alarms_tab.dart:443:8 • dead_code
+  error • Expected an identifier • lib/screens/alarms/alarms_tab.dart:443:8 • missing_identifier
+  error • Expected to find ';' • lib/screens/alarms/alarms_tab.dart:443:8 • expected_token
+  error • Unexpected text ';' • lib/screens/alarms/alarms_tab.dart:443:8 • unexpected_token
+  error • Expected an identifier • lib/screens/alarms/alarms_tab.dart:444:5 • missing_identifier
+  error • Unexpected text ';' • lib/screens/alarms/alarms_tab.dart:444:5 • unexpected_token
+   info • Unnecessary empty statement • lib/screens/alarms/alarms_tab.dart:444:6 • empty_statements
+   info • The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/screens/app_shell.dart:1:8 • unnecessary_import
+  error • Expected to find ')' • lib/screens/auth/auth_screen.dart:301:6 • expected_token
+  error • Expected to find ']' • lib/screens/family/family_tab.dart:455:15 • expected_token
+  error • Too many positional arguments: 0 expected, but 1 found • lib/screens/family/family_tab.dart:459:11 • extra_positional_arguments_could_be_named
+  error • Expected to find ')' • lib/screens/family/family_tab.dart:526:9 • expected_token
+  error • Undefined name 'HapticFeedback' • lib/screens/home/home_tab.dart:403:9 • undefined_identifier
+  error • The method 'animate' isn't defined for the type 'GestureDetector' • lib/screens/home/home_tab.dart:456:7 • undefined_method
+  error • The getter 'ms' isn't defined for the type 'int' • lib/screens/home/home_tab.dart:456:38 • undefined_getter
+  error • The method 'animate' isn't defined for the type 'Container' • lib/screens/home/home_tab.dart:528:7 • undefined_method
+  error • The getter 'ms' isn't defined for the type 'int' • lib/screens/home/home_tab.dart:528:38 • undefined_getter
+  error • The getter 'ms' isn't defined for the type 'int' • lib/screens/home/home_tab.dart:528:53 • undefined_getter
+   info • The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/screens/home/widgets/home_header.dart:1:8 • unnecessary_import
+  error • The getter 'frequency' isn't defined for the type 'Medicine' • lib/screens/home/widgets/med_card.dart:157:56 • undefined_getter
+   info • The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/screens/home/widgets/settings_modal_new.dart:1:8 • unnecessary_import
+  error • Expected to find ';' • lib/screens/home/widgets/settings_modal_new.dart:143:7 • expected_token
+warning • Dead code • lib/screens/home/widgets/settings_modal_new.dart:143:8 • dead_code
+  error • Expected an identifier • lib/screens/home/widgets/settings_modal_new.dart:143:8 • missing_identifier
+  error • Expected to find ';' • lib/screens/home/widgets/settings_modal_new.dart:143:8 • expected_token
+  error • Unexpected text ';' • lib/screens/home/widgets/settings_modal_new.dart:143:8 • unexpected_token
+  error • Expected an identifier • lib/screens/home/widgets/settings_modal_new.dart:144:5 • missing_identifier
+  error • Unexpected text ';' • lib/screens/home/widgets/settings_modal_new.dart:144:5 • unexpected_token
+   info • Unnecessary empty statement • lib/screens/home/widgets/settings_modal_new.dart:144:6 • empty_statements
+   info • The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/screens/home/widgets/streak_modal.dart:1:9 • unnecessary_import
+   info • The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/screens/settings/privacy_policy_screen.dart:1:8 • unnecessary_import
+warning • Unused import: 'package:flutter_animate/flutter_animate.dart' • lib/screens/settings/privacy_policy_screen.dart:3:8 • unused_import
+

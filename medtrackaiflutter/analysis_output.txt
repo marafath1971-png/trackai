@@ -1,0 +1,155 @@
+Resolving dependencies...
+Downloading packages...
+  _flutterfire_internals 1.3.59 (1.3.67 available)
+  cloud_firestore 5.6.12 (6.1.3 available)
+  cloud_firestore_platform_interface 6.6.12 (7.0.7 available)
+  cloud_firestore_web 4.4.12 (5.1.3 available)
+  cloud_functions 5.6.2 (6.0.7 available)
+  cloud_functions_platform_interface 5.8.2 (5.8.10 available)
+  cloud_functions_web 4.11.5 (5.1.3 available)
+  firebase_analytics 11.6.0 (12.1.3 available)
+  firebase_analytics_platform_interface 4.4.3 (5.0.7 available)
+  firebase_analytics_web 0.5.10+16 (0.6.1+3 available)
+  firebase_auth 5.7.0 (6.2.0 available)
+  firebase_auth_platform_interface 7.7.3 (8.1.7 available)
+  firebase_auth_web 5.15.3 (6.1.3 available)
+  firebase_core 3.15.2 (4.5.0 available)
+  firebase_core_web 2.24.1 (3.5.0 available)
+  firebase_crashlytics 4.3.10 (5.0.8 available)
+  firebase_crashlytics_platform_interface 3.8.10 (3.8.18 available)
+  firebase_messaging 15.2.10 (16.1.2 available)
+  firebase_messaging_platform_interface 4.6.10 (4.7.7 available)
+  firebase_messaging_web 3.10.10 (4.1.3 available)
+  firebase_performance 0.10.1+10 (0.11.1+5 available)
+  firebase_performance_platform_interface 0.1.5+10 (0.1.6+5 available)
+  firebase_performance_web 0.1.7+16 (0.1.8+3 available)
+  flutter_launcher_icons 0.13.1 (0.14.4 available)
+  flutter_lints 3.0.2 (6.0.0 available)
+  go_router 13.2.5 (17.1.0 available)
+  google_fonts 6.3.3 (8.0.2 available)
+  google_sign_in 6.3.0 (7.2.0 available)
+  google_sign_in_android 6.2.1 (7.2.9 available)
+  google_sign_in_ios 5.9.0 (6.3.0 available)
+  google_sign_in_platform_interface 2.5.0 (3.1.0 available)
+  google_sign_in_web 0.12.4+4 (1.1.3 available)
+  image 4.5.4 (4.8.0 available)
+  intl 0.19.0 (0.20.2 available)
+  lints 3.0.0 (6.1.0 available)
+  matcher 0.12.18 (0.12.19 available)
+  meta 1.17.0 (1.18.1 available)
+  mobile_scanner 6.0.11 (7.2.0 available)
+  pointycastle 3.9.1 (4.0.0 available)
+  test_api 0.7.9 (0.7.10 available)
+  win32 5.15.0 (6.0.0 available)
+Got dependencies!
+41 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Analyzing medtrackaiflutter...                                  
+
+   info • 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion • lib/core/utils/color_utils.dart:14:16 • deprecated_member_use
+  error • The name 'dispose' is already defined • lib/providers/app_state.dart:331:8 • duplicate_definition
+warning • Unused import: '../../widgets/shared/shared_widgets.dart' • lib/screens/alarms/alarms_tab.dart:7:8 • unused_import
+  error • The method 'hexToColor' isn't defined for the type '_NextDoseIndicator' • lib/screens/alarms/alarms_tab.dart:326:22 • undefined_method
+  error • The method 'hexToColor' isn't defined for the type '_TimelineAlarmCard' • lib/screens/alarms/alarms_tab.dart:500:22 • undefined_method
+   info • Use 'const' with the constructor to improve performance • lib/screens/alarms/alarms_tab.dart:756:19 • prefer_const_constructors
+  error • The method 'hexToColor' isn't defined for the type '_MedAlarmContainer' • lib/screens/alarms/alarms_tab.dart:778:22 • undefined_method
+  error • The method 'hexToColor' isn't defined for the type '_AddAlarmSheetState' • lib/screens/alarms/alarms_tab.dart:1044:50 • undefined_method
+   info • Statements in an if should be enclosed in a block • lib/screens/alarms/alarms_tab.dart:1136:55 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/alarms/alarms_tab.dart:1137:61 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/alarms/alarms_tab.dart:1138:61 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/alarms/alarms_tab.dart:1139:36 • curly_braces_in_flow_control_structures
+   info • Use 'const' with the constructor to improve performance • lib/screens/alarms/alarms_tab.dart:1164:43 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/screens/alarms/alarms_tab.dart:1312:36 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/screens/alarms/alarms_tab.dart:1313:40 • prefer_const_constructors
+warning • The declaration '_TimeInput' isn't referenced • lib/screens/alarms/alarms_tab.dart:1386:7 • unused_element
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/dashboard/widgets/dashboard_widgets.dart:35:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/dashboard/widgets/dashboard_widgets.dart:59:63 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/dashboard/widgets/dashboard_widgets.dart:81:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/dashboard/widgets/dashboard_widgets.dart:206:39 • deprecated_member_use
+  error • 'state' isn't a field in the enclosing class • lib/screens/family/family_tab.dart:202:7 • initializing_formal_for_non_existent_field
+  error • 'L' isn't a field in the enclosing class • lib/screens/family/family_tab.dart:203:7 • initializing_formal_for_non_existent_field
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:216:9 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:218:9 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:219:25 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:222:24 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:249:44 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:259:42 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:267:46 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:278:36 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:279:33 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:301:36 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:311:44 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:319:44 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:329:30 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:331:49 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:340:32 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:348:32 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:360:19 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:363:52 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:376:38 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:383:38 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:389:38 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:390:38 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:406:40 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:418:32 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:420:27 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:421:30 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:422:26 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:423:54 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:430:19 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:439:34 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:442:67 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:450:38 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:458:36 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:467:36 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:486:45 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:491:40 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:502:32 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:504:33 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:507:32 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:508:28 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:528:17 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:539:36 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:552:30 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:554:28 • undefined_identifier
+  error • Undefined name 'L' • lib/screens/family/family_tab.dart:555:24 • undefined_identifier
+  error • Undefined name 'state' • lib/screens/family/family_tab.dart:556:48 • undefined_identifier
+warning • The value of the local variable 'meds' isn't used • lib/screens/family/family_tab.dart:3201:15 • unused_local_variable
+  error • The method 'hexToColor' isn't defined for the type '_DoseCardState' • lib/screens/home/widgets/home_dose_section.dart:39:22 • undefined_method
+   info • Unnecessary use of string interpolation • lib/screens/home/widgets/home_dose_section.dart:180:29 • unnecessary_string_interpolations
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:44:52 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:46:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:52:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:107:52 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:109:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:115:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:149:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:158:38 • deprecated_member_use
+  error • The method 'hexToColor' isn't defined for the type 'MedCard' • lib/screens/home/widgets/med_card.dart:29:22 • undefined_method
+   info • Use 'const' with the constructor to improve performance • lib/screens/home/widgets/med_card.dart:84:29 • prefer_const_constructors
+warning • The value of the local variable 'doseIdx' isn't used • lib/screens/home/widgets/missed_dose_sheet.dart:39:11 • unused_local_variable
+  error • The method 'hexToColor' isn't defined for the type '_AppTabState' • lib/screens/home/widgets/settings_modal_new.dart:992:44 • undefined_method
+  error • The method 'hexToColor' isn't defined for the type '_AppTabState' • lib/screens/home/widgets/settings_modal_new.dart:1001:56 • undefined_method
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/screens/home/widgets/settings_modal_new.dart:1180:32 • deprecated_member_use
+   info • 'share' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/screens/home/widgets/settings_modal_new.dart:1180:38 • deprecated_member_use
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/screens/home/widgets/settings_modal_new.dart:1254:13 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/screens/home/widgets/settings_modal_new.dart:1254:19 • deprecated_member_use
+   info • Unnecessary 'const' keyword • lib/screens/home/widgets/streak_modal.dart:297:52 • unnecessary_const
+  error • Invalid constant value • lib/screens/home/widgets/streak_modal.dart:411:44 • invalid_constant
+  error • The method 'hexToColor' isn't defined for the type '_MedicineDetailScreenState' • lib/screens/medicine/medicine_detail_screen.dart:62:22 • undefined_method
+   info • Use 'const' with the constructor to improve performance • lib/screens/medicine/medicine_detail_screen.dart:181:27 • prefer_const_constructors
+  error • The method 'hexToColor' isn't defined for the type '_MedicineDetailScreenState' • lib/screens/medicine/medicine_detail_screen.dart:351:30 • undefined_method
+   info • Use 'const' with the constructor to improve performance • lib/screens/onboarding/onboarding_screen.dart:2007:33 • prefer_const_constructors
+   info • Use 'const' literals as arguments to constructors of '@immutable' classes • lib/screens/onboarding/onboarding_screen.dart:2010:35 • prefer_const_literals_to_create_immutables
+   info • Use 'const' with the constructor to improve performance • lib/screens/scan/scan_tab.dart:918:21 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/screens/scan/scan_tab.dart:919:21 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/screens/scan/scan_tab.dart:919:57 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/screens/scan/scan_tab.dart:945:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/screens/scan/scan_tab.dart:946:13 • prefer_const_constructors
+   info • Use 'const' with the constructor to improve performance • lib/screens/scan/scan_tab.dart:946:29 • prefer_const_constructors
+warning • The declaration '_buildRichChip' isn't referenced • lib/screens/scan/scan_tab.dart:1293:10 • unused_element
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/services/export_service.dart:80:11 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/services/export_service.dart:80:17 • deprecated_member_use
+warning • Unused import: '../../core/utils/color_utils.dart' • lib/widgets/shared/shared_widgets.dart:4:8 • unused_import
+
+105 issues found. (ran in 8.1s)

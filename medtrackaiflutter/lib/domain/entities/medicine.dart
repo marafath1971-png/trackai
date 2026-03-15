@@ -99,8 +99,10 @@ class Medicine {
   int refillAt;
   String? imageUrl;
   String notes;
+  String intakeInstructions; // NEW: e.g., "With Food", "After Meals"
   List<ScheduleEntry> schedule;
   String courseStartDate;
+  String unit; // NEW: 'tablets', 'ml', 'puffs', etc.
 
   Medicine({
     required this.id,
@@ -115,12 +117,23 @@ class Medicine {
     this.refillAt = 7,
     this.imageUrl,
     this.notes = '',
+    this.intakeInstructions = '',
     this.schedule = const [],
     required this.courseStartDate,
+    this.unit = 'units',
   });
 
   /// 0.0 – 1.0 course progress fraction.
   double get coursePct => 1.0;
+
+  String get frequency {
+    if (schedule.isEmpty) return 'No schedule';
+    final count = schedule.length;
+    if (count == 1) return 'Once daily';
+    if (count == 2) return 'Twice daily';
+    if (count == 3) return 'Three times daily';
+    return '$count times daily';
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -135,8 +148,10 @@ class Medicine {
         'refillAt': refillAt,
         'imageUrl': imageUrl,
         'notes': notes,
+        'intakeInstructions': intakeInstructions,
         'schedule': schedule.map((s) => s.toJson()).toList(),
         'courseStartDate': courseStartDate,
+        'unit': unit,
       };
 
   factory Medicine.fromJson(Map<String, dynamic> j) => Medicine(
@@ -152,10 +167,12 @@ class Medicine {
         refillAt: j['refillAt'] ?? 7,
         imageUrl: j['imageUrl'],
         notes: j['notes'] ?? '',
+        intakeInstructions: j['intakeInstructions'] ?? '',
         schedule: (j['schedule'] as List<dynamic>? ?? [])
             .map((s) => ScheduleEntry.fromJson(s))
             .toList(),
         courseStartDate: j['courseStartDate'] ?? '',
+        unit: j['unit'] ?? 'units',
       );
 
   Medicine copyWith({
@@ -169,7 +186,9 @@ class Medicine {
     String? color,
     int? refillAt,
     String? notes,
+    String? intakeInstructions,
     List<ScheduleEntry>? schedule,
+    String? unit,
   }) =>
       Medicine(
         id: id,
@@ -184,7 +203,9 @@ class Medicine {
         refillAt: refillAt ?? this.refillAt,
         imageUrl: imageUrl,
         notes: notes ?? this.notes,
+        intakeInstructions: intakeInstructions ?? this.intakeInstructions,
         schedule: schedule ?? this.schedule,
         courseStartDate: courseStartDate,
+        unit: unit ?? this.unit,
       );
 }

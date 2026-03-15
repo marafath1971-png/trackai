@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/app_theme.dart';
 
 // ══════════════════════════════════════════════
@@ -36,7 +37,7 @@ class RingChart extends StatelessWidget {
           painter: _RingPainter(
               percent: percent.clamp(0, 1),
               color: color,
-              bg: L.border,
+              bg: L.fill,
               strokeWidth: strokeWidth),
         ),
         Column(mainAxisSize: MainAxisSize.min, children: [
@@ -115,16 +116,18 @@ class _RingPainter extends CustomPainter {
 class AppToggle extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
-  final Color activeColor;
+  final Color? activeColor;
 
   const AppToggle(
       {super.key,
       required this.value,
       required this.onChanged,
-      this.activeColor = const Color(0xFF111111)});
+      this.activeColor});
 
   @override
   Widget build(BuildContext context) {
+    final L = context.L;
+    final effectiveColor = activeColor ?? L.text;
     return GestureDetector(
       onTap: () => onChanged(!value),
       child: AnimatedContainer(
@@ -132,12 +135,12 @@ class AppToggle extends StatelessWidget {
         width: 44,
         height: 26,
         decoration: BoxDecoration(
-          color: value ? activeColor : const Color(0x4C787880),
+          color: value ? effectiveColor : L.fill,
           borderRadius: BorderRadius.circular(99),
         ),
         child: Stack(children: [
           AnimatedPositioned(
-            duration: const Duration(milliseconds: 220),
+            duration: const Duration(milliseconds: 400),
             curve: Curves.elasticOut,
             top: 3,
             left: value ? null : 3,
@@ -156,7 +159,10 @@ class AppToggle extends StatelessWidget {
                 ],
               ),
             ),
-          ),
+          ).animate(target: value ? 1 : 0)
+            .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.1, 1.1), duration: 200.ms, curve: Curves.easeOutBack)
+            .then()
+            .scale(begin: const Offset(1.1, 1.1), end: const Offset(1, 1), duration: 150.ms),
         ]),
       ),
     );
@@ -206,19 +212,20 @@ class AppToast extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final L = context.L;
     final Color bg;
     switch (type) {
       case 'error':
-        bg = const Color(0xFFEF4444);
+        bg = L.red;
         break;
       case 'warning':
-        bg = const Color(0xFFF97316);
+        bg = L.red.withValues(alpha: 0.8);
         break;
       case 'info':
-        bg = const Color(0xFF3B82F6);
+        bg = L.text;
         break;
       default:
-        bg = const Color(0xFF111111);
+        bg = L.text;
     }
     return Positioned(
       bottom: 100,
@@ -266,7 +273,7 @@ class SkeletonBox extends StatefulWidget {
   final double height;
   final double radius;
   const SkeletonBox(
-      {super.key, required this.width, required this.height, this.radius = 8});
+      {super.key, required this.width, required this.height, this.radius = 16});
 
   @override
   State<SkeletonBox> createState() => _SkeletonBoxState();
@@ -464,6 +471,7 @@ class LightInput extends StatelessWidget {
         onChanged: onChanged,
         keyboardType: keyboardType,
         maxLines: maxLines,
+        cursorColor: L.text,
         style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w500,
@@ -477,15 +485,15 @@ class LightInput extends StatelessWidget {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(24),
               borderSide: BorderSide(color: L.border, width: 0.5)),
           enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(24),
               borderSide: BorderSide(color: L.border, width: 0.5)),
           focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(24),
               borderSide: BorderSide(
-                  color: context.isDark ? AppColors.dGreen : AppColors.lBlue,
+                  color: L.text,
                   width: 1.5)),
         ),
       ),
@@ -570,7 +578,4 @@ class MedImage extends StatelessWidget {
   }
 }
 
-Color hexToColor(String hex) {
-  final h = hex.replaceAll('#', '');
-  return Color(int.parse('FF$h', radix: 16));
-}
+

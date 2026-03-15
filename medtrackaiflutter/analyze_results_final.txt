@@ -1,0 +1,16 @@
+Analyzing medtrackaiflutter...                                  
+
+  error • Expected to find ')' • lib/screens/auth/auth_screen.dart:301:6 • expected_token
+  error • Expected to find ']' • lib/screens/family/family_tab.dart:455:15 • expected_token
+  error • Too many positional arguments: 0 expected, but 1 found • lib/screens/family/family_tab.dart:459:11 • extra_positional_arguments_could_be_named
+  error • Expected to find ')' • lib/screens/family/family_tab.dart:526:9 • expected_token
+   info • The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' • lib/screens/home/widgets/home_header.dart:1:8 • unnecessary_import
+  error • Expected to find ';' • lib/screens/home/widgets/settings_modal_new.dart:142:7 • expected_token
+warning • Dead code • lib/screens/home/widgets/settings_modal_new.dart:142:8 • dead_code
+  error • Expected an identifier • lib/screens/home/widgets/settings_modal_new.dart:142:8 • missing_identifier
+  error • Expected to find ';' • lib/screens/home/widgets/settings_modal_new.dart:142:8 • expected_token
+  error • Unexpected text ';' • lib/screens/home/widgets/settings_modal_new.dart:142:8 • unexpected_token
+  error • Expected an identifier • lib/screens/home/widgets/settings_modal_new.dart:143:5 • missing_identifier
+  error • Unexpected text ';' • lib/screens/home/widgets/settings_modal_new.dart:143:5 • unexpected_token
+   info • Unnecessary empty statement • lib/screens/home/widgets/settings_modal_new.dart:143:6 • empty_statements
+

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
 import '../../models/models.dart';
 import '../../models/constants.dart';
 import '../../theme/app_theme.dart';
 import '../../services/notification_service.dart';
-import '../../widgets/common/modern_time_picker.dart';
+import '../../services/auth_service.dart';
 
 // ══════════════════════════════════════════════
 // ONBOARDING SCREEN
@@ -205,6 +206,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         const _OBStep(id: 'notif', type: 'notif'),
         const _OBStep(id: 'plan', type: 'plan'),
         const _OBStep(id: 'paywall', type: 'paywall'),
+        const _OBStep(id: 'celebration', type: 'celebration'),
       ];
 
   @override
@@ -226,13 +228,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   void _next() {
     if (_step < _steps.length - 1) {
+      if (_steps[_step].id == 'paywall') {
+        // We'll advance to celebration from within Paywall if needed, 
+        // but here we just increment the main step
+      }
       setState(() => _step++);
       _animCtrl.forward(from: 0);
     }
   }
 
   void _back() {
-    if (_step > 0) {
+    if (_step > 0 && _steps[_step].id != 'celebration') {
       setState(() => _step--);
       _animCtrl.forward(from: 0);
     }
@@ -302,7 +308,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     const oBg = AppColors.oBg;
     const oText = AppColors.oText;
     const oSub = AppColors.oSub;
-    const oLime = AppColors.oLime;
+    const oLime = Colors.white;
     const oCard = AppColors.oCard;
 
     final progress = (_step + 1) / _steps.length;
@@ -317,9 +323,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             if (step.type != 'splash' && step.type != 'paywall')
               Container(
                 margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                height: 4,
+                height: 6,
                 decoration: BoxDecoration(
-                    color: const Color(0xFF1E1E2A),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(99)),
                 child: FractionallySizedBox(
                   alignment: Alignment.centerLeft,
@@ -327,8 +333,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                          colors: [oLime, AppColors.oGreen]),
+                          colors: [oLime, Colors.white]),
                       borderRadius: BorderRadius.circular(99),
+                      boxShadow: [
+                        BoxShadow(color: oLime.withValues(alpha: 0.2), blurRadius: 10, spreadRadius: 1)
+                      ]
                     ),
                   ),
                 ),
@@ -347,9 +356,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
             // ── Step content
             Expanded(
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: _buildStep(step, oText, oSub, oLime, oCard, oBg),
+              child: Scrollbar(
+                child: FadeTransition(
+                  opacity: _fadeAnim,
+                  child: _buildStep(step, oText, oSub, oLime, oCard, oBg),
+                ),
               ),
             ),
 
@@ -430,11 +441,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           onApplyPromo: _applyPromo,
           onNextStep: () => setState(() => _paywallStep++),
           onComplete: _complete,
+          onAuth: _next,
           oText: oText,
           oSub: oSub,
           oCard: oCard,
           oLime: oLime,
         );
+      case 'celebration':
+        return _CelebrationStep(onComplete: _complete, oLime: oLime, oText: oText, oSub: oSub);
       default:
         return const SizedBox.shrink();
     }
@@ -461,8 +475,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 18),
           decoration: BoxDecoration(
-            color: canGo ? oLime : const Color(0xFF1E1E2A),
-            borderRadius: BorderRadius.circular(16),
+            color: canGo ? oLime : Colors.white.withValues(alpha: 0.02),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: canGo ? Colors.white.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.05)),
             boxShadow: canGo
                 ? [
                     BoxShadow(
@@ -565,11 +580,13 @@ class _SplashStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const oLime = AppColors.oLime;
+    const oLime = Colors.white;
     const oText = AppColors.oText;
     const oSub = AppColors.oSub;
+    const oCard = AppColors.oCard;
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       child: ConstrainedBox(
         constraints:
             BoxConstraints(minHeight: MediaQuery.of(context).size.height),
@@ -586,9 +603,9 @@ class _SplashStep extends StatelessWidget {
                     width: 88,
                     height: 88,
                     decoration: BoxDecoration(
-                      color: const Color(0x1FA3E635),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: const Color(0x33A3E635)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                     ),
                     child: Center(
                         child: Image.asset('assets/images/app_logo.png',
@@ -608,7 +625,7 @@ class _SplashStep extends StatelessWidget {
                         TextSpan(
                             text: 'Med ',
                             style: TextStyle(color: Color(0xFFF0F0F5))),
-                        TextSpan(text: 'Ai', style: TextStyle(color: oLime)),
+                        TextSpan(text: 'AI', style: TextStyle(color: oLime)),
                       ],
                     ),
                   ),
@@ -634,34 +651,35 @@ class _SplashStep extends StatelessWidget {
               ].map((f) {
                 final parts = f.$1.split(' ');
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.oCard,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.oBorder, width: 0.5),
+                    color: oCard,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
-                  child: Row(children: [
-                    Text(parts[0], style: const TextStyle(fontSize: 22)),
-                    const SizedBox(width: 14),
-                    Expanded(
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                          Text(parts[1],
-                              style: const TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: oText)),
-                          Text(f.$2,
-                              style: const TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 12,
-                                  color: oSub)),
-                        ])),
-                  ]),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    child: Row(children: [
+                      Text(parts[0], style: const TextStyle(fontSize: 22)),
+                      const SizedBox(width: 14),
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text(parts[1],
+                                style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: oText)),
+                            Text(f.$2,
+                                style: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 12,
+                                    color: oSub)),
+                          ])),
+                    ]),
+                  ),
                 );
               }),
               const SizedBox(height: 32),
@@ -718,7 +736,6 @@ class _AnimatedFloatWidgetState extends State<_AnimatedFloatWidget>
   }
 }
 
-
 // ════════════════════════════════════════
 // TEXT STEP
 // ════════════════════════════════════════
@@ -761,7 +778,7 @@ class _TextStepState extends State<_TextStep> {
 
   @override
   Widget build(BuildContext context) {
-    const oLime = AppColors.oLime;
+    const oLime = Colors.white;
     final val = _ctrl.text.trim();
     final hasVal = val.isNotEmpty;
 
@@ -807,21 +824,21 @@ class _TextStepState extends State<_TextStep> {
             hintText: widget.step.placeholder,
             hintStyle: TextStyle(color: widget.oSub, fontFamily: 'Inter'),
             filled: true,
-            fillColor: widget.oCard,
+            fillColor: Colors.white.withValues(alpha: 0.05),
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(24),
               borderSide: BorderSide(
-                  color: hasVal ? oLime : AppColors.oBorder,
-                  width: hasVal ? 1.5 : 0.5),
+                  color: hasVal ? oLime : Colors.white.withValues(alpha: 0.1),
+                  width: hasVal ? 1.5 : 0.8),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(24),
               borderSide: BorderSide(
-                  color: hasVal ? oLime : AppColors.oBorder, width: 1.5),
+                  color: hasVal ? oLime : Colors.white.withValues(alpha: 0.2), width: 1.5),
             ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
           ),
         ),
         const Spacer(),
@@ -854,6 +871,7 @@ class _SingleStep extends StatelessWidget {
     final isGrid = step.options.length > 4;
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _StepHeader(
@@ -897,13 +915,16 @@ class _SingleStep extends StatelessWidget {
         padding:
             EdgeInsets.symmetric(horizontal: isGrid ? 12 : 18, vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0x1FA3E635) : const Color(0x12FFFFFF),
-          borderRadius: BorderRadius.circular(14),
+          color: isSelected ? oLime.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(28),
           border: Border.all(
               color: isSelected
-                  ? oLime.withValues(alpha: 0.4)
-                  : const Color(0x14FFFFFF),
-              width: 1.0),
+                  ? oLime.withValues(alpha: 0.5)
+                  : Colors.white.withValues(alpha: 0.08),
+              width: isSelected ? 1.5 : 1.0),
+          boxShadow: isSelected ? [
+            BoxShadow(color: oLime.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 8))
+          ] : null,
         ),
         child: isGrid
             ? Column(
@@ -971,6 +992,7 @@ class _MultiStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final selected = List<String>.from(form[step.field!] ?? []);
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _StepHeader(
@@ -997,11 +1019,11 @@ class _MultiStep extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0x1FA3E635) : oCard,
+                    color: isSelected ? oLime.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.03),
                     borderRadius: BorderRadius.circular(99),
                     border: Border.all(
-                        color: isSelected ? oLime : AppColors.oBorder,
-                        width: isSelected ? 1.5 : 0.5),
+                        color: isSelected ? oLime.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.08),
+                        width: isSelected ? 1.5 : 1.0),
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     if (opt['e'] != null)
@@ -1051,6 +1073,7 @@ class _TimeStep extends StatelessWidget {
     final m = time['m'] ?? 0;
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _StepHeader(
@@ -1073,11 +1096,11 @@ class _TimeStep extends StatelessWidget {
               margin: const EdgeInsets.only(right: 6),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: isActive ? oLime.withValues(alpha: 0.15) : oCard,
-                borderRadius: BorderRadius.circular(12),
+                color: isActive ? oLime.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                    color: isActive ? oLime : AppColors.oBorder,
-                    width: isActive ? 1.5 : 0.5),
+                    color: isActive ? oLime : Colors.white.withValues(alpha: 0.08),
+                    width: isActive ? 1.5 : 1.0),
               ),
               child: Column(children: [
                 Text(qt['emoji'] as String,
@@ -1108,7 +1131,8 @@ class _TimeStep extends StatelessWidget {
                   },
                   oText: oText,
                   oSub: oSub,
-                  oCard: oCard)),
+                  oCard: oCard,
+                  oLime: oLime)),
           Padding(
               padding: const EdgeInsets.only(top: 16),
               child: Text(':',
@@ -1129,14 +1153,15 @@ class _TimeStep extends StatelessWidget {
                   },
                   oText: oText,
                   oSub: oSub,
-                  oCard: oCard)),
+                  oCard: oCard,
+                  oLime: oLime)),
           const SizedBox(width: 8),
           Padding(
             padding: const EdgeInsets.only(top: 16),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               decoration: BoxDecoration(
-                  color: oCard, borderRadius: BorderRadius.circular(12)),
+                  color: oCard, borderRadius: BorderRadius.circular(24)),
               child: Text(h >= 12 ? 'PM' : 'AM',
                   style: TextStyle(
                       fontFamily: 'Inter',
@@ -1154,14 +1179,15 @@ class _TimeStep extends StatelessWidget {
 class _TimeInput extends StatelessWidget {
   final String label, value;
   final ValueChanged<String> onChanged;
-  final Color oText, oSub, oCard;
+  final Color oText, oSub, oCard, oLime;
   const _TimeInput(
       {required this.label,
       required this.value,
       required this.onChanged,
       required this.oText,
       required this.oSub,
-      required this.oCard});
+      required this.oCard,
+      required this.oLime});
 
   @override
   Widget build(BuildContext context) {
@@ -1191,14 +1217,16 @@ class _TimeInput extends StatelessWidget {
           fillColor: oCard,
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.oBorder, width: 0.5)),
+              borderRadius: BorderRadius.circular(24),
+              borderSide:
+                  BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1.0)),
           enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.oBorder, width: 0.5)),
+              borderRadius: BorderRadius.circular(24),
+              borderSide:
+                  BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1.0)),
           focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.oLime, width: 1.5)),
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: oLime, width: 1.5)),
         ),
       ),
     ]);
@@ -1236,7 +1264,9 @@ class _NotifStep extends StatelessWidget {
             color: oLime.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: Center(child: Icon(Icons.notifications_active_rounded, color: oLime, size: 40)),
+          child: Center(
+              child: Icon(Icons.notifications_active_rounded,
+                  color: oLime, size: 40)),
         ),
         const SizedBox(height: 32),
         Text('Enable Reminders',
@@ -1292,6 +1322,7 @@ class _PlanReadyStep extends StatelessWidget {
     ];
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
       child: Column(children: [
         const SizedBox(height: 12),
@@ -1318,8 +1349,8 @@ class _PlanReadyStep extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
-              color: oLime.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16)),
+              color: oLime.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(32)),
           child: Text(
             _generateNarrative(name, goal, wakeTime, motivation),
             textAlign: TextAlign.center,
@@ -1334,11 +1365,11 @@ class _PlanReadyStep extends StatelessWidget {
         const SizedBox(height: 32),
         ...highlights.map((h) => Container(
               margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                  color: oCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.oBorder, width: 0.5)),
+                  color: Colors.white.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.08))),
               child: Row(children: [
                 Container(
                   width: 24,
@@ -1363,8 +1394,8 @@ class _PlanReadyStep extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-              color: oLime.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
+              color: Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(32),
               border: Border.all(color: oLime.withValues(alpha: 0.2))),
           child: Column(children: [
             Text('94%',
@@ -1422,6 +1453,7 @@ class _PaywallStep extends StatelessWidget {
   final VoidCallback onApplyPromo;
   final VoidCallback onNextStep;
   final VoidCallback onComplete;
+  final VoidCallback onAuth;
   final Color oText, oSub, oCard, oLime;
 
   const _PaywallStep({
@@ -1436,6 +1468,7 @@ class _PaywallStep extends StatelessWidget {
     required this.onApplyPromo,
     required this.onNextStep,
     required this.onComplete,
+    required this.onAuth,
     required this.oText,
     required this.oSub,
     required this.oCard,
@@ -1455,6 +1488,7 @@ class _PaywallStep extends StatelessWidget {
         onPromoChange: onPromoChange,
         onSkip: onComplete,
         onNext: onNextStep,
+        onAuth: onAuth,
         oText: oText,
         oSub: oSub,
         oCard: oCard,
@@ -1487,7 +1521,7 @@ class _PaywallFeatures extends StatelessWidget {
   final bool promoError;
   final Function(String) onToggle;
   final Function(String) onPromoChange;
-  final VoidCallback onApply, onNext, onSkip;
+  final VoidCallback onApply, onNext, onSkip, onAuth;
   final Color oText, oSub, oCard, oLime;
 
   const _PaywallFeatures({
@@ -1500,6 +1534,7 @@ class _PaywallFeatures extends StatelessWidget {
     required this.onApply,
     required this.onNext,
     required this.onSkip,
+    required this.onAuth, // ADDED
     required this.oText,
     required this.oSub,
     required this.oCard,
@@ -1538,24 +1573,32 @@ class _PaywallFeatures extends StatelessWidget {
     ];
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('MEDTRACK PRO',
+            Text('MED AI PRO',
                 style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                     color: oLime,
                     letterSpacing: 1.2)),
-            Text('Start your free trial',
+            const Text("World's #1 Advanced AI",
                 style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 26,
                     fontWeight: FontWeight.w900,
-                    color: oText,
+                    color: Colors.white,
                     letterSpacing: -0.5)),
+            Text('Start your free trial',
+                style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: oSub,
+                    letterSpacing: -0.3)),
           ]),
           TextButton(
               onPressed: onSkip,
@@ -1700,13 +1743,17 @@ class _PaywallFeatures extends StatelessWidget {
                   borderSide: BorderSide(
                       color: appliedPromo != null
                           ? oLime
-                          : (promoError ? const Color(0xFFFF453A) : AppColors.oBorder))),
+                          : (promoError
+                              ? const Color(0xFFFF453A)
+                              : AppColors.oBorder))),
               enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
                       color: appliedPromo != null
                           ? oLime
-                          : (promoError ? const Color(0xFFFF453A) : AppColors.oBorder))),
+                          : (promoError
+                              ? const Color(0xFFFF453A)
+                              : AppColors.oBorder))),
             ),
           )),
           const SizedBox(width: 8),
@@ -1780,9 +1827,50 @@ class _PaywallFeatures extends StatelessWidget {
               TextSpan(
                   text: 'No payment due now',
                   style: TextStyle(color: oLime, fontWeight: FontWeight.w800)),
-              const TextSpan(text: ' · Cancel anytime'),
+               const TextSpan(text: ' · Cancel anytime'),
             ]))),
+        const SizedBox(height: 32),
+        _AuthButtons(onAuth: onAuth),
       ]),
+    );
+  }
+}
+
+class _AuthButtons extends StatelessWidget {
+  final VoidCallback onAuth;
+  const _AuthButtons({required this.onAuth});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+       _buildAuthBtn("Continue with Google", "assets/images/google_logo.png", () async {
+          await AuthService.signInWithGoogle();
+          onAuth();
+       }, Colors.white, Colors.black),
+       const SizedBox(height: 12),
+       _buildAuthBtn("Continue with Apple", null, () async {
+          await AuthService.signInWithApple();
+          onAuth();
+       }, Colors.white, Colors.black, icon: Icons.apple_rounded),
+    ]);
+  }
+
+  Widget _buildAuthBtn(String label, String? asset, VoidCallback onTap, Color bg, Color text, {IconData? icon}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 54,
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(16)),
+        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          if (asset != null)
+              Image.asset(asset, width: 20, height: 20, errorBuilder: (c, e, s) => const Icon(Icons.login, size: 20))
+            else if (icon != null)
+              Icon(icon, size: 22, color: text),
+          const SizedBox(width: 12),
+          Text(label, style: TextStyle(color: text, fontSize: 15, fontWeight: FontWeight.w700)),
+        ]),
+      ),
     );
   }
 }
@@ -1823,6 +1911,7 @@ class _PaywallTrust extends StatelessWidget {
     ];
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const SizedBox(height: 12),
@@ -1843,7 +1932,7 @@ class _PaywallTrust extends StatelessWidget {
               decoration: BoxDecoration(
                   color: oCard,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.oBorder)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.1))),
               child:
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(t['e']!, style: const TextStyle(fontSize: 28)),
@@ -1939,6 +2028,8 @@ class _PaywallTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const oLime = Colors.white;
+    const oLimeDark = AppColors.oLimeDark;
     final trialDays = (appliedPromo?['type'] == 'trial')
         ? (appliedPromo!['label'].contains('30') ? 30 : 14)
         : 7;
@@ -1960,18 +2051,19 @@ class _PaywallTimeline extends StatelessWidget {
         'date': fmtDate(reminderDate),
         'desc': 'We email you a reminder',
         'icon': '📧',
-        'color': Colors.orange
+        'color': oLime
       },
       {
         'label': 'Day $trialDays',
         'date': fmtDate(trialEnd),
         'desc': plan == 'annual' ? '\$35.88 billed' : '\$7.99 billed',
         'icon': '💳',
-        'color': Colors.blue
+        'color': oLime
       },
     ];
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const SizedBox(height: 12),
@@ -1996,10 +2088,10 @@ class _PaywallTimeline extends StatelessWidget {
                 child: Container(
                   width: 2,
                   decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [oLime, Colors.orange, Colors.blue]),
+                          colors: [oLime, oLimeDark, oLime]),
                       borderRadius: BorderRadius.circular(99)),
                 ),
               )),
@@ -2029,9 +2121,9 @@ class _PaywallTimeline extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                       color: oCard,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                          color: i == 0 ? color : AppColors.oBorder)),
+                          color: i == 0 ? color : Colors.white.withValues(alpha: 0.1))),
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -2068,8 +2160,8 @@ class _PaywallTimeline extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
               color: oCard,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.oBorder)),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1))),
           child: Column(children: [
             _PriceRow(
                 label: 'Free trial',
@@ -2177,5 +2269,86 @@ class _PriceRow extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                   color: color ?? oSub))),
     ]);
+  }
+}
+
+class _CelebrationStep extends StatelessWidget {
+  final VoidCallback onComplete;
+  final Color oLime, oText, oSub;
+  const _CelebrationStep({required this.onComplete, required this.oLime, required this.oText, required this.oSub});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: oLime.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Center(
+              child: Text('🎉', style: TextStyle(fontSize: 60)),
+            ),
+          ).animate().scale(duration: 600.ms, curve: Curves.elasticOut).shimmer(delay: 600.ms),
+          const SizedBox(height: 40),
+          const Text(
+            "Healthy Life Boosted!",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              fontFamily: 'Inter',
+              letterSpacing: -1.0,
+            ),
+          ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
+          const SizedBox(height: 16),
+          Text(
+            "You're all set to use the world's most advanced AI medication tracker.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: oSub,
+              fontSize: 16,
+              height: 1.5,
+            ),
+          ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0),
+          const SizedBox(height: 60),
+          GestureDetector(
+            onTap: onComplete,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              decoration: BoxDecoration(
+                color: oLime,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: oLime.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Text(
+                "Go to Dashboard",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ).animate().scale(delay: 800.ms, duration: 400.ms, curve: Curves.elasticOut),
+        ],
+      ),
+    );
   }
 }

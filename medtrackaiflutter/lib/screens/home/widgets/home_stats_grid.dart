@@ -26,12 +26,8 @@ class HomeStatsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final L = context.L;
     final adherence = (state.getAdherenceScore() * 100).round();
-    final adhColor = adherence >= 80
-        ? L.green
-        : adherence >= 50
-            ? L.amber
-            : L.red;
-
+    
+    // Minimalist monochrome color selection
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -39,134 +35,112 @@ class HomeStatsGrid extends StatelessWidget {
           // Card 1: Daily Progress
           Expanded(
             child: Container(
-              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: L.card,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: L.border.withOpacity(0.5)),
-                gradient: LinearGradient(
-                  colors: [L.card, L.bg.withOpacity(0.5)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.0),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Text('💊', style: TextStyle(fontSize: 16)),
-                      const SizedBox(width: 8),
-                      Text('$takenCount',
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text('$takenCount',
+                              style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w900,
+                                  color: L.text,
+                                  letterSpacing: -1.0)),
+                          const SizedBox(width: 4),
+                          Text('/${doses.length}',
+                              style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 13,
+                                  color: L.sub,
+                                  fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text('Doses today',
                           style: TextStyle(
                               fontFamily: 'Inter',
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              color: L.text,
-                              letterSpacing: -1.0)),
-                      Text('/${doses.length}',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 12,
+                              fontSize: 11,
                               color: L.sub,
-                              fontWeight: FontWeight.w700)),
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.1)),
+                      const SizedBox(height: 16),
+                      RingChart(
+                        percent: dosePct,
+                        size: 48,
+                        strokeWidth: 5,
+                        color: L.text,
+                        label: '${(dosePct * 100).round()}%',
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text('Doses today',
-                      style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 12,
-                          color: L.sub,
-                          fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 16),
-                  RingChart(
-                    percent: dosePct,
-                    size: 54,
-                    strokeWidth: 6,
-                    color: ringCol,
-                    label: '${(dosePct * 100).round()}%',
-                  ),
-                ],
-              ),
-            ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0),
+                ),
+              ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           // Card 2: Adherence Score
           Expanded(
             child: Container(
-              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: L.card,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: L.border.withOpacity(0.5)),
-                gradient: LinearGradient(
-                  colors: [L.card, L.bg.withOpacity(0.5)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.0),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Text('📈', style: TextStyle(fontSize: 16)),
-                      const SizedBox(width: 8),
-                      Text('$adherence%',
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                          Text('$adherence%',
+                              style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w900,
+                                  color: L.text,
+                                  letterSpacing: -1.0)),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text('Adherence (30d)',
                           style: TextStyle(
                               fontFamily: 'Inter',
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              color: adhColor,
-                              letterSpacing: -1.0)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text('Adherence (30d)',
-                      style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 12,
-                          color: L.sub,
-                          fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 16),
-                  Container(
-                    height: 6,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                        color: L.border.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(99)),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: adherence / 100.0,
-                      child: Container(
+                              fontSize: 11,
+                              color: L.sub,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.1)),
+                      const SizedBox(height: 20),
+                      Container(
+                        height: 5,
+                        width: double.infinity,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: [
-                            adhColor,
-                            adhColor.withOpacity(0.7)
-                          ]),
-                          borderRadius: BorderRadius.circular(99),
+                            color: L.fill.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(99)),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: adherence / 100.0,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: L.text,
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ).animate(delay: 150.ms).fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0),
+                ),
+              ).animate(delay: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
           ),
         ],
       ),

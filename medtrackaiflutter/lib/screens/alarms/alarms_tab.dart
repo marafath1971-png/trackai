@@ -4,10 +4,9 @@ import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
 import '../../domain/entities/entities.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/shared/shared_widgets.dart';
+import '../../core/utils/color_utils.dart';
 import '../../widgets/common/modern_time_picker.dart';
 import '../../core/utils/date_formatter.dart';
-import 'dart:ui';
 import 'package:flutter_animate/flutter_animate.dart';
 
 // ══════════════════════════════════════════════
@@ -54,10 +53,12 @@ class _AlarmsTabState extends State<AlarmsTab> {
     return Scaffold(
       backgroundColor: L.bg,
       body: Stack(children: [
-        SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            children: [
+        Scrollbar(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
+            child: Column(
+              children: [
               Padding(
                 padding: EdgeInsets.only(
                     top: 100 + MediaQuery.of(context).padding.top,
@@ -85,7 +86,7 @@ class _AlarmsTabState extends State<AlarmsTab> {
                 ),
               ),
               if (activeSchedules.isNotEmpty)
-                ..._buildGroupedAlarms(activeSchedules, state, L),
+                ..._buildGroupedAlarms(activeSchedules, state, L, nextDose),
               if (inactiveSchedules.isNotEmpty) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
@@ -110,6 +111,7 @@ class _AlarmsTabState extends State<AlarmsTab> {
                         sch: sch,
                         state: state,
                         L: L,
+                        isNext: false,
                         onToggle: () =>
                             state.toggleSchedule(sch.med.id, sch.idx),
                         onRemove: () =>
@@ -155,71 +157,68 @@ class _AlarmsTabState extends State<AlarmsTab> {
             ],
           ),
         ),
+      ),
 
         // Fixed Premium Header
         Positioned(
           top: 0,
           left: 0,
           right: 0,
-          child: ClipRRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-              child: Container(
-                padding: EdgeInsets.fromLTRB(24, 60 + MediaQuery.of(context).padding.top, 24, 20),
-                decoration: BoxDecoration(
-                  color: L.bg.withValues(alpha: 0.8),
-                  border: Border(
-                    bottom: BorderSide(color: L.border.withValues(alpha: 0.5), width: 0.5),
-                  ),
-                ),
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Reminders',
-                                style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w900,
-                                    color: L.text,
-                                    letterSpacing: -1.2)),
-                            const SizedBox(height: 4),
-                            Text(
-                                activeCount > 0
-                                    ? 'You have $activeCount scheduled doses'
-                                    : (state.meds.isEmpty
-                                        ? 'Start by adding a medicine'
-                                        : 'No active reminders'),
-                                style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 14,
-                                    color: L.sub,
-                                    fontWeight: FontWeight.w600)),
-                          ]),
-                      if (activeCount > 0)
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                              color: const Color(0xFF111111),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFA3E635).withValues(alpha: 0.2),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 5),
-                                )
-                              ]),
-                          child: const Center(
-                            child: Icon(Icons.notifications_active_rounded,
-                                color: Color(0xFFA3E635), size: 22),
-                          ),
-                        ),
-                    ]),
+          child: Container(
+            padding: EdgeInsets.fromLTRB(24, 60 + MediaQuery.of(context).padding.top, 24, 20),
+            decoration: BoxDecoration(
+              color: L.bg,
+              border: Border(
+                bottom: BorderSide(color: L.border, width: 1.5),
               ),
             ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Reminders',
+                        style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            color: L.text,
+                            letterSpacing: -1.2)),
+                    const SizedBox(height: 4),
+                    Text(
+                        activeCount > 0
+                            ? 'You have $activeCount scheduled doses'
+                            : (state.meds.isEmpty
+                                ? 'Start by adding a medicine'
+                                : 'No active reminders'),
+                        style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 14,
+                            color: L.sub,
+                            fontWeight: FontWeight.w600)),
+                  ]),
+                if (activeCount > 0)
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                        color: L.card2,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: L.green.withValues(alpha: 0.3), width: 1.5),
+                        boxShadow: [
+                      BoxShadow(
+                        color: L.green.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      )
+                    ]),
+                    child: Center(
+                      child: Icon(Icons.notifications_active_rounded,
+                          color: L.green, size: 24),
+                    ),
+                  ),
+            ]),
           ),
         ),
 
@@ -247,7 +246,7 @@ class _AlarmsTabState extends State<AlarmsTab> {
 }
 
 List<Widget> _buildGroupedAlarms(
-    List<dynamic> active, AppState state, AppThemeColors L) {
+    List<dynamic> active, AppState state, AppThemeColors L, dynamic nextDose) {
   final Map<TimePeriod, List<dynamic>> grouped = {
     TimePeriod.morning: [],
     TimePeriod.afternoon: [],
@@ -296,6 +295,7 @@ List<Widget> _buildGroupedAlarms(
             sch: sch,
             state: state,
             L: L,
+            isNext: sch == nextDose, // Pass isNext to highlight
             onToggle: () {
               HapticFeedback.lightImpact();
               state.toggleSchedule(sch.med.id, sch.idx);
@@ -340,17 +340,19 @@ class _NextDoseIndicator extends StatelessWidget {
         ScaleEffect(begin: const Offset(0.95, 0.95), duration: 500.ms, curve: Curves.easeOut),
       ],
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
-          color: const Color(0xFF111111),
-          borderRadius: BorderRadius.circular(32),
+          color: L.card,
+          borderRadius: BorderRadius.circular(36),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFA3E635).withValues(alpha: 0.15),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 30,
-              offset: const Offset(0, 10),
-            )
+              offset: const Offset(0, 15),
+              spreadRadius: -10,
+            ),
           ],
+          border: Border.all(color: L.border, width: 1.5),
         ),
         child: Column(
           children: [
@@ -365,15 +367,15 @@ class _NextDoseIndicator extends StatelessWidget {
                             fontFamily: 'Inter',
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
-                            color: const Color(0xFFA3E635),
+                            color: L.green,
                             letterSpacing: 1.5)),
                     const SizedBox(height: 4),
                     Text(diffStr,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
-                            color: Colors.white,
+                            color: L.text,
                             letterSpacing: -0.5)),
                   ],
                 ),
@@ -385,7 +387,7 @@ class _NextDoseIndicator extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Center(
-                    child: Icon(Icons.timer_outlined, color: const Color(0xFFA3E635), size: 24),
+                    child: Icon(Icons.timer_outlined, color: L.green, size: 24),
                   ),
                 ),
               ],
@@ -394,8 +396,8 @@ class _NextDoseIndicator extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(20),
+                color: L.fill,
+                borderRadius: BorderRadius.circular(24),
               ),
               child: Row(
                 children: [
@@ -416,17 +418,17 @@ class _NextDoseIndicator extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(med.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.white,
+                                color: L.text,
                                 letterSpacing: -0.3)),
                         Text('${s.label} · ${fmtTime(s.h, s.m)}',
                             style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 13,
-                                color: Colors.white.withValues(alpha: 0.6),
+                                color: L.sub,
                                 fontWeight: FontWeight.w500)),
                       ],
                     ),
@@ -434,7 +436,7 @@ class _NextDoseIndicator extends StatelessWidget {
                   const Icon(Icons.chevron_right_rounded, color: Colors.white38),
                 ],
               ),
-            ),
+            ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 3.seconds, color: Colors.white.withValues(alpha: 0.05)),
           ],
         ),
       ),
@@ -481,11 +483,13 @@ class _TimelineAlarmCard extends StatelessWidget {
   final dynamic sch; // {med, sched, idx}
   final AppState state;
   final AppThemeColors L;
+  final bool isNext;
   final VoidCallback onToggle, onRemove;
   const _TimelineAlarmCard(
       {required this.sch,
       required this.state,
       required this.L,
+      this.isNext = false,
       required this.onToggle,
       required this.onRemove});
 
@@ -495,30 +499,39 @@ class _TimelineAlarmCard extends StatelessWidget {
     final s = sch.sched as ScheduleEntry;
     final medColor = hexToColor(med.color);
 
-    return Animate(
-      effects: [
-        FadeEffect(duration: 400.ms, curve: Curves.easeOut),
-        SlideEffect(begin: const Offset(0, 0.05), duration: 400.ms, curve: Curves.easeOut),
-      ],
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: L.card,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: L.border.withValues(alpha: 0.5)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: IntrinsicHeight(
-          child: Row(children: [
-            // Left Accent Bar
-            Container(width: 6, color: medColor),
+    Widget card = Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: L.card,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+            color: isNext ? L.green.withValues(alpha: 0.5) : L.border,
+            width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: IntrinsicHeight(
+        child: Row(children: [
+          // Left Accent Bar (Glow if next)
+          Container(
+              width: isNext ? 8 : 6,
+              color: isNext ? L.green : medColor,
+              child: isNext
+                  ? Animate(
+                      onPlay: (controller) => controller.repeat(reverse: true),
+                      effects: [
+                        FadeEffect(
+                            begin: 0.5, end: 1.0, duration: 1000.ms, curve: Curves.easeInOut)
+                      ],
+                      child: Container(color: L.text),
+                    )
+                  : null),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -632,11 +645,11 @@ class _TimelineAlarmCard extends StatelessWidget {
                               height: 18,
                               decoration: BoxDecoration(
                                 color: isScheduled
-                                    ? const Color(0xFF111111)
+                                    ? L.card2
                                     : Colors.transparent,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                    color: isScheduled ? const Color(0xFF111111) : L.border,
+                                    color: isScheduled ? L.card2 : L.border,
                                     width: 1),
                               ),
                               child: Center(
@@ -645,7 +658,7 @@ class _TimelineAlarmCard extends StatelessWidget {
                                           fontFamily: 'Inter',
                                           fontSize: 9,
                                           fontWeight: FontWeight.w800,
-                                          color: isScheduled ? Colors.white : L.sub))),
+                                          color: isScheduled ? L.text : L.sub))),
                             );
                           }).toList(),
                         ),
@@ -657,7 +670,33 @@ class _TimelineAlarmCard extends StatelessWidget {
             ),
           ]),
         ),
-      ),
+    );
+
+    if (isNext) {
+      card = Animate(
+        onPlay: (controller) => controller.repeat(reverse: true),
+        effects: [
+          CustomEffect(
+            builder: (context, value, child) {
+              return Transform.scale(
+                scale: 1.0 + (value * 0.015),
+                child: child,
+              );
+            },
+            duration: 1500.ms,
+            curve: Curves.easeInOut,
+          )
+        ],
+        child: card,
+      );
+    }
+
+    return Animate(
+      effects: [
+        FadeEffect(duration: 400.ms, curve: Curves.easeOut),
+        SlideEffect(begin: const Offset(0, 0.05), duration: 400.ms, curve: Curves.easeOut),
+      ],
+      child: card,
     );
   }
 }
@@ -669,36 +708,47 @@ class _PremiumToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final L = context.L;
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
         onChanged(!value);
       },
-      child: Container(
-        width: 50,
-        height: 28,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        width: 52,
+        height: 30,
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
             color: value
-                ? const Color(0xFF111111)
-                : Colors.black.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(100)),
+                ? L.text.withValues(alpha: 0.2)
+                : L.fill,
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(
+              color: value ? L.text.withValues(alpha: 0.3) : L.border,
+              width: 1,
+            ),
+        ),
         child: AnimatedAlign(
-          duration: const Duration(milliseconds: 250),
+          duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutBack,
           alignment: value ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
-            width: 20,
-            height: 20,
-            decoration: const BoxDecoration(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 4,
-                      offset: Offset(0, 2))
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2))
                 ]),
+            child: value
+                ? Icon(Icons.check_rounded, size: 14, color: L.text)
+                : Icon(Icons.close_rounded, size: 14, color: L.sub.withValues(alpha: 0.5)),
           ),
         ),
       ),
@@ -723,11 +773,18 @@ class _MedAlarmContainer extends StatelessWidget {
     final count = med.schedule.length;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: L.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: L.border.withValues(alpha: 0.5)),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: L.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(children: [
         Row(children: [
@@ -736,7 +793,7 @@ class _MedAlarmContainer extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
                 color: medColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14)),
+                borderRadius: BorderRadius.circular(24)),
             child: Center(
                 child: Text(med.form == 'tablet' ? '💊' : '💧',
                     style: const TextStyle(fontSize: 22))),
@@ -769,8 +826,8 @@ class _MedAlarmContainer extends StatelessWidget {
                   height: 36,
                   decoration: const BoxDecoration(
                       color: Color(0xFF111111), shape: BoxShape.circle),
-                  child: const Icon(Icons.add_rounded,
-                      color: Color(0xFFA3E635), size: 20))),
+                  child: Icon(Icons.add_rounded,
+                      color: L.text, size: 20))),
         ]),
         if (med.schedule.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -782,8 +839,8 @@ class _MedAlarmContainer extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                  color: L.fill.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(14),
+                  color: L.fill.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(22),
                   border: Border.all(color: L.border.withValues(alpha: 0.3))),
               child: Row(children: [
                 Text(fmtTime(s.h, s.m),
@@ -819,15 +876,16 @@ class _MedAlarmContainer extends StatelessWidget {
 Widget _buildEmptyState(BuildContext context, AppThemeColors L) {
   final state = context.read<AppState>();
   return Container(
-    padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+    padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
     decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(24),
+        color: L.card.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: L.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 4,
-              offset: const Offset(0, 1))
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 10))
         ]),
     child: Column(children: [
       Container(
@@ -856,17 +914,21 @@ Widget _buildEmptyState(BuildContext context, AppThemeColors L) {
               fontFamily: 'Inter', fontSize: 14, color: L.sub, height: 1.5),
           textAlign: TextAlign.center),
       const SizedBox(height: 24),
-      if (state.meds.isEmpty)
         GestureDetector(
           onTap: () {
-            // Navigation to Scan tab is handled by the parent AppShell
-            // This is a placeholder for the user to trigger the scan overlay or tab change
+            HapticFeedback.lightImpact();
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
             decoration: BoxDecoration(
                 color: const Color(0xFF111111),
-                borderRadius: BorderRadius.circular(14)),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                      color: L.text.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8))
+                ]),
             child: const Text('Scan a Medicine',
                 style: TextStyle(
                     fontFamily: 'Inter',
@@ -910,12 +972,30 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
   int _h = 8, _m = 0;
   String _label = 'Morning';
   final List<int> _days = [1, 2, 3, 4, 5, 6, 0];
-  bool _withFood = false;
+  String _intake = '';
+
+  final List<Map<String, String>> _intakeOptions = [
+    {'label': 'None', 'emoji': '➖'},
+    {'label': 'With Food', 'emoji': '🍞'},
+    {'label': 'Before Food', 'emoji': '⏳'},
+    {'label': 'After Meals', 'emoji': '🍽️'},
+    {'label': 'With Water', 'emoji': '💧'},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _intake = widget.med.intakeInstructions;
+    if (_intake.isEmpty) _intake = 'None';
+  }
 
   @override
   Widget build(BuildContext context) {
     final L = context.L;
     final state = context.read<AppState>();
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final maxH = MediaQuery.of(context).size.height * 0.85;
+
     return GestureDetector(
       onTap: widget.onClose,
       child: Container(
@@ -924,13 +1004,26 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
           alignment: Alignment.bottomCenter,
           child: GestureDetector(
             onTap: () {},
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.only(bottom: bottomInset),
+              constraints: BoxConstraints(maxHeight: maxH),
               decoration: BoxDecoration(
-                  color: L.card,
+                  color: L.card.withValues(alpha: 0.95),
                   borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(24))),
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
-              child: SingleChildScrollView(
+                      const BorderRadius.vertical(top: Radius.circular(32)),
+                  border: Border.all(color: L.border.withValues(alpha: 0.5)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 40,
+                      offset: const Offset(0, -10),
+                    ),
+                  ]),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+                child: SingleChildScrollView(
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -1054,10 +1147,15 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                             _m = res.minute;
                             // Update label if it's one of the defaults
                             if (_label == 'Morning' || _label == 'Afternoon' || _label == 'Evening' || _label == 'Night') {
-                              if (_h >= 5 && _h < 12) _label = 'Morning';
-                              else if (_h >= 12 && _h < 17) _label = 'Afternoon';
-                              else if (_h >= 17 && _h < 21) _label = 'Evening';
-                              else _label = 'Night';
+                              if (_h >= 5 && _h < 12) {
+                                _label = 'Morning';
+                              } else if (_h >= 12 && _h < 17) {
+                                _label = 'Afternoon';
+                              } else if (_h >= 17 && _h < 21) {
+                                _label = 'Evening';
+                              } else {
+                                _label = 'Night';
+                              }
                             }
                           });
                         }
@@ -1066,7 +1164,7 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         decoration: BoxDecoration(
                             color: L.fill,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(24),
                             border: Border.all(color: L.border.withValues(alpha: 0.5))),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1082,11 +1180,11 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                             ),
                             Container(
                               padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                  color: const Color(0xFF111111),
+                              decoration: const BoxDecoration(
+                                  color: Color(0xFF111111),
                                   shape: BoxShape.circle),
-                              child: const Icon(Icons.access_time_filled_rounded,
-                                  color: Color(0xFFA3E635), size: 20),
+                              child: Icon(Icons.access_time_filled_rounded,
+                                  color: L.text, size: 20),
                             ),
                           ],
                         ),
@@ -1105,7 +1203,7 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                     Container(
                       decoration: BoxDecoration(
                           color: L.fill,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(24),
                           border: Border.all(color: L.border.withValues(alpha: 0.5))),
                       child: TextField(
                         controller: TextEditingController(text: _label)
@@ -1173,48 +1271,47 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                     }).toList()),
                     const SizedBox(height: 24),
 
-                    // With food toggle
-                    GestureDetector(
-                      onTap: () => setState(() => _withFood = !_withFood),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                            color: L.fill,
-                            borderRadius: BorderRadius.circular(14)),
-                        child: Row(children: [
-                          const Text('🍽️', style: TextStyle(fontSize: 20)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                              child: Text('Take with food',
+                    // Intake instructions selector
+                    Text('Intake Instructions',
+                        style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: L.sub,
+                            letterSpacing: 0.8)),
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                          children: _intakeOptions.map((opt) {
+                        final active = _intake == opt['label'];
+                        return GestureDetector(
+                          onTap: () => setState(() => _intake = opt['label']!),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 8, bottom: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                                color: active ? const Color(0xFF111111) : L.fill,
+                             borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                                    color: active
+                                        ? const Color(0xFF111111)
+                                        : L.border.withValues(alpha: 0.5))),
+                            child: Row(children: [
+                              Text(opt['emoji']!,
+                                  style: const TextStyle(fontSize: 14)),
+                              const SizedBox(width: 8),
+                              Text(opt['label']!,
                                   style: TextStyle(
                                       fontFamily: 'Inter',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: L.text))),
-                          Container(
-                            width: 44,
-                            height: 26,
-                            decoration: BoxDecoration(
-                                color: _withFood
-                                    ? const Color(0xFF111111)
-                                    : Colors.black.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(99)),
-                            child: AnimatedAlign(
-                                duration: const Duration(milliseconds: 200),
-                                alignment: _withFood
-                                    ? Alignment.centerRight
-                                    : Alignment.centerLeft,
-                                child: Container(
-                                    width: 20,
-                                    height: 20,
-                                    margin: const EdgeInsets.all(3),
-                                    decoration: const BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle))),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: active ? Colors.white : L.text)),
+                            ]),
                           ),
-                        ]),
-                      ),
+                        );
+                      }).toList()),
                     ),
                     const SizedBox(height: 20),
 
@@ -1223,7 +1320,7 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                           color: L.fill,
-                          borderRadius: BorderRadius.circular(16)),
+                          borderRadius: BorderRadius.circular(24)),
                       child: Row(children: [
                         Container(
                             width: 40,
@@ -1247,7 +1344,7 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                                       color: L.text,
                                       letterSpacing: -0.3)),
                               Text(
-                                  '$_label · ${_days.length == 7 ? "Every day" : _days.isEmpty ? "No days" : "${_days.length} days"}${_withFood ? " · 🍽️ With food" : ""}',
+                                  '$_label · ${_days.length == 7 ? "Every day" : _days.isEmpty ? "No days" : "${_days.length} days"}${_intake != 'None' ? " · $_intake" : ""}',
                                   style: TextStyle(
                                       fontFamily: 'Inter',
                                       fontSize: 12,
@@ -1260,6 +1357,9 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                     // Set button
                     GestureDetector(
                       onTap: () {
+                        if (_intake != widget.med.intakeInstructions) {
+                          state.updateMed(widget.med.id, intakeInstructions: _intake, updateNotifs: false);
+                        }
                         state.addSchedule(
                             widget.med.id,
                             ScheduleEntry(
@@ -1274,7 +1374,7 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         decoration: BoxDecoration(
                             color: const Color(0xFF111111),
-                            borderRadius: BorderRadius.circular(16)),
+                            borderRadius: BorderRadius.circular(24)),
                         child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -1290,63 +1390,18 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                             ]),
                       ),
                     ),
-                  ])),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
-class _TimeInput extends StatelessWidget {
-  final String label, value;
-  final VoidCallback onInc, onDec;
-  const _TimeInput(
-      {required this.label,
-      required this.value,
-      required this.onInc,
-      required this.onDec});
-
-  @override
-  Widget build(BuildContext context) {
-    final L = context.L;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label,
-          style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: L.sub,
-              letterSpacing: 0.8)),
-      const SizedBox(height: 4),
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-            color: L.fill, borderRadius: BorderRadius.circular(12)),
-        child:
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(value,
-              style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: L.text)),
-          Column(children: [
-            GestureDetector(
-                onTap: onInc,
-                child: Icon(Icons.keyboard_arrow_up_rounded,
-                    size: 16, color: L.sub)),
-            GestureDetector(
-                onTap: onDec,
-                child: Icon(Icons.keyboard_arrow_down_rounded,
-                    size: 16, color: L.sub)),
-          ]),
-        ]),
-      ),
-    ]); // Added closing bracket for Column
-  }
-}
 
 class _SnoozeBtn extends StatelessWidget {
   final String label;
@@ -1361,14 +1416,21 @@ class _SnoozeBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: L.fill,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: L.border),
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            const Icon(Icons.snooze_rounded,
-                size: 12, color: Color(0xFF6366F1)),
+            Icon(Icons.snooze_rounded,
+                size: 12, color: L.text),
             const SizedBox(width: 4),
             Text(label,
                 style: TextStyle(

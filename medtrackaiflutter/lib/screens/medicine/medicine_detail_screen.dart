@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
 import '../../domain/entities/entities.dart';
 import '../../theme/app_theme.dart';
+import '../../core/utils/color_utils.dart';
 import '../../widgets/shared/shared_widgets.dart';
 import '../../widgets/common/modern_time_picker.dart';
 import 'package:flutter/services.dart';
@@ -24,9 +25,7 @@ class MedicineDetailScreen extends StatefulWidget {
   State<MedicineDetailScreen> createState() => _MedicineDetailScreenState();
 }
 
-class _MedicineDetailScreenState extends State<MedicineDetailScreen>
-    with SingleTickerProviderStateMixin {
-  int _activeTab = 0; // 0: Overview, 1: History, 2: Reminders
+class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   bool _editMode = false;
   late Map<String, dynamic> _editFields;
 
@@ -51,6 +50,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
       'count': med.count.toString(),
       'totalCount': med.totalCount.toString(),
       'refillAt': med.refillAt.toString(),
+      'intakeInstructions': med.intakeInstructions,
     };
   }
 
@@ -62,7 +62,6 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
     final L = context.L;
     final medColor = hexToColor(med.color);
 
-    // Calculate Adherence
     final medHistory = state.history.values
         .expand((e) => e)
         .where((e) => e.medId == med.id)
@@ -71,421 +70,299 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
     final totalDoses = medHistory.length;
     final adh = totalDoses == 0 ? 0 : (takenCount * 100 / totalDoses).round();
 
-    return Material(
-      color: L.bg,
-      child: Column(
-        children: [
-          // 1. HERO SECTION (Dark / Med Color Background)
-          _buildHero(med, medColor, L),
-
-          if (_editMode)
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: _buildEditForm(med, state, L),
+    return Scaffold(
+      backgroundColor: L.bg,
+      body: _editMode
+          ? SafeArea(
+              child: Scrollbar(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics()),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Column(
+                    children: [
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                              icon: Icon(Icons.close_rounded, color: L.sub),
+                              onPressed: () => setState(() {
+                                _resetEdit();
+                                _editMode = false;
+                              }),
+                            ),
+                          ),
+                          Text('Edit Medication', 
+                              style: TextStyle(
+                                  color: L.text, 
+                                  fontSize: 18, 
+                                  fontWeight: FontWeight.w900, 
+                                  fontFamily: 'Inter',
+                                  letterSpacing: -0.5)),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      _buildEditForm(med, state, L),
+                      const SizedBox(height: 120),
+                    ],
+                  ),
+                ),
               ),
+                
             )
-          else ...[
-            // 2. STATS ROW (3 Columns)
-            _buildStatsRow(med, adh, L),
-
-            // 3. TABS HEADER
-            _buildTabsHeader(L),
-
-            // 4. TAB CONTENT
-            Expanded(
-              child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                physics: const BouncingScrollPhysics(),
-                child: _buildActiveTabContent(med, state, medColor, medHistory,
-                    adh, takenCount, totalDoses, L),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHero(Medicine med, Color medColor, AppThemeColors L) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + 20,
-          bottom: 32,
-          left: 24,
-          right: 24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF111111),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 10)),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white, size: 20),
-                onPressed: widget.onBack,
-              ),
-              Row(
-                children: [
-                  _CircleIconBtn(
-                      icon: _editMode
-                          ? Icons.close_rounded
-                          : Icons.edit_note_rounded,
-                      onTap: () => setState(() {
-                            if (_editMode) _resetEdit();
-                            _editMode = !_editMode;
-                          })),
-                  const SizedBox(width: 12),
-                  _CircleIconBtn(icon: Icons.share_rounded, onTap: () {}),
+          : Scrollbar(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics()),
+                slivers: [
+                  _buildSliverAppBar(med, medColor, L),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (med.intakeInstructions.isNotEmpty && med.intakeInstructions != 'None')
+                            _buildIntakeChip(med.intakeInstructions, L),
+                          if (med.intakeInstructions.isNotEmpty && med.intakeInstructions != 'None')
+                            const SizedBox(height: 32),
+                          
+                          _buildStatsCards(med, adh, L),
+                          const SizedBox(height: 32),
+                          _buildScheduleSection(med, state, L),
+                          const SizedBox(height: 32),
+                          _buildHistorySection(med, adh, takenCount, totalDoses, L),
+                          const SizedBox(height: 32),
+                          _buildSettingsSection(med, state, L),
+                          const SizedBox(height: 120),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            ],
+            ),
+    );
+  }
+
+  Widget _buildSliverAppBar(Medicine med, Color medColor, AppThemeColors L) {
+    return SliverAppBar(
+      expandedHeight: 320,
+      pinned: true,
+      backgroundColor: L.bg,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      leading: IconButton(
+        icon: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: L.bg.withValues(alpha: 0.6),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
           ),
-          const SizedBox(height: 24),
-          Hero(
-            tag: 'med_${med.id}',
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                    color: medColor.withValues(alpha: 0.3), width: 3),
-              ),
-              child: MedImage(
-                imageUrl: med.imageUrl,
-                width: 100,
-                height: 100,
-                borderRadius: 99,
-                placeholder: const Center(
-                  child: Text('💊', style: TextStyle(fontSize: 48)),
+          child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16),
+        ),
+        onPressed: widget.onBack,
+      ),
+      actions: [
+        _CircleIconBtn(
+          icon: Icons.edit_note_rounded,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            setState(() {
+              _resetEdit();
+              _editMode = true;
+            });
+          },
+        ),
+        const SizedBox(width: 12),
+        _CircleIconBtn(
+          icon: Icons.share_rounded,
+          onTap: () {
+            HapticFeedback.lightImpact();
+          },
+        ),
+        const SizedBox(width: 20),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
+        titlePadding: const EdgeInsets.only(bottom: 16, left: 40, right: 40),
+        title: Text(
+          med.name,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w900,
+            color: L.text,
+            letterSpacing: -0.5,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        background: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Premium background gradient/blur
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      medColor.withValues(alpha: 0.25),
+                      L.bg,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(med.name,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: -0.5)),
-          if (med.brand.isNotEmpty)
-            Text(med.brand,
-                style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white.withValues(alpha: 0.5))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsRow(Medicine med, int adh, AppThemeColors L) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _StatItem(
-              label: 'ADHERENCE',
-              value: '$adh%',
-              color: adh >= 80 ? L.green : L.amber,
-              L: L),
-          _StatItem(
-              label: 'STOCK',
-              value: '${med.count}',
-              sub: 'pills',
-              color: med.count <= med.refillAt ? L.red : L.text,
-              L: L),
-          _StatItem(
-              label: 'COURSE',
-              value: 'N/A',
-              sub: 'Progress',
-              color: L.green,
-              L: L),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabsHeader(AppThemeColors L) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: L.fill,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          _TabBtn(
-              label: 'Overview',
-              active: _activeTab == 0,
-              onTap: () => setState(() => _activeTab = 0),
-              L: L),
-          _TabBtn(
-              label: 'History',
-              active: _activeTab == 1,
-              onTap: () => setState(() => _activeTab = 1),
-              L: L),
-          _TabBtn(
-              label: 'Reminders',
-              active: _activeTab == 2,
-              onTap: () => setState(() => _activeTab = 2),
-              L: L),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActiveTabContent(
-      Medicine med,
-      AppState state,
-      Color medColor,
-      List<DoseEntry> medHistory,
-      int adh,
-      int taken,
-      int total,
-      AppThemeColors L) {
-    switch (_activeTab) {
-      case 1:
-        return _buildHistoryTab(med, medHistory, adh, taken, total, L);
-      case 2:
-        return _buildRemindersTab(med, L);
-      default:
-        return _buildOverviewTab(med, state, medColor, L);
-    }
-  }
-
-  Widget _buildOverviewTab(
-      Medicine med, AppState state, Color medColor, AppThemeColors L) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionLabel('📌 Instructions'),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: medColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: medColor.withValues(alpha: 0.2), width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: medColor.withValues(alpha: 0.05),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: medColor, shape: BoxShape.circle),
-                  child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 16),
+            // Glass circle glow
+            Positioned(
+              top: -40,
+              left: -40,
+              child: Container(
+                width: 240,
+                height: 240,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: medColor.withValues(alpha: 0.1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: medColor.withValues(alpha: 0.1),
+                      blurRadius: 100,
+                      spreadRadius: 20,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Text('How & When to Take',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        color: L.text,
-                        fontSize: 17,
-                        letterSpacing: -0.3)),
-              ]),
-              const SizedBox(height: 20),
-              _buildInstructionRow("📖 Instruction", med.notes.isNotEmpty ? med.notes : "Take as prescribed by your doctor.", L),
-              const Divider(height: 32, thickness: 0.5),
-              _buildInstructionRow("🥛 How to take", "Take with water, ideally after meals for better absorption.", L),
-              const Divider(height: 32, thickness: 0.5),
-              _buildInstructionRow("⏰ Best time", "Consistent timing is key for effective results.", L),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        const SectionLabel('Stock Status'),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-              color: L.card,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: L.border)),
-          child: Column(children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('Available Balance',
-                  style: TextStyle(color: L.text, fontWeight: FontWeight.w600)),
-              Text('${med.count} pills',
-                  style: TextStyle(
-                      color: L.text,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 18)),
-            ]),
-            const SizedBox(height: 16),
-            Row(children: [
-              Expanded(
-                  child: _ActionBtn(
-                      label: 'Refill +10',
-                      onTap: () =>
-                          state.updateMed(med.id, count: med.count + 10),
-                      color: L.green,
-                      isGhost: true)),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: _ActionBtn(
-                      label: 'Adjust',
-                      onTap: () {},
-                      color: L.text,
-                      isGhost: true)),
-            ]),
-          ]),
-        ),
-        const SizedBox(height: 24),
-        const SizedBox(height: 32),
-        Center(
-          child: TextButton.icon(
-            onPressed: () {
-              state.deleteMed(med.id);
-              widget.onBack();
-            },
-            icon: Icon(Icons.delete_outline_rounded, color: L.red, size: 18),
-            label: Text('Remove Medicine',
-                style: TextStyle(
-                    color: L.red, fontWeight: FontWeight.w700, fontSize: 14)),
-          ),
-        ),
-        const SizedBox(height: 40),
-      ],
-    );
-  }
-
-  Widget _buildInstructionRow(String label, String content, AppThemeColors L) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label.toUpperCase(),
-            style: TextStyle(
-                color: L.sub,
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.2)),
-        const SizedBox(height: 6),
-        Text(content,
-            style: TextStyle(
-                color: L.text.withValues(alpha: 0.8),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                height: 1.5)),
-      ],
-    );
-  }
-
-  Widget _buildHistoryTab(Medicine med, List<DoseEntry> medHistory, int adh,
-      int taken, int total, AppThemeColors L) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionLabel('Performance Summary'),
-        Row(
-          children: [
-            Expanded(
-                child: _SummaryBox(
-                    label: 'Taken',
-                    value: '$taken',
-                    icon: Icons.check_circle_rounded,
-                    color: L.green,
-                    L: L)),
-            const SizedBox(width: 12),
-            Expanded(
-                child: _SummaryBox(
-                    label: 'Missed',
-                    value: '${total - taken}',
-                    icon: Icons.cancel_rounded,
-                    color: L.red,
-                    L: L)),
+              ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 40),
+                Hero(
+                  tag: 'med_${med.id}',
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: medColor.withValues(alpha: 0.2), width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: medColor.withValues(alpha: 0.15),
+                          blurRadius: 40,
+                          offset: const Offset(0, 15),
+                        )
+                      ],
+                    ),
+                    child: MedImage(
+                      imageUrl: med.imageUrl,
+                      width: 120,
+                      height: 120,
+                      borderRadius: 99,
+                      placeholder: Center(
+                        child: Text(med.name.isNotEmpty ? med.name[0].toUpperCase() : '💊', 
+                            style: const TextStyle(fontSize: 56)),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (med.brand.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: medColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(med.brand,
+                        style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: medColor)),
+                  ),
+                const SizedBox(height: 40),
+              ],
+            ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutCubic),
           ],
         ),
-        const SizedBox(height: 24),
-        const SectionLabel('14-Day Timeline'),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-              color: L.card,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: L.border)),
-          child: Column(
-            children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Text('Last 14 days',
-                    style:
-                        TextStyle(color: L.text, fontWeight: FontWeight.w700)),
-                Text('$adh%',
-                    style: TextStyle(
-                        color: adh >= 80 ? L.green : L.amber,
-                        fontWeight: FontWeight.w900)),
-              ]),
-              const SizedBox(height: 20),
-              // Adherence Grid (Simplified version of JSX 14-day log)
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: List.generate(14, (i) {
-                  return Container(
-                    width: (MediaQuery.of(context).size.width - 100) / 7,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: i < 11 ? L.green.withValues(alpha: 0.15) : L.fill,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: i < 11
-                              ? L.green.withValues(alpha: 0.3)
-                              : L.border),
-                    ),
-                    child: Center(
-                        child: Icon(
-                            i < 11 ? Icons.check_rounded : Icons.remove_rounded,
-                            size: 14,
-                            color: i < 11 ? L.green : L.sub)),
-                  );
-                }),
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildRemindersTab(Medicine med, AppThemeColors L) {
-    final state = context.watch<AppState>();
+  Widget _buildIntakeChip(String intake, AppThemeColors L) {
+    String emoji = '💊';
+    if (intake.contains('Food')) emoji = '🍞';
+    if (intake.contains('Meals')) emoji = '🍽️';
+    if (intake.contains('Water')) emoji = '💧';
+
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: L.fill,
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(color: L.border.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 18)),
+            const SizedBox(width: 8),
+            Text(intake,
+                style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: L.text)),
+          ],
+        ),
+      ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9), delay: 200.ms),
+    );
+  }
+
+  Widget _buildStatsCards(Medicine med, int adh, AppThemeColors L) {
+    return Row(
+      children: [
+        Expanded(
+          child: _GlassDataCard(
+            label: 'ADHERENCE',
+            value: adh == -1 ? 'NEW' : '$adh%',
+            color: adh >= 80 ? L.text : (adh >= 50 ? L.amber : L.red),
+            L: L,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _GlassDataCard(
+            label: 'STOCK LEFT',
+            value: '${med.count}',
+            sub: 'pills',
+            color: med.count <= med.refillAt ? L.red : L.text,
+            L: L,
+          ),
+        ),
+      ],
+    ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.05);
+  }
+
+  Widget _buildScheduleSection(Medicine med, AppState state, AppThemeColors L) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const SectionLabel('Current Schedule'),
+            const SectionLabel('Reminders'),
             TextButton.icon(
               onPressed: () async {
                 HapticFeedback.lightImpact();
                 final result = await ModernTimePicker.show(
                   context,
-                  initialTime: const TimeOfDay(hour: 12, minute: 0),
+                  initialTime: const TimeOfDay(hour: 8, minute: 0),
                   title: "Add Reminder",
                 );
                 if (result != null) {
@@ -498,21 +375,22 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
                   state.addSchedule(med.id, newEntry);
                 }
               },
-              icon: Icon(Icons.add_circle_outline_rounded, color: L.green, size: 18),
-              label: Text('Add New',
+              icon: Icon(Icons.add_circle_outline_rounded, color: L.text, size: 18),
+              label: Text('Add Slot',
                   style: TextStyle(
-                      color: L.green, fontWeight: FontWeight.w800, fontSize: 13)),
+                      color: L.text, fontWeight: FontWeight.w800, fontSize: 13)),
             ),
           ],
         ),
         const SizedBox(height: 8),
         if (med.schedule.isEmpty)
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: L.card,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: L.border.withValues(alpha: 0.5)),
+              color: L.card.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: L.border.withValues(alpha: 0.4)),
             ),
             child: Column(
               children: [
@@ -532,30 +410,22 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
 
             return Animate(
               effects: [
-                FadeEffect(duration: 400.ms, curve: Curves.easeOut),
-                SlideEffect(begin: const Offset(0, 0.05), duration: 400.ms, curve: Curves.easeOut),
+                FadeEffect(duration: 400.ms, delay: (100 * idx).ms, curve: Curves.easeOut),
+                SlideEffect(begin: const Offset(0, 0.05), duration: 400.ms, delay: (100 * idx).ms, curve: Curves.easeOut),
               ],
               child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
+                margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: L.card,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: L.border.withValues(alpha: 0.5)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
+                  color: L.card.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(color: L.border.withValues(alpha: 0.4)),
                 ),
-                clipBehavior: Clip.antiAlias,
                 child: IntrinsicHeight(
                   child: Row(children: [
-                    Container(width: 6, color: medColor),
+                    Container(width: 8, color: medColor.withValues(alpha: 0.8)),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -565,93 +435,258 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
                                 Row(children: [
                                   Text(
                                       '${s.h.toString().padLeft(2, '0')}:${s.m.toString().padLeft(2, '0')}',
-                                      style: TextStyle(
-                                          fontFamily: 'Inter',
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.w900,
-                                          color: s.enabled ? L.text : L.sub,
-                                          letterSpacing: -1.0)),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: L.fill,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(s.label.toUpperCase(),
-                                        style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w800,
-                                            color: L.sub,
-                                            letterSpacing: 0.5)),
-                                  ),
-                                ]),
-                                AppToggle(
-                                    value: s.enabled,
-                                    onChanged: (v) {
-                                      HapticFeedback.lightImpact();
-                                      state.toggleSchedule(med.id, idx);
-                                    }),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                // Days Indicator
-                                Wrap(
-                                  spacing: 4,
-                                  children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-                                      .asMap()
-                                      .entries
-                                      .map((e) {
-                                    final isScheduled = s.days.contains(e.key);
-                                    return Container(
-                                      width: 18,
-                                      height: 18,
-                                      decoration: BoxDecoration(
-                                        color: isScheduled
-                                            ? const Color(0xFF111111)
-                                            : Colors.transparent,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                            color: isScheduled ? const Color(0xFF111111) : L.border,
-                                            width: 1),
+                                          style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontSize: 26,
+                                              fontWeight: FontWeight.w900,
+                                              color: s.enabled ? L.text : L.sub,
+                                              letterSpacing: -1.0)),
+                                      const SizedBox(width: 10),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: L.fill,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(s.label.toUpperCase(),
+                                            style: TextStyle(
+                                                fontFamily: 'Inter',
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w800,
+                                                color: L.sub,
+                                                letterSpacing: 1.0)),
                                       ),
-                                      child: Center(
-                                          child: Text(e.value,
-                                              style: TextStyle(
-                                                  fontFamily: 'Inter',
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: isScheduled ? Colors.white : L.sub))),
-                                    );
-                                  }).toList(),
+                                    ]),
+                                    AppToggle(
+                                        value: s.enabled,
+                                        onChanged: (v) {
+                                          HapticFeedback.lightImpact();
+                                          state.toggleSchedule(med.id, idx);
+                                        }),
+                                  ],
                                 ),
-                                const Spacer(),
-                                IconButton(
-                                  onPressed: () {
-                                    HapticFeedback.mediumImpact();
-                                    state.removeSchedule(med.id, idx);
-                                  },
-                                  icon: Icon(Icons.delete_outline_rounded,
-                                      size: 18, color: L.red.withValues(alpha: 0.7)),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    Wrap(
+                                      spacing: 6,
+                                      children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+                                          .asMap()
+                                          .entries
+                                          .map((e) {
+                                        final isScheduled = s.days.contains(e.key);
+                                        return Container(
+                                          width: 22,
+                                          height: 22,
+                                          decoration: BoxDecoration(
+                                            color: isScheduled
+                                                ? L.text
+                                                : Colors.transparent,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                                color: isScheduled ? L.text : L.border,
+                                                width: 1),
+                                          ),
+                                          child: Center(
+                                              child: Text(e.value,
+                                                  style: TextStyle(
+                                                      fontFamily: 'Inter',
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.w800,
+                                                      color: isScheduled ? L.bg : L.sub))),
+                                        );
+                                      }).toList(),
+                                    ),
+                                    const Spacer(),
+                                    IconButton(
+                                      onPressed: () {
+                                        HapticFeedback.mediumImpact();
+                                        state.removeSchedule(med.id, idx);
+                                      },
+                                      icon: Icon(Icons.delete_outline_rounded,
+                                          size: 20, color: L.red.withValues(alpha: 0.8)),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ]),
                     ),
-                  ]),
+                  ),
+                );
+              }),
+          ],
+        );
+      }
+
+  Widget _buildHistorySection(Medicine med, int adh, int taken, int total, AppThemeColors L) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionLabel('Performance Summary'),
+        Row(
+          children: [
+            Expanded(
+                child: _SummaryBox(
+                    label: 'Taken',
+                    value: '$taken',
+                    icon: Icons.check_circle_rounded,
+                    color: L.text,
+                    L: L)),
+            const SizedBox(width: 12),
+            Expanded(
+                child: _SummaryBox(
+                    label: 'Missed',
+                    value: '${total - taken}',
+                    icon: Icons.cancel_rounded,
+                    color: L.red,
+                    L: L)),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+              color: L.card.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: L.border.withValues(alpha: 0.4)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                )
+              ]),
+          child: Column(
+            children: [
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Text('Last 14 days',
+                    style:
+                        TextStyle(color: L.text, fontWeight: FontWeight.w800, fontSize: 13, letterSpacing: 0.5)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: (adh >= 80 ? L.text : L.red).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text('$adh%',
+                      style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 16,
+                          color: adh >= 80 ? L.text : L.red,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.5)),
                 ),
+              ]),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: List.generate(14, (i) {
+                  final isFilled = i < 11;
+                  return Container(
+                    width: (MediaQuery.of(context).size.width - 110) / 7,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: isFilled ? L.text.withValues(alpha: 0.15) : L.fill,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: isFilled
+                              ? L.text.withValues(alpha: 0.3)
+                              : L.border.withValues(alpha: 0.5)),
+                    ),
+                    child: Center(
+                        child: Icon(
+                            isFilled ? Icons.check_rounded : Icons.remove_rounded,
+                            size: 16,
+                            color: isFilled ? L.text : L.sub.withValues(alpha: 0.5))),
+                  );
+                }),
               ),
-            );
-          }),
-        const SizedBox(height: 40),
+            ],
+          ),
+        ),
       ],
+    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.05);
+  }
+
+  Widget _buildSettingsSection(Medicine med, AppState state, AppThemeColors L) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionLabel('Management'),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: L.card.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: L.border.withValues(alpha: 0.4)),
+          ),
+          child: Column(
+            children: [
+              _buildListTile(
+                icon: Icons.add_circle_outline_rounded,
+                title: 'Refill Stock (+10)',
+                color: L.text,
+                L: L,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  state.updateMed(med.id, count: med.count + 10);
+                },
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Divider(height: 1, thickness: 0.5, color: L.border.withValues(alpha: 0.5)),
+              ),
+              const SizedBox(height: 4),
+              _buildListTile(
+                icon: Icons.delete_outline_rounded,
+                title: 'Delete Medicine',
+                color: L.red,
+                L: L,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  state.deleteMed(med.id);
+                  widget.onBack();
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.05);
+  }
+
+  Widget _buildListTile({required IconData icon, required String title, required Color color, required AppThemeColors L, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: color.withValues(alpha: 0.2)),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(title, style: TextStyle(fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w700, color: L.text)),
+            ),
+            Icon(Icons.chevron_right_rounded, color: L.sub.withValues(alpha: 0.5), size: 24),
+          ],
+        ),
+      ),
     );
   }
 
@@ -667,16 +702,16 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         LightInput(
-            label: 'Medicine Name',
+            label: 'Medication Name',
             value: _editFields['name'],
             onChanged: (v) => _editFields['name'] = v),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         LightInput(
             label: 'Brand Name',
             value: _editFields['brand'],
             placeholder: 'Optional',
             onChanged: (v) => _editFields['brand'] = v),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         Row(children: [
           Expanded(
               child: LightInput(
@@ -684,7 +719,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
                   value: _editFields['dose'],
                   placeholder: '500mg',
                   onChanged: (v) => _editFields['dose'] = v)),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
               child: LightInput(
                   label: 'Form',
@@ -692,48 +727,52 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
                   placeholder: 'tablet',
                   onChanged: (v) => _editFields['form'] = v)),
         ]),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         LightInput(
             label: 'Category',
             value: _editFields['category'],
             onChanged: (v) => _editFields['category'] = v),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
         Row(children: [
           Expanded(
               child: LightInput(
-                  label: 'Count left',
+                  label: 'Stock',
                   value: _editFields['count'],
                   keyboardType: TextInputType.number,
                   onChanged: (v) => _editFields['count'] = v)),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
               child: LightInput(
-                  label: 'Pack size',
+                  label: 'Pack',
                   value: _editFields['totalCount'],
                   keyboardType: TextInputType.number,
                   onChanged: (v) => _editFields['totalCount'] = v)),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
               child: LightInput(
-                  label: 'Alert at',
+                  label: 'Alert',
                   value: _editFields['refillAt'],
                   keyboardType: TextInputType.number,
                   onChanged: (v) => _editFields['refillAt'] = v)),
         ]),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
         Row(children: [
           Expanded(
               child: _ActionBtn(
                   label: 'Cancel',
-                  onTap: () => setState(() => _editMode = false),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    setState(() => _editMode = false);
+                  },
                   color: L.sub,
                   isGhost: true)),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
               flex: 2,
               child: _ActionBtn(
                   label: 'Save Changes',
                   onTap: () {
+                    HapticFeedback.mediumImpact();
                     state.updateMed(
                       med.id,
                       name: _editFields['name'],
@@ -746,92 +785,84 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen>
                           med.totalCount,
                       refillAt:
                           int.tryParse(_editFields['refillAt']) ?? med.refillAt,
+                      intakeInstructions: _editFields['intakeInstructions'] ?? med.intakeInstructions,
                     );
                     setState(() => _editMode = false);
                   },
                   color: const Color(0xFF111111))),
         ]),
-        const SizedBox(height: 40),
+        const SizedBox(height: 48),
       ],
     );
   }
 }
 
-class _StatItem extends StatelessWidget {
+class _GlassDataCard extends StatelessWidget {
   final String label, value;
   final String? sub;
   final Color color;
   final AppThemeColors L;
-  const _StatItem(
-      {required this.label,
-      required this.value,
-      this.sub,
-      required this.color,
-      required this.L});
+
+  const _GlassDataCard({
+    required this.label,
+    required this.value,
+    this.sub,
+    required this.color,
+    required this.L,
+  });
+
   @override
-  Widget build(BuildContext context) => Column(children: [
-        Text(label,
-            style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: L.sub,
-                letterSpacing: 0.5)),
-        const SizedBox(height: 4),
-        Text(value,
-            style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: color,
-                letterSpacing: -1)),
-        if (sub != null)
-          Text(sub!,
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: L.card.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: L.border.withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
               style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: L.sub)),
-      ]);
-}
-
-class _TabBtn extends StatelessWidget {
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-  final AppThemeColors L;
-  const _TabBtn(
-      {required this.label,
-      required this.active,
-      required this.onTap,
-      required this.L});
-  @override
-  Widget build(BuildContext context) => Expanded(
-          child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: active ? L.card : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: active
-                ? [
-                    BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2))
-                  ]
-                : null,
+                  fontWeight: FontWeight.w800,
+                  color: L.sub,
+                  letterSpacing: 1.2)),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(value,
+                  style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: color,
+                      letterSpacing: -1.0)),
+              if (sub != null) ...[
+                const SizedBox(width: 4),
+                Text(sub!,
+                    style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: L.sub)),
+              ],
+            ],
           ),
-          child: Text(label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 13,
-                  fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-                  color: active ? L.text : L.sub)),
-        ),
-      ));
+        ],
+      ),
+    );
+  }
 }
 
 class _SummaryBox extends StatelessWidget {
@@ -850,7 +881,7 @@ class _SummaryBox extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
             color: L.card,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(color: L.border)),
         child: Row(children: [
           Icon(icon, color: color, size: 20),
@@ -861,7 +892,7 @@ class _SummaryBox extends StatelessWidget {
                     color: L.sub, fontSize: 12, fontWeight: FontWeight.w600)),
             Text(value,
                 style: TextStyle(
-                    color: L.text, fontSize: 18, fontWeight: FontWeight.w900)),
+                    color: L.text, fontSize: 18, fontWeight: FontWeight.w900, fontFamily: 'Inter')),
           ]),
         ]),
       );
@@ -871,13 +902,11 @@ class _ActionBtn extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final Color color;
-  final IconData? icon;
   final bool isGhost;
   const _ActionBtn(
       {required this.label,
       required this.onTap,
       required this.color,
-      this.icon,
       this.isGhost = false});
   @override
   Widget build(BuildContext context) => GestureDetector(
@@ -886,16 +915,12 @@ class _ActionBtn extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isGhost ? Colors.transparent : color,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(24),
             border: isGhost
                 ? Border.all(color: color.withValues(alpha: 0.3), width: 1.5)
                 : null,
           ),
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            if (icon != null) ...[
-              Icon(icon, size: 18, color: Colors.white),
-              const SizedBox(width: 8)
-            ],
             Text(label,
                 style: TextStyle(
                     color: isGhost ? color : Colors.white,

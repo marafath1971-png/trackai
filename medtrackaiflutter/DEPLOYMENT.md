@@ -1,6 +1,6 @@
-# MedTrackAI Deployment Strategy
+# Med AI Deployment Strategy
 
-This document outlines the standard procedures for building and deploying the MedTrackAI application for both Android and iOS platforms.
+This document outlines the standard procedures for building and deploying the Med AI application for both Android and iOS platforms.
 
 ## Prerequisites
 Before building for production, ensure the following are configured:

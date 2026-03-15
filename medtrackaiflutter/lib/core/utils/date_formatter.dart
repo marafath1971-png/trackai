@@ -1,5 +1,7 @@
 
-String todayStr() => DateTime.now().toIso8601String().substring(0, 10);
+String todayStr() => formatDateKey(DateTime.now());
+
+String formatDateKey(DateTime d) => d.toIso8601String().substring(0, 10);
 
 int dayIdx() => DateTime.now().weekday % 7; // 0=Sun...6=Sat
 

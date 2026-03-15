@@ -1,0 +1,489 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../../providers/app_state.dart';
+import '../../../models/models.dart';
+import '../../../theme/app_theme.dart';
+import '../../../core/utils/color_utils.dart';
+import '../../../core/utils/date_formatter.dart';
+import '../../../services/auth_service.dart';
+import './caregiver_widgets.dart';
+
+class PatientCard extends StatelessWidget {
+  final Map<String, dynamic> patient;
+  final AppState state;
+  final AppThemeColors L;
+  final VoidCallback onTap;
+  const PatientCard({super.key, required this.patient, required this.state, required this.L, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<Medicine>>(
+      stream: state.getPatientMeds(patient['uid']),
+      builder: (context, medSnap) {
+        return StreamBuilder<Map<String, List<DoseEntry>>>(
+          stream: state.getPatientHistory(patient['uid']),
+          builder: (context, historySnap) {
+            final history = historySnap.data ?? {};
+            
+            // Calculate today's adherence for this patient
+            final dateKey = DateTime.now().toIso8601String().substring(0, 10);
+            final entries = history[dateKey] ?? [];
+            final taken = entries.where((e) => e.taken).length;
+            final total = entries.length;
+            final adherence = total == 0 ? 1.0 : (taken / total);
+
+            return GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                onTap();
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: L.card.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(color: L.border.withValues(alpha: 0.4)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 25,
+                      offset: const Offset(0, 12),
+                      spreadRadius: -5,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(32),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: L.purple.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Center(
+                              child: Text(patient['avatar'] ?? '👤', style: const TextStyle(fontSize: 28)),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(patient['name'] ?? 'Unknown',
+                                    style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                        color: L.text)),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '$total doses scheduled · $taken taken',
+                                  style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 12,
+                                      color: L.sub,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text('${(adherence * 100).toInt()}%',
+                                  style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                      color: adherence >= 0.8 ? L.green : L.amber)),
+                              Text('TODAY',
+                                  style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: L.sub,
+                                      letterSpacing: 0.5)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class WeeklyAdherenceChart extends StatelessWidget {
+  final List<Medicine> meds;
+  final Map<String, List<DoseEntry>> history;
+  final AppThemeColors L;
+  const WeeklyAdherenceChart({super.key, required this.meds, required this.history, required this.L});
+
+  @override
+  Widget build(BuildContext context) {
+    // Generate last 7 days data
+    final Map<String, double> weekData = {};
+    for (int i = 6; i >= 0; i--) {
+      final date = DateTime.now().subtract(Duration(days: i));
+      final dateStr = date.toIso8601String().substring(0, 10);
+      final dayLabel =
+          ['Mn', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'][date.weekday - 1];
+
+      final doses = history[dateStr] ?? [];
+      final sysExpected = meds
+          .where((m) => m.schedule
+              .any((s) => s.enabled && s.days.contains(date.weekday % 7)))
+          .length;
+
+      double score = 0.0;
+      if (sysExpected > 0) {
+        final taken = doses.where((d) => d.taken).length;
+        score = (taken / sysExpected).clamp(0.0, 1.0);
+      } else if (doses.isNotEmpty) {
+        score = 1.0;
+      }
+      weekData[dayLabel] = score;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+          color: L.card,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: L.border.withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('Weekly Adherence',
+                  style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: L.text)),
+              const Spacer(),
+              Icon(Icons.bar_chart_rounded, color: L.sub, size: 18),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: weekData.entries.map((e) {
+              final pct = e.value;
+              final height = 10.0 + (pct * 60.0);
+              final color = pct >= 0.8
+                  ? L.green
+                  : pct > 0.0
+                      ? L.amber
+                      : L.bg;
+
+              return Column(
+                children: [
+                  Container(
+                    width: 28,
+                    height: height,
+                    decoration: BoxDecoration(
+                      color: pct == 0.0 ? L.border : color,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(e.key,
+                      style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 11,
+                          color: L.sub,
+                          fontWeight: FontWeight.w600)),
+                ],
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ProtectorInsights extends StatelessWidget {
+  final Caregiver cg;
+  final AppState state;
+  final AppThemeColors L;
+  final VoidCallback onBack;
+  const ProtectorInsights(
+      {super.key,
+      required this.cg,
+      required this.state,
+      required this.L,
+      required this.onBack});
+
+  @override
+  Widget build(BuildContext context) {
+    final isMe = cg.patientUid.isEmpty || cg.patientUid == AuthService.uid;
+
+    if (isMe) {
+      return InsightsContent(
+        cg: cg,
+        meds: state.activeMeds,
+        history: state.history,
+        streak: state.getStreak(),
+        L: L,
+        onBack: onBack,
+      );
+    }
+
+    return StreamBuilder<List<Medicine>>(
+      stream: state.getPatientMeds(cg.patientUid),
+      builder: (context, medSnap) {
+        final meds = medSnap.data ?? [];
+        return StreamBuilder<Map<String, List<DoseEntry>>>(
+          stream: state.getPatientHistory(cg.patientUid),
+          builder: (context, historySnap) {
+            final history = historySnap.data ?? {};
+            return InsightsContent(
+              cg: cg,
+              meds: meds,
+              history: history,
+              streak: 0, // Streak calculation for patient needs history traversal
+              L: L,
+              onBack: onBack,
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class InsightsContent extends StatelessWidget {
+  final Caregiver cg;
+  final List<Medicine> meds;
+  final Map<String, List<DoseEntry>> history;
+  final int streak;
+  final AppThemeColors L;
+  final VoidCallback onBack;
+
+  const InsightsContent({
+    super.key,
+    required this.cg,
+    required this.meds,
+    required this.history,
+    required this.streak,
+    required this.L,
+    required this.onBack,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Dose calculation logic
+    final doses = <DoseItem>[];
+    for (final med in meds) {
+      for (final s in med.schedule) {
+        doses.add(DoseItem(
+          med: med,
+          sched: s,
+          key: '${med.id}-${s.label}',
+        ));
+      }
+    }
+    
+    final dateKey = DateTime.now().toIso8601String().substring(0, 10);
+    final historyEntries = history[dateKey] ?? [];
+    
+    // Status helper
+    String getStatusText(DoseItem d) {
+       final match = historyEntries.where((e) => e.medId == d.med.id && e.label == d.sched.label).firstOrNull;
+       if (match != null && match.taken) return 'Taken ✓';
+       // simplified logic for protector mode
+       return 'Upcoming';
+    }
+
+    return Scaffold(
+      backgroundColor: L.bg,
+      body: SafeArea(
+          child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [
+                      GestureDetector(
+                          onTap: onBack,
+                          child: Icon(Icons.arrow_back_ios_new_rounded,
+                              color: L.sub, size: 18)),
+                      const SizedBox(width: 14),
+                      Text('Protector Insights',
+                          style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: L.text)),
+                    ]),
+                    const SizedBox(height: 28),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5)),
+                      child: Row(children: [
+                        Container(
+                            width: 68,
+                            height: 68,
+                            decoration: BoxDecoration(
+                                color:
+                                    hexToColor(cg.color).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(24)),
+                            child: Center(
+                                child: Text(cg.avatar,
+                                    style: const TextStyle(fontSize: 34)))),
+                        const SizedBox(width: 18),
+                        Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                              Text(cg.name,
+                                  style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w800,
+                                      color: L.text,
+                                      letterSpacing: -0.5)),
+                              Text(
+                                  '${cg.relation} Connected · Since ${cg.addedAt}',
+                                  style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 13,
+                                      color: L.sub,
+                                      fontWeight: FontWeight.w500)),
+                            ])),
+                      ]),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(children: [
+                      Expanded(
+                          child: FamStatJSX(
+                              emoji: '📈',
+                              label: 'Adherence',
+                              value: (meds.isEmpty ? 100 : (historyEntries.where((e) => e.taken).length / historyEntries.length.clamp(1, 1000)) * 100).toInt(),
+                              color: L.green)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: FamStatJSX(
+                              emoji: '🔥',
+                              label: 'Streak',
+                              value: streak,
+                              color: const Color(0xFFF97316))),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: FamStatJSX(
+                              emoji: '💊',
+                              label: 'Active Meds',
+                              value: meds.length,
+                              color: L.text)),
+                    ]),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: L.card.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                      ),
+                      child: WeeklyAdherenceChart(meds: meds, history: history, L: L),
+                    ),
+                    const SizedBox(height: 24),
+
+                    const SizedBox(height: 32),
+                    Text('REAL-TIME STATUS',
+                        style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: L.sub,
+                            letterSpacing: 1.0)),
+                    const SizedBox(height: 12),
+                    ...doses.map((d) {
+                      final statusLabel = getStatusText(d);
+                      final isTaken = statusLabel.contains('✓');
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                        ),
+                        child: Row(children: [
+                          Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                  color: (isTaken
+                                          ? L.green
+                                          : L.sub)
+                                      .withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(24)),
+                              child: Center(
+                                  child: Text(
+                                      isTaken
+                                          ? '✅'
+                                          : '⏳',
+                                      style: const TextStyle(fontSize: 18)))),
+                          const SizedBox(width: 14),
+                          Expanded(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                Text(d.med.name,
+                                    style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: L.text)),
+                                Text(
+                                    '${fmtTime(d.sched.h, d.sched.m)} · ${d.sched.label}',
+                                    style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 12,
+                                        color: L.sub,
+                                        fontWeight: FontWeight.w500)),
+                              ])),
+                          Text(statusLabel,
+                              style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: isTaken ? L.green : L.sub))
+                        ]),
+                      );
+                    }),
+                    const SizedBox(height: 40),
+                  ]))),
+    );
+  }
+}

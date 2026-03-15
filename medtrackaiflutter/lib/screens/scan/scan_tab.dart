@@ -1,10 +1,11 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/app_state.dart';
+import '../../widgets/smoothing_text.dart';
 import '../../domain/entities/medicine.dart';
 import '../../domain/entities/scan_result.dart';
 import '../../theme/app_theme.dart';
@@ -13,10 +14,10 @@ import '../../services/auth_service.dart';
 import '../../core/utils/date_formatter.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../../widgets/common/modern_time_picker.dart';
+import '../../widgets/modals/premium_paywall.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as p;
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 class ScanTab extends StatefulWidget {
   final void Function(Medicine)? onSave;
@@ -134,6 +135,12 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
   Future<void> _capturePhoto() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
 
+    final state = Provider.of<AppState>(context, listen: false);
+    if ((state.profile?.scansUsed ?? 0) >= 1 && !(state.profile?.isPremium ?? false)) {
+      _showPaywall();
+      return;
+    }
+
     try {
       HapticFeedback.mediumImpact();
       final XFile image = await _controller!.takePicture();
@@ -144,11 +151,26 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
   }
 
   Future<void> _pickFromGallery() async {
+    final state = Provider.of<AppState>(context, listen: false);
+    if ((state.profile?.scansUsed ?? 0) >= 1 && !(state.profile?.isPremium ?? false)) {
+      _showPaywall();
+      return;
+    }
+
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       _processImage(File(image.path));
     }
+  }
+
+  void _showPaywall() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const PremiumPaywall(),
+    );
   }
 
   Future<File?> _compressImage(File file) async {
@@ -189,12 +211,27 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     if (!mounted) return;
 
     response.fold(
-      (success) {
-        setState(() => _isScanning = false);
+      (success) async {
+        setState(() {
+          _isScanning = false;
+          // Auto-detect mapping
+          if (success.isLiquid) {
+            _selectedCategory = 'Liquid';
+          } else if (success.isSpray || success.form.toLowerCase().contains('spray')) {
+            _selectedCategory = 'Spray';
+          } else if (success.form.toLowerCase().contains('tablet') || success.form.toLowerCase().contains('pill') || success.form.toLowerCase().contains('capsule')) {
+            _selectedCategory = 'Tablet';
+          }
+        });
+        
+        final state = Provider.of<AppState>(context, listen: false);
+        await state.incrementScanCount();
+
         _showResultModal(success.copyWith(
           imageUrl: file.path, 
           category: _selectedCategory,
-          description: success.name
+          description: success.name,
+          form: success.form
         ));
       },
       (failure) {
@@ -324,21 +361,34 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                     builder: (context, child) {
                       final glow = 0.2 + _pulseController.value * 0.4;
                       return Container(
-                        width: 130,
-                        height: 130,
+                        width: 140,
+                        height: 140,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(36),
+                          border: Border.all(
+                            color: context.L.green.withValues(alpha: 0.3),
+                            width: 2,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFA3E635).withValues(alpha: glow),
+                              color: Colors.white.withValues(alpha: glow * 0.5),
                               blurRadius: 40,
-                              spreadRadius: 8,
+                              spreadRadius: 4,
                             ),
                           ],
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(28),
-                          child: Image.file(_imageFile!, fit: BoxFit.cover),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: context.L.card,
+                            borderRadius: BorderRadius.circular(34),
+                          ),
+                          child: Center(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(28),
+                              child: Image.file(_imageFile!,
+                                  fit: BoxFit.cover, width: 120, height: 120),
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -365,9 +415,9 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                       child: child,
                     ),
                   ),
-                  child: Text(
-                    '${_scanStepIcons[_scanStep]}  ${_scanSteps[_scanStep]}',
+                  child: SmoothingText(
                     key: ValueKey(_scanStep),
+                    text: '${_scanStepIcons[_scanStep]}  ${_scanSteps[_scanStep]}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -631,84 +681,81 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
 
   Widget _buildCircularBlurBtn(
       {required IconData icon, required VoidCallback onTap}) {
-    return ClipOval(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: GestureDetector(
-          onTap: onTap,
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.white, size: 22),
-          ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.15),
+          shape: BoxShape.circle,
         ),
+        child: Icon(icon, color: Colors.white, size: 22),
       ),
     );
   }
 
   Widget _buildCategoryPill() {
     return Center(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: _categories.map((cat) {
-                final isSelected = _selectedCategory == cat['name'];
-                return GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => _selectedCategory = cat['name']);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.white : Colors.transparent,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          cat['icon'],
-                          size: 18,
-                          color: isSelected ? Colors.black : Colors.white70,
-                        ),
-                        if (isSelected) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            cat['name'],
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ] else ...[
-                          const SizedBox(width: 6),
-                          Text(
-                            cat['name'],
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics()),
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: _categories.map((cat) {
+              final isSelected = _selectedCategory == cat['name'];
+              return GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _selectedCategory = cat['name']);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.white : Colors.transparent,
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                );
-              }).toList(),
-            ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        cat['icon'],
+                        size: 18,
+                        color: isSelected ? Colors.black : Colors.white70,
+                      ),
+                      if (isSelected) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          cat['name'],
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ] else ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          cat['name'],
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ),
       ),
@@ -797,6 +844,7 @@ class _ResultModalState extends State<_ResultModal> {
   late TextEditingController _brandController;
   late TextEditingController _doseController;
   late TextEditingController _formController;
+  late TextEditingController _unitController; // NEW
   
   // Clinical Controllers
   late TextEditingController _descController;
@@ -815,6 +863,7 @@ class _ResultModalState extends State<_ResultModal> {
     _brandController = TextEditingController(text: widget.result.brand);
     _doseController = TextEditingController(text: widget.result.dose);
     _formController = TextEditingController(text: widget.result.form);
+    _unitController = TextEditingController(text: widget.result.unit);
     
     _descController = TextEditingController(text: widget.result.description);
     _howController = TextEditingController(text: "${widget.result.howToTake}\n\n${widget.result.whenToTake}");
@@ -844,6 +893,7 @@ class _ResultModalState extends State<_ResultModal> {
     _brandController.dispose();
     _doseController.dispose();
     _formController.dispose();
+    _unitController.dispose();
     _descController.dispose();
     _howController.dispose();
     _sideEffectsController.dispose();
@@ -872,7 +922,7 @@ class _ResultModalState extends State<_ResultModal> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: const Color(0xFFA3E635).withValues(alpha: 0.15),
+                color: context.L.text.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: const Center(child: Text('🛡️', style: TextStyle(fontSize: 40))),
@@ -909,14 +959,14 @@ class _ResultModalState extends State<_ResultModal> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text("G", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: context.L.text)),
-                    SizedBox(width: 12),
-                    Text("Continue with Google", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                    const SizedBox(width: 12),
+                    const Text("Continue with Google", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                   ],
                 ),
               ),
@@ -939,16 +989,16 @@ class _ResultModalState extends State<_ResultModal> {
   void _showReviewHelp() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Row(
+        content: Row(
           children: [
-            Icon(Icons.edit_note_rounded, color: Color(0xFFA3E635)),
-            SizedBox(width: 12),
-            Expanded(child: Text("Everything is editable! Tap any text field to correct or add details.")),
+            Icon(Icons.edit_note_rounded, color: context.L.text),
+            const SizedBox(width: 12),
+            const Expanded(child: Text("Everything is editable! Tap any text field to correct or add details.")),
           ],
         ),
         backgroundColor: const Color(0xFF111111),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         margin: const EdgeInsets.all(20),
         duration: const Duration(seconds: 4),
       ),
@@ -964,16 +1014,17 @@ class _ResultModalState extends State<_ResultModal> {
       constraints: BoxConstraints(maxHeight: size.height * 0.9),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        top: 24,
+        top: 12,
       ),
       decoration: BoxDecoration(
         color: L.bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border.all(color: L.border, width: 1),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Drag Handle
+              const SizedBox(height: 12),
           Container(
             width: 48,
             height: 6,
@@ -1046,6 +1097,19 @@ class _ResultModalState extends State<_ResultModal> {
                       Expanded(child: _buildEditableChip(controller: _formController, icon: "📦", hint: "Form", L: L)),
                     ],
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildEditableChip(
+                          controller: _unitController,
+                          icon: "📐",
+                          hint: "Unit (ml, mg, tablets)",
+                          L: L,
+                        ),
+                      ),
+                    ],
+                  ),
 
                   const SizedBox(height: 32),
 
@@ -1056,35 +1120,35 @@ class _ResultModalState extends State<_ResultModal> {
                     icon: Icons.info_outline_rounded,
                     controller: _descController,
                     L: L,
-                    accentColor: const Color(0xFFA3E635),
+                    accentColor: context.L.text,
                   ),
                   _buildExpandableCard(
                     title: "How to Take",
                     icon: Icons.menu_book_rounded,
                     controller: _howController,
                     L: L,
-                    accentColor: const Color(0xFFA3E635),
+                    accentColor: context.L.text,
                   ),
                   _buildExpandableCard(
                     title: "Side Effects",
                     icon: Icons.error_outline_rounded,
                     controller: _sideEffectsController,
                     L: L,
-                    accentColor: const Color(0xFFA3E635),
+                    accentColor: context.L.text,
                   ),
                   _buildExpandableCard(
                     title: "Interactions",
                     icon: Icons.swap_calls_rounded,
                     controller: _interactionsController,
                     L: L,
-                    accentColor: const Color(0xFFA3E635),
+                    accentColor: context.L.text,
                   ),
                   _buildExpandableCard(
                     title: "Warnings",
                     icon: Icons.warning_amber_rounded,
                     controller: _warningsController,
                     L: L,
-                    accentColor: const Color(0xFFA3E635),
+                    accentColor: context.L.text,
                   ),
 
                   // Additional/Personal Notes
@@ -1093,7 +1157,7 @@ class _ResultModalState extends State<_ResultModal> {
                     icon: Icons.note_add_rounded,
                     controller: _additionalController,
                     L: L,
-                    accentColor: const Color(0xFFA3E635),
+                    accentColor: context.L.text,
                     hint: "Add any special instructions or doctor's notes here...",
                   ),
 
@@ -1106,7 +1170,8 @@ class _ResultModalState extends State<_ResultModal> {
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: L.card,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: L.border.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [
@@ -1156,6 +1221,7 @@ class _ResultModalState extends State<_ResultModal> {
                           imageUrl: widget.result.imageUrl,
                           notes: "PURPOSE:\n${_descController.text}\n\nINSTRUCTIONS:\n${_howController.text}\n\nWARNINGS:\n${_warningsController.text}\n\nNOTES:\n${_additionalController.text}",
                           courseStartDate: todayStr(),
+                          unit: _unitController.text,
                           schedule: _manualSchedule,
                         );
                         widget.onSave(med);
@@ -1166,7 +1232,7 @@ class _ResultModalState extends State<_ResultModal> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFA3E635),
+                        backgroundColor: context.L.text,
                         foregroundColor: Colors.black,
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -1194,26 +1260,26 @@ class _ResultModalState extends State<_ResultModal> {
       ),
     );
   }
-
   Widget _buildStatusBadge(bool identified) {
-    final color = const Color(0xFFA3E635);
+    final L = context.L;
+    final color = L.text;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: identified ? color.withValues(alpha: 0.15) : Colors.black12,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: identified ? color.withValues(alpha: 0.3) : Colors.black26),
+        color: identified ? color.withValues(alpha: 0.15) : L.fill,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: identified ? color.withValues(alpha: 0.3) : L.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(identified ? Icons.verified_rounded : Icons.help_center_rounded,
-              color: identified ? color : Colors.grey, size: 16),
+              color: identified ? color : L.sub, size: 16),
           const SizedBox(width: 8),
           Text(
             identified ? "AI VERIFIED" : "MANUAL REVIEW",
             style: TextStyle(
-              color: identified ? color : Colors.grey,
+              color: identified ? color : L.sub,
               fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.2,
@@ -1257,21 +1323,21 @@ class _ResultModalState extends State<_ResultModal> {
     required AppThemeColors L,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: L.border.withValues(alpha: 0.5)),
+        color: L.fill,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: L.border),
       ),
       child: Row(
         children: [
           Text(icon, style: const TextStyle(fontSize: 12)),
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: controller,
               style: TextStyle(
-                color: L.text.withValues(alpha: 0.7),
+                color: L.text,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
@@ -1289,25 +1355,6 @@ class _ResultModalState extends State<_ResultModal> {
     );
   }
 
-  Widget _buildRichChip(String text, AppThemeColors L) {
-    if (text.endsWith(' ') || text.trim().length <= 2) return const SizedBox();
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: L.border.withValues(alpha: 0.5)),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: L.text.withValues(alpha: 0.7),
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
 
   Widget _buildSectionHeader(String title, AppThemeColors L) {
     return Text(
@@ -1333,11 +1380,11 @@ class _ResultModalState extends State<_ResultModal> {
     if (controller.text.isEmpty && title != "Personal Notes") return const SizedBox();
     return Container(
       margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: L.card.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: L.border.withValues(alpha: 0.3)),
+        color: L.card,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: L.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1384,7 +1431,8 @@ class _ResultModalState extends State<_ResultModal> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: L.card,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: L.border.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1397,7 +1445,7 @@ class _ResultModalState extends State<_ResultModal> {
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                       color: L.text)),
-              Text("Total supply detected",
+              Text("${_unitController.text} supply detected",
                   style: TextStyle(
                       fontSize: 12,
                       color: L.text.withValues(alpha: 0.4))),
@@ -1446,7 +1494,7 @@ class _ResultModalState extends State<_ResultModal> {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: active ? L.bg : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: active
               ? [
                   BoxShadow(
@@ -1472,15 +1520,15 @@ class _ResultModalState extends State<_ResultModal> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFA3E635).withValues(alpha: 0.08),
+        color: context.L.fill,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFA3E635).withValues(alpha: 0.2)),
+        border: Border.all(color: context.L.border.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              const Icon(Icons.auto_awesome_rounded, color: Color(0xFFA3E635), size: 18),
+              Icon(Icons.auto_awesome_rounded, color: context.L.text, size: 18),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -1518,7 +1566,7 @@ class _ResultModalState extends State<_ResultModal> {
             padding: const EdgeInsets.symmetric(vertical: 18),
             decoration: BoxDecoration(
               color: L.card,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(color: L.border.withValues(alpha: 0.5)),
             ),
             child: Row(
@@ -1554,7 +1602,7 @@ class _ResultModalState extends State<_ResultModal> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: L.card,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: L.border.withValues(alpha: 0.5)),
       ),
       child: Row(
@@ -1582,12 +1630,12 @@ class _ResultModalState extends State<_ResultModal> {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: L.bg,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: L.border.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.alarm_rounded, color: Color(0xFFA3E635), size: 16),
+                      Icon(Icons.alarm_rounded, color: context.L.text, size: 16),
                       const SizedBox(width: 8),
                       Text(
                         timeStr,

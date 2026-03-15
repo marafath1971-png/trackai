@@ -35,8 +35,6 @@ class MissedDoseProtocolSheet extends StatelessWidget {
     final minsLate = minutesLate % 60;
 
     // Compute next dose minutes for secondary advice
-    final doses = state.getDoses();
-    final doseIdx = doses.indexWhere((d) => d.key == dose.key);
 
     return Container(
       margin: EdgeInsets.only(
@@ -45,7 +43,14 @@ class MissedDoseProtocolSheet extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: L.card,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 36),
@@ -73,7 +78,7 @@ class MissedDoseProtocolSheet extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 child: const Icon(Icons.access_time_rounded,
                     color: Color(0xFFF59E0B), size: 26),
@@ -107,7 +112,7 @@ class MissedDoseProtocolSheet extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: L.fill,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(24),
               ),
               child: Row(children: [
                 const Icon(Icons.warning_amber_rounded,
@@ -137,7 +142,7 @@ class MissedDoseProtocolSheet extends StatelessWidget {
                     : minutesLate < 360
                         ? const Color(0xFFF59E0B).withValues(alpha: 0.08)
                         : const Color(0xFFEF4444).withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: minutesLate < 120
                       ? const Color(0xFF10B981).withValues(alpha: 0.3)
@@ -265,9 +270,9 @@ class _ActionBtn extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: outlined ? Colors.transparent : color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(16),
-          border: outlined ? Border.all(color: L.border) : null,
+          color: outlined ? Colors.transparent : color.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: outlined ? L.border : color.withValues(alpha: 0.3)),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Icon(icon, size: 18, color: outlined ? L.sub : color),

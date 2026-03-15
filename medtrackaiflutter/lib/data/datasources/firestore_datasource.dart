@@ -15,6 +15,8 @@ class FirestoreDataSource {
       _userDoc(uid).collection('history');
   CollectionReference _caregivers(String uid) =>
       _userDoc(uid).collection('caregivers');
+  CollectionReference _monitoring(String uid) =>
+      _userDoc(uid).collection('monitoring');
 
   // ── Profile ────────────────────────────────────────────────────────
   Future<UserProfile?> getProfile(String uid) async {
@@ -156,7 +158,41 @@ class FirestoreDataSource {
   }
 
   Future<void> joinCaregiver(String patientUid, int cgId) async {
+    // 1. Update status on patient side
     await _caregivers(patientUid).doc('$cgId').update({'status': 'active'});
+    
+    // 2. Create reciprocal link on caregiver side
+    // In a real app, cgId would correspond to the caregiver's actual UID.
+    // For this simulation/prototype, we'll use the 'caregiverUID' if available or assume it exists.
+    // For now, we'll just update the status.
+  }
+
+  // ── Monitoring (For Caregivers) ────────────────────────────────────
+  
+  Stream<List<Map<String, dynamic>>> getMonitoringPatientsStream(String uid) {
+    return _monitoring(uid).snapshots().map((snap) => snap.docs
+        .map((d) => {'uid': d.id, ...d.data() as Map<String, dynamic>})
+        .toList());
+  }
+
+  Stream<List<Medicine>> getPatientMedsStream(String patientUid) {
+    return _meds(patientUid).snapshots().map((snap) => snap.docs
+        .map((d) => Medicine.fromJson(d.data() as Map<String, dynamic>))
+        .toList());
+  }
+
+  Stream<Map<String, List<DoseEntry>>> getPatientHistoryStream(String patientUid) {
+    return _history(patientUid).snapshots().map((snap) {
+      final result = <String, List<DoseEntry>>{};
+      for (final doc in snap.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final entries = (data['entries'] as List? ?? [])
+            .map((e) => DoseEntry.fromJson(e as Map<String, dynamic>))
+            .toList();
+        result[doc.id] = entries;
+      }
+      return result;
+    });
   }
 
   // ── Streak ─────────────────────────────────────────────────────────

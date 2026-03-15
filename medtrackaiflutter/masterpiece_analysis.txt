@@ -1,0 +1,9 @@
+Analyzing medtrackaiflutter...                                  
+
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/screens/home/widgets/settings_modal_new.dart:1181:32 • deprecated_member_use
+   info • 'share' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/screens/home/widgets/settings_modal_new.dart:1181:38 • deprecated_member_use
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/screens/home/widgets/settings_modal_new.dart:1255:13 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/screens/home/widgets/settings_modal_new.dart:1255:19 • deprecated_member_use
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/services/export_service.dart:80:11 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/services/export_service.dart:80:17 • deprecated_member_use
+

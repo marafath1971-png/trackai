@@ -28,7 +28,7 @@ class CourseCompletionDialog extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
                 color: Colors.black.withValues(alpha: 0.2),
@@ -106,11 +106,11 @@ class CourseCompletionDialog extends StatelessWidget {
                       onArchive();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: L.blue,
+                      backgroundColor: const Color(0xFF111111),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(24)),
                       elevation: 0,
                     ),
                     child: const Text('Archive & Finish',

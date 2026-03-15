@@ -136,22 +136,23 @@ class GeminiService {
     return '''
 You are an expert pharmacist and clinical image analyst.
 Examine the provided ${hint ?? ''} medicine packaging image carefully and extract all key medical details.
+Auto-detect the medicine FORM (pill, spray, liquid, tablet, capsule etc.) and STOCK details.
 Return ONLY valid JSON with NO markdown formatting, NO code fences, NO explanations:
 {
   "identified": true,
   "name": "Generic medicine name",
   "brand": "Brand/trade name",
-  "form": "tablet|syrup|capsule|liquid|inhaler|drops|cream|patch|injection|other",
+  "form": "tablet|capsule|pill|liquid|syrup|spray|inhaler|drops|cream|patch|injection|other",
   "dose": "Strength e.g. 500mg, 250mg/5ml",
   "dosePerTake": "Quantity per dose e.g. 1 tablet, 5ml",
   "frequency": "e.g. twice daily, every 8 hours, once at bedtime",
-  "howToTake": "Detailed instructions e.g. Swallow whole with a full glass of water. Do not crush.",
-  "whenToTake": "Specific timing guidance e.g. Take in the morning before breakfast. Avoid taking at night.",
+  "howToTake": "Detailed instructions e.g. Swallow whole with a full glass of water.",
+  "whenToTake": "Specific timing guidance e.g. Take in the morning before breakfast.",
   "withFood": true,
-  "sideEffects": "Common side effects: nausea, headache, dizziness. Rare: allergic reaction.",
-  "interactions": "Avoid with: alcohol, blood thinners, antacids. Consult doctor if taking NSAIDs.",
-  "warnings": "Do not use if pregnant or breastfeeding. Avoid driving if drowsy. Keep out of reach of children.",
-  "storage": "Store below 25°C away from light and moisture. Keep refrigerated after opening.",
+  "sideEffects": "Common side effects: nausea, headache.",
+  "interactions": "Avoid with: alcohol, blood thinners.",
+  "warnings": "Do not use if pregnant. Avoid driving if drowsy.",
+  "storage": "Store below 25°C away from light.",
   "category": "Prescription|OTC|Supplement",
   "isAntibiotic": false,
   "isOngoing": false,
@@ -160,8 +161,10 @@ Return ONLY valid JSON with NO markdown formatting, NO code fences, NO explanati
   "pillCount": 30,
   "packSize": 30,
   "isLiquid": false,
+  "isSpray": false,
   "volumeAmount": 0,
   "volumeUnit": "ml",
+  "unit": "tablets|ml|puffs|drops|creams|units",
   "scheduleSlots": [
     {"label": "Morning", "h": 8, "m": 0, "days": [0,1,2,3,4,5,6]},
     {"label": "Evening", "h": 20, "m": 0, "days": [0,1,2,3,4,5,6]}
@@ -169,8 +172,8 @@ Return ONLY valid JSON with NO markdown formatting, NO code fences, NO explanati
   "confidence": "high|medium|low"
 }
 Note: scheduleSlots days use JavaScript day index (0=Sun, 1=Mon...6=Sat). 
-Generate realistic scheduleSlots based on the frequency field (once daily = morning only, twice = morning+evening, three times = morning+noon+night etc.)
-If identification is not possible, set identified to false and return best guesses.
+Generate realistic scheduleSlots based on the frequency field.
+If identification is not possible, set identified to false and best guess.
 ''';
   }
 

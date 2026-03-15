@@ -55,22 +55,21 @@ void main() async {
     ChangeNotifierProvider(
       create: (_) =>
           AppState(medRepo: medRepo, userRepo: userRepo)..loadFromStorage(),
-      child: const MedTrackApp(),
+      child: const MedAIApp(),
     ),
   );
 }
 
-class MedTrackApp extends StatelessWidget {
-  const MedTrackApp({super.key});
+class MedAIApp extends StatelessWidget {
+  const MedAIApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     final isDark = context.select<AppState, bool>((state) => state.darkMode);
+    final accentHex = context.select<AppState, String?>((state) => state.profile?.accentColor);
 
-    final lightTheme =
-        AppTheme.light().copyWith(extensions: [AppThemeColors.light]);
-    final darkTheme =
-        AppTheme.dark().copyWith(extensions: [AppThemeColors.dark]);
+    final lightTheme = AppTheme.light(accentHex: accentHex);
+    final darkTheme = AppTheme.dark(accentHex: accentHex);
 
     return MaterialApp(
       title: 'Med AI',
@@ -82,8 +81,9 @@ class MedTrackApp extends StatelessWidget {
         FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
       ],
       builder: (context, child) {
+        final L = context.L;
         return Container(
-          color: isDark ? const Color(0xFF000000) : const Color(0xFFE5E5E5),
+          color: L.bg,
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 430),
@@ -160,7 +160,7 @@ class _SplashLoading extends StatelessWidget {
             height: 2,
             child: LinearProgressIndicator(
               backgroundColor: Colors.transparent,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.oLime),
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
             ))
             .animate()
             .fadeIn(delay: 800.ms)

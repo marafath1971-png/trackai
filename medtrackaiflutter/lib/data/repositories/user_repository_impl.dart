@@ -155,6 +155,22 @@ class UserRepositoryImpl implements IUserRepository {
     await firestoreDataSource.deleteInvite(code);
   }
 
+  @override
+  Stream<List<Map<String, dynamic>>> getMonitoringPatientsStream() {
+    if (!_hasAuth) return Stream.value([]);
+    return firestoreDataSource.getMonitoringPatientsStream(_uid!);
+  }
+
+  @override
+  Stream<List<Medicine>> getPatientMedsStream(String patientUid) {
+    return firestoreDataSource.getPatientMedsStream(patientUid);
+  }
+
+  @override
+  Stream<Map<String, List<DoseEntry>>> getPatientHistoryStream(String patientUid) {
+    return firestoreDataSource.getPatientHistoryStream(patientUid);
+  }
+
   // ── Offline-to-Cloud Sync ──────────────────────────────────────────
   /// Upload all local user data to Firestore. Called once after first sign-in
   /// when Firestore has no user document yet.

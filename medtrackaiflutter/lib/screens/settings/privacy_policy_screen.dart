@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
+import '../../../theme/app_theme.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
@@ -22,81 +22,47 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: L.text)),
+        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Privacy Policy for Med AI',
-                style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: L.text,
-                    letterSpacing: -0.5)),
-            const SizedBox(height: 8),
-            Text('Last Updated: March 10, 2026',
-                style:
-                    TextStyle(fontFamily: 'Inter', fontSize: 13, color: L.sub)),
-            const SizedBox(height: 32),
-            _Section(
-              title: '1. Introduction',
-              content:
-                  'Med AI is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your health information when you use our medication tracking and health insight application.',
-              L: L,
-            ),
-            _Section(
-              title: '2. Information We Collect',
-              content:
-                  'We collect information to provide you with a better experience:\n\n'
-                  '• Health Data: Medication names, dosages, schedules, and adherence history.\n'
-                  '• Images: Photos of medication packaging you take for AI scanning.\n'
-                  '• Profile Data: Your name and health goals.\n'
-                  '• Caregiver Information: Names and contact details of family members you choose to share alerts with.',
-              L: L,
-            ),
-            _Section(
-              title: '3. How We Use Data',
-              content: 'Your data is used specifically for:\n\n'
-                  '• Generating smart medication reminders.\n'
-                  '• Providing AI-powered insights on your health and adherence.\n'
-                  '• Escalating missed-dose alerts to your designated caregivers.\n'
-                  '• Identifying medications via visual AI analysis.',
-              L: L,
-            ),
-            _Section(
-              title: '4. AI Services & Third Parties',
-              content:
-                  'To provide our advanced features, we use third-party AI services:\n\n'
-                  '• Google Gemini: Used for processing medication images to identify products.\n'
-                  '• Anthropic Claude: Used for analyzing your medication patterns to provide health insights.\n\n'
-                  'Data sent to these services is limited to what is necessary for the specific function and is handled according to their respective privacy standards.',
-              L: L,
-            ),
-            _Section(
-              title: '5. Data Storage',
-              content:
-                  'Most of your personal data is stored locally on your device to ensure maximum privacy. Some features, like caregiver alerts, require minimal transmission of data to facilitate notification delivery.',
-              L: L,
-            ),
-            _Section(
-              title: '6. Your Rights',
-              content:
-                  'You have full control over your data. You can delete all your tracked medications and history at any time from within the App Settings.',
-              L: L,
-            ),
-            const SizedBox(height: 40),
-            Center(
-              child: Text('Med AI · Secure. Private. Simple.',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: L.sub.withValues(alpha: 0.6))),
-            ),
-            const SizedBox(height: 40),
-          ],
+      body: Scrollbar(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _Section(
+                L: L,
+                title: 'Data Collection',
+                content: 'We only collect data that is essential for your health tracking: medication names, dosages, and compliance history. All data is processed securely.',
+              ),
+              _Section(
+                L: L,
+                title: 'AI Analysis',
+                content: 'Your health data is analyzed by advanced AI to provide insights. This analysis is private and only visible to you and your authorized caregivers.',
+              ),
+              _Section(
+                L: L,
+                title: 'Third-Party Services',
+                content: 'We use encrypted cloud services for data storage. We do not sell or share your personal health data with third-party advertisers.',
+              ),
+              _Section(
+                L: L,
+                title: 'Your Rights',
+                content: 'You share full control over your data. You can export or delete your entire health history at any time from the settings menu.',
+              ),
+              const SizedBox(height: 40),
+              Center(
+                child: Text('Med AI · Secure. Private. Simple.',
+                    style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: L.sub.withValues(alpha: 0.6))),
+              ),
+              const SizedBox(height: 120),
+            ],
+          ),
         ),
       ),
     );

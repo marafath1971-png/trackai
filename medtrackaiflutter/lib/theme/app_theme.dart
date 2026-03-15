@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../core/utils/color_utils.dart';
 
 // ══════════════════════════════════════════════
 // COLOR TOKENS (matching JSX L_LIGHT / L_DARK)
@@ -10,9 +11,9 @@ class AppColors {
   static const Color lBg = Color(0xFFFFFFFF);
   static const Color lCard = Color(0xFFF9F9FB);
   static const Color lCard2 = Color(0xFFF0F0F2);
-  static const Color lBorder = Color(0x14000000); 
+  static const Color lBorder = Color(0x26000000); // 15% opacity
   static const Color lText = Color(0xFF000000);
-  static const Color lSub = Color(0x99000000); 
+  static const Color lSub = Color(0xBF000000); 
   static const Color lFill = Color(0x0F000000); 
 
   static const Color lGreen = Color(0xFFA3E635);
@@ -35,9 +36,9 @@ class AppColors {
   static const Color dBg = Color(0xFF000000);
   static const Color dCard = Color(0xFF111111);
   static const Color dCard2 = Color(0xFF1C1C1E);
-  static const Color dBorder = Color(0x1FFFFFFF); 
+  static const Color dBorder = Color(0x26FFFFFF); // 15% opacity
   static const Color dText = Color(0xFFFFFFFF);
-  static const Color dSub = Color(0x99FFFFFF); 
+  static const Color dSub = Color(0xBFFFFFFF); 
   static const Color dFill = Color(0x14FFFFFF); 
 
   static const Color dGreen = Color(0xFFA3E635);
@@ -57,6 +58,7 @@ class AppColors {
   // Onboarding dark theme aliased to new brand
   static const Color oBg = Color(0xFF000000);
   static const Color oCard = Color(0xFF111111);
+  static const Color oFill = Color(0x14FFFFFF);
   static const Color oBorder = Color(0x1FFFFFFF);
   static const Color oText = Color(0xFFFFFFFF);
   static const Color oSub = Color(0x99FFFFFF);
@@ -77,25 +79,27 @@ class AppColors {
 // ══════════════════════════════════════════════
 
 class AppTheme {
-  static ThemeData light() {
+  static ThemeData light({String? accentHex}) {
+    final primary = accentHex != null ? hexToColor(accentHex) : AppColors.lGreen;
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       scaffoldBackgroundColor: AppColors.lBg,
-      colorScheme: const ColorScheme.light(
+      colorScheme: ColorScheme.light(
         primary: AppColors.lAccent,
         surface: AppColors.lCard,
         onPrimary: AppColors.white,
         onSurface: AppColors.lText,
-        secondary: AppColors.lGreen,
+        secondary: primary,
         error: AppColors.lRed,
       ),
       textTheme: _buildTextTheme(AppColors.lText),
-      cardTheme: const CardThemeData(
+      cardTheme: CardThemeData(
         color: AppColors.lCard,
         elevation: 0,
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(16))),
+            borderRadius: BorderRadius.circular(16)),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.lBg,
@@ -109,28 +113,32 @@ class AppTheme {
           TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
         },
       ),
+    ).copyWith(
+      extensions: [AppThemeColors.fromPrimary(primary, Brightness.light)],
     );
   }
 
-  static ThemeData dark() {
+  static ThemeData dark({String? accentHex}) {
+    final primary = accentHex != null ? hexToColor(accentHex) : AppColors.dGreen;
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.dBg,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: ColorScheme.dark(
         primary: AppColors.white,
         surface: AppColors.dCard,
         onPrimary: AppColors.black,
         onSurface: AppColors.dText,
-        secondary: AppColors.dGreen,
+        secondary: primary,
         error: AppColors.dRed,
       ),
       textTheme: _buildTextTheme(AppColors.dText),
-      cardTheme: const CardThemeData(
+      cardTheme: CardThemeData(
         color: AppColors.dCard,
         elevation: 0,
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(16))),
+            borderRadius: BorderRadius.circular(16)),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.dBg,
@@ -144,6 +152,8 @@ class AppTheme {
           TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
         },
       ),
+    ).copyWith(
+      extensions: [AppThemeColors.fromPrimary(primary, Brightness.dark)],
     );
   }
 
@@ -255,6 +265,22 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     purpleLight: AppColors.dPurpleLight,
     teal: AppColors.dTeal,
   );
+
+  static AppThemeColors fromPrimary(Color primary, Brightness brightness) {
+    if (brightness == Brightness.light) {
+      return light.copyWith(
+        green: primary,
+        greenDark: primary.withValues(alpha: 0.8),
+        greenLight: primary.withValues(alpha: 0.15),
+      );
+    } else {
+      return dark.copyWith(
+        green: primary,
+        greenDark: primary.withValues(alpha: 0.8),
+        greenLight: primary.withValues(alpha: 0.15),
+      );
+    }
+  }
 
   @override
   AppThemeColors copyWith({

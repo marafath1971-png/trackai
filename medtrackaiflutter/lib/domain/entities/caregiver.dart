@@ -69,5 +69,5 @@ class Caregiver {
 
   String get inviteCode =>
       'MT-${id.abs().toRadixString(16).toUpperCase().padLeft(6, '0').substring(0, 6)}';
-  String get inviteUrl => 'https://medtrack.app/join/$patientUid/$inviteCode';
+  String get inviteUrl => 'https://medai.app/join/$patientUid/$inviteCode';
 }

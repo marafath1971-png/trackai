@@ -237,16 +237,13 @@ class _AppShellState extends State<AppShell>
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
-                      child: Opacity(
-                        opacity: selected ? 1.0 : 0.0,
-                        child: Icon(
-                          icon,
-                          size: 22,
-                          color: selected ? L.secondary : L.text.withValues(alpha: 0.7),
-                        ).animate(target: selected ? 1 : 0)
-                         .scale(duration: 200.ms, curve: Curves.easeOutBack)
-                         .tint(color: L.secondary, duration: 200.ms),
-                      ),
+                      child: Icon(
+                        icon,
+                        size: 22,
+                        color: selected ? L.secondary : L.text.withValues(alpha: 0.5),
+                      ).animate(target: selected ? 1 : 0)
+                       .scale(duration: 200.ms, curve: Curves.easeOutBack)
+                       .tint(color: L.secondary, duration: 200.ms),
                   ),
                   if (cnt > 0)
                     Positioned(

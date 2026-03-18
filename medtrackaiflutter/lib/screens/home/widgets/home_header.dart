@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../widgets/common/unified_header.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../providers/app_state.dart';
@@ -34,7 +35,7 @@ class HomeHeader extends StatelessWidget {
       showBrand: true,
       isScrolled: isScrolled,
       onTap: onTap,
-      title: name,
+      titleWidget: _buildProTitle(L, name),
       subtitle: _getSubGreeting(),
       actions: [
         _StreakBtn(streak: streak, onTap: onOpenStreak),
@@ -50,6 +51,42 @@ class HomeHeader extends StatelessWidget {
     );
   }
 
+  Widget _buildProTitle(AppThemeColors L, String name) {
+    final hour = DateTime.now().hour;
+    String greeting;
+    if (hour < 12) {
+      greeting = "Good Morning,";
+    } else if (hour < 17) {
+      greeting = "Good Afternoon,";
+    } else {
+      greeting = "Good Evening,";
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          greeting,
+          style: GoogleFonts.outfit(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: L.text.withValues(alpha: 0.5),
+            letterSpacing: 0.2,
+          ),
+        ),
+        Text(
+          name,
+          style: GoogleFonts.outfit(
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            color: L.text,
+            letterSpacing: -1.2,
+            height: 1.1,
+          ),
+        ),
+      ],
+    );
+  }
 
   String _getSubGreeting() {
     try {

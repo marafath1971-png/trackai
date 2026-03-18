@@ -39,7 +39,7 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => Size.fromHeight(
-      102 + (bottomHeight ?? (bottom != null ? 60 : 0)));
+      122 + (bottomHeight ?? (bottom != null ? 60 : 0)));
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +82,7 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
                               .animate()
                               .fadeIn(duration: 400.ms)
                               .slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
-                          const SizedBox(height: 1),
+                          const SizedBox(height: 8),
                           if (title != null || titleWidget != null) 
                             Padding(
                               padding: const EdgeInsets.only(left: 2),
@@ -174,13 +174,13 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 28,
-          height: 28,
-          padding: const EdgeInsets.all(4),
+          width: 32,
+          height: 32,
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: L.text.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+            color: L.text.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: L.border.withValues(alpha: 0.12), width: 1.5),
           ),
           child: Image.asset(
             'assets/images/home_logo.png',
@@ -189,14 +189,14 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
             fit: BoxFit.contain,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
         Text(
           'Med AI',
           style: GoogleFonts.outfit(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
             color: L.text,
-            letterSpacing: -0.5,
+            letterSpacing: -0.8,
             height: 1.0,
           ),
         ),

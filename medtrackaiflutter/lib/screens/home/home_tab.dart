@@ -105,7 +105,7 @@ class _HomeTabState extends State<HomeTab> {
                   parent: AlwaysScrollableScrollPhysics()),
               slivers: [
               SliverToBoxAdapter(
-                child: SizedBox(height: 210 + MediaQuery.of(context).padding.top),
+                child: SizedBox(height: 230 + MediaQuery.of(context).padding.top),
               ),
 
               // --- 1. MISSED ALERTS ---

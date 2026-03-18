@@ -173,21 +173,11 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
+        Image.asset(
+          'assets/images/home_logo.png',
           width: 32,
           height: 32,
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: L.text.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: L.border.withValues(alpha: 0.12), width: 1.5),
-          ),
-          child: Image.asset(
-            'assets/images/home_logo.png',
-            width: 20,
-            height: 20,
-            fit: BoxFit.contain,
-          ),
+          fit: BoxFit.contain,
         ),
         const SizedBox(width: 10),
         Text(

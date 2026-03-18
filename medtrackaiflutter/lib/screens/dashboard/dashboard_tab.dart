@@ -3,7 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../../domain/entities/health_insight.dart';
 import 'widgets/dashboard_widgets.dart';
+import '../../widgets/common/unified_header.dart';
+import '../../widgets/modals/trend_drilldown_sheet.dart';
+import '../../widgets/common/app_loading_indicator.dart';
+import '../../core/utils/haptic_engine.dart';
 
 class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key});
@@ -13,9 +18,13 @@ class DashboardTab extends StatefulWidget {
 }
 
 class _DashboardTabState extends State<DashboardTab> {
+  bool _isScrolled = false;
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     // Refresh insights when entering the tab
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppState>().fetchHealthInsights();
@@ -23,28 +32,57 @@ class _DashboardTabState extends State<DashboardTab> {
   }
 
   @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final scrolled = _scrollController.offset > 10;
+    if (scrolled != _isScrolled) {
+      setState(() => _isScrolled = scrolled);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final state = context.watch<AppState>();
     final L = context.L;
-    final latency = state.getLatencyData();
-    final adherence = state.getAdherenceScore();
-    final streak = state.getStreak();
+    // Granular selection
+    final latency = context.select<AppState, List<Map<String, dynamic>>>((s) => s.getLatencyData());
+    final adherence = context.select<AppState, double>((s) => s.getAdherenceScore());
+    final streak = context.select<AppState, int>((s) => s.getStreak());
+    final loadingInsight = context.select<AppState, bool>((s) => s.loadingInsight);
+    final healthInsights = context.select<AppState, List<HealthInsight>>((s) => s.healthInsights);
 
     return Scaffold(
       backgroundColor: L.bg,
       body: Stack(
         children: [
-          Scrollbar(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics()),
-              child: Column(
-                children: [
-                SizedBox(height: 120 + MediaQuery.of(context).padding.top),
+          RefreshIndicator(
+            onRefresh: () async {
+              HapticEngine.selection();
+              final state = context.read<AppState>();
+              await state.loadFromStorage();
+              await state.fetchHealthInsights();
+            },
+            displacement: 100,
+            color: L.secondary,
+            backgroundColor: L.bg,
+            child: Scrollbar(
+              controller: _scrollController,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics()),
+                child: Column(
+                  children: [
+                    SizedBox(height: 110 + MediaQuery.of(context).padding.top),
+                    const SizedBox(height: AppSpacing.l),
                 
                 // --- SUMMARY STATS ---
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
                   child: Row(
                     children: [
                       _buildStatCard(
@@ -52,56 +90,56 @@ class _DashboardTabState extends State<DashboardTab> {
                         'ADHERENCE',
                         '${(adherence * 100).round()}%',
                         Icons.analytics_rounded,
-                        L.green,
+                        L.secondary,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpacing.m),
                       _buildStatCard(
                         context,
                         'STREAK',
                         '$streak Days',
                         Icons.local_fire_department_rounded,
-                        L.amber,
+                        L.warning,
                       ),
                     ],
                   ),
                 ),
     
 
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xl),
 
             // --- LATENCY HEATMAP ---
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
               child: LatencyHeatmap(latencyData: latency, L: L)
                   .animate()
                   .fadeIn(duration: 600.ms)
                   .slideY(begin: 0.1, end: 0),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xl),
 
             // --- AI HEALTH COACH ---
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: state.loadingInsight 
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+              child: loadingInsight 
                 ? _buildLoadingInsights(L)
                 : HealthCoachCard(
-                    insightJson: state.healthInsights, 
+                    insights: healthInsights, 
                     L: L,
-                    onRetry: () => state.fetchHealthInsights(),
+                    onRetry: () => context.read<AppState>().fetchHealthInsights(),
                   ).animate().fadeIn(duration: 800.ms),
             ),
 
-            const SizedBox(height: 48),
+            const SizedBox(height: AppSpacing.xxl),
 
             // --- FOOTER INFO ---
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(AppSpacing.m),
                 decoration: BoxDecoration(
                   color: L.fill,
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: AppRadius.roundL,
                   border: Border.all(color: L.border),
                 ),
                 child: Row(
@@ -111,7 +149,7 @@ class _DashboardTabState extends State<DashboardTab> {
                     Expanded(
                       child: Text(
                         'This dashboard uses AI to analyze patterns. Always consult your doctor for medical advice.',
-                        style: TextStyle(color: L.sub, fontSize: 12, height: 1.4),
+                        style: AppTypography.bodySmall.copyWith(color: L.sub, fontSize: 12, height: 1.4),
                       ),
                     ),
                   ],
@@ -124,39 +162,16 @@ class _DashboardTabState extends State<DashboardTab> {
           ),
         ),
       ),
-
-        // --- FLOATING HEADER ---
+    ),
         Positioned(
           top: 0,
           left: 0,
           right: 0,
-          child: Container(
-            padding: EdgeInsets.fromLTRB(24, 60 + MediaQuery.of(context).padding.top, 24, 20),
-            decoration: BoxDecoration(
-              color: L.bg,
-              border: Border(
-                bottom: BorderSide(color: L.border, width: 1.5),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                 Text('Health Insights',
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: L.text,
-                        letterSpacing: -1.2)),
-                const SizedBox(height: 4),
-                Text('Clinical overview & AI coaching',
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: L.sub)),
-              ],
-            ),
+          child: UnifiedHeader(
+            showBrand: true,
+            isScrolled: _isScrolled,
+            title: 'Insights',
+            subtitle: 'Analytics & health patterns',
           ),
         ),
       ]),
@@ -166,19 +181,23 @@ class _DashboardTabState extends State<DashboardTab> {
   Widget _buildStatCard(BuildContext context, String label, String value, IconData icon, Color color) {
     final L = context.L;
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(24),
+      child: GestureDetector(
+        onTap: () {
+          HapticEngine.selection();
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => TrendDrilldownSheet(state: context.read<AppState>(), L: L),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.xl),
         decoration: BoxDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: L.border, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          borderRadius: AppRadius.roundL,
+          border: Border.all(color: L.border, width: 1.0),
+          boxShadow: L.shadowSoft,
         ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,10 +214,10 @@ class _DashboardTabState extends State<DashboardTab> {
                     ),
                     const SizedBox(width: 10),
                     Text(label, 
-                      style: TextStyle(
-                        fontFamily: 'Inter',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.labelLarge.copyWith(
                         fontSize: 11, 
-                        fontWeight: FontWeight.w900, 
                         color: L.sub, 
                         letterSpacing: 0.8
                       )),
@@ -206,16 +225,15 @@ class _DashboardTabState extends State<DashboardTab> {
                 ),
                 const SizedBox(height: 16),
                 Text(value, 
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: AppTypography.displayMedium.copyWith(
                     fontSize: 28, 
-                    fontWeight: FontWeight.w900, 
                     color: L.text,
                     letterSpacing: -1.0
                   )),
               ],
             ),
           ),
+      ),
     );
   }
 
@@ -224,30 +242,21 @@ class _DashboardTabState extends State<DashboardTab> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('FETCHING AI INSIGHTS...',
-            style: TextStyle(
-                fontFamily: 'Inter',
+            style: AppTypography.labelLarge.copyWith(
                 fontSize: 11,
-                fontWeight: FontWeight.w800,
                 color: L.sub,
                 letterSpacing: 1.0)),
         const SizedBox(height: 12),
         Container(
           width: double.infinity,
-          height: 100,
+          height: 120,
           decoration: BoxDecoration(
             color: L.fill,
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: AppRadius.roundL,
             border: Border.all(color: L.border),
           ),
-          child: Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(L.green),
-              ),
-            ),
+          child: const Center(
+            child: AppLoadingIndicator(size: 32),
           ),
         ),
       ],

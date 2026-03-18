@@ -16,14 +16,7 @@ class NotificationService {
       StreamController<String>.broadcast();
 
   static Future<void> init() async {
-    tz.initializeTimeZones();
-    try {
-      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
-      final String timeZoneName = timezoneInfo.toString();
-      tz.setLocalLocation(tz.getLocation(timeZoneName));
-    } catch (_) {
-      // Fallback
-    }
+    await refreshTimeZone();
 
     const initSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -253,5 +246,16 @@ class NotificationService {
       payload: payload,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
+  }
+
+  static Future<void> refreshTimeZone() async {
+    try {
+      tz.initializeTimeZones();
+      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+      final String timeZoneName = timezoneInfo.toString();
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+    } catch (e) {
+      // Fallback or ignore
+    }
   }
 }

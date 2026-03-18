@@ -29,6 +29,7 @@ class UserProfile {
   final String reminderSound;
   final int scansUsed;
   final bool isPremium;
+  final String? photoUrl;
 
   const UserProfile({
     this.name = '',
@@ -61,6 +62,7 @@ class UserProfile {
     this.reminderSound = 'default',
     this.scansUsed = 0,
     this.isPremium = false,
+    this.photoUrl,
   });
 
   Map<String, dynamic> toJson() => {
@@ -94,6 +96,7 @@ class UserProfile {
         'reminderSound': reminderSound,
         'scansUsed': scansUsed,
         'isPremium': isPremium,
+        'photoUrl': photoUrl,
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> j) => UserProfile(
@@ -128,6 +131,7 @@ class UserProfile {
         reminderSound: j['reminderSound'] ?? 'default',
         scansUsed: j['scansUsed'] ?? 0,
         isPremium: j['isPremium'] ?? false,
+        photoUrl: j['photoUrl'],
       );
 
   UserProfile copyWith({
@@ -146,6 +150,7 @@ class UserProfile {
     String? reminderSound,
     int? scansUsed,
     bool? isPremium,
+    String? photoUrl,
   }) =>
       UserProfile(
         name: name ?? this.name,
@@ -178,5 +183,6 @@ class UserProfile {
         reminderSound: reminderSound ?? this.reminderSound,
         scansUsed: scansUsed ?? this.scansUsed,
         isPremium: isPremium ?? this.isPremium,
+        photoUrl: photoUrl ?? this.photoUrl,
       );
 }

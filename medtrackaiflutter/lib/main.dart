@@ -10,6 +10,8 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_localizations/flutter_localizations.dart';
+
 import 'firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'providers/app_state.dart';
@@ -19,10 +21,12 @@ import 'screens/app_shell.dart';
 import 'screens/auth/auth_screen.dart';
 import 'services/notification_service.dart';
 import 'services/encryption_service.dart';
+import 'services/storage_service.dart';
 import 'data/datasources/local_prefs_datasource.dart';
 import 'data/datasources/firestore_datasource.dart';
 import 'data/repositories/medication_repository_impl.dart';
 import 'data/repositories/user_repository_impl.dart';
+import 'widgets/common/global_error_boundary.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,16 +50,19 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final localDataSource = LocalDataSource(prefs);
   final firestoreDataSource = FirestoreDataSource();
+  final storageService = StorageService();
   final medRepo =
-      MedicationRepositoryImpl(localDataSource, firestoreDataSource);
+      MedicationRepositoryImpl(localDataSource, firestoreDataSource, storageService);
   final userRepo = UserRepositoryImpl(localDataSource, firestoreDataSource);
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(
-    ChangeNotifierProvider(
-      create: (_) =>
-          AppState(medRepo: medRepo, userRepo: userRepo)..loadFromStorage(),
-      child: const MedAIApp(),
+    GlobalErrorBoundary(
+      child: ChangeNotifierProvider(
+        create: (_) =>
+            AppState(medRepo: medRepo, userRepo: userRepo)..loadFromStorage(),
+        child: const MedAIApp(),
+      ),
     ),
   );
 }
@@ -77,6 +84,22 @@ class MedAIApp extends StatelessWidget {
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', ''), // English
+        Locale('es', ''), // Spanish
+        Locale('fr', ''), // French
+        Locale('de', ''), // German
+        Locale('zh', ''), // Chinese
+        Locale('ja', ''), // Japanese
+        Locale('hi', ''), // Hindi
+        Locale('bn', ''), // Bengali
+        Locale('ar', ''), // Arabic
+      ],
       navigatorObservers: [
         FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
       ],

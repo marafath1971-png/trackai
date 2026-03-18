@@ -9,7 +9,6 @@ class LockScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<AppState>();
     final L = context.L;
 
     return Scaffold(
@@ -30,7 +29,7 @@ class LockScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: L.bg.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.0),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.2),
@@ -83,7 +82,7 @@ class LockScreen extends StatelessWidget {
                   const SizedBox(height: 32),
                   GestureDetector(
                     onTap: () {
-                      state.unlockApp();
+                      context.read<AppState>().unlockApp();
                     },
                     child: Container(
                       width: double.infinity,

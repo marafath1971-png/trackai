@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../domain/entities/entities.dart';
 import '../domain/repositories/medication_repository.dart';
 import '../domain/repositories/user_repository.dart';
@@ -13,6 +15,8 @@ import 'package:flutter_dynamic_icon_plus/flutter_dynamic_icon_plus.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../services/gemini_service.dart';
 import '../services/biometric_service.dart';
+import '../core/utils/haptic_engine.dart';
+import '../core/utils/logger.dart';
 
 enum AppPhase { loading, onboarding, auth, app }
 
@@ -47,59 +51,87 @@ class AppState extends ChangeNotifier {
   bool darkMode = false;
   String? toast;
   String? toastType;
-  String? healthInsights;
+  List<HealthInsight> healthInsights = [];
   bool loadingInsight = false;
   bool isLocked = false;
   StreamSubscription? _cgSub;
   StreamSubscription? _notifSub;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer;
+ 
+  // ── Calculation Cache ──────────────────────────────────────────────
+  int? _cachedStreak;
+  double? _cachedAdherence;
+  List<DoseItem>? _cachedDoses;
+  List<({Medicine med, ScheduleEntry sched, int idx})>? _cachedAllSchedules;
+  bool _isStreakDirty = true;
+  bool _isAdherenceDirty = true;
+  bool _isDosesDirty = true;
+  bool _isAllSchedulesDirty = true;
+  bool _isLatencyDirty = true;
+  List<Map<String, dynamic>>? _cachedLatency;
 
-  AppState({required this.medRepo, required this.userRepo}) {
+  AppState({
+    required this.medRepo,
+    required this.userRepo,
+    AudioPlayer? audioPlayer,
+  }) : _audioPlayer = audioPlayer ?? AudioPlayer() {
     _notifSub = NotificationService.actionStream.stream
         .listen(_handleNotificationAction);
   }
 
   // ── Load from storage ──────────────────────────────────────────────
   Future<void> loadFromStorage() async {
+    await NotificationService.refreshTimeZone();
     try {
-      final results = await Future.wait([
-        userRepo.getProfile(),
-        medRepo.getMedicines(),
-        medRepo.getHistory(),
-        userRepo.getCaregivers(),
-        userRepo.getStreakData(),
-        medRepo.getTakenToday(),
-        userRepo.getDarkMode(),
-      ]);
+      // Use localized error logging for each repository call to pinpoint failures
+      final profileResult = await userRepo.getProfile().catchError((e) {
+        appLogger.e('[AppState] Failed to fetch profile', error: e);
+        return null;
+      });
+      final medsResult = await medRepo.getMedicines().catchError((e) {
+        appLogger.e('[AppState] Failed to fetch medicines', error: e);
+        return <Medicine>[];
+      });
+      final historyResult = await medRepo.getHistory().catchError((e) {
+        appLogger.e('[AppState] Failed to fetch history', error: e);
+        return <String, List<DoseEntry>>{};
+      });
+      final caregiversResult = await userRepo.getCaregivers().catchError((e) {
+        appLogger.e('[AppState] Failed to fetch caregivers', error: e);
+        return <Caregiver>[];
+      });
 
-      final cloudProfile = results[0] as UserProfile?;
-      final cloudMeds = results[1] as List<Medicine>;
-      // history merge already done inside MedicationRepositoryImpl.getHistory()
-      history = results[2] as Map<String, List<DoseEntry>>;
-      caregivers = results[3] as List<Caregiver>;
-      streakData = results[4] as StreakData;
-      takenToday = results[5] as Map<String, bool>;
-      darkMode = results[6] as bool;
+      profile = profileResult;
+      meds = medsResult;
+      history = historyResult;
+      caregivers = caregiversResult;
 
-      profile = cloudProfile;
-      meds = cloudMeds;
+      // Other less critical loads
+      try {
+        streakData = await userRepo.getStreakData();
+        takenToday = await medRepo.getTakenToday();
+        darkMode = await userRepo.getDarkMode();
+      } catch (e) {
+        appLogger.w('[AppState] Secondary data load failed', error: e);
+      }
 
       // If user is signed in but Firestore had no data, push our local data up.
-      // This handles the first-login after using the app offline.
       if (AuthService.uid != null &&
-          cloudProfile == null &&
-          cloudMeds.isEmpty) {
+          profile == null &&
+          meds.isEmpty) {
         _syncLocalToCloud();
       }
 
       phase = profile != null && profile!.name.isNotEmpty
           ? AppPhase.app
-          : AppPhase.app; // Changed from onboarding to app to support scan-first if needed, but loadFromStorage sets initial phase.
+          : AppPhase.app; 
+      
       _updateNotifications();
       _listenToCaregivers();
       _listenToMonitoring();
 
       if (AuthService.uid != null) {
+        _syncUserProfileFromAuth();
         _initPushNotifications();
       }
 
@@ -108,8 +140,10 @@ class AppState extends ChangeNotifier {
         isLocked = true;
       }
 
+      _invalidateCache();
       notifyListeners();
-    } catch (_) {
+    } catch (e, stack) {
+      appLogger.e('[AppState] Critical load failure', error: e, stackTrace: stack);
       phase = AppPhase.onboarding;
       notifyListeners();
     }
@@ -124,8 +158,9 @@ class AppState extends ChangeNotifier {
   void _listenToCaregivers() {
     _cgSub?.cancel();
     _cgSub = userRepo.getCaregiversStream().listen((list) {
-      caregivers = list;
-      notifyListeners();
+    caregivers = list;
+    _invalidateCache();
+    notifyListeners();
     });
   }
 
@@ -144,8 +179,9 @@ class AppState extends ChangeNotifier {
     if (uid == null) return;
 
     _monitoringSub = userRepo.getMonitoringPatientsStream().listen((patients) {
-      monitoredPatients = patients;
-      notifyListeners();
+    monitoredPatients = patients;
+    _invalidateCache();
+    notifyListeners();
     });
   }
 
@@ -241,10 +277,75 @@ class AppState extends ChangeNotifier {
     await saveProfile(profile!.copyWith(scansUsed: newCount));
   }
 
+  Future<String?> uploadImage(File file) async {
+    try {
+      return await medRepo.uploadMedicineImage(file);
+    } catch (e) {
+      appLogger.e('[AppState] Image upload failed', error: e);
+      return null;
+    }
+  }
+
   Future<void> unlockPremium() async {
     if (profile == null) return;
     await saveProfile(profile!.copyWith(isPremium: true));
     showToast('Premium Unlocked! Full access granted 💎✨', type: 'success');
+  }
+
+  // ── Authentication ──────────────────────────────────────────────────
+  Future<void> signInWithGoogle() async {
+    try {
+      final cred = await AuthService.signInWithGoogle();
+      if (cred != null) {
+        await loadFromStorage(); // Reload everything from Firestore/Local
+        _syncLocalToCloud();
+        showToast('Signed in with Google');
+      }
+    } on PlatformException catch (e) {
+      showToast('Sign in failed: ${e.message ?? e.code}', type: 'error');
+    } catch (e) {
+      showToast('Sign in failed. Please try again.', type: 'error');
+    }
+  }
+
+  Future<void> signInWithApple() async {
+    try {
+      final cred = await AuthService.signInWithApple();
+      if (cred != null) {
+        await loadFromStorage();
+        _syncLocalToCloud();
+        showToast('Signed in with Apple');
+      }
+    } on PlatformException catch (e) {
+      showToast('Sign in failed: ${e.message ?? e.code}', type: 'error');
+    } catch (e) {
+      showToast('Sign in failed. Please try again.', type: 'error');
+    }
+  }
+
+  Future<void> signOut() async {
+    await AuthService.signOut();
+    // Reset local state if needed, or just reload which will detect no UID
+    await loadFromStorage();
+    showToast('Signed out', type: 'info');
+  }
+
+  void _syncUserProfileFromAuth() {
+    if (AuthService.currentUser == null) return;
+    
+    final user = AuthService.currentUser!;
+    final currentProfile = profile ?? const UserProfile();
+    
+    // Only update if current profile is empty or placeholder
+    String? newName = currentProfile.name.isEmpty ? user.displayName : null;
+    String? newPhoto = currentProfile.photoUrl == null ? user.photoURL : null;
+
+    if (newName != null || newPhoto != null) {
+      saveProfile(currentProfile.copyWith(
+        name: newName ?? currentProfile.name,
+        photoUrl: newPhoto ?? currentProfile.photoUrl,
+      ));
+    }
   }
 
   Future<void> toggleBiometricLock(bool enabled) async {
@@ -403,6 +504,8 @@ class AppState extends ChangeNotifier {
   List<Medicine> get activeMeds => meds;
 
   List<DoseItem> getDoses() {
+    if (!_isDosesDirty && _cachedDoses != null) return _cachedDoses!;
+
     final today = dayIdx();
     final items = <DoseItem>[];
     for (final med in activeMeds) {
@@ -414,10 +517,15 @@ class AppState extends ChangeNotifier {
     }
     items.sort(
         (a, b) => (a.sched.h * 60 + a.sched.m) - (b.sched.h * 60 + b.sched.m));
+    
+    _cachedDoses = items;
+    _isDosesDirty = false;
     return items;
   }
 
   int getStreak() {
+    if (!_isStreakDirty && _cachedStreak != null) return _cachedStreak!;
+
     int s = 0;
 
     // We check up to 365 days back
@@ -462,10 +570,13 @@ class AppState extends ChangeNotifier {
         break;
       }
     }
+    _cachedStreak = s;
+    _isStreakDirty = false;
     return s;
   }
 
   double getAdherenceScore() {
+    if (!_isAdherenceDirty && _cachedAdherence != null) return _cachedAdherence!;
     if (history.isEmpty) return 1.0;
     
     int totalScheduled = 0;
@@ -490,9 +601,83 @@ class AppState extends ChangeNotifier {
       }
     }
 
-    if (totalScheduled == 0) return 1.0;
-    return (totalTaken / totalScheduled).clamp(0.0, 1.0);
+    if (totalScheduled == 0) {
+      _cachedAdherence = 1.0;
+      _isAdherenceDirty = false;
+      return 1.0;
+    }
+    final score = (totalTaken / totalScheduled).clamp(0.0, 1.0);
+    _cachedAdherence = score;
+    _isAdherenceDirty = false;
+    return score;
   }
+
+  List<({Medicine med, ScheduleEntry sched, int idx})> getAllSchedules() {
+    if (!_isAllSchedulesDirty && _cachedAllSchedules != null) {
+      return _cachedAllSchedules!;
+    }
+
+    final items = meds
+        .expand((m) => m.schedule
+            .asMap()
+            .entries
+            .map((e) => (med: m, sched: e.value, idx: e.key)))
+        .toList();
+    items.sort(
+        (a, b) => (a.sched.h * 60 + a.sched.m) - (b.sched.h * 60 + b.sched.m));
+
+    _cachedAllSchedules = items;
+    _isAllSchedulesDirty = false;
+    return items;
+  }
+
+  List<Map<String, dynamic>> getTrendData() {
+    final List<Map<String, dynamic>> data = [];
+    final now = DateTime.now();
+    for (int i = 29; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final dayOfWeek = date.weekday % 7;
+
+      final scheduledOnDay = meds.where((m) => 
+        m.schedule.any((s) => s.enabled && s.days.contains(dayOfWeek))
+      ).length;
+
+      double adherence = 1.0;
+      if (scheduledOnDay > 0) {
+        final entries = history[dateKey] ?? [];
+        adherence = entries.where((e) => e.taken).length / scheduledOnDay;
+      }
+
+      data.add({
+        'date': dateKey,
+        'label': ['S', 'M', 'T', 'W', 'T', 'F', 'S'][date.weekday % 7],
+        'value': adherence,
+        'scheduled': scheduledOnDay,
+      });
+    }
+    return data;
+  }
+
+  int getAdherenceForMed(int medId) {
+    final medHistory = history.values
+        .expand((e) => e)
+        .where((e) => e.medId == medId)
+        .toList();
+    final takenCount = medHistory.where((e) => e.taken).length;
+    final totalDoses = medHistory.length;
+    return totalDoses == 0 ? 0 : (takenCount * 100 / totalDoses).round();
+  }
+
+  ({int taken, int total}) getHistoryCountForMed(int medId) {
+    final medHistory = history.values
+        .expand((e) => e)
+        .where((e) => e.medId == medId)
+        .toList();
+    return (taken: medHistory.where((e) => e.taken).length, total: medHistory.length);
+  }
+
+  int get unseenAlertsCount => missedAlerts.where((a) => !a.seen).length;
 
   List<Medicine> getLowMeds() =>
       meds.where((m) => m.count <= m.refillAt && m.count > 0).toList();
@@ -514,6 +699,7 @@ class AppState extends ChangeNotifier {
   void toggleDarkMode() {
     darkMode = !darkMode;
     userRepo.saveDarkMode(darkMode);
+    _invalidateCache();
     notifyListeners();
   }
 
@@ -531,6 +717,7 @@ class AppState extends ChangeNotifier {
       takenToday = {...takenToday, key: !wasTaken};
 
       // Optimistic UI update instantly for perceived speed.
+      _invalidateCache();
       notifyListeners();
 
       final todayKey = todayStr();
@@ -627,11 +814,22 @@ class AppState extends ChangeNotifier {
     return 'Skip this dose, take next at scheduled time'; // > 6h
   }
 
+  Future<void> nudgePatient(String patientUid) async {
+    try {
+      await userRepo.nudgePatient(patientUid);
+      showToast('Nudge sent! 🔔', type: 'success');
+      HapticEngine.selection();
+    } catch (e) {
+      showToast('Failed to send nudge', type: 'error');
+    }
+  }
+
   // ── Medicine CRUD ──────────────────────────────────────────────────
   void addMedicine(Medicine med) {
     meds = [...meds, med];
     medRepo.addMedicine(med);
     _updateNotifications();
+    _invalidateCache();
     notifyListeners();
   }
 
@@ -674,6 +872,7 @@ class AppState extends ChangeNotifier {
     if (updateNotifs) {
       _updateNotifications();
     }
+    _invalidateCache();
     notifyListeners();
   }
 
@@ -681,6 +880,7 @@ class AppState extends ChangeNotifier {
     meds = meds.where((m) => m.id != id).toList();
     medRepo.deleteMedicine(id);
     _updateNotifications();
+    _invalidateCache();
     notifyListeners();
     showToast('Medicine removed');
   }
@@ -751,6 +951,8 @@ class AppState extends ChangeNotifier {
   }
 
   List<Map<String, dynamic>> getLatencyData() {
+    if (!_isLatencyDirty && _cachedLatency != null) return _cachedLatency!;
+
     final List<Map<String, dynamic>> latency = [];
     final now = DateTime.now();
 
@@ -782,6 +984,8 @@ class AppState extends ChangeNotifier {
             }
         }
     }
+    _cachedLatency = latency;
+    _isLatencyDirty = false;
     return latency;
   }
   void addSchedule(int medId, ScheduleEntry s) {
@@ -850,7 +1054,13 @@ class AppState extends ChangeNotifier {
 
   Future<void> joinCaregiver(String patientUid, int cgId) async {
     try {
-      await userRepo.joinCaregiver(patientUid, cgId);
+      await userRepo.joinCaregiver(
+        patientUid: patientUid,
+        cgId: cgId,
+        patientName: profile?.name ?? 'Unknown Patient',
+        patientAvatar: profile?.avatar ?? '😊',
+        relation: 'Connected Patient',
+      );
       activateCaregiver(cgId);
       showToast('Successfully joined! Monitoring active ✓');
     } catch (e) {
@@ -860,7 +1070,13 @@ class AppState extends ChangeNotifier {
 
   Future<void> joinForce(String patientUid, int cgId) async {
     try {
-      await userRepo.joinCaregiver(patientUid, cgId);
+      await userRepo.joinCaregiver(
+        patientUid: patientUid,
+        cgId: cgId,
+        patientName: profile?.name ?? 'Unknown Patient',
+        patientAvatar: profile?.avatar ?? '😊',
+        relation: 'Connected Patient',
+      );
       
       // Ensure it's in our local list or refreshed
       final match = caregivers.where((c) => c.id == cgId).firstOrNull;
@@ -871,8 +1087,6 @@ class AppState extends ChangeNotifier {
       }
 
       // Add to monitoring list if we are the one joining (caregiver role)
-      // In a production app, this would be handled by a cloud function or batch write.
-      // For now, we'll manually refresh our monitoring list.
       await initMonitoring();
       
       showToast('Joined successfully! ✓');
@@ -943,7 +1157,7 @@ class AppState extends ChangeNotifier {
     caregivers = [];
     takenToday = {};
     streakData = const StreakData();
-    healthInsights = null;
+    healthInsights = [];
     missedAlerts = [];
     await Future.wait([
       medRepo.saveHistory({}),
@@ -1039,6 +1253,7 @@ class AppState extends ChangeNotifier {
         },
         (failure) {
           debugPrint('Health Insight Error: ${failure.message}');
+          healthInsights = [HealthInsight(category: 'Coach', title: 'System Error', body: "Couldn't generate insights right now. Please check your connection.")];
         },
       );
     } catch (e) {
@@ -1047,5 +1262,13 @@ class AppState extends ChangeNotifier {
       loadingInsight = false;
       notifyListeners();
     }
+  }
+
+  void _invalidateCache() {
+    _isStreakDirty = true;
+    _isAdherenceDirty = true;
+    _isDosesDirty = true;
+    _isAllSchedulesDirty = true;
+    _isLatencyDirty = true;
   }
 }

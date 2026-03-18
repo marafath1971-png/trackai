@@ -16,12 +16,14 @@ import '../core/utils/logger.dart';
 class GeminiService {
   static String get _apiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
 
-  /// Tried models and their preferred API versions in order of reliability.
-  static const List<Map<String, String>> _scanModels = [
-    {'model': 'gemini-2.5-flash', 'version': 'v1beta'},
-    {'model': 'gemini-flash-latest', 'version': 'v1beta'},
-    {'model': 'gemini-2.0-flash-lite', 'version': 'v1beta'},
-    {'model': 'gemini-2.0-flash', 'version': 'v1beta'},
+  /// Standardized models and their versions for all AI tasks.
+  /// Using verified identifiers from 2026 API diagnostics.
+  static const List<Map<String, String>> _standardModels = [
+    {'model': 'gemini-1.5-flash-latest', 'version': 'v1beta'},
+    {'model': 'gemini-1.5-flash-8b', 'version': 'v1beta'},
+    {'model': 'gemini-1.5-pro-latest', 'version': 'v1beta'},
+    {'model': 'gemini-2.0-flash-exp', 'version': 'v1beta'},
+    {'model': 'gemini-2.0-flash-lite-preview-02-05', 'version': 'v1beta'},
   ];
 
   static GenerativeModel _getModel(String modelName, {String apiVersion = 'v1'}) {
@@ -43,7 +45,7 @@ class GeminiService {
     appLogger.d('[GeminiService] Starting scan with hint: $hint');
     String lastError = '';
 
-    for (final config in _scanModels) {
+    for (final config in _standardModels) {
       final modelName = config['model']!;
       final apiVersion = config['version']!;
       
@@ -69,33 +71,40 @@ class GeminiService {
 
         return Success(_parseScanResponse(responseText));
       } catch (e) {
-        lastError = e.toString();
+        lastError = _humanizeError(e);
         appLogger.e('[GeminiService] Failed with $modelName ($apiVersion): $e');
         
-        // If it's a quota error on one model, we continue to the next
+        // Check if this error specifically represents a system/quota issue
+        final s = e.toString().toLowerCase();
+        if (s.contains('quota') || s.contains('limit') || s.contains('429')) {
+             // We continue to next model, only if ALL fail will we return busy status
+             continue;
+        }
       }
     }
 
-    return Error(ScanFailure("The AI couldn't identify this medicine. Please try again with a clearer photo of the label. ($lastError)"));
+    // If we've exhausted all models and they all failed with quota/busy, or other errors
+    final isBusy = lastError.contains('Limit Reached') || lastError.contains('taking a short breather');
+    if (isBusy) {
+      return Success(ScanResult(identified: false, systemBusy: true));
+    }
+
+    return Error(ScanFailure(lastError.isNotEmpty 
+        ? lastError 
+        : "The AI couldn't identify this medicine. Please try again with a clearer photo of the label."));
   }
 
   /// Uses Gemini to generate a short, friendly, personalized health tip.
   /// Includes fallback to multiple models and a static tip if all fail (e.g., quota).
-  static Future<Result<String>> getHealthInsight({
+  static Future<Result<List<HealthInsight>>> getHealthInsight({
     required List<Medicine> meds,
     required int streak,
     required double adherence,
     required List<Map<String, dynamic>> latencyData,
   }) async {
-    final configs = [
-      {'model': 'gemini-2.5-flash', 'version': 'v1beta'},
-      {'model': 'gemini-flash-latest', 'version': 'v1beta'},
-      {'model': 'gemini-2.0-flash-lite', 'version': 'v1beta'},
-      {'model': 'gemini-2.0-flash', 'version': 'v1beta'},
-    ];
     String lastError = '';
 
-    for (final config in configs) {
+    for (final config in _standardModels) {
       final modelName = config['model']!;
       final apiVersion = config['version']!;
 
@@ -106,28 +115,42 @@ class GeminiService {
         final response = await _withRetry(
             () => model.generateContent([Content.text(prompt)]));
         if (response.text != null && response.text!.isNotEmpty) {
-          return Success(response.text!.trim());
+          final responseText = response.text!.trim();
+          try {
+            final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(responseText);
+            if (jsonMatch != null) {
+              final data = json.decode(jsonMatch.group(0)!) as Map<String, dynamic>;
+              final insightsList = data['insights'] as List;
+              if (insightsList.isNotEmpty) {
+                final result = insightsList
+                    .map((item) => HealthInsight.fromJson(item as Map<String, dynamic>))
+                    .toList();
+                return Success(result);
+              }
+            }
+          } catch (e) {
+            appLogger.w('[GeminiService] Insight JSON parse error: $e');
+          }
+          // Fallback if not JSON or empty
+          return Success([HealthInsight(category: 'Coach', title: 'Daily Tip', body: responseText)]);
         }
       } catch (e) {
-        lastError = e.toString();
+        lastError = _humanizeError(e);
         appLogger.w('[GeminiService] Insight failed with $modelName ($apiVersion): $e');
       }
     }
 
     // Static Fallback Tips if AI is unavailable
     final fallbackTips = [
-      'Consistency is key! Taking your meds at the same time every day helps maintain effectiveness.',
-      'Stay hydrated and track your symptoms regularily to help your doctor monitor your progress.',
-      'Keep your current streak going! Every day adds up to a healthier, more predictable routine.'
+      HealthInsight(category: 'Personal', title: 'Consistency', body: 'Consistency is key! Taking your meds at the same time every day helps maintain effectiveness.'),
+      HealthInsight(category: 'Safety', title: 'Hydration', body: 'Stay hydrated and track your symptoms regularily to help your doctor monitor your progress.'),
+      HealthInsight(category: 'Adherence', title: 'Keep it up!', body: 'Keep your current streak going! Every day adds up to a healthier routine.')
     ];
-    final staticTip = (meds.length % 3 == 0)
-        ? fallbackTips[0]
-        : (meds.length % 3 == 1 ? fallbackTips[1] : fallbackTips[2]);
-
+    
     appLogger.e(
         '[GeminiService] All insight models failed. Returning static tip.',
         error: lastError);
-    return Success(staticTip);
+    return Success([fallbackTips[meds.length % 3]]);
   }
 
   // ── Helper Prompt Generators ───────────────────────────────────────────────
@@ -146,12 +169,12 @@ Return ONLY valid JSON with NO markdown formatting, NO code fences, NO explanati
   "dose": "Strength e.g. 500mg, 250mg/5ml",
   "dosePerTake": "Quantity per dose e.g. 1 tablet, 5ml",
   "frequency": "e.g. twice daily, every 8 hours, once at bedtime",
-  "howToTake": "Detailed instructions e.g. Swallow whole with a full glass of water.",
+  "howToTake": "Detailed instructions e.g. Swallow whole with a full glass of water. If regional names exist (e.g., Paracetamol vs Acetaminophen), note them if appropriate.",
   "whenToTake": "Specific timing guidance e.g. Take in the morning before breakfast.",
   "withFood": true,
-  "sideEffects": "Common side effects: nausea, headache.",
+  "sideEffects": "Common side effects: nausea, headache. Use regional spelling if applicable (e.g., 'drowsiness' vs 'doziness' is less relevant than drug synonyms).",
   "interactions": "Avoid with: alcohol, blood thinners.",
-  "warnings": "Do not use if pregnant. Avoid driving if drowsy.",
+  "warnings": "Do not use if pregnant. Avoid driving if drowsy. Handle regional drug name synonyms (e.g. Salbutamol for Albuterol, Paracetamol for Acetaminophen).",
   "storage": "Store below 25°C away from light.",
   "category": "Prescription|OTC|Supplement",
   "isAntibiotic": false,
@@ -203,10 +226,48 @@ Provide 3 short, friendly, categorized health coaching tips.
 Return ONLY a JSON object:
 {
   "insights": [
-    {"category": "Safety|Adherence|Optimization", "title": "Short Title", "body": "Actionable tip (max 30 words)"}
+    {
+      "category": "Safety|Adherence|Optimization", 
+      "title": "Short Title", 
+      "body": "Actionable tip (max 30 words)",
+      "steps": ["Step 1", "Step 2"]
+    }
   ]
 }
 ''';
+  }
+
+  /// Handles interactive follow-up questions for health coaching.
+  static Future<Result<String>> askFollowUp(String question, List<HealthInsight> currentInsights) async {
+    final context = currentInsights.map((i) => '${i.title}: ${i.body}').join('\n');
+    final prompt = '''
+You are MedAI Pro, a premium, high-performance AI Health Coach. 🚀
+Recent insights provided:
+$context
+
+The user is asking: "$question"
+
+Provide a response that is helpful, professional, yet exceptionally engaging and "hooked". 🤖
+- Use emojis strategically (e.g., ✨, 💊, 📈, 🚨).
+- Keep it concise (max 100 words).
+- Focus on being encouraging and medically sound.
+- If the question is unrelated to health, politely redirect.
+''';
+
+    for (final config in _standardModels) {
+      final modelName = config['model']!;
+      final apiVersion = config['version']!;
+      try {
+        final model = _getModel(modelName, apiVersion: apiVersion);
+        final response = await _withRetry(() => model.generateContent([Content.text(prompt)]));
+        if (response.text != null && response.text!.isNotEmpty) {
+          return Success(response.text!.trim());
+        }
+      } catch (e) {
+        appLogger.w('[GeminiService] Follow-up failed with $modelName: $e');
+      }
+    }
+    return const Error(ScanFailure('Sorry, I couldn\'t process that question right now. Our AI might be busy. Please try again later.'));
   }
 
   // ── Helper Data Parsers ──────────────────────────────────────────────────
@@ -256,7 +317,13 @@ Return ONLY a JSON object:
   }
 
   static bool _isRetryableError(dynamic e) {
-    final errStr = e.toString().toLowerCase();
+    // Defensive check for UTF-16 compatibility
+    final errStr = _safeString(e).toLowerCase();
+
+    // FAIL FAST if quota is strictly zero (account limitation)
+    if (errStr.contains('limit: 0')) {
+      return false;
+    }
 
     // Do not retry fatal auth or invalid request errors
     if (errStr.contains('403') ||
@@ -277,5 +344,36 @@ Return ONLY a JSON object:
     }
 
     return true; // Default to retry for transient exceptions
+  }
+
+  /// Sanitizes strings to ensure they are well-formed UTF-16 for Flutter/Dart logging.
+  static String _safeString(dynamic e) {
+    try {
+      final s = e.toString();
+      // Only keep characters that are part of well-formed UTF-16
+      return s.runes.map((r) => r <= 0x10FFFF ? String.fromCharCode(r) : '').join();
+    } catch (_) {
+      return "Unknown Gemini Error";
+    }
+  }
+
+  /// Translates ugly technical AI errors into friendly, branded messages.
+  static String _humanizeError(dynamic e) {
+    final s = _safeString(e).toLowerCase();
+
+    if (s.contains('quota') || s.contains('limit') || s.contains('429')) {
+      return "Our AI is currently taking a short breather (Limit Reached). Please try again in a few minutes, or upgrade to Pro for unlimited scanning! ✨";
+    }
+    if (s.contains('socket') || s.contains('timeout') || s.contains('network')) {
+      return "Connection issues? Check your internet and let's try identifying that medicine again. 🌐";
+    }
+    if (s.contains('safety') || s.contains('finish_reason_safety')) {
+      return "Our AI couldn't process this for safety reasons. Please ensure the label is clearly visible and medical in nature. ⚖️";
+    }
+    if (s.contains('401') || s.contains('key') || s.contains('auth')) {
+      return "AI authentication failed. Please check your API key in settings. 🔑";
+    }
+
+    return "The AI couldn't identify this medicine. Please try again with a clearer photo of the label. 💊";
   }
 }

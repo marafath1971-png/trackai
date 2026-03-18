@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/app_loading_indicator.dart';
 
 // ══════════════════════════════════════════════
 // AUTH SCREEN — Sign In / Sign Up
@@ -102,10 +103,12 @@ class _AuthScreenState extends State<AuthScreen> {
     final L = context.L;
     final topPad = MediaQuery.of(context).padding.top;
 
-    return Scaffold(
-      backgroundColor: L.bg,
-      body: SafeArea(
-        child: Scrollbar(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: L.bg,
+        body: SafeArea(
+          child: Scrollbar(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics()),
@@ -121,7 +124,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 height: 72,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: AppRadius.roundXL,
                   border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   boxShadow: [
                     BoxShadow(
@@ -131,24 +134,25 @@ class _AuthScreenState extends State<AuthScreen> {
                   ],
                 ),
                 child: const Center(
-                    child: Text('💊',
-                        style: TextStyle(fontSize: 34, height: 1.0))),
+                    child: Image(
+                      image: AssetImage('assets/images/home_logo.png'),
+                      width: 44,
+                      height: 44,
+                    )),
               ),
               const SizedBox(height: 24),
 
               RichText(
                   text: TextSpan(
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.displayLarge.copyWith(
                     fontSize: 30,
-                    fontWeight: FontWeight.w900,
                     color: L.text,
                     letterSpacing: -0.8),
                 children: [
                   TextSpan(
                       text: _isSignUp ? 'Create\nyour ' : 'Welcome\nback to '),
-                  TextSpan(text: 'Med ', style: TextStyle(color: L.text)),
-                  TextSpan(text: 'Ai', style: TextStyle(color: L.green)),
+                  TextSpan(text: 'Med ', style: AppTypography.displayLarge.copyWith(fontSize: 30, color: L.text)),
+                  TextSpan(text: 'Ai', style: AppTypography.displayLarge.copyWith(fontSize: 30, color: L.green)),
                 ],
               )),
               const SizedBox(height: 8),
@@ -156,8 +160,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 _isSignUp
                     ? 'Sign up to sync your medicines across all devices.'
                     : 'Sign in to access your medicine data.',
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.bodySmall.copyWith(
                     fontSize: 15,
                     color: L.sub,
                     height: 1.5),
@@ -174,8 +177,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text('or',
-                      style: TextStyle(
-                          fontFamily: 'Inter', fontSize: 13, color: L.sub)),
+                      style: AppTypography.bodySmall.copyWith(fontSize: 13, color: L.sub)),
                 ),
                 Expanded(child: Divider(color: L.border)),
               ]),
@@ -215,8 +217,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: GestureDetector(
                     onTap: _forgotPassword,
                     child: Text('Forgot password?',
-                        style: TextStyle(
-                            fontFamily: 'Inter',
+                        style: AppTypography.labelLarge.copyWith(
                             fontSize: 13,
                             color: L.green,
                             fontWeight: FontWeight.w600)),
@@ -232,14 +233,13 @@ class _AuthScreenState extends State<AuthScreen> {
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
                       color: L.redLight,
-                      borderRadius: BorderRadius.circular(16)),
+                      borderRadius: AppRadius.roundM),
                   child: Row(children: [
                     Icon(Icons.error_outline_rounded, color: L.red, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
                         child: Text(_error!,
-                            style: TextStyle(
-                                fontFamily: 'Inter',
+                            style: AppTypography.bodySmall.copyWith(
                                 fontSize: 13,
                                 color: L.red))),
                   ]),
@@ -264,8 +264,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   }),
                   child: RichText(
                       text: TextSpan(
-                    style: TextStyle(
-                        fontFamily: 'Inter', fontSize: 14, color: L.sub),
+                    style: AppTypography.bodySmall.copyWith(fontSize: 14, color: L.sub),
                     children: [
                       TextSpan(
                           text: _isSignUp
@@ -273,8 +272,10 @@ class _AuthScreenState extends State<AuthScreen> {
                               : "Don't have an account? "),
                       TextSpan(
                         text: _isSignUp ? 'Sign In' : 'Sign Up',
-                        style: TextStyle(
-                            color: L.green, fontWeight: FontWeight.w700),
+                        style: AppTypography.bodySmall.copyWith(
+                            fontSize: 14,
+                            color: L.green,
+                            fontWeight: FontWeight.w700),
                       ),
                     ],
                   )),
@@ -289,8 +290,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     context.read<AppState>().skipAuth();
                   },
                   child: Text('Continue without account →',
-                      style: TextStyle(
-                          fontFamily: 'Inter', fontSize: 13, color: L.sub)),
+                      style: AppTypography.bodySmall.copyWith(fontSize: 13, color: L.sub)),
                 ),
               ),
               const SizedBox(height: 120),
@@ -299,7 +299,8 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
       ),
     ),
-  );
+  ),
+);
 }
 }
 
@@ -320,28 +321,25 @@ class _GoogleBtn extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: AppRadius.roundXL,
           border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          // Google G logo
-          Container(
+          // Google G logo — Using a better visual or asset
+          Image.network(
+            'https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png',
             width: 20,
             height: 20,
-            decoration: const BoxDecoration(shape: BoxShape.circle),
-            child: Text('G',
-                style: TextStyle(
-                    fontFamily: 'Inter',
+            errorBuilder: (c, e, s) => Text('G',
+                style: AppTypography.displayLarge.copyWith(
                     fontSize: 16,
-                    fontWeight: FontWeight.w900,
                     color: L.text)),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Text('Continue with Google',
-              style: TextStyle(
-                  fontFamily: 'Inter',
+              style: AppTypography.titleLarge.copyWith(
                   fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: L.text)),
         ]),
       ),
@@ -371,18 +369,18 @@ class _AuthField extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: AppRadius.roundL,
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: TextField(
         controller: controller,
         obscureText: obscure,
         keyboardType: keyboardType,
-        style: TextStyle(fontFamily: 'Inter', fontSize: 15, color: L.text),
+        style: AppTypography.bodyLarge.copyWith(fontSize: 15, color: L.text),
         decoration: InputDecoration(
           labelText: label,
           labelStyle:
-              TextStyle(fontFamily: 'Inter', fontSize: 14, color: L.sub),
+              AppTypography.bodySmall.copyWith(fontSize: 14, color: L.sub),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -416,7 +414,7 @@ class _PrimaryBtn extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: L.green,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: AppRadius.roundXL,
           boxShadow: [
             BoxShadow(
                 color: L.green.withValues(alpha: 0.25),
@@ -426,16 +424,10 @@ class _PrimaryBtn extends StatelessWidget {
         ),
         child: Center(
           child: loading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white))
+              ? const AppLoadingIndicator(size: 20)
               : Text(label,
-                  style: const TextStyle(
-                      fontFamily: 'Inter',
+                  style: AppTypography.titleLarge.copyWith(
                       fontSize: 16,
-                      fontWeight: FontWeight.w900,
                       color: Colors.black)),
         ),
       ),

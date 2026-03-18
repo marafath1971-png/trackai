@@ -1,3 +1,4 @@
+import '../../core/utils/logger.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/entities.dart';
 
@@ -78,12 +79,14 @@ class FirestoreDataSource {
   Future<Map<String, List<DoseEntry>>> getRecentHistory(String uid,
       {int days = 30}) async {
     try {
-      final snap = await _history(uid)
-          .orderBy(FieldPath.documentId, descending: true)
-          .limit(days)
-          .get();
+      // Note: Order by documentId descending often requires an index in subcollections.
+      // We'll fetch and sort locally to avoid index blockers for new users.
+      final snap = await _history(uid).limit(days).get();
       final result = <String, List<DoseEntry>>{};
-      for (final doc in snap.docs) {
+      final sortedDocs = snap.docs.toList()
+        ..sort((a, b) => b.id.compareTo(a.id));
+
+      for (final doc in sortedDocs) {
         final data = doc.data() as Map<String, dynamic>;
         final entries = (data['entries'] as List? ?? [])
             .map((e) => DoseEntry.fromJson(e as Map<String, dynamic>))
@@ -157,28 +160,58 @@ class FirestoreDataSource {
         .set(cg.toJson(), SetOptions(merge: true));
   }
 
-  Future<void> joinCaregiver(String patientUid, int cgId) async {
+  Future<void> joinCaregiver({
+    required String caregiverUid,
+    required String patientUid,
+    required int cgId,
+    required String patientName,
+    required String patientAvatar,
+    required String relation,
+  }) async {
     // 1. Update status on patient side
-    await _caregivers(patientUid).doc('$cgId').update({'status': 'active'});
+    // CRITICAL: We use caregiverUid as the document ID here to facilitate 
+    // isActiveCaregiver rules which require exists(path/uid).
+    final batch = _db.batch();
     
+    // Set the new active document
+    batch.set(_caregivers(patientUid).doc(caregiverUid), {
+      'status': 'active',
+      'id': cgId, // Keep original ID for reference
+    }, SetOptions(merge: true));
+
+    // Delete the old pending document (if it was keyed by int ID)
+    batch.delete(_caregivers(patientUid).doc('$cgId'));
+
     // 2. Create reciprocal link on caregiver side
-    // In a real app, cgId would correspond to the caregiver's actual UID.
-    // For this simulation/prototype, we'll use the 'caregiverUID' if available or assume it exists.
-    // For now, we'll just update the status.
+    batch.set(_monitoring(caregiverUid).doc(patientUid), {
+      'name': patientName,
+      'avatar': patientAvatar,
+      'relation': relation,
+      'addedAt': DateTime.now().toIso8601String().substring(0, 10),
+    });
+
+    await batch.commit();
   }
 
   // ── Monitoring (For Caregivers) ────────────────────────────────────
   
   Stream<List<Map<String, dynamic>>> getMonitoringPatientsStream(String uid) {
+    appLogger.i('[FirestoreDataSource] Starting monitoring query on: users/$uid/monitoring');
     return _monitoring(uid).snapshots().map((snap) => snap.docs
         .map((d) => {'uid': d.id, ...d.data() as Map<String, dynamic>})
-        .toList());
+        .toList()).handleError((e) {
+          appLogger.e('[FirestoreDataSource] Monitoring stream error: $e');
+          return <Map<String, dynamic>>[];
+        });
   }
 
   Stream<List<Medicine>> getPatientMedsStream(String patientUid) {
     return _meds(patientUid).snapshots().map((snap) => snap.docs
         .map((d) => Medicine.fromJson(d.data() as Map<String, dynamic>))
-        .toList());
+        .toList()).handleError((e) {
+          appLogger.e('[FirestoreDataSource] Patient meds stream error: $e');
+          return <Medicine>[];
+        });
   }
 
   Stream<Map<String, List<DoseEntry>>> getPatientHistoryStream(String patientUid) {
@@ -192,6 +225,9 @@ class FirestoreDataSource {
         result[doc.id] = entries;
       }
       return result;
+    }).handleError((e) {
+      appLogger.e('[FirestoreDataSource] Patient history stream error: $e');
+      return <String, List<DoseEntry>>{};
     });
   }
 
@@ -253,5 +289,12 @@ class FirestoreDataSource {
 
   Future<void> deleteInvite(String inviteCode) async {
     await _db.collection('caregiverInvites').doc(inviteCode).delete();
+  }
+
+  Future<void> nudgePatient(String patientUid) async {
+    await _userDoc(patientUid).set({
+      'lastNudgeAt': FieldValue.serverTimestamp(),
+      'nudgeCount': FieldValue.increment(1),
+    }, SetOptions(merge: true));
   }
 }

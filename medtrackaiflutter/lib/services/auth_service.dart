@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import '../core/utils/logger.dart';
 
 // ══════════════════════════════════════════════
 // AUTH SERVICE
@@ -56,6 +57,12 @@ class AuthService {
       return await _auth.signInWithCredential(credential);
     } on FirebaseAuthException {
       rethrow;
+    } on PlatformException catch (e) {
+      appLogger.e("Google Sign-In Platform Error: ${e.code} - ${e.message}");
+      rethrow;
+    } catch (e) {
+      appLogger.e("Google Sign-In General Error: $e");
+      rethrow;
     }
   }
 
@@ -78,9 +85,12 @@ class AuthService {
       return await _auth.signInWithCredential(credential);
     } on FirebaseAuthException {
       rethrow;
+    } on PlatformException catch (e) {
+      appLogger.e("Apple Sign-In Platform Error: ${e.code} - ${e.message}");
+      rethrow;
     } catch (e) {
-      debugPrint("Apple Sign-In Error: $e");
-      return null;
+      appLogger.e("Apple Sign-In General Error: $e");
+      rethrow;
     }
   }
 

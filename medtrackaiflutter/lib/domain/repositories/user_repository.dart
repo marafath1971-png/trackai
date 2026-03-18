@@ -2,12 +2,19 @@ import '../entities/entities.dart';
 
 abstract class IUserRepository {
   Future<UserProfile?> getProfile();
+  Future<UserProfile?> getOtherProfile(String uid);
   Future<void> saveProfile(UserProfile profile);
 
   Future<List<Caregiver>> getCaregivers();
   Stream<List<Caregiver>> getCaregiversStream();
   Future<void> saveCaregivers(List<Caregiver> caregivers);
-  Future<void> joinCaregiver(String patientUid, int cgId);
+  Future<void> joinCaregiver({
+    required String patientUid,
+    required int cgId,
+    required String patientName,
+    required String patientAvatar,
+    required String relation,
+  });
 
   Future<StreakData> getStreakData();
   Future<void> saveStreakData(StreakData data);
@@ -25,4 +32,5 @@ abstract class IUserRepository {
   Stream<List<Map<String, dynamic>>> getMonitoringPatientsStream();
   Stream<List<Medicine>> getPatientMedsStream(String patientUid);
   Stream<Map<String, List<DoseEntry>>> getPatientHistoryStream(String patientUid);
+  Future<void> nudgePatient(String patientUid);
 }

@@ -51,11 +51,12 @@ class _ModernTimePickerState extends State<ModernTimePicker> {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xl),
       decoration: BoxDecoration(
         color: L.bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -68,7 +69,7 @@ class _ModernTimePickerState extends State<ModernTimePicker> {
               borderRadius: BorderRadius.circular(16),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.l),
           Text(
             widget.title,
             style: TextStyle(
@@ -87,15 +88,24 @@ class _ModernTimePickerState extends State<ModernTimePicker> {
                 // Hours
                 Expanded(
                   child: CupertinoPicker(
-                    scrollController: FixedExtentScrollController(initialItem: _hour),
+                    scrollController: FixedExtentScrollController(
+                      initialItem: _hour % 12 == 0 ? 11 : (_hour % 12) - 1,
+                    ),
                     itemExtent: 45,
-                    onSelectedItemChanged: (h) {
-                      setState(() => _hour = h);
+                    onSelectedItemChanged: (index) {
+                      setState(() {
+                        final h12 = index + 1;
+                        if (_hour >= 12) {
+                          _hour = h12 == 12 ? 12 : h12 + 12;
+                        } else {
+                          _hour = h12 == 12 ? 0 : h12;
+                        }
+                      });
                       widget.onTimeChanged(TimeOfDay(hour: _hour, minute: _minute));
                     },
-                    children: List.generate(24, (i) => Center(
+                    children: List.generate(12, (i) => Center(
                       child: Text(
-                        i.toString().padLeft(2, '0'),
+                        (i + 1).toString().padLeft(2, '0'),
                         style: TextStyle(
                           color: L.text,
                           fontSize: 28,
@@ -129,6 +139,30 @@ class _ModernTimePickerState extends State<ModernTimePicker> {
                     )),
                   ),
                 ),
+                const SizedBox(width: 8),
+                // AM/PM
+                Expanded(
+                  child: CupertinoPicker(
+                    scrollController: FixedExtentScrollController(initialItem: _hour >= 12 ? 1 : 0),
+                    itemExtent: 45,
+                    onSelectedItemChanged: (index) {
+                      setState(() {
+                        final isPm = index == 1;
+                        final h12 = _hour % 12 == 0 ? 12 : _hour % 12;
+                        if (isPm) {
+                          _hour = h12 == 12 ? 12 : h12 + 12;
+                        } else {
+                          _hour = h12 == 12 ? 0 : h12;
+                        }
+                      });
+                      widget.onTimeChanged(TimeOfDay(hour: _hour, minute: _minute));
+                    },
+                    children: [
+                      Center(child: Text("AM", style: TextStyle(color: L.text, fontSize: 20, fontWeight: FontWeight.w800))),
+                      Center(child: Text("PM", style: TextStyle(color: L.text, fontSize: 20, fontWeight: FontWeight.w800))),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -139,9 +173,9 @@ class _ModernTimePickerState extends State<ModernTimePicker> {
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: context.L.text,
-                foregroundColor: context.L.bg,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                backgroundColor: L.primary,
+                foregroundColor: L.onPrimary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.m)),
                 elevation: 0,
               ),
               child: const Text(
@@ -150,7 +184,7 @@ class _ModernTimePickerState extends State<ModernTimePicker> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.m),
         ],
       ),
     );

@@ -1,0 +1,13 @@
+{
+  "@@locale": "en",
+  "appTitle": "Med Trackr",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "greetingHero": "Hero",
+  "homeTab": "Home",
+  "alarmsTab": "Alarms",
+  "dashboardTab": "Trends",
+  "familyTab": "Circle",
+  "scanTab": "Scan"
+}

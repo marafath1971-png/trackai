@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared/shared_widgets.dart';
+import '../domain/entities/entities.dart';
 import 'home/home_tab.dart';
 import 'scan/scan_tab.dart';
 import 'alarms/alarms_tab.dart';
@@ -11,8 +12,6 @@ import 'family/family_tab.dart';
 import 'dashboard/dashboard_tab.dart';
 import 'security/lock_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
-// ══════════════════════════════════════════════
 // APP SHELL — Bottom nav + FAB + overlays
 // ══════════════════════════════════════════════
 
@@ -31,56 +30,55 @@ class _AppShellState extends State<AppShell>
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<AppState>();
     final L = context.L;
-    final isDark = state.darkMode;
-    final unseenAlerts = state.missedAlerts.where((a) => !a.seen).length;
-    final lowMeds = state.getLowMeds();
+    // Granular selection
+    final isDark = context.select<AppState, bool>((s) => s.darkMode);
+    final unseenAlerts = context.select<AppState, int>((s) => s.unseenAlertsCount);
+    final lowMeds = context.select<AppState, List<Medicine>>((s) => s.getLowMeds());
+    final isLocked = context.select<AppState, bool>((s) => s.isLocked);
+    final toast = context.select<AppState, String?>((s) => s.toast);
+    final toastType = context.select<AppState, String?>((s) => s.toastType);
 
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-      child: state.isLocked 
+      child: isLocked 
         ? const LockScreen()
         : Scaffold(
             backgroundColor: L.bg,
             body: Stack(children: [
           // ── Main content (Animated Transitions)
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: ScaleTransition(
-                  scale: Tween<double>(begin: 0.98, end: 1.0).animate(
-                    CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
-                  ),
-                  child: child,
-                ),
-              );
-            },
-            child: _showScan
-                ? ScanTab(
-                    key: const ValueKey('scan_tab'),
-                    onSave: (med) {
-                      state.addMedicine(med);
-                      setState(() {
-                        _showScan = false;
-                        _tab = 0;
-                      });
-                      state.showToast('💊 ${med.name} added!');
-                    },
-                    onClose: () => setState(() {
+          Stack(
+            children: [
+              IndexedStack(
+                index: _tab,
+                children: [
+                  HomeTab(onScan: () => setState(() => _showScan = true)),
+                  const AlarmsTab(),
+                  const DashboardTab(),
+                  const FamilyTab(),
+                ],
+              ),
+
+              // ── Scan Overlay (Modal-like)
+              if (_showScan)
+                ScanTab(
+                  key: const ValueKey('scan_tab'),
+                  onSave: (med) {
+                    final s = context.read<AppState>();
+                    s.addMedicine(med);
+                    setState(() {
                       _showScan = false;
-                    }),
-                    onManualAdd: null,
-                  )
-                : SizedBox(
-                    key: ValueKey('main_tab_$_tab'),
-                    child: _buildTab(state),
-                  ),
+                      _tab = 0;
+                    });
+                    s.showToast('💊 ${med.name} added!');
+                  },
+                  onClose: () => setState(() {
+                    _showScan = false;
+                  }),
+                  onManualAdd: null,
+                ).animate().fadeIn(duration: 300.ms).scale(begin: const Offset(0.95, 0.95)),
+            ],
           ),
 
           // ── Low stock banner
@@ -96,8 +94,8 @@ class _AppShellState extends State<AppShell>
             ),
 
           // ── Toast
-          if (state.toast != null)
-            AppToast(message: state.toast!, type: state.toastType ?? 'success'),
+          if (toast != null)
+            AppToast(message: toast, type: toastType ?? 'success'),
 
           // ── Bottom nav
           Positioned(
@@ -111,24 +109,7 @@ class _AppShellState extends State<AppShell>
     );
   }
 
-  Widget _buildTab(AppState state) {
-    switch (_tab) {
-      case 0:
-        return HomeTab(
-          onScan: () => setState(() => _showScan = true),
-        );
-      case 1:
-        return const AlarmsTab();
-      case 2:
-        return const DashboardTab();
-      case 3:
-        return const FamilyTab();
-      default:
-        return HomeTab(
-          onScan: () => setState(() => _showScan = true),
-        );
-    }
-  }
+
 
   Widget _buildBottomNav(AppThemeColors L, int unseenAlerts) {
     final bg = L.card;
@@ -148,8 +129,8 @@ class _AppShellState extends State<AppShell>
             margin: const EdgeInsets.only(right: 36),
             decoration: BoxDecoration(
               color: bg,
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: L.border, width: 1.5),
+              borderRadius: BorderRadius.circular(AppRadius.l),
+              border: Border.all(color: L.border, width: 1.0),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.2),
@@ -159,7 +140,7 @@ class _AppShellState extends State<AppShell>
                 ),
               ],
             ),
-            padding: const EdgeInsets.fromLTRB(16, 0, 36, 0),
+            padding: const EdgeInsets.fromLTRB(12, 0, 32, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -184,14 +165,14 @@ class _AppShellState extends State<AppShell>
                 height: 66,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [L.green, L.green.withValues(alpha: 0.8)],
+                    colors: [L.secondary, L.secondary.withValues(alpha: 0.8)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: L.green.withValues(alpha: 0.3),
+                      color: L.secondary.withValues(alpha: 0.3),
                       blurRadius: 25,
                       offset: const Offset(0, 8),
                       spreadRadius: 2,
@@ -205,7 +186,7 @@ class _AppShellState extends State<AppShell>
                 ),
                 child: const Center(
                   child: Icon(Icons.add_rounded,
-                      color: Colors.black, size: 36),
+                      color: Colors.white, size: 36),
                 ),
               ).animate(onPlay: (c) => c.repeat(reverse: true))
                 .scale(
@@ -215,7 +196,7 @@ class _AppShellState extends State<AppShell>
                   curve: Curves.easeInOut,
                 )
                 .shimmer(
-                  color: L.green.withValues(alpha: 0.2),
+                  color: L.secondary.withValues(alpha: 0.2),
                   duration: 3000.ms,
                 ),
             ),
@@ -252,15 +233,20 @@ class _AppShellState extends State<AppShell>
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: selected
-                          ? L.green.withValues(alpha: 0.1)
+                          ? L.secondary.withValues(alpha: 0.1)
                           : Colors.transparent,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
-                    child: Icon(
-                      icon,
-                      size: 22,
-                      color: selected ? L.green : L.sub,
-                    ),
+                      child: Opacity(
+                        opacity: selected ? 1.0 : 0.0,
+                        child: Icon(
+                          icon,
+                          size: 22,
+                          color: selected ? L.secondary : L.text.withValues(alpha: 0.7),
+                        ).animate(target: selected ? 1 : 0)
+                         .scale(duration: 200.ms, curve: Curves.easeOutBack)
+                         .tint(color: L.secondary, duration: 200.ms),
+                      ),
                   ),
                   if (cnt > 0)
                     Positioned(
@@ -270,9 +256,9 @@ class _AppShellState extends State<AppShell>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 4, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.lRed,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: L.bg, width: 1.5),
+                          color: L.error,
+                          borderRadius: BorderRadius.circular(AppRadius.s),
+                          border: Border.all(color: L.bg, width: 1.0),
                         ),
                         child: Text(
                           cnt > 9 ? '9+' : cnt.toString(),
@@ -293,11 +279,13 @@ class _AppShellState extends State<AppShell>
                   fontFamily: 'Inter',
                   fontSize: 10,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
-                  color: selected ? L.green : L.sub,
+                  color: selected ? L.secondary : L.sub,
                   letterSpacing: -0.1,
                 ),
                 child: Text(label),
-              ),
+              ).animate(target: selected ? 1 : 0)
+               .scale(duration: 200.ms, begin: const Offset(1, 1), end: const Offset(1.1, 1.1))
+               .moveY(begin: 0, end: -2, duration: 200.ms),
             ],
           ),
         ),
@@ -322,38 +310,69 @@ class LowStockBanner extends StatelessWidget {
     final L = context.L;
     final firstName = meds.isNotEmpty ? meds.first.name : '';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: L.card2,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: L.green.withValues(alpha: 0.3), width: 1.5),
+        color: L.card.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        border: Border.all(color: L.error.withValues(alpha: 0.2), width: 1.0),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-              spreadRadius: -2),
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 25,
+              offset: const Offset(0, 12),
+              spreadRadius: -5),
         ],
       ),
       child: Row(children: [
-        const Text('📦', style: TextStyle(fontSize: 16)),
-        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: L.error.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.inventory_2_rounded, size: 18, color: L.error),
+        ),
+        const SizedBox(width: 12),
         Expanded(
-            child: Text(
-          '${meds.length > 1 ? "${meds.length} medicines" : firstName} running low',
-          style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: L.text),
+            child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Stock Alert',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: L.error,
+                letterSpacing: 0.5,
+              ),
+            ),
+            Text(
+              '${meds.length > 1 ? "${meds.length} medicines" : firstName} running low',
+              style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: L.text,
+                  letterSpacing: -0.3),
+            ),
+          ],
         )),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
         GestureDetector(
           onTap: onDismiss,
-          child: Icon(Icons.close_rounded, size: 16, color: L.sub),
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: L.fill,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.close_rounded, size: 14, color: L.sub),
+          ),
         ),
       ]),
-    );
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2, end: 0);
   }
 }
 

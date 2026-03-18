@@ -93,7 +93,7 @@ class StreakModal extends StatelessWidget {
                   color: L.bg,
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(32)),
-                  border: Border.all(color: L.border, width: 1.5)),
+                  border: Border.all(color: L.border, width: 1.0)),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 const SizedBox(height: 12),
                 Center(

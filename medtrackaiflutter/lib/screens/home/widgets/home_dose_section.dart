@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../providers/app_state.dart';
-import '../../../core/utils/color_utils.dart';
 import '../../../theme/app_theme.dart';
+import '../../../core/utils/color_utils.dart';
 import '../../../core/utils/date_formatter.dart';
-import '../../../widgets/shared/shared_widgets.dart';
-import 'package:provider/provider.dart';
+import '../../../core/utils/haptic_engine.dart';
 
 class DoseCard extends StatefulWidget {
   final DoseItem dose;
@@ -44,12 +43,22 @@ class _DoseCardState extends State<DoseCard> {
       direction: widget.taken ? DismissDirection.none : DismissDirection.horizontal,
       onDismissed: (direction) {
         if (direction == DismissDirection.startToEnd) {
-          HapticFeedback.mediumImpact();
+          HapticEngine.doseTaken();
           widget.onTake();
         } else {
-          HapticFeedback.lightImpact();
+          HapticEngine.light();
           widget.onSnooze();
         }
+      },
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          HapticEngine.doseTaken();
+          widget.onTake();
+        } else {
+          HapticEngine.light();
+          widget.onSnooze();
+        }
+        return false; // Prevent removal from tree
       },
       background: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -106,7 +115,7 @@ class _DoseCardState extends State<DoseCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(fmtTime(widget.dose.sched.h, widget.dose.sched.m),
+                    Text(fmtTime(widget.dose.sched.h, widget.dose.sched.m, context),
                         style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 15,

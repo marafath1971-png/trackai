@@ -33,6 +33,7 @@ class ScanResult {
   bool withFood;
   String warnings;
   bool isOngoing;
+  bool systemBusy; // NEW: true if AI quota/network failure occurred
 
   ScanResult({
     this.identified = false,
@@ -66,6 +67,7 @@ class ScanResult {
     this.withFood = false,
     this.warnings = '',
     this.isOngoing = true,
+    this.systemBusy = false,
   });
 
   int _parseInt(dynamic v, int fallback) {
@@ -149,6 +151,7 @@ class ScanResult {
     bool? withFood,
     String? warnings,
     bool? isOngoing,
+    bool? systemBusy,
   }) =>
       ScanResult(
         identified: identified ?? this.identified,
@@ -182,5 +185,6 @@ class ScanResult {
         withFood: withFood ?? this.withFood,
         warnings: warnings ?? this.warnings,
         isOngoing: isOngoing ?? this.isOngoing,
+        systemBusy: systemBusy ?? this.systemBusy,
       );
 }

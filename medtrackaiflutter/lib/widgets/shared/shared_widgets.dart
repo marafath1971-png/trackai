@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/app_theme.dart';
 
@@ -116,51 +117,63 @@ class _RingPainter extends CustomPainter {
 class AppToggle extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
-  final Color? activeColor;
 
-  const AppToggle(
-      {super.key,
-      required this.value,
-      required this.onChanged,
-      this.activeColor});
+  const AppToggle({super.key, required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    final effectiveColor = activeColor ?? L.text;
     return GestureDetector(
-      onTap: () => onChanged(!value),
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        onChanged(!value);
+      },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 44,
-        height: 26,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        width: 48,
+        height: 28,
         decoration: BoxDecoration(
-          color: value ? effectiveColor : L.fill,
-          borderRadius: BorderRadius.circular(99),
+          color: value ? L.text : L.fill,
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(
+            color: value ? L.text : L.border.withValues(alpha: 0.5),
+            width: 1.0,
+          ),
+          boxShadow: [
+            if (value)
+              BoxShadow(
+                color: L.text.withValues(alpha: 0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+          ],
         ),
-        child: Stack(children: [
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.elasticOut,
-            top: 3,
-            left: value ? null : 3,
-            right: value ? 3 : null,
-            child: Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.25),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1))
-                ],
+        child: Stack(
+          children: [
+            AnimatedAlign(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.elasticOut,
+              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: value ? L.bg : Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2))
+                  ],
+                ),
               ),
             ),
           ).animate(target: value ? 1 : 0)
-            .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.1, 1.1), duration: 200.ms, curve: Curves.easeOutBack)
             .then()
             .scale(begin: const Offset(1.1, 1.1), end: const Offset(1, 1), duration: 150.ms),
         ]),
@@ -214,51 +227,79 @@ class AppToast extends StatelessWidget {
   Widget build(BuildContext context) {
     final L = context.L;
     final Color bg;
+    final IconData icon;
+    
     switch (type) {
       case 'error':
         bg = L.red;
+        icon = Icons.error_outline_rounded;
         break;
       case 'warning':
-        bg = L.red.withValues(alpha: 0.8);
+        bg = L.amber;
+        icon = Icons.warning_amber_rounded;
         break;
       case 'info':
         bg = L.text;
+        icon = Icons.info_outline_rounded;
         break;
       default:
         bg = L.text;
+        icon = Icons.check_circle_outline_rounded;
     }
+
     return Positioned(
-      bottom: 100,
-      left: 20,
-      right: 20,
+      bottom: 110,
+      left: 24,
+      right: 24,
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: 0, end: 1),
-        duration: const Duration(milliseconds: 350),
-        curve: const Cubic(0.34, 1.56, 0.64, 1),
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutBack,
         builder: (ctx, v, child) => Transform.translate(
-          offset: Offset(0, 20 * (1 - v)),
+          offset: Offset(0, 30 * (1 - v)),
           child: Opacity(opacity: v.clamp(0.0, 1.0), child: child),
         ),
         child: Center(
-            child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(99),
-            boxShadow: [
-              BoxShadow(
-                  color: bg.withValues(alpha: 0.35),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: bg.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 20,
-                  offset: const Offset(0, 8))
-            ],
+                  offset: const Offset(0, 10),
+                ),
+                BoxShadow(
+                  color: bg.withValues(alpha: 0.2),
+                  blurRadius: 30,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: Colors.white, size: 18),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      fontFamily: 'Inter',
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: Text(message,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                  fontFamily: 'Inter')),
-        )),
+        ),
       ),
     );
   }
@@ -347,7 +388,7 @@ class SettingsRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: L.border, width: 0.5)),
+          border: Border(top: BorderSide(color: L.border, width: 1.0)),
         ),
         child: Row(children: [
           leading,
@@ -486,15 +527,15 @@ class LightInput extends StatelessWidget {
               const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide(color: L.border, width: 0.5)),
+              borderSide: BorderSide(color: L.border, width: 1.0)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide(color: L.border, width: 0.5)),
+              borderSide: BorderSide(color: L.border, width: 1.0)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(24),
               borderSide: BorderSide(
                   color: L.text,
-                  width: 1.5)),
+                  width: 1.0)),
         ),
       ),
     ]);

@@ -29,14 +29,12 @@ class AddHeader extends StatelessWidget {
         const SizedBox(width: 8),
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title,
-              style: TextStyle(
-                  fontFamily: 'Inter',
+              style: AppTypography.titleLarge.copyWith(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: L.text)),
           Text('Step $step of 3',
-              style:
-                  TextStyle(fontFamily: 'Inter', fontSize: 12, color: L.sub)),
+              style: AppTypography.labelLarge.copyWith(fontSize: 12, color: L.sub)),
         ]),
       ]),
       const SizedBox(height: 24),
@@ -92,8 +90,7 @@ class AddCgStep1 extends StatelessWidget {
 
                       // Avatar
                       Text('CHOOSE AVATAR',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.labelLarge.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.0,
@@ -112,15 +109,15 @@ class AddCgStep1 extends StatelessWidget {
                                         height: 44,
                                         decoration: BoxDecoration(
                                             color: avatar == a
-                                                ? L.green.withValues(alpha: 0.1)
+                                                ? L.text.withValues(alpha: 0.05)
                                                 : L.card,
                                             borderRadius:
                                                 BorderRadius.circular(24),
                                             border: Border.all(
                                                 color: avatar == a
-                                                    ? L.green
-                                                    : L.border.withValues(alpha: 0.5),
-                                                width: 2)),
+                                                    ? L.text
+                                                    : L.border.withValues(alpha: 0.2),
+                                                width: 1.0)),
                                         child: Center(
                                             child: Text(a,
                                                 style: const TextStyle(
@@ -131,8 +128,7 @@ class AddCgStep1 extends StatelessWidget {
 
                       // Name
                       Text('FULL NAME *',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.labelLarge.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.0,
@@ -142,30 +138,28 @@ class AddCgStep1 extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: 14),
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.03),
+                            color: L.card,
                             borderRadius: BorderRadius.circular(28),
                             border: Border.all(
                                 color: nameCtrl.text.isNotEmpty
-                                    ? L.green
-                                    : Colors.white.withValues(alpha: 0.1),
-                                width: 1.5)),
+                                    ? L.text
+                                    : L.border.withValues(alpha: 0.2),
+                                width: 1.0)),
                         child: TextField(
                             controller: nameCtrl,
-                            style: TextStyle(
-                                fontFamily: 'Inter',
+                            style: AppTypography.bodySmall.copyWith(
                                 fontSize: 15,
                                 color: L.text),
                             decoration: InputDecoration(
                                 border: InputBorder.none,
                                 hintText: 'e.g. Sarah Johnson',
-                                hintStyle: TextStyle(
+                                hintStyle: AppTypography.bodySmall.copyWith(
                                     color: L.sub.withValues(alpha: 0.5)))),
                       ),
 
                       // Relationship
                       Text('RELATIONSHIP',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.labelLarge.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.0,
@@ -192,22 +186,21 @@ class AddCgStep1 extends StatelessWidget {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 13, vertical: 7),
                                         decoration: BoxDecoration(
-                                            color: relation == r
-                                                ? L.green
-                                                : L.card,
+                                                color: relation == r
+                                                    ? L.text
+                                                    : L.card,
                                             borderRadius:
                                                 BorderRadius.circular(99),
                                             border: Border.all(
                                                 color: relation == r
-                                                    ? L.green
+                                                    ? L.text
                                                     : L.border)),
                                         child: Text(r,
-                                            style: TextStyle(
-                                                fontFamily: 'Inter',
+                                            style: AppTypography.labelLarge.copyWith(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w600,
                                                 color: relation == r
-                                                    ? Colors.white
+                                                    ? L.bg
                                                     : L.sub))),
                                   ))
                               .toList()),
@@ -215,8 +208,7 @@ class AddCgStep1 extends StatelessWidget {
 
                       // Phone
                       Text('PHONE (OPTIONAL — FOR SMS BACKUP)',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.labelLarge.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.0,
@@ -226,30 +218,28 @@ class AddCgStep1 extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.03),
+                            color: L.card,
                             borderRadius: BorderRadius.circular(28),
                             border: Border.all(
                                 color: contactCtrl.text.isNotEmpty
-                                    ? L.green
-                                    : Colors.white.withValues(alpha: 0.1),
-                                width: 1.5)),
+                                    ? L.text
+                                    : L.border.withValues(alpha: 0.2),
+                                width: 1.0)),
                         child: TextField(
                             controller: contactCtrl,
-                            style: TextStyle(
-                                fontFamily: 'Inter',
+                            style: AppTypography.bodySmall.copyWith(
                                 fontSize: 15,
                                 color: L.text),
                             decoration: InputDecoration(
                                 border: InputBorder.none,
                                 hintText: '+880 1XXX-XXXXXX',
-                                hintStyle: TextStyle(
+                                hintStyle: AppTypography.bodySmall.copyWith(
                                     color: L.sub.withValues(alpha: 0.5)))),
                       ),
 
                       // Alert Delay
                       Text('ALERT AFTER MISSED DOSE BY',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.labelLarge.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.0,
@@ -296,7 +286,7 @@ class AddCgStep1 extends StatelessWidget {
                               decoration: BoxDecoration(
                                   color: nameCtrl.text.trim().isEmpty
                                       ? L.border.withValues(alpha: 0.3)
-                                      : L.green,
+                                      : L.text,
                                   borderRadius: BorderRadius.circular(32)),
                               child: Text('Generate QR Code →',
                                   style: TextStyle(
@@ -305,7 +295,7 @@ class AddCgStep1 extends StatelessWidget {
                                       fontSize: 15,
                                       color: nameCtrl.text.trim().isEmpty
                                           ? L.sub
-                                          : Colors.white)))),
+                                          : L.bg)))),
                     ]))),
       );
 }
@@ -336,11 +326,10 @@ class DelayBtn extends StatelessWidget {
                 border:
                     Border.all(color: current == delay ? L.green : L.border)),
             child: Text(label,
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.labelLarge.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: current == delay ? Colors.white : L.sub))),
+                    color: current == delay ? Colors.black : L.sub))),
       ));
 }
 
@@ -434,8 +423,7 @@ class _AddCgStep2State extends State<AddCgStep2> {
                       ),
                       Text(
                           'Share the QR or invite code with ${cg.name}. They do not need to download the app to accept!',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.bodySmall.copyWith(
                               fontSize: 14,
                               color: L.sub,
                               height: 1.5)),
@@ -457,7 +445,7 @@ class _AddCgStep2State extends State<AddCgStep2> {
                                   blurRadius: 10,
                                   offset: const Offset(0, 4))
                             ],
-                            border: Border.all(color: L.border.withValues(alpha: 0.5), width: 1.5)),
+                            border: Border.all(color: L.border.withValues(alpha: 0.5), width: 1.0)),
                         child: QrImageView(
                           data: cg.inviteUrl, 
                           size: 210,
@@ -468,8 +456,7 @@ class _AddCgStep2State extends State<AddCgStep2> {
                       const SizedBox(height: 28),
                       Center(
                           child: Text('OR USE INVITE CODE',
-                              style: TextStyle(
-                                  fontFamily: 'Inter',
+                              style: AppTypography.labelLarge.copyWith(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: L.sub,
@@ -477,7 +464,7 @@ class _AddCgStep2State extends State<AddCgStep2> {
                       const SizedBox(height: 8),
                       Center(
                           child: Text(cg.inviteCode,
-                              style: TextStyle(
+                              style: AppTypography.displayLarge.copyWith(
                                   fontFamily: 'monospace',
                                   fontSize: 24,
                                   fontWeight: FontWeight.w800,
@@ -494,10 +481,9 @@ class _AddCgStep2State extends State<AddCgStep2> {
                             decoration: BoxDecoration(
                                 color: L.card,
                                 borderRadius: BorderRadius.circular(24),
-                                border: Border.all(color: L.border)),
+                                border: Border.all(color: L.text, width: 2)),
                             child: Text('📋 Copy Link',
-                                style: TextStyle(
-                                    fontFamily: 'Inter',
+                                style: AppTypography.labelLarge.copyWith(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
                                     color: L.sub))),
@@ -518,35 +504,32 @@ class _AddCgStep2State extends State<AddCgStep2> {
                               children: [
                                 if (_scanState == 'idle') ...[
                                   const Icon(Icons.camera_alt_rounded,
-                                      color: Colors.white, size: 16),
+                                      color: Colors.black, size: 16),
                                   const SizedBox(width: 8),
-                                  const Text(
+                                  Text(
                                       'Simulate: Caregiver Scans This QR',
-                                      style: TextStyle(
-                                          fontFamily: 'Inter',
+                                      style: AppTypography.labelLarge.copyWith(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 14,
-                                          color: Colors.white)),
+                                          color: Colors.black)),
                                 ] else if (_scanState == 'scanning') ...[
                                   const Text('⟳',
                                       style: TextStyle(fontSize: 16)),
                                   const SizedBox(width: 8),
                                   Text('Scanning...',
-                                      style: TextStyle(
-                                          fontFamily: 'Inter',
+                                      style: AppTypography.labelLarge.copyWith(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 14,
                                           color: L.green)),
                                 ] else ...[
                                   const Icon(Icons.check_circle_rounded,
-                                      color: Colors.white, size: 16),
+                                      color: Colors.black, size: 16),
                                   const SizedBox(width: 8),
-                                  const Text('Activated!',
-                                      style: TextStyle(
-                                          fontFamily: 'Inter',
+                                  Text('Activated!',
+                                      style: AppTypography.labelLarge.copyWith(
                                           fontWeight: FontWeight.w700,
                                           fontSize: 14,
-                                          color: Colors.white)),
+                                          color: Colors.black)),
                                 ]
                               ]),
                         ),
@@ -585,14 +568,12 @@ class HowItWorksRow extends StatelessWidget {
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title,
-              style: TextStyle(
-                  fontFamily: 'Inter',
+              style: AppTypography.titleLarge.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: L.text)),
           Text(desc,
-              style:
-                  TextStyle(fontFamily: 'Inter', fontSize: 12, color: L.sub)),
+              style: AppTypography.bodySmall.copyWith(fontSize: 12, color: L.sub)),
         ]))
       ]),
     );
@@ -622,10 +603,10 @@ class AddCgStep3 extends StatelessWidget {
                         padding: const EdgeInsets.all(16),
                         margin: const EdgeInsets.only(bottom: 24),
                         decoration: BoxDecoration(
-                            color: const Color(0xFFF0FDF4),
+                            color: L.card,
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                                color: const Color(0xFFBBF7D0), width: 2)),
+                                color: L.border.withValues(alpha: 0.1), width: 1.0)),
                         child: Row(children: [
                           Container(
                               width: 52,
@@ -655,24 +636,23 @@ class AddCgStep3 extends StatelessWidget {
                                         color: L.sub)),
                               ])),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                                color: const Color(0xFFDCFCE7),
-                                borderRadius: BorderRadius.circular(99)),
-                            child: Text('● Active',
-                                style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: L.green,
-                                    letterSpacing: 0.5)),
-                          ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                  color: L.text.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(99)),
+                              child: Text('● Active',
+                                  style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: L.text,
+                                      letterSpacing: 0.5)),
+                            ),
                         ]),
                       ),
                       Text('THEY CAN NOW:',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.labelLarge.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1,
@@ -722,14 +702,14 @@ class AddCgStep3 extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(vertical: 17),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                  color: L.green,
+                                  color: L.text,
                                   borderRadius: BorderRadius.circular(24)),
-                              child: const Text('Done',
+                              child: Text('Done',
                                   style: TextStyle(
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w700,
                                       fontSize: 15,
-                                      color: Colors.white)))),
+                                      color: L.bg)))),
                     ]))));
   }
 }

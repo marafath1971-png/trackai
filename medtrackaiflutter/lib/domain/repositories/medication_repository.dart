@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../entities/entities.dart';
 
 abstract class IMedicationRepository {
@@ -5,6 +6,8 @@ abstract class IMedicationRepository {
   Future<void> addMedicine(Medicine med);
   Future<void> updateMedicine(Medicine med);
   Future<void> deleteMedicine(int id);
+  
+  Future<String?> uploadMedicineImage(File imageFile);
 
   Future<Map<String, List<DoseEntry>>> getHistory();
   Future<void> saveHistory(Map<String, List<DoseEntry>> history,

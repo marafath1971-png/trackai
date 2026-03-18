@@ -3,6 +3,7 @@ import '../../domain/repositories/user_repository.dart';
 import '../datasources/local_prefs_datasource.dart';
 import '../datasources/firestore_datasource.dart';
 import '../../services/auth_service.dart';
+import '../../core/utils/logger.dart';
 
 // ══════════════════════════════════════════════
 // USER REPOSITORY — Offline-First
@@ -30,6 +31,11 @@ class UserRepositoryImpl implements IUserRepository {
     final j = localDataSource.getJson('profile', decrypt: true);
     if (j == null) return null;
     return UserProfile.fromJson(j);
+  }
+
+  @override
+  Future<UserProfile?> getOtherProfile(String uid) async {
+    return await firestoreDataSource.getProfile(uid);
   }
 
   @override
@@ -74,8 +80,23 @@ class UserRepositoryImpl implements IUserRepository {
   }
 
   @override
-  Future<void> joinCaregiver(String patientUid, int cgId) async {
-    await firestoreDataSource.joinCaregiver(patientUid, cgId);
+  Future<void> joinCaregiver({
+    required String patientUid,
+    required int cgId,
+    required String patientName,
+    required String patientAvatar,
+    required String relation,
+  }) async {
+    if (_hasAuth) {
+      await firestoreDataSource.joinCaregiver(
+        caregiverUid: _uid!,
+        patientUid: patientUid,
+        cgId: cgId,
+        patientName: patientName,
+        patientAvatar: patientAvatar,
+        relation: relation,
+      );
+    }
   }
 
   // ── Streak ─────────────────────────────────────────────────────────
@@ -157,7 +178,11 @@ class UserRepositoryImpl implements IUserRepository {
 
   @override
   Stream<List<Map<String, dynamic>>> getMonitoringPatientsStream() {
-    if (!_hasAuth) return Stream.value([]);
+    if (!_hasAuth) {
+      appLogger.i('[UserRepositoryImpl] No auth, skipping monitoring stream');
+      return Stream.value([]);
+    }
+    appLogger.i('[UserRepositoryImpl] Starting monitoring stream for UID: $_uid');
     return firestoreDataSource.getMonitoringPatientsStream(_uid!);
   }
 
@@ -169,6 +194,13 @@ class UserRepositoryImpl implements IUserRepository {
   @override
   Stream<Map<String, List<DoseEntry>>> getPatientHistoryStream(String patientUid) {
     return firestoreDataSource.getPatientHistoryStream(patientUid);
+  }
+
+  @override
+  Future<void> nudgePatient(String patientUid) async {
+    if (_hasAuth) {
+      await firestoreDataSource.nudgePatient(patientUid);
+    }
   }
 
   // ── Offline-to-Cloud Sync ──────────────────────────────────────────

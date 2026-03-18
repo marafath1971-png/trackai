@@ -4,6 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../providers/app_state.dart';
 import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
+import '../../../widgets/common/app_loading_indicator.dart';
 
 class JoinAsCaregiverView extends StatefulWidget {
   final AppState state;
@@ -74,8 +75,7 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                   child: Icon(Icons.close_rounded, color: L.text, size: 24)),
               const SizedBox(width: 14),
               Text('Join as Caregiver',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
+                  style: AppTypography.titleLarge.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: L.text)),
@@ -83,13 +83,13 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
           ),
           Expanded(
               child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Scan the QR code or enter the invite code to start monitoring.',
-                            style: TextStyle(
-                                fontFamily: 'Inter',
+                            style: AppTypography.bodySmall.copyWith(
                                 fontSize: 14,
                                 color: L.sub,
                                 height: 1.5)),
@@ -125,8 +125,7 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                         const SizedBox(height: 32),
                         Center(
                             child: Text('OR ENTER CODE',
-                                style: TextStyle(
-                                    fontFamily: 'Inter',
+                                style: AppTypography.labelLarge.copyWith(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
                                     color: L.sub,
@@ -141,7 +140,7 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                                   color: _error != null ? L.red : L.border)),
                           child: TextField(
                             controller: _codeCtrl,
-                            style: TextStyle(
+                            style: AppTypography.displayLarge.copyWith(
                                 fontFamily: 'monospace',
                                 fontSize: 24,
                                 fontWeight: FontWeight.w800,
@@ -159,8 +158,7 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                           const SizedBox(height: 8),
                           Center(
                               child: Text(_error!,
-                                  style: TextStyle(
-                                      fontFamily: 'Inter',
+                                  style: AppTypography.bodySmall.copyWith(
                                       fontSize: 12,
                                       color: L.red,
                                       fontWeight: FontWeight.w600))),
@@ -178,18 +176,12 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                                     color: _isChecking ? L.greenLight : L.green,
                                     borderRadius: BorderRadius.circular(24)),
                                 child: _isChecking
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2))
-                                    : const Text('Verify and Join',
-                                        style: TextStyle(
-                                            fontFamily: 'Inter',
+                                    ? const AppLoadingIndicator(size: 20)
+                                    : Text('Verify and Join',
+                                        style: AppTypography.titleLarge.copyWith(
                                             fontWeight: FontWeight.w700,
                                             fontSize: 15,
-                                            color: Colors.white)))),
+                                            color: Colors.black)))),
                         const SizedBox(height: 40),
                       ]))),
         ])));

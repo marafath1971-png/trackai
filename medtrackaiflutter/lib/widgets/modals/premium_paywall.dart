@@ -5,6 +5,10 @@ import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../services/auth_service.dart';
 
+import '../../core/utils/haptic_engine.dart';
+import '../../widgets/common/app_loading_indicator.dart';
+import '../../widgets/common/refined_sheet_wrapper.dart';
+
 class PremiumPaywall extends StatefulWidget {
   const PremiumPaywall({super.key});
 
@@ -29,55 +33,39 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
     final L = context.L;
     final state = Provider.of<AppState>(context, listen: false);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.95),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+    return RefinedSheetWrapper(
+      scrollable: true,
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-
+          const SizedBox(height: 12),
           // Icon/Celebration
           Container(
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: L.green.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Center(
               child: Text('💎', style: TextStyle(fontSize: 40)),
             ),
           ).animate(onPlay: (c) => c.repeat())
-            .shimmer(duration: 2.seconds, color: Colors.white.withValues(alpha: 0.3))
+            .shimmer(duration: 2.seconds, color: L.green.withValues(alpha: 0.3))
             .scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 1.seconds, curve: Curves.easeInOut),
 
           const SizedBox(height: 24),
 
           // Marketing Text
-          const Text(
+          Text(
             "World's #1 Advanced AI Medication App",
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white,
+              color: L.text,
               fontSize: 24,
               fontWeight: FontWeight.w900,
-              fontFamily: 'Outfit',
+              fontFamily: 'Inter',
               letterSpacing: -0.5,
             ),
           ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0),
@@ -88,7 +76,7 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
             "Never miss a course again. Your healthy life, boosted with precision AI.",
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: L.sub,
               fontSize: 16,
               fontWeight: FontWeight.w500,
               height: 1.4,
@@ -111,38 +99,43 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
               "Continue with Google",
               "assets/images/google_logo.png",
               AuthService.signInWithGoogle,
-              Colors.white,
-              Colors.black,
+              L.card,
+              L.text,
             ),
             const SizedBox(height: 12),
             _buildAuthBtn(
               "Continue with Apple",
               null,
               AuthService.signInWithApple,
-              Colors.white,
-              Colors.black,
+              L.card,
+              L.text,
               icon: Icons.apple_rounded,
             ),
             const SizedBox(height: 24),
-            const Text(
-              "OR",
-              style: TextStyle(color: Colors.white24, fontWeight: FontWeight.w700, fontSize: 12),
+            Center(
+              child: Text(
+                "OR",
+                style: TextStyle(color: L.sub.withValues(alpha: 0.3), fontWeight: FontWeight.w700, fontSize: 12),
+              ),
             ),
             const SizedBox(height: 24),
           ],
 
           // Main Unlock Button
           GestureDetector(
-            onTap: _isProcessing ? null : () => _handleUnlock(state),
+            onTap: _isProcessing ? null : () {
+              HapticEngine.success();
+              _handleUnlock(state);
+            },
             child: Container(
               width: double.infinity,
               height: 64,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: L.text,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: L.text.withValues(alpha: 0.2),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -150,15 +143,11 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
               ),
               child: Center(
                 child: _isProcessing
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3),
-                      )
-                    : const Text(
+                    ? const AppLoadingIndicator(size: 24)
+                    : Text(
                         "Unlock Full Access",
                         style: TextStyle(
-                          color: Colors.black,
+                          color: L.bg,
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.5,
@@ -172,7 +161,7 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
           Text(
             "Start today and feel the smoothing difference.",
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.4),
+              color: L.sub.withValues(alpha: 0.5),
               fontSize: 13,
               fontStyle: FontStyle.italic,
             ),
@@ -190,16 +179,16 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: L.fill,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, size: 18, color: Colors.white),
+            child: Icon(icon, size: 18, color: L.text),
           ),
           const SizedBox(width: 16),
           Text(
             text,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: L.text,
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
@@ -219,6 +208,7 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
   }) {
     return GestureDetector(
       onTap: () async {
+        HapticEngine.selection();
         try {
           await onTap();
           if (mounted) Navigator.pop(context);
@@ -232,6 +222,7 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: context.L.border),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Row(
@@ -247,7 +238,7 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
               style: TextStyle(
                 color: text,
                 fontSize: 16,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],

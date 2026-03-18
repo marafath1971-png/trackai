@@ -15,6 +15,8 @@ import 'widgets/add_cg_flow.dart';
 import 'widgets/join_as_cg_view.dart';
 import 'widgets/alert_log_widgets.dart';
 import 'widgets/demo_widgets.dart';
+import '../../widgets/common/unified_header.dart';
+import '../../widgets/common/premium_empty_state.dart';
 
 // ══════════════════════════════════════════════
 // FAMILY HUB TAB
@@ -50,12 +52,29 @@ class _FamilyTabState extends State<FamilyTab> {
   String _avatar = '👩';
   int _pivot = 0; // 0: Account Security, 1: Family Circle
   int _alertDelay = 30;
+  bool _isScrolled = false;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _nameCtrl.dispose();
     _contactCtrl.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    final scrolled = _scrollController.offset > 10;
+    if (scrolled != _isScrolled) {
+      setState(() => _isScrolled = scrolled);
+    }
   }
 
   @override
@@ -108,11 +127,11 @@ class _FamilyTabState extends State<FamilyTab> {
                 final s = Provider.of<AppState>(context, listen: false);
                 final patientUid = AuthService.uid ?? '';
                 const colors = [
-                  '#6366F1',
-                  '#10B981',
-                  '#F59E0B',
-                  '#F43F5E',
-                  '#8B5CF6'
+                  '#111111',
+                  '#1A1A1A',
+                  '#222222',
+                  '#2A2A2A',
+                  '#333333'
                 ];
                 final color = colors[s.caregivers.length % colors.length];
                 final cg = Caregiver(
@@ -170,6 +189,8 @@ class _FamilyTabState extends State<FamilyTab> {
               state: state,
               L: L,
               pivot: _pivot,
+              isScrolled: _isScrolled,
+              scrollController: _scrollController,
               onPivotChanged: (v) => setState(() => _pivot = v),
               onAddCg: () => setState(() => _view = FamilyView.addStep1),
               onJoin: () => setState(() => _view = FamilyView.join),
@@ -203,6 +224,8 @@ class HubView extends StatelessWidget {
   final AppState state;
   final AppThemeColors L;
   final int pivot;
+  final bool isScrolled;
+  final ScrollController scrollController;
   final ValueChanged<int> onPivotChanged;
   final VoidCallback onAddCg, onJoin, onMarkSeen, onEscalationDemo;
   final void Function(Caregiver) onDashboard;
@@ -213,6 +236,8 @@ class HubView extends StatelessWidget {
     required this.state,
     required this.L,
     required this.pivot,
+    required this.isScrolled,
+    required this.scrollController,
     required this.onPivotChanged,
     required this.onAddCg,
     required this.onJoin,
@@ -233,14 +258,17 @@ class HubView extends StatelessWidget {
       body: Stack(
         children: [
           Scrollbar(
+            controller: scrollController,
             child: SingleChildScrollView(
+              controller: scrollController,
               physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics()),
               child: Column(
                 children: [
-                SizedBox(height: 140 + MediaQuery.of(context).padding.top),
+                SizedBox(height: 110 + MediaQuery.of(context).padding.top),
+                const SizedBox(height: 24),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
                   child: Column(
                     children: [
                       if (unseenCount > 0)
@@ -250,26 +278,25 @@ class HubView extends StatelessWidget {
                             margin: const EdgeInsets.only(bottom: 24),
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                                color: L.red.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(color: L.red.withValues(alpha: 0.3))),
+                                color: L.error.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(AppRadius.l),
+                                border: Border.all(color: L.error.withValues(alpha: 0.3))),
                             child: Row(
                               children: [
                                 Container(
                                     width: 8,
                                     height: 8,
-                                    decoration: BoxDecoration(color: L.red, shape: BoxShape.circle)),
+                                    decoration: BoxDecoration(color: L.error, shape: BoxShape.circle)),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                       '$unseenCount new missed-dose alert${unseenCount > 1 ? "s" : ""}',
-                                      style: TextStyle(
-                                          fontFamily: 'Inter',
+                                      style: AppTypography.labelLarge.copyWith(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w700,
-                                          color: L.red)),
+                                          color: L.error)),
                                 ),
-                                Icon(Icons.chevron_right_rounded, color: L.red, size: 20),
+                                Icon(Icons.chevron_right_rounded, color: L.error, size: 20),
                               ],
                             ),
                           ),
@@ -280,7 +307,7 @@ class HubView extends StatelessWidget {
                         padding: const EdgeInsets.all(5),
                         decoration: BoxDecoration(
                           color: L.card,
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(AppRadius.l),
                           border: Border.all(color: L.border),
                           boxShadow: [
                             BoxShadow(
@@ -319,7 +346,7 @@ class HubView extends StatelessWidget {
                         ),
                       ).animate().fade(delay: 100.ms).slideY(begin: 0.1, end: 0),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.l),
 
                       if (pivot == 0) ...[
                         if (state.caregivers.isEmpty)
@@ -332,21 +359,21 @@ class HubView extends StatelessWidget {
                                       emoji: '👥',
                                       label: 'Active',
                                       value: activeCount,
-                                      color: L.green).animate().fade(delay: 300.ms).slideY(begin: 0.2, end: 0)),
+                                      color: L.secondary).animate().fade(delay: 300.ms).slideY(begin: 0.2, end: 0)),
                               const SizedBox(width: 10),
                               Expanded(
                                   child: FamStatJSX(
                                       emoji: '⏳',
                                       label: 'Pending',
                                       value: pendingCount,
-                                      color: L.amber).animate().fade(delay: 400.ms).slideY(begin: 0.2, end: 0)),
+                                      color: L.warning).animate().fade(delay: 400.ms).slideY(begin: 0.2, end: 0)),
                               const SizedBox(width: 10),
                               Expanded(
                                   child: FamStatJSX(
                                       emoji: '⚠️',
                                       label: 'Alerts',
                                       value: state.missedAlerts.length,
-                                      color: L.red).animate().fade(delay: 500.ms).slideY(begin: 0.2, end: 0)),
+                                      color: L.error).animate().fade(delay: 500.ms).slideY(begin: 0.2, end: 0)),
                             ],
                           ),
                           const SizedBox(height: 24),
@@ -354,8 +381,7 @@ class HubView extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('MY CAREGIVERS',
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
+                                    style: AppTypography.labelLarge.copyWith(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w800,
                                         color: L.sub,
@@ -383,8 +409,7 @@ class HubView extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('PROTECTING (${state.monitoredPatients.length})',
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
+                                    style: AppTypography.labelLarge.copyWith(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w800,
                                         color: L.sub,
@@ -425,8 +450,7 @@ class HubView extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('ALERT LOG',
-                                style: TextStyle(
-                                    fontFamily: 'Inter',
+                                style: AppTypography.labelLarge.copyWith(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w800,
                                     color: L.sub,
@@ -456,73 +480,28 @@ class HubView extends StatelessWidget {
             ),
           ),
         ),
-
-          // --- FLOATING HEADER ---
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: Container(
-              padding: EdgeInsets.fromLTRB(24, 60 + MediaQuery.of(context).padding.top, 24, 20),
-              decoration: BoxDecoration(
-                color: L.bg,
-                border: Border(
-                  bottom: BorderSide(color: L.border, width: 1.5),
+            child: UnifiedHeader(
+              showBrand: true,
+              isScrolled: isScrolled,
+              title: 'Family Circle',
+              subtitle: activeCount > 0
+                  ? '$activeCount caregivers monitoring you'
+                  : 'Protect your health together',
+              actions: [
+                HeaderActionBtn(
+                  onTap: onJoin,
+                  child: Icon(Icons.qr_code_scanner_rounded, color: L.text, size: 18),
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Family Circle',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 32,
-                              fontWeight: FontWeight.w900,
-                              color: L.text,
-                              letterSpacing: -1.2)),
-                      const SizedBox(height: 4),
-                      Text(
-                        activeCount > 0
-                            ? '$activeCount caregivers monitoring you'
-                            : 'Protect your health together',
-                        style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 14,
-                            color: L.sub,
-                            fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      HeaderBtn(
-                        onTap: () {
-                          HapticFeedback.mediumImpact();
-                          onJoin();
-                        },
-                        label: 'Join',
-                        icon: Icons.qr_code_scanner_rounded,
-                        color: L.purple,
-                        bg: L.purple.withValues(alpha: 0.1),
-                      ),
-                      const SizedBox(width: 10),
-                      HeaderBtn(
-                        onTap: () {
-                          HapticFeedback.mediumImpact();
-                          onAddCg();
-                        },
-                        label: 'Add',
-                        icon: Icons.add_rounded,
-                        color: Colors.white,
-                        bg: L.card2,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                HeaderActionBtn(
+                  onTap: onAddCg,
+                  backgroundColor: L.text,
+                  child: Icon(Icons.add_rounded, color: L.bg, size: 20),
+                ),
+              ],
             ),
           ),
         ],
@@ -531,100 +510,22 @@ class HubView extends StatelessWidget {
   }
 
   Widget _buildEmptyState(AppThemeColors L, VoidCallback onAddCg) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-          color: L.card,
-          borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: L.border),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 20,
-                offset: const Offset(0, 10))
-          ]),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('No caregivers yet',
-              style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: L.text)),
-          const SizedBox(height: 8),
-          Text(
-              'Add your first caregiver to start monitoring your medication adherence and get emergency alerts.',
-              style:
-                  TextStyle(fontFamily: 'Inter', fontSize: 14, color: L.sub, height: 1.5)),
-          const SizedBox(height: 20),
-          GestureDetector(
-            onTap: onAddCg,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: BoxDecoration(
-                  color: L.card2, borderRadius: BorderRadius.circular(24)),
-              child: const Text('Add Caregiver',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
-            ),
-          ),
-        ],
-      ),
+    return PremiumEmptyState(
+      title: 'No caregivers yet',
+      subtitle: 'Add your first caregiver to start monitoring your medication adherence and get emergency alerts.',
+      emoji: '👥',
+      actionLabel: 'Add Caregiver',
+      onAction: onAddCg,
     );
   }
 
   Widget _buildEmptyMonitoringState(AppThemeColors L, VoidCallback onJoin) {
-    return Container(
-      padding: const EdgeInsets.all(40),
-      child: Column(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: L.purple.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.shield_outlined, color: L.purple, size: 40),
-          ),
-          const SizedBox(height: 20),
-          Text('No Protected People',
-              style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: L.text)),
-          const SizedBox(height: 8),
-          Text(
-            'Join as a caregiver to monitor your family members\' health in real-time.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14,
-                color: L.sub,
-                height: 1.5),
-          ),
-          const SizedBox(height: 24),
-          GestureDetector(
-            onTap: onJoin,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: BoxDecoration(
-                color: L.purple,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: const Text('Join as Caregiver',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700)),
-            ),
-          ),
-        ],
-      ),
+    return PremiumEmptyState(
+      title: 'No Protected People',
+      subtitle: 'Join as a caregiver to monitor your family members\' health in real-time.',
+      icon: Icons.shield_outlined,
+      actionLabel: 'Join as Caregiver',
+      onAction: onJoin,
     );
   }
 }

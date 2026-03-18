@@ -44,7 +44,18 @@ class InviteService {
       return false;
     }
     final int caregiverId = raw['cgId'] as int;
-    await userRepository.joinCaregiver(patientUid, caregiverId);
+    final String relation = raw['relation'] as String? ?? 'Family';
+    
+    // Fetch patient profile to get their name and avatar
+    final patientProfile = await userRepository.getOtherProfile(patientUid);
+    
+    await userRepository.joinCaregiver(
+      patientUid: patientUid,
+      cgId: caregiverId,
+      patientName: patientProfile?.name ?? 'Patient',
+      patientAvatar: patientProfile?.avatar ?? '👤',
+      relation: relation,
+    );
     // Optionally delete after acceptance.
     await (userRepository as dynamic).deleteInvite(code);
     return true;

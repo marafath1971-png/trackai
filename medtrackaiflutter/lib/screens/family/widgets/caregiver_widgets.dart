@@ -5,6 +5,7 @@ import '../../../providers/app_state.dart';
 import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
 import '../../../core/utils/color_utils.dart';
+import '../../../core/utils/haptic_engine.dart';
 
 class CaregiverCard extends StatefulWidget {
   final Caregiver cg;
@@ -30,27 +31,20 @@ class _CaregiverCardState extends State<CaregiverCard> {
     final isActive = cg.status == 'active';
     final isPending = cg.status == 'pending';
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: AppSpacing.m),
       decoration: BoxDecoration(
-          color: L.card.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(32),
+          color: L.card,
+          borderRadius: AppRadius.roundL,
           border: Border.all(
-              color: isActive ? L.green.withValues(alpha: 0.4) : L.border.withValues(alpha: 0.4),
-              width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 30,
-              offset: const Offset(0, 15),
-              spreadRadius: -8,
-            ),
-          ]),
+              color: isActive ? L.secondary.withValues(alpha: 0.3) : L.border,
+              width: 1.0),
+          boxShadow: L.shadowSoft),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppRadius.l),
         child: Column(children: [
           GestureDetector(
             onTap: () {
-              HapticFeedback.lightImpact();
+              HapticEngine.light();
               setState(() => _expanded = !_expanded);
             },
             child: Padding(
@@ -64,7 +58,7 @@ class _CaregiverCardState extends State<CaregiverCard> {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                             color: hexToColor(cg.color).withValues(alpha: 0.3),
-                            width: 1.5)),
+                            width: 1.0)),
                     child: Center(
                         child: Text(cg.avatar,
                             style: const TextStyle(fontSize: 28))),
@@ -77,8 +71,7 @@ class _CaregiverCardState extends State<CaregiverCard> {
                         Row(children: [
                           Flexible(
                               child: Text(cg.name,
-                                  style: TextStyle(
-                                      fontFamily: 'Inter',
+                                  style: AppTypography.titleLarge.copyWith(
                                       fontSize: 17,
                                       fontWeight: FontWeight.w800,
                                       color: L.text),
@@ -89,25 +82,24 @@ class _CaregiverCardState extends State<CaregiverCard> {
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                                 color: isActive
-                                    ? L.green.withValues(alpha: 0.1)
+                                    ? L.secondary.withValues(alpha: 0.1)
                                     : isPending
-                                        ? L.amber.withValues(alpha: 0.1)
+                                        ? L.warning.withValues(alpha: 0.1)
                                         : L.fill,
-                                borderRadius: BorderRadius.circular(99)),
+                                borderRadius: BorderRadius.circular(AppRadius.m)),
                             child: Text(
                                 isActive
                                     ? 'ACTIVE'
                                     : isPending
                                         ? 'AWAITING'
                                         : 'INACTIVE',
-                                style: TextStyle(
-                                    fontFamily: 'Inter',
+                                style: AppTypography.labelLarge.copyWith(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w800,
                                     color: isActive
-                                        ? L.green
+                                        ? L.secondary
                                         : isPending
-                                            ? L.amber
+                                            ? L.warning
                                             : L.sub,
                                     letterSpacing: 0.5)),
                           ),
@@ -115,8 +107,7 @@ class _CaregiverCardState extends State<CaregiverCard> {
                         const SizedBox(height: 4),
                         Text(
                             '${cg.relation}${cg.contact.isNotEmpty ? " · ${cg.contact}" : ""}',
-                            style: TextStyle(
-                                fontFamily: 'Inter',
+                            style: AppTypography.bodySmall.copyWith(
                                 fontSize: 13,
                                 color: L.sub,
                                 fontWeight: FontWeight.w500)),
@@ -151,14 +142,13 @@ class _CaregiverCardState extends State<CaregiverCard> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                           Text('CODE',
-                              style: TextStyle(
-                                  fontFamily: 'Inter',
+                              style: AppTypography.labelLarge.copyWith(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w800,
                                   color: L.sub,
                                   letterSpacing: 0.04)),
                           Text(cg.inviteCode,
-                              style: TextStyle(
+                              style: AppTypography.displayLarge.copyWith(
                                   fontFamily: 'monospace',
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
@@ -166,8 +156,7 @@ class _CaregiverCardState extends State<CaregiverCard> {
                                   letterSpacing: 1.5)),
                           const SizedBox(height: 4),
                           Text('${cg.name} scans this to join',
-                              style: TextStyle(
-                                  fontFamily: 'Inter',
+                              style: AppTypography.bodySmall.copyWith(
                                   fontSize: 11,
                                   color: L.sub)),
                         ])),
@@ -181,8 +170,8 @@ class _CaregiverCardState extends State<CaregiverCard> {
                             label: 'View Dashboard',
                             icon: Icons.bar_chart_rounded,
                             onTap: widget.onDashboard,
-                            bg: L.green.withValues(alpha: 0.1),
-                            textColor: L.green)),
+                            bg: L.fill,
+                            textColor: L.text)),
                     const SizedBox(width: 8),
                   ] else ...[
                     Expanded(
@@ -198,8 +187,8 @@ class _CaregiverCardState extends State<CaregiverCard> {
                   IconButtonJSX(
                       icon: Icons.delete_outline_rounded,
                       onTap: () => widget.state.removeCaregiver(cg.id),
-                      bg: L.redLight,
-                      textColor: L.red),
+                      bg: L.error.withValues(alpha: 0.1),
+                      textColor: L.error),
                 ]),
               ]),
             ),
@@ -229,13 +218,12 @@ class CardBtn extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 11),
           alignment: Alignment.center,
           decoration:
-              BoxDecoration(color: bg, borderRadius: BorderRadius.circular(24)),
+              BoxDecoration(color: bg, borderRadius: BorderRadius.circular(AppRadius.m)),
           child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             Icon(icon, size: 14, color: textColor),
             const SizedBox(width: 6),
             Text(label,
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.labelLarge.copyWith(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: textColor)),
@@ -260,7 +248,7 @@ class IconButtonJSX extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(11),
           decoration:
-              BoxDecoration(color: bg, borderRadius: BorderRadius.circular(24)),
+              BoxDecoration(color: bg, borderRadius: BorderRadius.circular(AppRadius.m)),
           child: Icon(icon, size: 18, color: textColor),
         ),
       );
@@ -285,20 +273,10 @@ class FamStatJSX extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
       decoration: BoxDecoration(
-          color: L.card.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: L.border.withValues(alpha: 0.5)),
-          gradient: LinearGradient(
-            colors: [L.card, L.bg.withValues(alpha: 0.3)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 25,
-                offset: const Offset(0, 10))
-          ]),
+          color: L.card,
+          borderRadius: AppRadius.roundL,
+          border: Border.all(color: L.border),
+          boxShadow: L.shadowSoft),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(32),
         child: Column(children: [
@@ -312,8 +290,7 @@ class FamStatJSX extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text('$value',
-              style: TextStyle(
-                  fontFamily: 'Inter',
+              style: AppTypography.displayLarge.copyWith(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
                   color: color,
@@ -321,8 +298,7 @@ class FamStatJSX extends StatelessWidget {
                   height: 1.0)),
           const SizedBox(height: 6),
           Text(label.toUpperCase(),
-              style: TextStyle(
-                  fontFamily: 'Inter',
+              style: AppTypography.labelLarge.copyWith(
                   fontSize: 10,
                   color: L.sub,
                   fontWeight: FontWeight.w800,
@@ -349,31 +325,27 @@ class PivotTab extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: active ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2))
-                ]
-              : [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4))
-                ],
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 13,
-            fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-            color: active ? const Color(0xFF111111) : L.sub,
+            color: active ? L.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            boxShadow: active
+                ? [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4))
+                  ]
+                : [],
           ),
-        ),
+          child: Text(
+            label,
+            style: AppTypography.labelLarge.copyWith(
+              fontSize: 13,
+              fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+              color: active ? L.onPrimary : L.sub,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
       ),
     );
   }
@@ -402,8 +374,7 @@ class HeaderBtn extends StatelessWidget {
             Icon(icon, size: 14, color: color),
             const SizedBox(width: 6),
             Text(label,
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.labelLarge.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: color)),

@@ -14,10 +14,14 @@ import '../../services/auth_service.dart';
 import '../../core/utils/date_formatter.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../../widgets/common/modern_time_picker.dart';
+import '../../widgets/common/unified_header.dart';
 import '../../widgets/modals/premium_paywall.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as p;
 import 'package:flutter/services.dart';
+import '../../core/utils/haptic_engine.dart';
+import '../../widgets/common/app_loading_indicator.dart';
+import '../../core/utils/result.dart';
 
 class ScanTab extends StatefulWidget {
   final void Function(Medicine)? onSave;
@@ -116,7 +120,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     try {
       await _controller!.setFlashMode(nextMode);
       setState(() => _flashMode = nextMode);
-      HapticFeedback.selectionClick();
+      HapticEngine.selection();
     } catch (e) {
       // Flash not supported on this device/simulator
       setState(() => _flashSupported = false);
@@ -142,7 +146,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     }
 
     try {
-      HapticFeedback.mediumImpact();
+      HapticEngine.light();
       final XFile image = await _controller!.takePicture();
       _processImage(File(image.path));
     } catch (e) {
@@ -189,6 +193,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
   }
 
   Future<void> _processImage(File file) async {
+    final state = Provider.of<AppState>(context, listen: false);
     setState(() {
       _imageFile = file;
       _isScanning = true;
@@ -206,12 +211,20 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     final compressedFile = await _compressImage(file);
     final fileToScan = compressedFile ?? file;
     
-    final response = await GeminiService.scanMedicine(fileToScan);
+    // Parallelize AI scan and Image upload for better UX
+    final results = await Future.wait([
+      GeminiService.scanMedicine(fileToScan),
+      state.uploadImage(fileToScan),
+    ]);
+
+    final response = results[0] as Result<ScanResult>;
+    final cloudUrl = results[1] as String?;
 
     if (!mounted) return;
 
     response.fold(
       (success) async {
+        HapticEngine.successScan();
         setState(() {
           _isScanning = false;
           // Auto-detect mapping
@@ -224,25 +237,26 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
           }
         });
         
-        final state = Provider.of<AppState>(context, listen: false);
         await state.incrementScanCount();
 
         _showResultModal(success.copyWith(
-          imageUrl: file.path, 
+          imageUrl: cloudUrl ?? file.path, 
           category: _selectedCategory,
-          description: success.name,
+          description: success.name.isNotEmpty ? success.name : null,
           form: success.form
         ));
       },
       (failure) {
+        // NEVER show an error to the user face. Instead, transition to "Smart Manual Entry".
+        HapticEngine.selection();
         setState(() => _isScanning = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Scan Error: ${failure.message}"),
-            backgroundColor: context.L.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        
+        _showResultModal(ScanResult(
+          identified: false,
+          systemBusy: true, // This will trigger the "Smart Assist" UI in the modal
+          imageUrl: cloudUrl ?? file.path,
+          category: _selectedCategory,
+        ));
       },
     );
   }
@@ -291,7 +305,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
               ),
             ).animate().fadeIn(duration: 400.ms)
           else
-            const Center(child: CircularProgressIndicator(color: Colors.white)),
+            const Center(child: AppLoadingIndicator(size: 40)),
 
           // 2. Scan Frame Brackets
           Center(
@@ -311,14 +325,33 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
             top: 0,
             left: 0,
             right: 0,
-            child: Container(
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 10,
-                left: 20,
-                right: 20,
-                bottom: 20,
+            child: UnifiedHeader(
+              backgroundColor: Colors.transparent,
+              blurred: false,
+              showBorder: false,
+              leading: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/ghost_scan.png',
+                    width: 24,
+                    errorBuilder: (c, e, s) =>
+                        const Text("👻", style: TextStyle(fontSize: 20)),
+                  ),
+                ),
               ),
-              child: _buildHeader(),
+              title: "Scanner",
+              actions: [
+                _buildCircularBlurBtn(
+                  icon: Icons.close,
+                  onTap: widget.onClose ?? () => Navigator.pop(context),
+                ),
+              ],
             ),
           ).animate().fadeIn(delay: 300.ms).slideY(begin: -0.2, end: 0),
 
@@ -483,14 +516,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                               child: done
                                   ? const Icon(Icons.check_rounded, size: 16, color: Colors.black)
                                   : active
-                                      ? const SizedBox(
-                                          width: 14,
-                                          height: 14,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
+                                      ? const AppLoadingIndicator(size: 14)
                                       : Text('${i + 1}',
                                           style: const TextStyle(color: Colors.white54, fontSize: 11)),
                             ),
@@ -641,44 +667,6 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // Small Ghost Icon
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Image.asset(
-              'assets/images/ghost_scan.png',
-              width: 24,
-              errorBuilder: (c, e, s) =>
-                  const Text("👻", style: TextStyle(fontSize: 20)),
-            ),
-          ),
-        ),
-        const Text(
-          "Scanner",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-          ),
-        ),
-        _buildCircularBlurBtn(
-          icon: Icons.close,
-          onTap: widget.onClose ?? () => Navigator.pop(context),
-        ),
-      ],
-    );
-  }
-
   Widget _buildCircularBlurBtn(
       {required IconData icon, required VoidCallback onTap}) {
     return GestureDetector(
@@ -713,7 +701,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
               final isSelected = _selectedCategory == cat['name'];
               return GestureDetector(
                 onTap: () {
-                  HapticFeedback.selectionClick();
+                  HapticEngine.selection();
                   setState(() => _selectedCategory = cat['name']);
                 },
                 child: Container(
@@ -1042,11 +1030,52 @@ class _ResultModalState extends State<_ResultModal> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (widget.result.systemBusy)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: L.green.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: L.green.withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Text("✨", style: TextStyle(fontSize: 20)),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Smart Assist Active",
+                                  style: TextStyle(
+                                    color: L.green,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "Our AI is busy, but your photo is ready! Please confirm the details manually below.",
+                                  style: TextStyle(
+                                    color: L.text.withValues(alpha: 0.7),
+                                    fontSize: 12,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ).animate().fadeIn().slideY(begin: 0.2, end: 0),
+
                   // Verification Badge
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildStatusBadge(widget.result.identified),
+                      _buildStatusBadge(widget.result.identified, widget.result.systemBusy),
                       GestureDetector(
                         onTap: () {
                           HapticFeedback.lightImpact();
@@ -1084,7 +1113,7 @@ class _ResultModalState extends State<_ResultModal> {
                     controller: _nameController,
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
-                    hint: "Medicine Name",
+                    hint: widget.result.category == 'Beauty' ? "Product Name" : "Medicine Name",
                     L: L,
                   ),
                   const SizedBox(height: 12),
@@ -1114,7 +1143,7 @@ class _ResultModalState extends State<_ResultModal> {
                   const SizedBox(height: 32),
 
                   // Info Sections
-                  _buildSectionHeader("ℹ️ CLINICAL INFO", L),
+                  _buildSectionHeader(widget.result.category == 'Beauty' ? "✨ PRODUCT INFO" : "ℹ️ CLINICAL INFO", L),
                   _buildExpandableCard(
                     title: "Medical Purpose",
                     icon: Icons.info_outline_rounded,
@@ -1196,7 +1225,7 @@ class _ResultModalState extends State<_ResultModal> {
                   const SizedBox(height: 32),
 
                   // Inventory section
-                  _buildSectionHeader("📦 INVENTORY", L),
+                  _buildSectionHeader(widget.result.category == 'Liquid' ? "💧 LIQUID INVENTORY" : "📦 INVENTORY", L),
                   const SizedBox(height: 16),
                   _buildInventorySelector(L),
 
@@ -1233,7 +1262,7 @@ class _ResultModalState extends State<_ResultModal> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: context.L.text,
-                        foregroundColor: Colors.black,
+                        foregroundColor: context.L.bg,
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                       ),
@@ -1260,26 +1289,37 @@ class _ResultModalState extends State<_ResultModal> {
       ),
     );
   }
-  Widget _buildStatusBadge(bool identified) {
+  Widget _buildStatusBadge(bool identified, bool systemBusy) {
     final L = context.L;
-    final color = L.text;
+    
+    String label = identified ? "AI VERIFIED" : "MANUAL REVIEW";
+    IconData icon = identified ? Icons.verified_rounded : Icons.help_center_rounded;
+    Color color = identified ? L.text : L.sub;
+    Color bg = identified ? color.withValues(alpha: 0.15) : L.fill;
+
+    if (systemBusy) {
+      label = "SMART ASSIST";
+      icon = Icons.auto_awesome_rounded;
+      color = L.green;
+      bg = color.withValues(alpha: 0.1);
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: identified ? color.withValues(alpha: 0.15) : L.fill,
+        color: bg,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: identified ? color.withValues(alpha: 0.3) : L.border),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(identified ? Icons.verified_rounded : Icons.help_center_rounded,
-              color: identified ? color : L.sub, size: 16),
+          Icon(icon, color: color, size: 16),
           const SizedBox(width: 8),
           Text(
-            identified ? "AI VERIFIED" : "MANUAL REVIEW",
+            label,
             style: TextStyle(
-              color: identified ? color : L.sub,
+              color: color,
               fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.2,
@@ -1445,7 +1485,7 @@ class _ResultModalState extends State<_ResultModal> {
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                       color: L.text)),
-              Text("${_unitController.text} supply detected",
+              Text(widget.result.category == 'Liquid' ? "volume detected" : "${_unitController.text} supply detected",
                   style: TextStyle(
                       fontSize: 12,
                       color: L.text.withValues(alpha: 0.4))),
@@ -1595,8 +1635,7 @@ class _ResultModalState extends State<_ResultModal> {
   }
 
   Widget _buildScheduleItem(int idx, ScheduleEntry s, AppThemeColors L) {
-    final timeStr =
-        "${s.h.toString().padLeft(2, '0')}:${s.m.toString().padLeft(2, '0')}";
+    final timeStr = fmtTime(s.h, s.m, context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -1724,7 +1763,7 @@ class ScanFramePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = Colors.white
-      ..strokeWidth = 3.5
+      ..strokeWidth = 4.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 

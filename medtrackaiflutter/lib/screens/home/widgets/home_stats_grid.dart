@@ -30,18 +30,18 @@ class HomeStatsGrid extends StatelessWidget {
     // Minimalist monochrome color selection
     return IntrinsicHeight(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Card 1: Daily Progress
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Card 1: Daily Progress
           Expanded(
             child: Container(
               decoration: BoxDecoration(
                 color: L.card,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.0),
+                borderRadius: BorderRadius.circular(AppRadius.l),
+                border: Border.all(color: L.border, width: 1.0),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(AppSpacing.m),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -49,16 +49,13 @@ class HomeStatsGrid extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text('$takenCount',
-                              style: TextStyle(
-                                  fontFamily: 'Inter',
+                              style: AppTypography.displayMedium.copyWith(
                                   fontSize: 24,
-                                  fontWeight: FontWeight.w900,
                                   color: L.text,
                                   letterSpacing: -1.0)),
                           const SizedBox(width: 4),
                           Text('/${doses.length}',
-                              style: TextStyle(
-                                  fontFamily: 'Inter',
+                              style: AppTypography.titleMedium.copyWith(
                                   fontSize: 13,
                                   color: L.sub,
                                   fontWeight: FontWeight.w600)),
@@ -66,11 +63,9 @@ class HomeStatsGrid extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text('Doses today',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.labelMedium.copyWith(
                               fontSize: 11,
                               color: L.sub,
-                              fontWeight: FontWeight.w500,
                               letterSpacing: 0.1)),
                       const SizedBox(height: 16),
                       RingChart(
@@ -85,17 +80,17 @@ class HomeStatsGrid extends StatelessWidget {
                 ),
               ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.m),
           // Card 2: Adherence Score
           Expanded(
             child: Container(
               decoration: BoxDecoration(
                 color: L.card,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.0),
+                borderRadius: BorderRadius.circular(AppRadius.l),
+                border: Border.all(color: L.border, width: 1.0),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(AppSpacing.m),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -103,21 +98,17 @@ class HomeStatsGrid extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                           Text('$adherence%',
-                              style: TextStyle(
-                                  fontFamily: 'Inter',
+                              style: AppTypography.displayMedium.copyWith(
                                   fontSize: 24,
-                                  fontWeight: FontWeight.w900,
                                   color: L.text,
                                   letterSpacing: -1.0)),
                         ],
                       ),
                       const SizedBox(height: 2),
                       Text('Adherence (30d)',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.labelMedium.copyWith(
                               fontSize: 11,
                               color: L.sub,
-                              fontWeight: FontWeight.w500,
                               letterSpacing: 0.1)),
                       const SizedBox(height: 20),
                       Container(

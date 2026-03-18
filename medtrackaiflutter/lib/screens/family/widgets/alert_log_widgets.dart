@@ -17,23 +17,22 @@ class AlertLogCard extends StatelessWidget {
           onTap();
         },
         child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: AppSpacing.m),
           decoration: BoxDecoration(
-              color: L.card.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(28),
+              color: L.card,
+              borderRadius: BorderRadius.circular(AppRadius.l),
               border: Border.all(
-                  color: alert.seen ? L.border.withValues(alpha: 0.5) : L.red.withValues(alpha: 0.4),
-                  width: 1.5),
+                  color: alert.seen ? L.border : L.error,
+                  width: 1.0),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 25,
                   offset: const Offset(0, 12),
-                  spreadRadius: -5,
                 ),
               ]),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(AppRadius.l),
             child: Padding(
               padding: const EdgeInsets.all(18),
               child: Row(children: [
@@ -41,11 +40,11 @@ class AlertLogCard extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                      color: L.red.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16)),
+                      color: L.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppRadius.m)),
                   child: Center(
                       child: Icon(Icons.warning_amber_rounded,
-                          color: L.red, size: 28)),
+                          color: L.error, size: 28)),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -53,22 +52,23 @@ class AlertLogCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                       Text(alert.medName,
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.titleLarge.copyWith(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
-                              color: L.text)),
+                              color: L.text),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1),
                       const SizedBox(height: 4),
                       Text('Missed ${alert.doseLabel} at ${alert.time}',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.bodySmall.copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: L.sub)),
+                              color: L.sub),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1),
                       const SizedBox(height: 6),
                       Text(alert.timestamp,
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.labelLarge.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: L.sub.withValues(alpha: 0.6))),
@@ -125,15 +125,13 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('Escalation Logic',
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
+                                    style: AppTypography.titleLarge.copyWith(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w800,
                                         color: L.text)),
                                 Text(
                                     'How missed doses trigger caregiver alerts',
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
+                                    style: AppTypography.bodySmall.copyWith(
                                         fontSize: 12,
                                         color: L.sub))
                               ])
@@ -153,10 +151,9 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                     color: _step <= 1 ? L.border : L.card,
-                                    borderRadius: BorderRadius.circular(24)),
+                                    borderRadius: BorderRadius.circular(AppRadius.m)),
                                 child: Text('← Back',
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
+                                    style: AppTypography.labelLarge.copyWith(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w700,
                                         color: _step <= 1 ? L.sub : L.text))),
@@ -209,9 +206,7 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                                                                   .start,
                                                           children: [
                                                         Text('CRITICAL ALERT',
-                                                            style: TextStyle(
-                                                                fontFamily:
-                                                                    'Inter',
+                                                            style: AppTypography.labelLarge.copyWith(
                                                                 fontSize: 11,
                                                                 fontWeight:
                                                                     FontWeight
@@ -242,9 +237,9 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                                         vertical: 14),
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
-                                        color: _step >= 4 ? L.border : L.green,
+                                        color: _step >= 4 ? L.border : L.secondary,
                                         borderRadius:
-                                            BorderRadius.circular(24)),
+                                            BorderRadius.circular(AppRadius.m)),
                                     child: Text(
                                         _step >= 4
                                             ? 'Full flow shown ✓'
@@ -271,24 +266,22 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                  color: L.redLight,
-                                  borderRadius: BorderRadius.circular(24),
+                                  color: L.error.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(AppRadius.l),
                                   border: Border.all(
-                                      color: const Color(0xFFFCA5A5))),
+                                      color: L.error.withValues(alpha: 0.3))),
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text('⚠️ Alert message sent:',
-                                        style: TextStyle(
-                                            fontFamily: 'Inter',
+                                        style: AppTypography.titleLarge.copyWith(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w700,
                                             color: L.red)),
                                     const SizedBox(height: 6),
                                     RichText(
                                         text: TextSpan(
-                                            style: TextStyle(
-                                                fontFamily: 'Inter',
+                                            style: AppTypography.bodySmall.copyWith(
                                                 fontSize: 13,
                                                 color: L.text,
                                                 height: 1.5),
@@ -313,14 +306,13 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                              color: L.card,
-                              borderRadius: BorderRadius.circular(24)),
+                               color: L.card,
+                               borderRadius: BorderRadius.circular(AppRadius.l)),
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('⏱️ Default alert delay: 30 minutes',
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
+                                    style: AppTypography.titleLarge.copyWith(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
                                         color: L.text)),
@@ -349,14 +341,14 @@ class EscalationTimeline extends StatelessWidget {
       {
         'title': 'Dose time arrives',
         'detail': '8:00 PM',
-        'icon': '🔔',
-        'color': L.amber
+         'icon': '🔔',
+        'color': L.warning
       },
       {
         'title': 'User snoozed',
         'detail': 'Snooze 10 min',
         'icon': '😴',
-        'color': L.amber
+        'color': L.warning
       },
       {
         'title': 'No action taken',
@@ -364,11 +356,11 @@ class EscalationTimeline extends StatelessWidget {
         'icon': '❌',
         'color': const Color(0xFFF97316)
       },
-      {
+       {
         'title': 'Caregivers alerted',
         'detail': '⚠️ Alert delivered',
         'icon': '⚠️',
-        'color': L.red
+        'color': L.error
       },
     ];
 
@@ -411,15 +403,13 @@ class EscalationTimeline extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(steps[i]['title'] as String,
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.labelLarge.copyWith(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: isActive ? L.text : L.sub)),
                       const SizedBox(height: 2),
                       Text(steps[i]['detail'] as String,
-                          style: TextStyle(
-                              fontFamily: 'Inter', fontSize: 13, color: L.sub)),
+                          style: AppTypography.bodySmall.copyWith(fontSize: 13, color: L.sub)),
                     ]),
               ),
             ),
@@ -463,14 +453,14 @@ class AlertDetailView extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
+               Container(
+                padding: const EdgeInsets.all(AppSpacing.m),
                 decoration: BoxDecoration(
-                    color: L.redLight.withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: L.red.withValues(alpha: 0.3), width: 1.5),
+                    color: L.error.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppRadius.l),
+                    border: Border.all(color: L.error.withValues(alpha: 0.3), width: 1.0),
                     gradient: LinearGradient(
-                      colors: [L.redLight, L.bg.withValues(alpha: 0.4)],
+                      colors: [L.redLight, L.bg],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -489,14 +479,12 @@ class AlertDetailView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                         Text(alert.medName,
-                            style: TextStyle(
-                                fontFamily: 'Inter',
+                            style: AppTypography.titleLarge.copyWith(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
                                 color: L.red)),
                         Text('Missed ${alert.doseLabel} at ${alert.time}',
-                            style: TextStyle(
-                                fontFamily: 'Inter',
+                            style: AppTypography.bodySmall.copyWith(
                                 fontSize: 13,
                                 color: L.sub)),
                       ])),
@@ -504,8 +492,7 @@ class AlertDetailView extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text('ESCALATION PATH',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
+                  style: AppTypography.labelLarge.copyWith(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: L.sub,
@@ -514,8 +501,7 @@ class AlertDetailView extends StatelessWidget {
               EscalationTimeline(activeStep: 4, L: L),
               const SizedBox(height: 24),
               Text('CAREGIVERS NOTIFIED',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
+                  style: AppTypography.labelLarge.copyWith(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: L.sub,
@@ -524,9 +510,9 @@ class AlertDetailView extends StatelessWidget {
               ...alert.caregivers.map((cg) => Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
+                     decoration: BoxDecoration(
                         color: L.card,
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(AppRadius.m),
                         boxShadow: [
                           BoxShadow(
                               color: Colors.black.withValues(alpha: 0.04),
@@ -573,8 +559,7 @@ class AlertDetailView extends StatelessWidget {
                   )),
               const SizedBox(height: 24),
               Text('MESSAGE SENT',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
+                  style: AppTypography.labelLarge.copyWith(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: L.sub,
@@ -611,11 +596,10 @@ class AlertDetailView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Center(
-                  child: Text(alert.timestamp,
-                      style: TextStyle(
-                          fontFamily: 'Inter',
+                       child: Text(alert.timestamp,
+                      style: AppTypography.bodySmall.copyWith(
                           fontSize: 12,
-                          color: L.sub.withValues(alpha: 0.6)))),
+                          color: L.sub))),
             ],
           ),
         ),

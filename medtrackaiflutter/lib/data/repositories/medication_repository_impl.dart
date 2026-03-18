@@ -1,8 +1,10 @@
+import 'dart:io';
 import '../../domain/entities/entities.dart';
 import '../../domain/repositories/medication_repository.dart';
 import '../datasources/local_prefs_datasource.dart';
 import '../datasources/firestore_datasource.dart';
 import '../../services/auth_service.dart';
+import '../../services/storage_service.dart';
 
 // ══════════════════════════════════════════════
 // MEDICATION REPOSITORY — Offline-First
@@ -13,11 +15,18 @@ import '../../services/auth_service.dart';
 class MedicationRepositoryImpl implements IMedicationRepository {
   final LocalDataSource localDataSource;
   final FirestoreDataSource firestoreDataSource;
+  final StorageService storageService;
 
-  MedicationRepositoryImpl(this.localDataSource, this.firestoreDataSource);
+  MedicationRepositoryImpl(this.localDataSource, this.firestoreDataSource, this.storageService);
 
   String? get _uid => AuthService.uid;
   bool get _hasAuth => _uid != null;
+
+  @override
+  Future<String?> uploadMedicineImage(File imageFile) async {
+    if (!_hasAuth) return null;
+    return await storageService.uploadMedicineImage(_uid!, imageFile);
+  }
 
   // ── Medicines ──────────────────────────────────────────────────────
   @override

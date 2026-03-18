@@ -8,6 +8,8 @@ import '../../models/constants.dart';
 import '../../theme/app_theme.dart';
 import '../../services/notification_service.dart';
 import '../../services/auth_service.dart';
+import '../../core/utils/date_formatter.dart';
+import 'package:intl/intl.dart';
 
 // ══════════════════════════════════════════════
 // ONBOARDING SCREEN
@@ -305,16 +307,18 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Widget build(BuildContext context) {
     final step = _steps[_step];
     final isPaywall = step.type == 'paywall';
-    const oBg = AppColors.oBg;
-    const oText = AppColors.oText;
-    const oSub = AppColors.oSub;
-    const oLime = Colors.white;
-    const oCard = AppColors.oCard;
+    final L = context.L;
+    
+    final oBg = L.bg;
+    final oText = L.text;
+    final oSub = L.sub;
+    final oLime = L.green; 
+    final oCard = L.card;
 
     final progress = (_step + 1) / _steps.length;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: context.isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: oBg,
         body: SafeArea(
@@ -332,7 +336,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   widthFactor: progress,
                   child: Container(
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                           colors: [oLime, Colors.white]),
                       borderRadius: BorderRadius.circular(99),
                       boxShadow: [
@@ -385,7 +389,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             onNext: _next,
             oText: oText,
             oSub: oSub,
-            oCard: oCard);
+            oCard: oCard,
+            oLime: oLime);
       case 'single':
         return _SingleStep(
             step: step,
@@ -492,10 +497,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 ? 'See My Plan →'
                 : (step.type == 'notif' ? 'Allow Notifications' : 'Continue →'),
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Inter',
+            style: AppTypography.titleLarge.copyWith(
               fontSize: 17,
-              fontWeight: FontWeight.w800,
               color: canGo ? const Color(0xFF1A2010) : const Color(0xFF404050),
               letterSpacing: -0.3,
             ),
@@ -550,21 +553,18 @@ class _StepHeader extends StatelessWidget {
       if (emoji.isNotEmpty)
         Padding(
           padding: const EdgeInsets.only(bottom: 14),
-          child: Text(emoji, style: const TextStyle(fontSize: 48, height: 1.0)),
+          child: Text(emoji, style: AppTypography.displayLarge.copyWith(fontSize: 48, height: 1.0)),
         ),
       Text(title,
-          style: TextStyle(
-              fontFamily: 'Inter',
+          style: AppTypography.displayLarge.copyWith(
               fontSize: 26,
-              fontWeight: FontWeight.w700,
               color: oText,
               letterSpacing: -0.5,
               height: 1.2)),
       if (subtitle.isNotEmpty) ...[
         const SizedBox(height: 6),
         Text(subtitle,
-            style: TextStyle(
-                fontFamily: 'Inter', fontSize: 14, color: oSub, height: 1.4)),
+            style: AppTypography.bodySmall.copyWith(fontSize: 14, color: oSub, height: 1.4)),
       ],
     ]);
   }
@@ -580,18 +580,20 @@ class _SplashStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const oLime = Colors.white;
-    const oText = AppColors.oText;
-    const oSub = AppColors.oSub;
-    const oCard = AppColors.oCard;
+    final L = context.L;
+    final oLime = L.green;
+    final oText = L.text;
+    final oSub = L.sub;
+    final oCard = L.card;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-      child: ConstrainedBox(
-        constraints:
-            BoxConstraints(minHeight: MediaQuery.of(context).size.height),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(32, 40, 32, 40),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(32, 40, 32, 40),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -604,7 +606,7 @@ class _SplashStep extends StatelessWidget {
                     height: 88,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: AppRadius.roundXL,
                       border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                     ),
                     child: Center(
@@ -614,27 +616,24 @@ class _SplashStep extends StatelessWidget {
                   const SizedBox(height: 20),
                   RichText(
                     textAlign: TextAlign.center,
-                    text: const TextSpan(
-                      style: TextStyle(
-                          fontFamily: 'Inter',
+                    text: TextSpan(
+                      style: AppTypography.displayLarge.copyWith(
                           fontSize: 36,
-                          fontWeight: FontWeight.w700,
                           letterSpacing: -1.0,
-                          height: 1.1),
+                          height: 1.6),
                       children: [
                         TextSpan(
                             text: 'Med ',
-                            style: TextStyle(color: Color(0xFFF0F0F5))),
-                        TextSpan(text: 'AI', style: TextStyle(color: oLime)),
+                            style: AppTypography.displayLarge.copyWith(fontSize: 36, color: const Color(0xFFF0F0F5))),
+                        TextSpan(text: 'AI', style: AppTypography.displayLarge.copyWith(fontSize: 36, color: oLime)),
                       ],
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Your intelligent medicine tracker.\nScan, track, and never miss a dose again.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontFamily: 'Inter',
+                    style: AppTypography.bodySmall.copyWith(
                         fontSize: 16,
                         color: oSub,
                         height: 1.6),
@@ -654,27 +653,24 @@ class _SplashStep extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: oCard,
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: AppRadius.roundXL,
                     border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     child: Row(children: [
-                      Text(parts[0], style: const TextStyle(fontSize: 22)),
+                      Text(parts[0], style: AppTypography.displayLarge.copyWith(fontSize: 22)),
                       const SizedBox(width: 14),
                       Expanded(
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                             Text(parts[1],
-                                style: const TextStyle(
-                                    fontFamily: 'Inter',
+                                style: AppTypography.titleLarge.copyWith(
                                     fontSize: 14,
-                                    fontWeight: FontWeight.w700,
                                     color: oText)),
                             Text(f.$2,
-                                style: const TextStyle(
-                                    fontFamily: 'Inter',
+                                style: AppTypography.bodySmall.copyWith(
                                     fontSize: 12,
                                     color: oSub)),
                           ])),
@@ -685,14 +681,15 @@ class _SplashStep extends StatelessWidget {
               const SizedBox(height: 32),
 
               const SizedBox(height: 32),
-              const Text('Free to start · No credit card required',
+              Text('Free to start · No credit card required',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontFamily: 'Inter', fontSize: 12, color: oSub)),
+                  style: AppTypography.bodySmall.copyWith(fontSize: 12, color: oSub)),
             ],
           ),
         ),
       ),
+    );
+      },
     );
   }
 }
@@ -745,7 +742,7 @@ class _TextStep extends StatefulWidget {
   final Map<String, dynamic> form;
   final Function(String, String) onChanged;
   final VoidCallback onNext;
-  final Color oText, oSub, oCard;
+  final Color oText, oSub, oCard, oLime;
   const _TextStep(
       {required this.step,
       required this.form,
@@ -753,7 +750,8 @@ class _TextStep extends StatefulWidget {
       required this.onNext,
       required this.oText,
       required this.oSub,
-      required this.oCard});
+      required this.oCard,
+      required this.oLime});
 
   @override
   State<_TextStep> createState() => _TextStepState();
@@ -778,7 +776,6 @@ class _TextStepState extends State<_TextStep> {
 
   @override
   Widget build(BuildContext context) {
-    const oLime = Colors.white;
     final val = _ctrl.text.trim();
     final hasVal = val.isNotEmpty;
 
@@ -787,20 +784,17 @@ class _TextStepState extends State<_TextStep> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const SizedBox(height: 8),
         // Large emoji
-        Text(widget.step.emoji, style: const TextStyle(fontSize: 52)),
+        Text(widget.step.emoji, style: AppTypography.displayLarge.copyWith(fontSize: 52)),
         const SizedBox(height: 16),
         Text(widget.step.title,
-            style: TextStyle(
-                fontFamily: 'Inter',
+            style: AppTypography.displayLarge.copyWith(
                 fontSize: 28,
-                fontWeight: FontWeight.w700,
                 color: widget.oText,
                 letterSpacing: -0.5,
                 height: 1.2)),
         const SizedBox(height: 8),
         Text(widget.step.subtitle,
-            style: TextStyle(
-                fontFamily: 'Inter', fontSize: 14, color: widget.oSub)),
+            style: AppTypography.bodySmall.copyWith(fontSize: 14, color: widget.oSub)),
         const SizedBox(height: 32),
         // Input — border turns lime when filled
         TextField(
@@ -808,8 +802,7 @@ class _TextStepState extends State<_TextStep> {
           autofocus: true,
           keyboardType:
               widget.step.isNum ? TextInputType.number : TextInputType.text,
-          style: TextStyle(
-              fontFamily: 'Inter',
+          style: AppTypography.bodySmall.copyWith(
               fontSize: 17,
               fontWeight: FontWeight.w600,
               color: widget.oText),
@@ -822,23 +815,23 @@ class _TextStepState extends State<_TextStep> {
               : null,
           decoration: InputDecoration(
             hintText: widget.step.placeholder,
-            hintStyle: TextStyle(color: widget.oSub, fontFamily: 'Inter'),
+            hintStyle: AppTypography.bodySmall.copyWith(color: widget.oSub),
             filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.05),
+            fillColor: widget.oText.withValues(alpha: 0.05),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: AppRadius.roundL,
               borderSide: BorderSide(
-                  color: hasVal ? oLime : Colors.white.withValues(alpha: 0.1),
+                  color: hasVal ? widget.oLime : widget.oText.withValues(alpha: 0.1),
                   width: hasVal ? 1.5 : 0.8),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: AppRadius.roundL,
               borderSide: BorderSide(
-                  color: hasVal ? oLime : Colors.white.withValues(alpha: 0.2), width: 1.5),
+                  color: hasVal ? widget.oLime : widget.oText.withValues(alpha: 0.2), width: 1.0),
             ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
+            border: OutlineInputBorder(borderRadius: AppRadius.roundL),
           ),
         ),
         const Spacer(),
@@ -915,12 +908,12 @@ class _SingleStep extends StatelessWidget {
         padding:
             EdgeInsets.symmetric(horizontal: isGrid ? 12 : 18, vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? oLime.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(28),
+          color: isSelected ? oLime.withValues(alpha: 0.15) : oText.withValues(alpha: 0.03),
+          borderRadius: AppRadius.roundXL,
           border: Border.all(
               color: isSelected
                   ? oLime.withValues(alpha: 0.5)
-                  : Colors.white.withValues(alpha: 0.08),
+                  : oText.withValues(alpha: 0.08),
               width: isSelected ? 1.5 : 1.0),
           boxShadow: isSelected ? [
             BoxShadow(color: oLime.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 8))
@@ -931,26 +924,23 @@ class _SingleStep extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (opt['e'] != null)
-                    Text(opt['e']!, style: const TextStyle(fontSize: 28)),
+                    Text(opt['e']!, style: AppTypography.displayLarge.copyWith(fontSize: 28)),
                   if (opt['e'] != null) const SizedBox(height: 12),
                   Text(opt['v']!,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontFamily: 'Inter',
+                      style: AppTypography.labelLarge.copyWith(
                           fontSize: 13,
-                          fontWeight: FontWeight.w600,
                           color: isSelected ? oLime : oText)),
                 ],
               )
             : Row(children: [
                 if (opt['e'] != null)
                   Text(opt['e']!,
-                      style: const TextStyle(fontSize: 24, height: 1.0)),
+                      style: AppTypography.displayLarge.copyWith(fontSize: 24, height: 1.0)),
                 if (opt['e'] != null) const SizedBox(width: 14),
                 Expanded(
                     child: Text(opt['v']!,
-                        style: TextStyle(
-                            fontFamily: 'Inter',
+                        style: AppTypography.bodySmall.copyWith(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: isSelected ? oLime : oText))),
@@ -1019,21 +1009,19 @@ class _MultiStep extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isSelected ? oLime.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.03),
+                    color: isSelected ? oLime.withValues(alpha: 0.15) : oText.withValues(alpha: 0.03),
                     borderRadius: BorderRadius.circular(99),
                     border: Border.all(
-                        color: isSelected ? oLime.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.08),
+                        color: isSelected ? oLime.withValues(alpha: 0.5) : oText.withValues(alpha: 0.08),
                         width: isSelected ? 1.5 : 1.0),
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     if (opt['e'] != null)
-                      Text(opt['e']!, style: const TextStyle(fontSize: 16)),
+                      Text(opt['e']!, style: AppTypography.bodySmall.copyWith(fontSize: 16)),
                     const SizedBox(width: 6),
                     Text(opt['v']!,
-                        style: TextStyle(
-                            fontFamily: 'Inter',
+                        style: AppTypography.labelLarge.copyWith(
                             fontSize: 13,
-                            fontWeight: FontWeight.w600,
                             color: isSelected ? oLime : oText)),
                     if (isSelected) ...[
                       const SizedBox(width: 4),
@@ -1096,21 +1084,19 @@ class _TimeStep extends StatelessWidget {
               margin: const EdgeInsets.only(right: 6),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: isActive ? oLime.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.03),
+                color: isActive ? oLime.withValues(alpha: 0.15) : oText.withValues(alpha: 0.03),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                    color: isActive ? oLime : Colors.white.withValues(alpha: 0.08),
+                    color: isActive ? oLime : oText.withValues(alpha: 0.08),
                     width: isActive ? 1.5 : 1.0),
               ),
               child: Column(children: [
                 Text(qt['emoji'] as String,
-                    style: const TextStyle(fontSize: 18)),
+                    style: AppTypography.displayLarge.copyWith(fontSize: 18)),
                 const SizedBox(height: 2),
                 Text(qt['label'] as String,
-                    style: TextStyle(
-                        fontFamily: 'Inter',
+                    style: AppTypography.labelSmall.copyWith(
                         fontSize: 10,
-                        fontWeight: FontWeight.w700,
                         color: isActive ? oLime : oSub)),
               ]),
             ),
@@ -1136,10 +1122,8 @@ class _TimeStep extends StatelessWidget {
           Padding(
               padding: const EdgeInsets.only(top: 16),
               child: Text(':',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
+                  style: AppTypography.displayLarge.copyWith(
                       fontSize: 36,
-                      fontWeight: FontWeight.w900,
                       color: oSub))),
           Expanded(
               child: _TimeInput(
@@ -1161,11 +1145,9 @@ class _TimeStep extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               decoration: BoxDecoration(
-                  color: oCard, borderRadius: BorderRadius.circular(24)),
+                  color: oCard, borderRadius: AppRadius.roundL),
               child: Text(h >= 12 ? 'PM' : 'AM',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w800,
+                  style: AppTypography.labelLarge.copyWith(
                       fontSize: 16,
                       color: oText)),
             ),
@@ -1193,10 +1175,8 @@ class _TimeInput extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(children: [
       Text(label.toUpperCase(),
-          style: TextStyle(
-              fontFamily: 'Inter',
+          style: AppTypography.labelLarge.copyWith(
               fontSize: 10,
-              fontWeight: FontWeight.w700,
               letterSpacing: 1,
               color: oSub)),
       const SizedBox(height: 6),
@@ -1206,10 +1186,8 @@ class _TimeInput extends StatelessWidget {
         maxLength: 2,
         textAlign: TextAlign.center,
         onChanged: onChanged,
-        style: TextStyle(
-            fontFamily: 'Inter',
+        style: AppTypography.displayLarge.copyWith(
             fontSize: 32,
-            fontWeight: FontWeight.w900,
             color: oText),
         decoration: InputDecoration(
           counterText: '',
@@ -1217,16 +1195,16 @@ class _TimeInput extends StatelessWidget {
           fillColor: oCard,
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: AppRadius.roundL,
               borderSide:
-                  BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1.0)),
+                  BorderSide(color: oText.withValues(alpha: 0.08), width: 1.0)),
           enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: AppRadius.roundL,
               borderSide:
-                  BorderSide(color: Colors.white.withValues(alpha: 0.08), width: 1.0)),
+                  BorderSide(color: oText.withValues(alpha: 0.08), width: 1.0)),
           focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide(color: oLime, width: 1.5)),
+              borderRadius: AppRadius.roundL,
+              borderSide: BorderSide(color: oLime, width: 1.0)),
         ),
       ),
     ]);
@@ -1270,18 +1248,15 @@ class _NotifStep extends StatelessWidget {
         ),
         const SizedBox(height: 32),
         Text('Enable Reminders',
-            style: TextStyle(
-                fontFamily: 'Inter',
+            style: AppTypography.displayLarge.copyWith(
                 fontSize: 28,
-                fontWeight: FontWeight.w900,
                 color: oText,
                 letterSpacing: -0.6)),
         const SizedBox(height: 12),
         Text(
             'Get notified when it\'s time to take your medicine. You can always change this later.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-                fontFamily: 'Inter', fontSize: 15, color: oSub, height: 1.5)),
+            style: AppTypography.bodySmall.copyWith(fontSize: 15, color: oSub, height: 1.5)),
         const Spacer(),
       ]),
     );
@@ -1333,15 +1308,13 @@ class _PlanReadyStep extends StatelessWidget {
               color: const Color(0x1FA3E635),
               borderRadius: BorderRadius.circular(28)),
           child:
-              const Center(child: Text('🎯', style: TextStyle(fontSize: 48))),
+              Center(child: Text('🎯', style: AppTypography.displayLarge.copyWith(fontSize: 48))),
         ),
         const SizedBox(height: 24),
         Text('Your plan is ready${name.isNotEmpty ? ", $name" : ""}!',
             textAlign: TextAlign.center,
-            style: TextStyle(
-                fontFamily: 'Inter',
+            style: AppTypography.displayLarge.copyWith(
                 fontSize: 32,
-                fontWeight: FontWeight.w900,
                 color: oText,
                 letterSpacing: -1.0,
                 height: 1.1)),
@@ -1350,14 +1323,12 @@ class _PlanReadyStep extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
               color: oLime.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(32)),
+              borderRadius: AppRadius.roundXL),
           child: Text(
             _generateNarrative(name, goal, wakeTime, motivation),
             textAlign: TextAlign.center,
-            style: TextStyle(
-                fontFamily: 'Inter',
+            style: AppTypography.titleLarge.copyWith(
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
                 color: oLime,
                 height: 1.4),
           ),
@@ -1367,9 +1338,9 @@ class _PlanReadyStep extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.08))),
+                  color: oText.withValues(alpha: 0.03),
+                  borderRadius: AppRadius.roundL,
+                  border: Border.all(color: oText.withValues(alpha: 0.08))),
               child: Row(children: [
                 Container(
                   width: 24,
@@ -1382,8 +1353,7 @@ class _PlanReadyStep extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(
                     child: Text(h,
-                        style: TextStyle(
-                            fontFamily: 'Inter',
+                        style: AppTypography.bodySmall.copyWith(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: oText))),
@@ -1394,21 +1364,18 @@ class _PlanReadyStep extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(32),
+              color: oText.withValues(alpha: 0.03),
+              borderRadius: AppRadius.roundXL,
               border: Border.all(color: oLime.withValues(alpha: 0.2))),
           child: Column(children: [
             Text('94%',
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.displayLarge.copyWith(
                     fontSize: 36,
-                    fontWeight: FontWeight.w900,
                     color: oLime)),
             const SizedBox(height: 4),
             Text('of users like you improved adherence in 2 weeks',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.bodySmall.copyWith(
                     fontSize: 14,
                     color: oSub,
                     height: 1.4)),
@@ -1557,15 +1524,15 @@ class _PaywallFeatures extends StatelessWidget {
       {
         'id': 'annual',
         'label': 'Annual',
-        'price': '\$2.99',
+        'price': fmtCurrency(2.99),
         'period': '/mo',
-        'total': 'Billed \$35.88/year',
+        'total': 'Billed ${fmtCurrency(35.88)}/year',
         'badge': 'Best value · Save 62%'
       },
       {
         'id': 'monthly',
         'label': 'Monthly',
-        'price': '\$7.99',
+        'price': fmtCurrency(7.99),
         'period': '/mo',
         'total': 'Billed monthly',
         'badge': null
@@ -1579,32 +1546,26 @@ class _PaywallFeatures extends StatelessWidget {
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('MED AI PRO',
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.labelLarge.copyWith(
                     fontSize: 11,
-                    fontWeight: FontWeight.w900,
                     color: oLime,
                     letterSpacing: 1.2)),
-            const Text("World's #1 Advanced AI",
-                style: TextStyle(
-                    fontFamily: 'Inter',
+            Text("World's #1 Advanced AI",
+                style: AppTypography.displayLarge.copyWith(
                     fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
+                    color: oText,
                     letterSpacing: -0.5)),
             Text('Start your free trial',
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.titleLarge.copyWith(
                     fontSize: 18,
-                    fontWeight: FontWeight.w700,
                     color: oSub,
                     letterSpacing: -0.3)),
           ]),
           TextButton(
               onPressed: onSkip,
               child: Text('Skip',
-                  style: TextStyle(
-                      color: oSub, fontSize: 13, fontWeight: FontWeight.w600))),
+                  style: AppTypography.labelLarge.copyWith(
+                      color: oSub, fontSize: 13))),
         ]),
         const SizedBox(height: 20),
         GridView.builder(
@@ -1620,7 +1581,7 @@ class _PaywallFeatures extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
                 color: oCard,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadius.roundM,
                 border: Border.all(color: AppColors.oBorder)),
             child: Row(children: [
               Container(
@@ -1631,10 +1592,8 @@ class _PaywallFeatures extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                   child: Text(feats[i],
-                      style: TextStyle(
-                          fontFamily: 'Inter',
+                      style: AppTypography.labelLarge.copyWith(
                           fontSize: 11,
-                          fontWeight: FontWeight.w600,
                           color: oText),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis)),
@@ -1667,7 +1626,7 @@ class _PaywallFeatures extends StatelessWidget {
                             color: oLime,
                             borderRadius: BorderRadius.circular(99)),
                         child: Text(p['badge'] as String,
-                            style: const TextStyle(
+                            style: AppTypography.labelLarge.copyWith(
                                 color: Colors.black,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800)),
@@ -1695,27 +1654,21 @@ class _PaywallFeatures extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                         Text(p['label'] as String,
-                            style: TextStyle(
-                                fontFamily: 'Inter',
+                            style: AppTypography.titleLarge.copyWith(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w800,
                                 color: isSel ? oLime : oText)),
                         Text(p['total'] as String,
-                            style: TextStyle(
-                                fontFamily: 'Inter',
+                            style: AppTypography.bodySmall.copyWith(
                                 fontSize: 11,
                                 color: oSub)),
                       ])),
                   Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                     Text(p['price'] as String,
-                        style: TextStyle(
-                            fontFamily: 'Inter',
+                        style: AppTypography.displayLarge.copyWith(
                             fontSize: 22,
-                            fontWeight: FontWeight.w900,
                             color: isSel ? oLime : oText)),
                     Text(p['period'] as String,
-                        style: TextStyle(
-                            fontFamily: 'Inter', fontSize: 11, color: oSub)),
+                        style: AppTypography.labelSmall.copyWith(fontSize: 11, color: oSub)),
                   ]),
                 ]),
               ]),
@@ -1729,11 +1682,11 @@ class _PaywallFeatures extends StatelessWidget {
             onChanged: onPromoChange,
             controller: TextEditingController(text: promoInput)
               ..selection = TextSelection.collapsed(offset: promoInput.length),
-            style: TextStyle(
-                color: oText, fontSize: 14, fontWeight: FontWeight.w700),
+            style: AppTypography.labelLarge.copyWith(
+                color: oText, fontSize: 14),
             decoration: InputDecoration(
               hintText: 'Promo code (try WELCOME)',
-              hintStyle: TextStyle(color: oSub, fontSize: 13),
+              hintStyle: AppTypography.bodySmall.copyWith(color: oSub, fontSize: 13),
               filled: true,
               fillColor: oCard,
               contentPadding:
@@ -1769,19 +1722,20 @@ class _PaywallFeatures extends StatelessWidget {
                   border: Border.all(
                       color: appliedPromo != null ? oLime : AppColors.oBorder)),
               child: Text(appliedPromo != null ? '✓' : 'Apply',
-                  style: TextStyle(
+                  style: AppTypography.titleLarge.copyWith(
+                      fontSize: 14,
                       color: appliedPromo != null ? oLime : oText,
                       fontWeight: FontWeight.w700)),
             ),
           ),
         ]),
         if (promoError)
-          const Align(
+          Align(
               alignment: Alignment.centerLeft,
               child: Padding(
-                  padding: EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.only(top: 4),
                   child: Text('❌ Invalid promo code',
-                      style: TextStyle(
+                      style: AppTypography.bodySmall.copyWith(
                           color: AppColors.dRed,
                           fontSize: 12,
                           fontFamily: 'Inter')))),
@@ -1789,7 +1743,7 @@ class _PaywallFeatures extends StatelessWidget {
           Padding(
               padding: const EdgeInsets.only(top: 8, left: 4),
               child: Text('🎉 ${appliedPromo!['label']} applied!',
-                  style: TextStyle(
+                  style: AppTypography.bodySmall.copyWith(
                       color: oLime,
                       fontSize: 12,
                       fontWeight: FontWeight.w700))),
@@ -1808,25 +1762,22 @@ class _PaywallFeatures extends StatelessWidget {
                       blurRadius: 24,
                       offset: const Offset(0, 8))
                 ]),
-            child: const Text('Start 7-Day Free Trial →',
+            child: Text('Start 7-Day Free Trial →',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.titleLarge.copyWith(
                     fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF1A2010))),
+                    color: const Color(0xFF1A2010))),
           ),
         ),
         const SizedBox(height: 12),
         Center(
             child: RichText(
                 text: TextSpan(
-                    style: TextStyle(
-                        fontFamily: 'Inter', fontSize: 12, color: oSub),
+                    style: AppTypography.bodySmall.copyWith(fontSize: 12, color: oSub),
                     children: [
               TextSpan(
                   text: 'No payment due now',
-                  style: TextStyle(color: oLime, fontWeight: FontWeight.w800)),
+                  style: AppTypography.bodySmall.copyWith(fontSize: 12, color: oLime, fontWeight: FontWeight.w800)),
                const TextSpan(text: ' · Cancel anytime'),
             ]))),
         const SizedBox(height: 32),
@@ -1868,7 +1819,7 @@ class _AuthButtons extends StatelessWidget {
             else if (icon != null)
               Icon(icon, size: 22, color: text),
           const SizedBox(width: 12),
-          Text(label, style: TextStyle(color: text, fontSize: 15, fontWeight: FontWeight.w700)),
+          Text(label, style: AppTypography.labelLarge.copyWith(color: text, fontSize: 15, fontWeight: FontWeight.w700)),
         ]),
       ),
     );
@@ -1916,15 +1867,13 @@ class _PaywallTrust extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const SizedBox(height: 12),
         Text("We've got you covered",
-            style: TextStyle(
-                fontFamily: 'Inter',
+            style: AppTypography.displayLarge.copyWith(
                 fontSize: 32,
-                fontWeight: FontWeight.w900,
                 color: oText,
                 letterSpacing: -1.0)),
         const SizedBox(height: 8),
         Text("Your trust matters. Here's what happens next.",
-            style: TextStyle(fontFamily: 'Inter', fontSize: 16, color: oSub)),
+            style: AppTypography.bodySmall.copyWith(fontSize: 16, color: oSub)),
         const SizedBox(height: 32),
         ...trust.map((t) => Container(
               margin: const EdgeInsets.only(bottom: 12),
@@ -1932,25 +1881,22 @@ class _PaywallTrust extends StatelessWidget {
               decoration: BoxDecoration(
                   color: oCard,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.1))),
+                  border: Border.all(color: oText.withValues(alpha: 0.1))),
               child:
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(t['e']!, style: const TextStyle(fontSize: 28)),
+                Text(t['e']!, style: AppTypography.displayLarge.copyWith(fontSize: 28)),
                 const SizedBox(width: 16),
                 Expanded(
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                       Text(t['t']!,
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.labelLarge.copyWith(
                               fontSize: 15,
-                              fontWeight: FontWeight.w800,
                               color: oText)),
                       const SizedBox(height: 4),
                       Text(t['d']!,
-                          style: TextStyle(
-                              fontFamily: 'Inter',
+                          style: AppTypography.bodySmall.copyWith(
                               fontSize: 13,
                               color: oSub,
                               height: 1.4)),
@@ -1968,16 +1914,14 @@ class _PaywallTrust extends StatelessWidget {
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(
                 '"I haven\'t missed a single dose in 3 months. The reminders are perfectly timed."',
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.bodySmall.copyWith(
                     fontSize: 14,
                     color: oText,
                     fontStyle: FontStyle.italic,
                     height: 1.5)),
             const SizedBox(height: 10),
             Text('— Sarah K., managing Type 2 Diabetes ⭐⭐⭐⭐⭐',
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.labelLarge.copyWith(
                     fontSize: 12,
                     color: oSub,
                     fontWeight: FontWeight.w600)),
@@ -1998,12 +1942,10 @@ class _PaywallTrust extends StatelessWidget {
                       blurRadius: 20,
                       offset: const Offset(0, 8))
                 ]),
-            child: const Text('I Understand, Continue →',
+            child: Text('I Understand, Continue →',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.titleLarge.copyWith(
                     fontSize: 17,
-                    fontWeight: FontWeight.w900,
                     color: Colors.black)),
           ),
         ),
@@ -2028,35 +1970,34 @@ class _PaywallTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const oLime = Colors.white;
-    const oLimeDark = AppColors.oLimeDark;
+    final oLimeDark = oLime.withValues(alpha: 0.6);
     final trialDays = (appliedPromo?['type'] == 'trial')
         ? (appliedPromo!['label'].contains('30') ? 30 : 14)
         : 7;
     final today = DateTime.now();
     final trialEnd = today.add(Duration(days: trialDays));
     final reminderDate = trialEnd.subtract(const Duration(days: 3));
-    String fmtDate(DateTime d) => '${_month(d.month)} ${d.day}';
+    String fmtLocalDate(DateTime d) => DateFormat.MMMd().format(d);
 
     final timeline = [
       {
         'label': 'Today',
-        'date': fmtDate(today),
+        'date': fmtLocalDate(today),
         'desc': 'Start free trial',
         'icon': '🚀',
         'color': oLime
       },
       {
         'label': 'Day ${trialDays - 3}',
-        'date': fmtDate(reminderDate),
+        'date': fmtLocalDate(reminderDate),
         'desc': 'We email you a reminder',
         'icon': '📧',
         'color': oLime
       },
       {
         'label': 'Day $trialDays',
-        'date': fmtDate(trialEnd),
-        'desc': plan == 'annual' ? '\$35.88 billed' : '\$7.99 billed',
+        'date': fmtLocalDate(trialEnd),
+        'desc': plan == 'annual' ? '${fmtCurrency(35.88, context)} billed' : '${fmtCurrency(7.99, context)} billed',
         'icon': '💳',
         'color': oLime
       },
@@ -2068,15 +2009,13 @@ class _PaywallTimeline extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const SizedBox(height: 12),
         Text("Here's exactly what happens",
-            style: TextStyle(
-                fontFamily: 'Inter',
+            style: AppTypography.displayLarge.copyWith(
                 fontSize: 32,
-                fontWeight: FontWeight.w900,
                 color: oText,
                 letterSpacing: -1.0)),
         const SizedBox(height: 8),
         Text("No surprises. No confusion.",
-            style: TextStyle(fontFamily: 'Inter', fontSize: 16, color: oSub)),
+            style: AppTypography.bodySmall.copyWith(fontSize: 16, color: oSub)),
         const SizedBox(height: 32),
         Stack(children: [
           Positioned(
@@ -2088,7 +2027,7 @@ class _PaywallTimeline extends StatelessWidget {
                 child: Container(
                   width: 2,
                   decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [oLime, oLimeDark, oLime]),
@@ -2113,7 +2052,7 @@ class _PaywallTimeline extends StatelessWidget {
                       border: Border.all(color: color, width: 2)),
                   child: Center(
                       child: Text(t['icon'] as String,
-                          style: const TextStyle(fontSize: 18))),
+                          style: AppTypography.displayLarge.copyWith(fontSize: 18))),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -2123,7 +2062,7 @@ class _PaywallTimeline extends StatelessWidget {
                       color: oCard,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                          color: i == 0 ? color : Colors.white.withValues(alpha: 0.1))),
+                          color: i == 0 ? color : oText.withValues(alpha: 0.1))),
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -2131,22 +2070,19 @@ class _PaywallTimeline extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(t['label'] as String,
-                                  style: TextStyle(
-                                      fontFamily: 'Inter',
+                                  style: AppTypography.labelLarge.copyWith(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w800,
                                       color: i == 0 ? color : oText)),
                               Text(t['date'] as String,
-                                  style: TextStyle(
-                                      fontFamily: 'Inter',
+                                  style: AppTypography.labelLarge.copyWith(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
                                       color: oSub)),
                             ]),
                         const SizedBox(height: 4),
                         Text(t['desc'] as String,
-                            style: TextStyle(
-                                fontFamily: 'Inter',
+                            style: AppTypography.bodySmall.copyWith(
                                 fontSize: 13,
                                 color: i == 0 ? oText : oSub)),
                       ]),
@@ -2161,7 +2097,7 @@ class _PaywallTimeline extends StatelessWidget {
           decoration: BoxDecoration(
               color: oCard,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1))),
+              border: Border.all(color: oText.withValues(alpha: 0.1))),
           child: Column(children: [
             _PriceRow(
                 label: 'Free trial',
@@ -2180,7 +2116,7 @@ class _PaywallTimeline extends StatelessWidget {
             const SizedBox(height: 8),
             _PriceRow(
                 label: 'Then',
-                value: plan == 'annual' ? '\$35.88/year' : '\$7.99/month',
+                value: plan == 'annual' ? '${fmtCurrency(35.88, context)}/year' : '${fmtCurrency(7.99, context)}/month',
                 oText: oText,
                 oSub: oSub),
           ]),
@@ -2202,20 +2138,17 @@ class _PaywallTimeline extends StatelessWidget {
                 ]),
             child: Text('Start My $trialDays-Day Free Trial 🚀',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.titleLarge.copyWith(
                     fontSize: 17,
-                    fontWeight: FontWeight.w900,
                     color: Colors.black)),
           ),
         ),
         const SizedBox(height: 12),
         Center(
             child: Text(
-                'Cancel any time before ${fmtDate(trialEnd)} to avoid being charged.',
+                'Cancel any time before ${DateFormat.MMMd().format(trialEnd)} to avoid being charged.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontFamily: 'Inter',
+                style: AppTypography.bodySmall.copyWith(
                     fontSize: 11,
                     color: oSub,
                     height: 1.4))),
@@ -2223,21 +2156,6 @@ class _PaywallTimeline extends StatelessWidget {
     );
   }
 
-  String _month(int m) => [
-        '',
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec'
-      ][m];
 }
 
 class _PriceRow extends StatelessWidget {
@@ -2255,16 +2173,14 @@ class _PriceRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
       Text(label,
-          style: TextStyle(
-              fontFamily: 'Inter',
+          style: AppTypography.labelLarge.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: oText)),
       Expanded(
           child: Text(value,
               textAlign: TextAlign.right,
-              style: TextStyle(
-                  fontFamily: 'Inter',
+              style: AppTypography.labelLarge.copyWith(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
                   color: color ?? oSub))),
@@ -2292,19 +2208,17 @@ class _CelebrationStep extends StatelessWidget {
               color: oLime.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Center(
-              child: Text('🎉', style: TextStyle(fontSize: 60)),
+            child: Center(
+              child: Text('🎉', style: AppTypography.displayLarge.copyWith(fontSize: 60)),
             ),
           ).animate().scale(duration: 600.ms, curve: Curves.elasticOut).shimmer(delay: 600.ms),
           const SizedBox(height: 40),
-          const Text(
+          Text(
             "Healthy Life Boosted!",
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
+            style: AppTypography.displayLarge.copyWith(
+              color: oText,
               fontSize: 32,
-              fontWeight: FontWeight.w900,
-              fontFamily: 'Inter',
               letterSpacing: -1.0,
             ),
           ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
@@ -2312,7 +2226,7 @@ class _CelebrationStep extends StatelessWidget {
           Text(
             "You're all set to use the world's most advanced AI medication tracker.",
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: AppTypography.bodySmall.copyWith(
               color: oSub,
               fontSize: 16,
               height: 1.5,
@@ -2335,13 +2249,12 @@ class _CelebrationStep extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Text(
+              child: Text(
                 "Go to Dashboard",
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: AppTypography.titleLarge.copyWith(
                   color: Colors.black,
                   fontSize: 18,
-                  fontWeight: FontWeight.w900,
                   letterSpacing: 0.5,
                 ),
               ),

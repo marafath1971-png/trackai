@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../../providers/app_state.dart';
 import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
-import '../../../core/utils/color_utils.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../services/auth_service.dart';
 import './caregiver_widgets.dart';
+import '../../../widgets/common/unified_header.dart';
+import '../../../core/utils/haptic_engine.dart';
 
 class PatientCard extends StatelessWidget {
   final Map<String, dynamic> patient;
@@ -34,26 +34,19 @@ class PatientCard extends StatelessWidget {
 
             return GestureDetector(
               onTap: () {
-                HapticFeedback.lightImpact();
+                HapticEngine.light();
                 onTap();
               },
               child: Container(
-                margin: const EdgeInsets.only(bottom: 16),
+                margin: const EdgeInsets.only(bottom: AppSpacing.m),
                 decoration: BoxDecoration(
-                  color: L.card.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: L.border.withValues(alpha: 0.4)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 25,
-                      offset: const Offset(0, 12),
-                      spreadRadius: -5,
-                    ),
-                  ],
+                  color: L.card,
+                  borderRadius: AppRadius.roundL,
+                  border: Border.all(color: L.border),
+                  boxShadow: L.shadowSoft,
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(32),
+                  borderRadius: BorderRadius.circular(AppRadius.l),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Row(
@@ -62,8 +55,9 @@ class PatientCard extends StatelessWidget {
                             width: 60,
                             height: 60,
                             decoration: BoxDecoration(
-                              color: L.purple.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(24),
+                              color: L.fill,
+                              borderRadius: BorderRadius.circular(AppRadius.m),
+                              border: Border.all(color: L.border),
                             ),
                             child: Center(
                               child: Text(patient['avatar'] ?? '👤', style: const TextStyle(fontSize: 28)),
@@ -75,16 +69,14 @@ class PatientCard extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(patient['name'] ?? 'Unknown',
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w800,
-                                        color: L.text)),
+                                    style: AppTypography.titleLarge.copyWith(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: L.text)),
                                 const SizedBox(height: 4),
                                 Text(
                                   '$total doses scheduled · $taken taken',
-                                  style: TextStyle(
-                                      fontFamily: 'Inter',
+                                  style: AppTypography.bodySmall.copyWith(
                                       fontSize: 12,
                                       color: L.sub,
                                       fontWeight: FontWeight.w500),
@@ -96,19 +88,32 @@ class PatientCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text('${(adherence * 100).toInt()}%',
-                                  style: TextStyle(
-                                      fontFamily: 'Inter',
+                                  style: AppTypography.displayLarge.copyWith(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w900,
-                                      color: adherence >= 0.8 ? L.green : L.amber)),
+                                      color: adherence >= 0.8 ? L.secondary : L.warning)),
                               Text('TODAY',
-                                  style: TextStyle(
-                                      fontFamily: 'Inter',
+                                  style: AppTypography.labelLarge.copyWith(
                                       fontSize: 9,
                                       fontWeight: FontWeight.w800,
                                       color: L.sub,
                                       letterSpacing: 0.5)),
-                            ],
+                                ],
+                              ),
+                              const SizedBox(width: 12),
+                          GestureDetector(
+                            onTap: () {
+                              state.nudgePatient(patient['uid']);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: L.fill,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: L.border.withValues(alpha: 0.1)),
+                              ),
+                              child: Icon(Icons.notifications_active_outlined, size: 20, color: L.sub),
+                            ),
                           ),
                         ],
                       ),
@@ -156,31 +161,19 @@ class WeeklyAdherenceChart extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.m),
       decoration: BoxDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: L.border.withValues(alpha: 0.5)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ]),
+          borderRadius: AppRadius.roundL,
+          border: Border.all(color: L.border),
+          boxShadow: L.shadowSoft),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Text('Weekly Adherence',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
+                  style: AppTypography.titleLarge.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                       color: L.text)),
@@ -189,38 +182,44 @@ class WeeklyAdherenceChart extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: weekData.entries.map((e) {
-              final pct = e.value;
-              final height = 10.0 + (pct * 60.0);
-              final color = pct >= 0.8
-                  ? L.green
-                  : pct > 0.0
-                      ? L.amber
-                      : L.bg;
-
-              return Column(
-                children: [
-                  Container(
-                    width: 28,
-                    height: height,
-                    decoration: BoxDecoration(
-                      color: pct == 0.0 ? L.border : color,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: weekData.entries.map((e) {
+                final pct = e.value;
+                final height = 10.0 + (pct * 60.0);
+                final color = pct >= 0.8
+                    ? L.secondary
+                    : pct > 0.0
+                        ? L.warning
+                        : L.bg;
+            
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: height,
+                        decoration: BoxDecoration(
+                          color: pct == 0.0 ? L.border : color,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(e.key,
+                          style: AppTypography.labelLarge.copyWith(
+                              fontSize: 11,
+                              color: L.sub,
+                              fontWeight: FontWeight.w600)),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(e.key,
-                      style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 11,
-                          color: L.sub,
-                          fontWeight: FontWeight.w600)),
-                ],
-              );
-            }).toList(),
+                );
+              }).toList(),
+            ),
           ),
         ],
       ),
@@ -252,6 +251,7 @@ class ProtectorInsights extends StatelessWidget {
         streak: state.getStreak(),
         L: L,
         onBack: onBack,
+        state: state,
       );
     }
 
@@ -270,6 +270,7 @@ class ProtectorInsights extends StatelessWidget {
               streak: 0, // Streak calculation for patient needs history traversal
               L: L,
               onBack: onBack,
+              state: state,
             );
           },
         );
@@ -285,6 +286,7 @@ class InsightsContent extends StatelessWidget {
   final int streak;
   final AppThemeColors L;
   final VoidCallback onBack;
+  final AppState state;
 
   const InsightsContent({
     super.key,
@@ -294,6 +296,7 @@ class InsightsContent extends StatelessWidget {
     required this.streak,
     required this.L,
     required this.onBack,
+    required this.state,
   });
 
   @override
@@ -325,38 +328,34 @@ class InsightsContent extends StatelessWidget {
       backgroundColor: L.bg,
       body: SafeArea(
           child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.screenPadding),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(children: [
-                      GestureDetector(
-                          onTap: onBack,
-                          child: Icon(Icons.arrow_back_ios_new_rounded,
-                              color: L.sub, size: 18)),
-                      const SizedBox(width: 14),
-                      Text('Protector Insights',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: L.text)),
-                    ]),
+                    UnifiedHeader(
+                      leading: HeaderActionBtn(
+                        onTap: onBack,
+                        child: Icon(Icons.arrow_back_ios_new_rounded, color: L.sub, size: 18),
+                      ),
+                      title: 'Protector Insights',
+                      subtitle: 'Monitoring ${cg.name}\'s adherence',
+                      backgroundColor: Colors.transparent,
+                    ),
                     const SizedBox(height: 28),
                     Container(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(AppSpacing.m),
                       decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.03),
-                          borderRadius: BorderRadius.circular(32),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5)),
+                          color: L.card,
+                          borderRadius: BorderRadius.circular(AppRadius.l),
+                          border: Border.all(color: L.border, width: 1.0)),
                       child: Row(children: [
                         Container(
                             width: 68,
                             height: 68,
                             decoration: BoxDecoration(
-                                color:
-                                    hexToColor(cg.color).withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(24)),
+                                color: L.fill,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(color: L.border.withValues(alpha: 0.1))),
                             child: Center(
                                 child: Text(cg.avatar,
                                     style: const TextStyle(fontSize: 34)))),
@@ -366,21 +365,27 @@ class InsightsContent extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                               Text(cg.name,
-                                  style: TextStyle(
-                                      fontFamily: 'Inter',
+                                  style: AppTypography.titleLarge.copyWith(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w800,
                                       color: L.text,
                                       letterSpacing: -0.5)),
                               Text(
                                   '${cg.relation} Connected · Since ${cg.addedAt}',
-                                  style: TextStyle(
-                                      fontFamily: 'Inter',
+                                  style: AppTypography.bodySmall.copyWith(
                                       fontSize: 13,
                                       color: L.sub,
                                       fontWeight: FontWeight.w500)),
                             ])),
                       ]),
+                    ),
+                    const SizedBox(height: 16),
+                    CardBtn(
+                      label: 'Nudge ${cg.name}',
+                      icon: Icons.notifications_active_rounded,
+                      onTap: () => state.nudgePatient(cg.patientUid),
+                      bg: L.text.withValues(alpha: 0.05),
+                      textColor: L.text,
                     ),
                     const SizedBox(height: 20),
                     Row(children: [
@@ -407,11 +412,11 @@ class InsightsContent extends StatelessWidget {
                     ]),
                     const SizedBox(height: 24),
                     Container(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(AppSpacing.m),
                       decoration: BoxDecoration(
-                        color: L.card.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(32),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                        color: L.card,
+                        borderRadius: BorderRadius.circular(AppRadius.l),
+                        border: Border.all(color: L.border, width: 1.0),
                       ),
                       child: WeeklyAdherenceChart(meds: meds, history: history, L: L),
                     ),
@@ -419,8 +424,7 @@ class InsightsContent extends StatelessWidget {
 
                     const SizedBox(height: 32),
                     Text('REAL-TIME STATUS',
-                        style: TextStyle(
-                            fontFamily: 'Inter',
+                        style: AppTypography.labelLarge.copyWith(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                             color: L.sub,
@@ -434,9 +438,10 @@ class InsightsContent extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: 10),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.03),
-                          borderRadius: BorderRadius.circular(28),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                          color: L.card,
+                          borderRadius: AppRadius.roundL,
+                          border: Border.all(color: L.border),
+                          boxShadow: L.shadowSoft,
                         ),
                         child: Row(children: [
                           Container(
@@ -444,10 +449,10 @@ class InsightsContent extends StatelessWidget {
                               height: 44,
                               decoration: BoxDecoration(
                                   color: (isTaken
-                                          ? L.green
+                                          ? L.secondary
                                           : L.sub)
                                       .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(24)),
+                                  borderRadius: BorderRadius.circular(AppRadius.m)),
                               child: Center(
                                   child: Text(
                                       isTaken
@@ -460,25 +465,22 @@ class InsightsContent extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                 Text(d.med.name,
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
+                                    style: AppTypography.titleLarge.copyWith(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w800,
                                         color: L.text)),
                                 Text(
-                                    '${fmtTime(d.sched.h, d.sched.m)} · ${d.sched.label}',
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
+                                    '${fmtTime(d.sched.h, d.sched.m, context)} · ${d.sched.label}',
+                                    style: AppTypography.bodySmall.copyWith(
                                         fontSize: 12,
                                         color: L.sub,
                                         fontWeight: FontWeight.w500)),
                               ])),
                           Text(statusLabel,
-                              style: TextStyle(
-                                  fontFamily: 'Inter',
+                              style: AppTypography.labelLarge.copyWith(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: isTaken ? L.green : L.sub))
+                                  color: isTaken ? L.secondary : L.sub))
                         ]),
                       );
                     }),

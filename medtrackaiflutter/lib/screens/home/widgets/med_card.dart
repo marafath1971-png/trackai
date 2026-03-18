@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/app_state.dart';
-import '../../../models/models.dart';
-import '../../../core/utils/color_utils.dart';
+import '../../../domain/entities/entities.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/shared/shared_widgets.dart';
+import '../../../core/utils/haptic_engine.dart';
 
 // ══════════════════════════════════════════════
-// MED CARD (matches MedCard in JSX)
+// MED CARD
 // ══════════════════════════════════════════════
 
 class MedCard extends StatelessWidget {
@@ -27,60 +26,73 @@ class MedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    final state = context.watch<AppState>();
-
-    // Calculate adherence
-    final allEntries = state.history.values
-        .expand((e) => e)
-        .where((e) => e.medId == med.id)
-        .toList();
-    final adh = allEntries.isEmpty
-        ? -1
-        : (allEntries.where((e) => e.taken).length * 100 / allEntries.length).round();
+    // Granular selection for adherence
+    final adh = context.select<AppState, int>((s) => s.getAdherenceForMed(med.id));
 
     final pct = med.totalCount > 0 ? (med.count / med.totalCount).clamp(0.0, 1.0) : 0.0;
     final isLow = med.count <= (med.refillAt);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.m),
       decoration: BoxDecoration(
         color: L.card,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: AppRadius.roundL,
         border: Border.all(
-          color: L.border.withValues(alpha: 0.1),
+          color: L.border,
           width: 1.0,
         ),
+        boxShadow: L.shadowSoft,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: AppRadius.roundL,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: () {
-              HapticFeedback.selectionClick();
+              HapticEngine.selection();
               onView();
             },
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpacing.m),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Medicine Icon
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: L.text.withValues(alpha: 0.05),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: med.imageUrl != null && med.imageUrl!.isNotEmpty
-                              ? ClipOval(child: MedImage(imageUrl: med.imageUrl!, fit: BoxFit.cover, width: 56, height: 56))
-                              : Text(_getCategoryEmoji(med.category),
-                                  style: const TextStyle(fontSize: 24)),
-                        ),
+                      Stack(
+                        children: [
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: L.text.withValues(alpha: 0.05),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: med.imageUrl != null && med.imageUrl!.isNotEmpty
+                                  ? ClipOval(child: MedImage(imageUrl: med.imageUrl!, fit: BoxFit.cover, width: 56, height: 56))
+                                  : Text(_getCategoryEmoji(med.category),
+                                      style: const TextStyle(fontSize: 24)),
+                            ),
+                          ),
+                          if (isLow)
+                            Positioned(
+                              right: -2,
+                              top: -2,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: L.red,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: L.card, width: 2),
+                                ),
+                                child: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 10),
+                              ).animate(onPlay: (c) => c.repeat(reverse: true))
+                               .scale(begin: const Offset(1, 1), end: const Offset(1.2, 1.2), duration: 1.seconds)
+                               .boxShadow(begin: BoxShadow(color: L.red.withValues(alpha: 0)), end: BoxShadow(color: L.red.withValues(alpha: 0.4), blurRadius: 4)),
+                            ),
+                        ],
                       ),
                       const SizedBox(width: 14),
                       // Medicine Info
@@ -91,36 +103,69 @@ class MedCard extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Flexible(
-                                  child: Text(
-                                    med.name,
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w900,
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      med.name,
+                                      style: AppTypography.titleLarge.copyWith(
                                         color: L.text,
-                                        letterSpacing: -0.4),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                        letterSpacing: -0.4,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if (med.brand.isNotEmpty)
+                                      Text(
+                                        med.brand.toUpperCase(),
+                                        style: AppTypography.labelMedium.copyWith(
+                                          fontSize: 10,
+                                          color: L.sub.withValues(alpha: 0.5),
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                  ],
                                 ),
                                 if (adh != -1)
                                   Text('$adh%',
-                                      style: TextStyle(
-                                          fontFamily: 'Inter',
+                                      style: AppTypography.labelLarge.copyWith(
                                           fontSize: 11,
-                                          fontWeight: FontWeight.w800,
                                           color: L.text.withValues(alpha: 0.6))),
                               ],
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${med.dose} · ${med.frequency}',
-                              style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 12,
-                                  color: L.sub,
-                                  fontWeight: FontWeight.w500),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    '${med.dose} · ${med.frequency}',
+                                    style: AppTypography.bodyMedium.copyWith(
+                                        fontSize: 12,
+                                        color: L.sub,
+                                        fontWeight: FontWeight.w700),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (med.intakeInstructions.isNotEmpty && med.intakeInstructions != 'None') ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: L.text.withValues(alpha: 0.05),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      med.intakeInstructions,
+                                      style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w800,
+                                          color: L.text.withValues(alpha: 0.7)),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                             if (med.schedule.isNotEmpty)
                               Padding(
@@ -143,7 +188,7 @@ class MedCard extends StatelessWidget {
                 ),
                 // Compact Progress Bar
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.m),
                   child: Column(
                     children: [
                       Row(
@@ -151,19 +196,15 @@ class MedCard extends StatelessWidget {
                         children: [
                           Text(
                             isLow ? 'LOW STOCK' : 'SUPPLY',
-                            style: TextStyle(
-                                fontFamily: 'Inter',
+                            style: AppTypography.labelMedium.copyWith(
                                 fontSize: 9,
-                                fontWeight: FontWeight.w800,
                                 color: isLow ? L.text : L.sub,
                                 letterSpacing: 0.4),
                           ),
                           Text(
                             '${med.count} ${med.unit} left',
-                            style: TextStyle(
-                                fontFamily: 'Inter',
+                            style: AppTypography.labelMedium.copyWith(
                                 fontSize: 9,
-                                fontWeight: FontWeight.w700,
                                 color: L.sub),
                           ),
                         ],
@@ -217,8 +258,8 @@ class MedCard extends StatelessWidget {
                             _StepBtn(
                                 icon: Icons.remove_rounded,
                                 onTap: () {
-                                  HapticFeedback.selectionClick();
-                                  state.updateMed(med.id,
+                                  HapticEngine.selection();
+                                  context.read<AppState>().updateMed(med.id,
                                       count: (med.count - 1).clamp(0, med.totalCount));
                                 },
                                 color: L.text,
@@ -226,10 +267,8 @@ class MedCard extends StatelessWidget {
                             const SizedBox(width: 18),
                             Text(
                               '${med.count}',
-                              style: TextStyle(
-                                  fontFamily: 'Inter',
+                              style: AppTypography.displayMedium.copyWith(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.w900,
                                   color: L.text,
                                   letterSpacing: -0.5),
                             ),
@@ -237,8 +276,8 @@ class MedCard extends StatelessWidget {
                             _StepBtn(
                                 icon: Icons.add_rounded,
                                 onTap: () {
-                                  HapticFeedback.mediumImpact();
-                                  state.updateMed(med.id,
+                                  HapticEngine.success();
+                                  context.read<AppState>().updateMed(med.id,
                                       count: (med.count + 1).clamp(0, 9999));
                                 },
                                 color: L.bg,
@@ -275,10 +314,8 @@ class MedCard extends StatelessWidget {
                 const SizedBox(width: 6)
               ],
               Text(label,
-                  style: TextStyle(
-                      fontFamily: 'Inter',
+                  style: AppTypography.labelLarge.copyWith(
                       fontSize: 13,
-                      fontWeight: FontWeight.w800,
                       color: color)),
             ],
           ),

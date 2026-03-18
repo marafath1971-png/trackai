@@ -78,9 +78,9 @@ class HomeHeader extends StatelessWidget {
           name,
           style: GoogleFonts.outfit(
             fontSize: 28,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w600,
             color: L.text,
-            letterSpacing: -1.2,
+            letterSpacing: -0.5,
             height: 1.1,
           ),
         ),

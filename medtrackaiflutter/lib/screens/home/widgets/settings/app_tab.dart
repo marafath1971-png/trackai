@@ -10,6 +10,7 @@ import '../../../../core/utils/color_utils.dart';
 import '../../../../domain/entities/entities.dart';
 import '../../../settings/privacy_policy_screen.dart';
 import '../../../../widgets/common/paywall_sheet.dart';
+import '../../../../services/notification_service.dart';
 import 'settings_shared.dart';
 
 class AppTab extends StatefulWidget {
@@ -97,6 +98,17 @@ class _AppTabState extends State<AppTab> {
                               s.profile!.copyWith(notifRefill: v));
                         }
                       }),
+                  last: false,
+                  border: true),
+              SettingsModalRow(
+                  icon: Icons.notifications_none_rounded,
+                  iconBg: L.sub,
+                  label: 'Test Notifications',
+                  sub: 'Send a test reminder now',
+                  onClick: () {
+                    HapticFeedback.lightImpact();
+                    NotificationService.showTestNotification();
+                  },
                   last: true,
                   border: false),
             ])),
@@ -217,119 +229,6 @@ class _AppTabState extends State<AppTab> {
                         ),
                       ),
                     ]),
-              ),
-              Container(
-                padding: const EdgeInsets.all(16),
-                color: L.card,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('APP ICON',
-                        style: TextStyle(
-                            fontFamily: ff,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: L.sub,
-                            letterSpacing: 0.5)),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      height: 100,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          {'id': 'default', 'label': 'Default', 'path': 'assets/images/app_icon.png'},
-                          {'id': 'gold', 'label': 'Premium Gold', 'path': 'assets/images/app_icon_gold.png'},
-                          {'id': 'blue', 'label': 'Deep Blue', 'path': 'assets/images/app_icon_blue.png'},
-                          {'id': 'dark', 'label': 'Classic Dark', 'path': 'assets/images/app_icon_dark.png'},
-                        ].map((icon) {
-                          final isSel = (profile?.appIcon ?? 'default') == icon['id'];
-                          return GestureDetector(
-                            onTap: () => context.read<AppState>().updateAppIcon(icon['id'] as String),
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 12),
-                              child: Column(
-                                children: [
-                                  Container(
-                                    width: 64,
-                                    height: 64,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: isSel ? Border.all(color: L.green, width: 3) : null,
-                                      image: DecorationImage(
-                                        image: AssetImage(icon['path'] as String),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(icon['label'] as String,
-                                      style: TextStyle(
-                                          fontFamily: ff,
-                                          fontSize: 10,
-                                          fontWeight: isSel ? FontWeight.w800 : FontWeight.w500,
-                                          color: isSel ? L.green : L.sub)),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1, indent: 16, endIndent: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                color: L.card,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('REMINDER SOUND',
-                        style: TextStyle(
-                            fontFamily: ff,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: L.sub,
-                            letterSpacing: 0.5)),
-                    const SizedBox(height: 14),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          'Default', 'Chime', 'Pulse', 'Digital', 'Zen', 'Alert'
-                        ].map((sound) {
-                          final isSel = (profile?.reminderSound ?? 'Default') == sound;
-                          return GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              context.read<AppState>().updateReminderSound(sound);
-                            },
-                            child: AnimatedContainer(
-                              duration: 300.ms,
-                              curve: Curves.easeOutCubic,
-                              margin: const EdgeInsets.only(right: 8),
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: isSel ? const Color(0xFF111111) : L.fill,
-                                borderRadius: BorderRadius.circular(99),
-                                border: Border.all(
-                                  color: isSel ? L.green.withValues(alpha: 0.3) : Colors.transparent
-                                )
-                              ),
-                              child: Text(sound,
-                                  style: TextStyle(
-                                      fontFamily: ff,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      color: isSel ? L.green : L.text)),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ])),
         SettingsSection(

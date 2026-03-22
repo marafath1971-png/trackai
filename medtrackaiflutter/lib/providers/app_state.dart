@@ -15,7 +15,6 @@ import '../services/review_service.dart';
 import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:flutter_dynamic_icon_plus/flutter_dynamic_icon_plus.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../services/gemini_service.dart';
 import '../services/biometric_service.dart';
@@ -188,22 +187,13 @@ class AppState extends ChangeNotifier {
   @override
   void dispose() {
     _cgSub?.cancel();
-    // _monitoringSub?.cancel(); // This line was commented out in the original, but if it exists, it should be cancelled.
     _notifSub?.cancel();
     _audioPlayer.dispose();
     super.dispose();
   }
 
   void _listenToMonitoring() {
-    // _monitoringSub?.cancel(); // This line was commented out in the original, but if it exists, it should be cancelled.
-    final uid = AuthService.uid;
-    if (uid == null) return;
-
-    // _monitoringSub = userRepo.getMonitoringPatientsStream().listen((patients) { // This line was commented out in the original
-    // monitoredPatients = patients;
-    // _invalidateCache();
-    // notifyListeners();
-    // });
+    // Monitoring logic can be implemented here if needed for peer tracking
   }
 
   void _handleNotificationAction(String payloadStr) {
@@ -468,20 +458,10 @@ class AppState extends ChangeNotifier {
   Future<void> updateAppIcon(String iconKey) async {
     if (profile == null) return;
     await saveProfile(profile!.copyWith(appIcon: iconKey));
+    showToast('App icon choice saved! ✨');
     
-    try {
-      if (await FlutterDynamicIconPlus.supportsAlternateIcons) {
-        // iconKey would be 'gold', 'blue', 'dark' or null (for default)
-        final iconName = iconKey == 'default' ? null : iconKey;
-        await FlutterDynamicIconPlus.setAlternateIconName(iconName: iconName);
-        showToast('App icon updated! 📲');
-      } else {
-        showToast('Dynamic icons not supported on this device', type: 'info');
-      }
-    } catch (e) {
-      debugPrint('Failed to update app icon: $e');
-      showToast('App icon selection saved ✨');
-    }
+    // Note: Native dynamic icon switching requires specific platform setup (Info.plist/AndroidManifest)
+    // and is currently scoped for a future update.
   }
 
   Future<void> updateReminderSound(String soundKey) async {

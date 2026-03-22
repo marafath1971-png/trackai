@@ -248,6 +248,26 @@ class NotificationService {
     );
   }
 
+  static Future<void> showTestNotification() async {
+    const androidDetails = AndroidNotificationDetails(
+      'test_notifications',
+      'Test Notifications',
+      channelDescription: 'Used to test if notifications are working correctly',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    const iosDetails =
+        DarwinNotificationDetails(presentAlert: true, presentSound: true);
+    const details =
+        NotificationDetails(android: androidDetails, iOS: iosDetails);
+    await _plugin.show(
+      id: 888888,
+      title: 'Success! ✅',
+      body: 'Your Med AI reminders are configured correctly.',
+      notificationDetails: details,
+    );
+  }
+
   static Future<void> refreshTimeZone() async {
     try {
       tz.initializeTimeZones();

@@ -4,6 +4,8 @@ import '../../../providers/app_state.dart';
 import '../../../theme/app_theme.dart';
 import '../../../domain/entities/entities.dart';
 import '../../../core/utils/haptic_engine.dart';
+import '../../../widgets/modals/daily_log_sheet.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class QuickLogSymptom extends StatelessWidget {
   const QuickLogSymptom({super.key});
@@ -34,12 +36,32 @@ class QuickLogSymptom extends StatelessWidget {
                   color: L.sub,
                   letterSpacing: 1.2,
                 )),
-              Text('DAILY LOG',
-                style: AppTypography.labelLarge.copyWith(
-                  fontSize: 10,
-                  color: L.secondary.withValues(alpha: 0.7),
-                  fontWeight: FontWeight.w900,
-                )),
+              GestureDetector(
+                onTap: () {
+                  HapticEngine.selection();
+                  DailyLogSheet.show(context);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: L.secondary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('DAILY LOG',
+                        style: AppTypography.labelLarge.copyWith(
+                          fontSize: 10,
+                          color: L.secondary,
+                          fontWeight: FontWeight.w900,
+                        )),
+                      const SizedBox(width: 4),
+                      Icon(Icons.arrow_forward_ios_rounded, color: L.secondary, size: 8),
+                    ],
+                  ),
+                ),
+              ).animate().fadeIn(delay: 200.ms),
             ],
           ),
         ),

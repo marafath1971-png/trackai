@@ -4,6 +4,7 @@ import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../core/utils/haptic_engine.dart';
 import '../common/refined_sheet_wrapper.dart';
+import 'daily_log_sheet.dart';
 
 class TrendDrilldownSheet extends StatelessWidget {
   final AppState state;
@@ -158,6 +159,32 @@ class TrendDrilldownSheet extends StatelessWidget {
               ],
             ),
           ).animate(delay: 400.ms).fadeIn().slideY(begin: 0.1, end: 0),
+
+          const SizedBox(height: 32),
+          
+          // --- LINK TO DAILY LOG ---
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                HapticEngine.selection();
+                DailyLogSheet.show(context, date: DateTime.now());
+              },
+              icon: Icon(Icons.history_rounded, size: 18, color: L.text),
+              label: Text('VIEW DETAILED DAILY LOG', 
+                style: TextStyle(
+                  color: L.text, 
+                  fontWeight: FontWeight.w900, 
+                  fontSize: 12,
+                  letterSpacing: 0.5
+                )),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: L.border),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+          ).animate(delay: 500.ms).fadeIn().slideY(begin: 0.1, end: 0),
         ],
       ),
     );

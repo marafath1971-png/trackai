@@ -118,9 +118,11 @@ class HomeStatsGrid extends StatelessWidget {
                           ),
                           GestureDetector(
                             onTap: () {
-                              Share.share(
-                                "I'm staying on top of my health with MedAI! My medication adherence is $adherence% for the last 30 days. 💎📈 #MedAI #HealthTracking",
-                                subject: "My Health Progress",
+                              SharePlus.instance.share(
+                                ShareParams(
+                                  text: "I'm staying on top of my health with MedAI! My medication adherence is $adherence% for the last 30 days. 💎📈 #MedAI #HealthTracking",
+                                  subject: "My Health Progress",
+                                ),
                               );
                             },
                             child: Icon(Icons.share_rounded, size: 14, color: L.sub),

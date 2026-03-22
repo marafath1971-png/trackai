@@ -30,7 +30,6 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final L = context.L;
     final name = state.profile?.name ?? "Hero";
-    final avatar = state.profile?.avatar ?? "👤";
 
     return UnifiedHeader(
       showBrand: false,

@@ -101,6 +101,7 @@ class GeminiService {
     required int streak,
     required double adherence,
     required List<Map<String, dynamic>> latencyData,
+    required List<Symptom> symptoms,
   }) async {
     String lastError = '';
 
@@ -111,7 +112,7 @@ class GeminiService {
       try {
         final model = _getModel(modelName, apiVersion: apiVersion);
         final prompt =
-            _buildInsightPrompt(meds, streak, adherence, latencyData);
+            _buildInsightPrompt(meds, streak, adherence, latencyData, symptoms);
         final response = await _withRetry(
             () => model.generateContent([Content.text(prompt)]));
         if (response.text != null && response.text!.isNotEmpty) {
@@ -201,7 +202,7 @@ If identification is not possible, set identified to false and best guess.
   }
 
   static String _buildInsightPrompt(List<Medicine> meds, int streak,
-      double adherence, List<Map<String, dynamic>> latencyData) {
+      double adherence, List<Map<String, dynamic>> latencyData, List<Symptom> symptoms) {
     final medList = meds.map((m) => '${m.name} ${m.dose}').join(', ');
 
     // Summarize latency for the AI
@@ -214,6 +215,9 @@ If identification is not possible, set identified to false and best guess.
             (e['latency'] as int) > 30 && (e['time'] as String).startsWith('0'))
         .length;
 
+    // Summarize symptoms for the AI
+    final recentSymptoms = symptoms.take(10).map((s) => '${s.name} (Severity: ${s.severity}) at ${s.timestamp}').join(', ');
+
     return '''
 Analyze medication data for a patient.
 Meds: $medList
@@ -221,6 +225,7 @@ Streak: $streak days
 Adherence: $adherence%
 Last 14 days timing data: ${latencyData.length} records, Average Latency: ${avgLatency.toStringAsFixed(1)} mins.
 Morning (>30m) delays: $morningDelays.
+Recent Symptoms/Self-Reports: $recentSymptoms.
 
 Provide 3 short, friendly, categorized health coaching tips.
 Return ONLY a JSON object:

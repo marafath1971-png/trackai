@@ -30,19 +30,40 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final L = context.L;
     final name = state.profile?.name ?? "Hero";
+    final avatar = state.profile?.avatar ?? "👤";
 
     return UnifiedHeader(
-      showBrand: true,
+      showBrand: false,
+      leading: GestureDetector(
+        onTap: () {
+          HapticEngine.medium();
+          onOpenSettings();
+        },
+        child: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: L.fill,
+            shape: BoxShape.circle,
+            border: Border.all(color: L.border.withValues(alpha: 0.1)),
+          ),
+          child: Center(child: Text(avatar, style: const TextStyle(fontSize: 22))),
+        ),
+      ),
       isScrolled: isScrolled,
       onTap: onTap,
-      titleWidget: _buildProTitle(L, name),
-      subtitle: _getSubGreeting(),
+      titleWidget: Text(
+        "Hi, $name 👋",
+        style: GoogleFonts.outfit(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          color: L.text,
+          letterSpacing: -0.8,
+        ),
+      ),
+      subtitle: _getCompactStatus(),
       actions: [
         _StreakBtn(streak: streak, onTap: onOpenStreak),
-        HeaderActionBtn(
-          onTap: onOpenSettings,
-          child: Icon(Icons.settings_rounded, color: L.text, size: 18),
-        ),
       ],
       bottom: Padding(
         padding: const EdgeInsets.only(bottom: 8),
@@ -51,73 +72,14 @@ class HomeHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildProTitle(AppThemeColors L, String name) {
-    final hour = DateTime.now().hour;
-    String greeting;
-    if (hour < 12) {
-      greeting = "Good Morning,";
-    } else if (hour < 17) {
-      greeting = "Good Afternoon,";
-    } else {
-      greeting = "Good Evening,";
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          greeting,
-          style: GoogleFonts.outfit(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: L.text.withValues(alpha: 0.5),
-            letterSpacing: 0.2,
-          ),
-        ),
-        Text(
-          name,
-          style: GoogleFonts.outfit(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: L.text,
-            letterSpacing: -0.5,
-            height: 1.1,
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _getSubGreeting() {
-    try {
-      final hour = DateTime.now().hour;
-      String timeGreeting;
-      if (hour < 12) {
-        timeGreeting = "Good Morning";
-      } else if (hour < 17) {
-        timeGreeting = "Good Afternoon";
-      } else {
-        timeGreeting = "Good Evening";
-      }
-
-      final doses = state.getDoses();
-      final taken = doses.where((d) => state.takenToday[d.key] == true).length;
-      final remaining = doses.length - taken;
-
-      if (doses.isEmpty) return "$timeGreeting! Ready to start your health journey?";
-      
-      if (remaining == 0) {
-        return "All doses taken today. You're a rockstar! 🌟";
-      }
-      
-      if (taken == 0) {
-        return "$timeGreeting. $remaining doses scheduled for today.";
-      }
-
-      return "Great progress! Just $remaining more to go today.";
-    } catch (e) {
-      return "Welcome back to your health dashboard.";
-    }
+  String _getCompactStatus() {
+    final doses = state.getDoses();
+    final taken = doses.where((d) => state.takenToday[d.key] == true).length;
+    final remaining = doses.length - taken;
+    
+    if (doses.isEmpty) return "Let's start your health journey";
+    if (remaining == 0) return "All doses taken today! 🌟";
+    return "$remaining doses left to stay on track";
   }
 
   Widget _buildWeekStrip(BuildContext context, AppThemeColors L) {

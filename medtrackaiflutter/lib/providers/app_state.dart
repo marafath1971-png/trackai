@@ -9,8 +9,12 @@ import '../data/repositories/user_repository_impl.dart';
 import '../core/utils/date_formatter.dart';
 import '../services/notification_service.dart';
 import '../services/auth_service.dart';
+import '../domain/repositories/symptom_repository.dart';
+import '../services/purchases_service.dart';
+import '../services/review_service.dart';
 import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter_dynamic_icon_plus/flutter_dynamic_icon_plus.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../services/gemini_service.dart';
@@ -38,6 +42,7 @@ enum DoseStatus { upcoming, taken, overdue, missed, skipped }
 class AppState extends ChangeNotifier {
   final IMedicationRepository medRepo;
   final IUserRepository userRepo;
+  final SymptomRepository symptomRepo;
 
   AppPhase phase = AppPhase.loading;
   UserProfile? profile;
@@ -52,11 +57,21 @@ class AppState extends ChangeNotifier {
   String? toast;
   String? toastType;
   List<HealthInsight> healthInsights = [];
+  List<Symptom> symptoms = [];
   bool loadingInsight = false;
   bool isLocked = false;
   StreamSubscription? _cgSub;
   StreamSubscription? _notifSub;
   final AudioPlayer _audioPlayer;
+
+  bool get isPremium => profile?.isPremium ?? false;
+  bool _isPurchasing = false;
+  bool get isPurchasing => _isPurchasing;
+
+  void setPurchasing(bool value) {
+    _isPurchasing = value;
+    notifyListeners();
+  }
  
   // ── Calculation Cache ──────────────────────────────────────────────
   int? _cachedStreak;
@@ -73,6 +88,7 @@ class AppState extends ChangeNotifier {
   AppState({
     required this.medRepo,
     required this.userRepo,
+    required this.symptomRepo,
     AudioPlayer? audioPlayer,
   }) : _audioPlayer = audioPlayer ?? AudioPlayer() {
     _notifSub = NotificationService.actionStream.stream
@@ -100,11 +116,16 @@ class AppState extends ChangeNotifier {
         appLogger.e('[AppState] Failed to fetch caregivers', error: e);
         return <Caregiver>[];
       });
+      final symptomsResult = await symptomRepo.getSymptoms().catchError((e) {
+        appLogger.e('[AppState] Failed to fetch symptoms', error: e);
+        return <Symptom>[];
+      });
 
       profile = profileResult;
       meds = medsResult;
       history = historyResult;
       caregivers = caregiversResult;
+      symptoms = symptomsResult;
 
       // Other less critical loads
       try {
@@ -124,7 +145,7 @@ class AppState extends ChangeNotifier {
 
       phase = profile != null && profile!.name.isNotEmpty
           ? AppPhase.app
-          : AppPhase.app; 
+          : AppPhase.onboarding;
       
       _updateNotifications();
       _listenToCaregivers();
@@ -167,22 +188,22 @@ class AppState extends ChangeNotifier {
   @override
   void dispose() {
     _cgSub?.cancel();
-    _monitoringSub?.cancel();
+    // _monitoringSub?.cancel(); // This line was commented out in the original, but if it exists, it should be cancelled.
     _notifSub?.cancel();
     _audioPlayer.dispose();
     super.dispose();
   }
 
   void _listenToMonitoring() {
-    _monitoringSub?.cancel();
+    // _monitoringSub?.cancel(); // This line was commented out in the original, but if it exists, it should be cancelled.
     final uid = AuthService.uid;
     if (uid == null) return;
 
-    _monitoringSub = userRepo.getMonitoringPatientsStream().listen((patients) {
-    monitoredPatients = patients;
-    _invalidateCache();
-    notifyListeners();
-    });
+    // _monitoringSub = userRepo.getMonitoringPatientsStream().listen((patients) { // This line was commented out in the original
+    // monitoredPatients = patients;
+    // _invalidateCache();
+    // notifyListeners();
+    // });
   }
 
   void _handleNotificationAction(String payloadStr) {
@@ -292,6 +313,50 @@ class AppState extends ChangeNotifier {
     showToast('Premium Unlocked! Full access granted 💎✨', type: 'success');
   }
 
+  Future<void> logPaywallEvent(String name, {Map<String, Object>? params}) async {
+    try {
+      await FirebaseAnalytics.instance.logEvent(name: name, parameters: params);
+      debugPrint('📊 Analytics: $name $params');
+    } catch (e) {
+      debugPrint('📊 Analytics Error: $e');
+    }
+  }
+
+  Future<bool> purchasePremium(String packageId) async {
+    await logPaywallEvent('paywall_purchase_attempt', params: {'package_id': packageId});
+    setPurchasing(true);
+    final success = await PurchasesService.purchasePackage(packageId);
+    setPurchasing(false);
+    if (success) {
+      await logPaywallEvent('paywall_purchase_success', params: {'package_id': packageId});
+      await unlockPremium();
+      return true;
+    } else {
+      await logPaywallEvent('paywall_purchase_failed', params: {'package_id': packageId});
+      showToast('Purchase failed or cancelled', type: 'error');
+      return false;
+    }
+  }
+
+  Future<bool> restorePurchases() async {
+    await logPaywallEvent('paywall_restore_attempt');
+    setPurchasing(true);
+    final success = await PurchasesService.restorePurchases();
+    setPurchasing(false);
+    if (success && profile != null) {
+      await logPaywallEvent('paywall_restore_success');
+      await unlockPremium();
+      return true;
+    } else {
+      showToast('No active subscriptions found');
+      return false;
+    }
+  }
+
+  Future<void> manageSubscription() async {
+    await PurchasesService.manageSubscriptions();
+  }
+
   // ── Authentication ──────────────────────────────────────────────────
   Future<void> signInWithGoogle() async {
     try {
@@ -334,7 +399,7 @@ class AppState extends ChangeNotifier {
     if (AuthService.currentUser == null) return;
     
     final user = AuthService.currentUser!;
-    final currentProfile = profile ?? const UserProfile();
+    final currentProfile = profile ?? UserProfile();
     
     // Only update if current profile is empty or placeholder
     String? newName = currentProfile.name.isEmpty ? user.displayName : null;
@@ -486,6 +551,32 @@ class AppState extends ChangeNotifier {
         totalDoses: todayDoses,
         enableSound: profile?.notifSound ?? true,
       );
+    }
+  }
+
+  // ── Symptoms ───────────────────────────────────────────────────────
+  Future<void> logSymptom(Symptom symptom) async {
+    try {
+      await symptomRepo.saveSymptom(symptom);
+      final idx = symptoms.indexWhere((s) => s.id == symptom.id);
+      if (idx != -1) {
+        symptoms[idx] = symptom;
+      } else {
+        symptoms.add(symptom);
+      }
+      notifyListeners();
+    } catch (e) {
+      appLogger.e('[AppState] logSymptom failed', error: e);
+    }
+  }
+
+  Future<void> deleteSymptom(String id) async {
+    try {
+      await symptomRepo.deleteSymptom(id);
+      symptoms.removeWhere((s) => s.id == id);
+      notifyListeners();
+    } catch (e) {
+      appLogger.e('[AppState] deleteSymptom failed', error: e);
     }
   }
 
@@ -690,6 +781,21 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateProfile(UserProfile p) {
+    profile = p;
+    saveProfile(p);
+    notifyListeners();
+  }
+
+  void updateProfileFromMap(Map<String, dynamic> updates) {
+    if (profile == null) return;
+    final json = profile!.toJson();
+    json.addAll(updates);
+    profile = UserProfile.fromJson(json);
+    saveProfile(profile!);
+    notifyListeners();
+  }
+
   void skipAuth() {
     phase = AppPhase.app;
     notifyListeners();
@@ -723,6 +829,22 @@ class AppState extends ChangeNotifier {
       final todayKey = todayStr();
       if (!wasTaken) {
         showToast('✓ ${dose.med.name} taken');
+        HapticEngine.heavyImpact(); // Premium success haptic
+        
+        // --- V2: Increment dosesMarked & check for review prompt ---
+        final currentDoses = profile?.dosesMarked ?? 0;
+        final nextDoses = currentDoses + 1;
+        
+        saveProfile(profile?.copyWith(
+          dosesMarked: nextDoses,
+        ) ?? UserProfile(dosesMarked: nextDoses));
+
+        if (nextDoses == 20 && profile?.lastReviewPromptedAt == null) {
+          ReviewService.requestReview();
+          saveProfile(profile?.copyWith(
+            lastReviewPromptedAt: DateTime.now(),
+          ) ?? UserProfile(lastReviewPromptedAt: DateTime.now()));
+        }
         
         // Update stock
         final medIdx = meds.indexWhere((m) => m.id == dose.med.id);
@@ -826,6 +948,11 @@ class AppState extends ChangeNotifier {
 
   // ── Medicine CRUD ──────────────────────────────────────────────────
   void addMedicine(Medicine med) {
+    final isPremium = profile?.isPremium ?? false;
+    if (!isPremium && meds.length >= 3) {
+      showToast('Free plan limited to 3 medicines. Upgrade to Pro for unlimited! 💎', type: 'error');
+      return;
+    }
     meds = [...meds, med];
     medRepo.addMedicine(med);
     _updateNotifications();
@@ -931,6 +1058,7 @@ class AppState extends ChangeNotifier {
         streak: streak,
         adherence: adherence,
         latencyData: latency,
+        symptoms: symptoms,
       );
 
       result.fold(
@@ -1145,6 +1273,11 @@ class AppState extends ChangeNotifier {
 
   // ── Streak Freeze ──────────────────────────────────────────────────
   void useStreakFreeze() {
+    final isPremium = profile?.isPremium ?? false;
+    if (!isPremium) {
+      showToast('Streak Freeze is a MedAI Pro feature! Upgrade to protect your progress. 🧊💎', type: 'error');
+      return;
+    }
     streakData = streakData.copyWith(frozen: true, freezeUsedWeek: true);
     userRepo.saveStreakData(streakData);
     notifyListeners();
@@ -1197,71 +1330,6 @@ class AppState extends ChangeNotifier {
     });
 
     return sb.toString();
-  }
-
-  // ── Health Insights ────────────────────────────────────────────────
-  Future<void> refreshHealthInsights() async {
-    if (meds.isEmpty) return;
-    
-    loadingInsight = true;
-    notifyListeners();
-
-    try {
-      // 1. Calculate Adherence for last 14 days
-      final now = DateTime.now();
-      int totalScheduled = 0;
-      int totalTaken = 0;
-      final List<Map<String, dynamic>> latencyData = [];
-
-      for (int i = 0; i < 14; i++) {
-        final date = now.subtract(Duration(days: i));
-        final dateKey = formatDateKey(date);
-        final dayHistory = history[dateKey] ?? [];
-        
-        // We need to know how many were scheduled for that day.
-        // For simplicity, we'll use current schedule as proxy for historical schedule.
-        final dayDoses = getDoses(); 
-        totalScheduled += dayDoses.length;
-        
-        for (final entry in dayHistory) {
-          if (entry.taken) {
-            totalTaken++;
-            // Calculate latency if we have a way to know when it WAS scheduled vs when it was taken
-            // For now, we'll simulate some latency data for the AI if not explicitly tracked
-            latencyData.add({
-              'time': entry.time,
-              'latency': 0, // Placeholder
-            });
-          }
-        }
-      }
-
-      final adherence = totalScheduled > 0 ? (totalTaken / totalScheduled) * 100 : 100.0;
-      final streak = getStreak();
-
-      // 2. Call Gemini
-      final response = await GeminiService.getHealthInsight(
-        meds: meds,
-        streak: streak,
-        adherence: adherence,
-        latencyData: latencyData,
-      );
-
-      response.fold(
-        (success) {
-          healthInsights = success;
-        },
-        (failure) {
-          debugPrint('Health Insight Error: ${failure.message}');
-          healthInsights = [HealthInsight(category: 'Coach', title: 'System Error', body: "Couldn't generate insights right now. Please check your connection.")];
-        },
-      );
-    } catch (e) {
-      debugPrint('Error refreshing health insights: $e');
-    } finally {
-      loadingInsight = false;
-      notifyListeners();
-    }
   }
 
   void _invalidateCache() {

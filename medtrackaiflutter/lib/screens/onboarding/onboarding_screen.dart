@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
-import '../../models/models.dart';
+import '../../domain/entities/entities.dart';
+import '../../core/utils/haptic_engine.dart';
 import '../../models/constants.dart';
 import '../../theme/app_theme.dart';
 import '../../services/notification_service.dart';
@@ -52,15 +53,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     'reminderStyle': '',
     'notifPerm': false,
     'avatar': '😊',
-    'promoCode': null,
-    'appliedPromo': null,
   };
 
   String _paywallPlan = 'annual'; // 'annual' or 'monthly'
   int _paywallStep = 0; // 0=Features, 1=Trust, 2=Timeline
-  String _promoInput = '';
-  bool _promoError = false;
-  Map<String, dynamic>? _appliedPromo;
 
   // Step definitions matching OB_STEPS in JSX
   List<_OBStep> get _steps => [
@@ -73,23 +69,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             subtitle: "We'll personalise everything for you",
             field: 'name',
             placeholder: 'Your first name'),
-        const _OBStep(
-            id: 'age',
-            type: 'text',
-            emoji: '🎂',
-            title: 'How old are you?',
-            subtitle: 'Helps tailor health insights',
-            field: 'age',
-            placeholder: 'e.g. 35',
-            isNum: true),
-        const _OBStep(
-            id: 'gender',
-            type: 'single',
-            emoji: '🧬',
-            title: 'How do you identify?',
-            subtitle: 'For personalised health guidance',
-            field: 'gender',
-            options: kGenders),
         const _OBStep(
             id: 'goal',
             type: 'single',
@@ -114,97 +93,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             subtitle: 'Include vitamins, supplements & prescriptions',
             field: 'medCount',
             options: kMedCounts),
-        const _OBStep(
-            id: 'forgetting',
-            type: 'single',
-            emoji: '🧠',
-            title: 'When do you most forget to take meds?',
-            subtitle: "We'll build reminders around this",
-            field: 'forgetting',
-            options: kForgetPatterns),
-        const _OBStep(
-            id: 'wakeTime',
-            type: 'time',
-            emoji: '⏰',
-            title: 'What time do you wake up?',
-            subtitle: "We'll schedule your morning reminder",
-            field: 'wakeTime'),
-        const _OBStep(
-            id: 'breakfastTime',
-            type: 'time',
-            emoji: '🍳',
-            title: 'When do you usually have breakfast?',
-            subtitle: 'Some meds are best taken with food',
-            field: 'breakfastTime'),
-        const _OBStep(
-            id: 'lunchTime',
-            type: 'time',
-            emoji: '🥗',
-            title: 'What time is your lunch break?',
-            subtitle: "We'll set your midday check-in",
-            field: 'lunchTime'),
-        const _OBStep(
-            id: 'dinnerTime',
-            type: 'time',
-            emoji: '🍽️',
-            title: 'When do you have dinner?',
-            subtitle: 'Evening meds work best with your meal',
-            field: 'dinnerTime'),
-        const _OBStep(
-            id: 'sleepTime',
-            type: 'time',
-            emoji: '😴',
-            title: 'What time do you usually sleep?',
-            subtitle: "We'll send a last reminder before bed",
-            field: 'sleepTime'),
-        const _OBStep(
-            id: 'doctorVisits',
-            type: 'single',
-            emoji: '👨‍⚕️',
-            title: 'How often do you see your doctor?',
-            subtitle: 'Helps us remind you before appointments',
-            field: 'doctorVisits',
-            options: kDoctorVisits),
-        const _OBStep(
-            id: 'support',
-            type: 'single',
-            emoji: '🤝',
-            title: 'Do you have someone who helps you with medication?',
-            subtitle: "We'll tailor reminders accordingly",
-            field: 'support',
-            options: kSupport),
-        const _OBStep(
-            id: 'challenge',
-            type: 'single',
-            emoji: '😤',
-            title: "What's your biggest medication challenge?",
-            subtitle: "Let's solve it together",
-            field: 'challenge',
-            options: kChallenges),
-        const _OBStep(
-            id: 'prevApp',
-            type: 'single',
-            emoji: '📱',
-            title: 'Have you tried a medication app before?',
-            subtitle: "We'll show you what makes us different",
-            field: 'prevApp',
-            options: kPrevApp),
-        const _OBStep(
-            id: 'motivation',
-            type: 'multi',
-            emoji: '💪',
-            title: 'What motivates you to stay healthy?',
-            subtitle: "We'll personalise your encouragement",
-            field: 'motivation',
-            options: kMotivation),
-        const _OBStep(
-            id: 'reminderStyle',
-            type: 'single',
-            emoji: '🔔',
-            title: 'How should we remind you?',
-            subtitle: 'Pick the style that works for you',
-            field: 'reminderStyle',
-            options: kReminderStyles),
         const _OBStep(id: 'notif', type: 'notif'),
         const _OBStep(id: 'plan', type: 'plan'),
         const _OBStep(id: 'paywall', type: 'paywall'),
@@ -235,6 +123,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         // but here we just increment the main step
       }
       setState(() => _step++);
+      if (_steps[_step].id == 'paywall') {
+        context.read<AppState>().logPaywallEvent('paywall_viewed');
+      }
       _animCtrl.forward(from: 0);
     }
   }
@@ -256,11 +147,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       medCount: _form['medCount'] ?? '',
       forgetting: _form['forgetting'] ?? '',
       wakeTime: Map<String, int>.from(_form['wakeTime'] ?? {'h': 7, 'm': 0}),
-      breakfastTime:
-          Map<String, int>.from(_form['breakfastTime'] ?? {'h': 8, 'm': 0}),
+      breakfastTime: Map<String, int>.from(_form['breakfastTime'] ?? {'h': 8, 'm': 0}),
       lunchTime: Map<String, int>.from(_form['lunchTime'] ?? {'h': 12, 'm': 0}),
-      dinnerTime:
-          Map<String, int>.from(_form['dinnerTime'] ?? {'h': 19, 'm': 0}),
+      dinnerTime: Map<String, int>.from(_form['dinnerTime'] ?? {'h': 19, 'm': 0}),
       sleepTime: Map<String, int>.from(_form['sleepTime'] ?? {'h': 22, 'm': 0}),
       doctorVisits: _form['doctorVisits'] ?? '',
       support: _form['support'] ?? '',
@@ -270,24 +159,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       reminderStyle: _form['reminderStyle'] ?? '',
       notifPerm: _form['notifPerm'] ?? false,
       avatar: _form['avatar'] ?? '😊',
-      promoCode: _appliedPromo != null ? _promoInput : null,
-      appliedPromo: _appliedPromo,
+      promoCode: null,
+      appliedPromo: null,
     );
     context.read<AppState>().completeOnboarding(profile);
-  }
-
-  void _applyPromo() {
-    final code = _promoInput.trim().toUpperCase();
-    if (kPromoCodes.containsKey(code)) {
-      setState(() {
-        _appliedPromo = kPromoCodes[code];
-        _promoError = false;
-      });
-    } else {
-      setState(() {
-        _promoError = true;
-      });
-    }
   }
 
   bool _canContinue(_OBStep step) {
@@ -435,15 +310,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           form: _form,
           plan: _paywallPlan,
           paywallStep: _paywallStep,
-          promoInput: _promoInput,
-          appliedPromo: _appliedPromo,
-          promoError: _promoError,
           onPlanToggle: (p) => setState(() => _paywallPlan = p),
-          onPromoChange: (v) => setState(() {
-            _promoInput = v;
-            _promoError = false;
-          }),
-          onApplyPromo: _applyPromo,
           onNextStep: () => setState(() => _paywallStep++),
           onComplete: _complete,
           onAuth: _next,
@@ -518,7 +385,6 @@ class _OBStep {
   final String emoji;
   final String? field;
   final String? placeholder;
-  final bool isNum;
   final List<Map<String, String>> options;
 
   const _OBStep({
@@ -529,7 +395,6 @@ class _OBStep {
     this.emoji = '',
     this.field,
     this.placeholder,
-    this.isNum = false,
     this.options = const [],
   });
 }
@@ -801,7 +666,7 @@ class _TextStepState extends State<_TextStep> {
           controller: _ctrl,
           autofocus: true,
           keyboardType:
-              widget.step.isNum ? TextInputType.number : TextInputType.text,
+              widget.step.id == 'age' ? TextInputType.number : TextInputType.text,
           style: AppTypography.bodySmall.copyWith(
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -810,7 +675,7 @@ class _TextStepState extends State<_TextStep> {
           onSubmitted: (_) {
             if (hasVal) widget.onNext();
           },
-          inputFormatters: widget.step.isNum
+          inputFormatters: widget.step.id == 'age'
               ? [FilteringTextInputFormatter.digitsOnly]
               : null,
           decoration: InputDecoration(
@@ -1412,12 +1277,7 @@ class _PaywallStep extends StatelessWidget {
   final Map<String, dynamic> form;
   final String plan;
   final int paywallStep;
-  final String promoInput;
-  final Map<String, dynamic>? appliedPromo;
-  final bool promoError;
   final Function(String) onPlanToggle;
-  final Function(String) onPromoChange;
-  final VoidCallback onApplyPromo;
   final VoidCallback onNextStep;
   final VoidCallback onComplete;
   final VoidCallback onAuth;
@@ -1427,12 +1287,7 @@ class _PaywallStep extends StatelessWidget {
     required this.form,
     required this.plan,
     required this.paywallStep,
-    required this.promoInput,
-    required this.appliedPromo,
-    required this.promoError,
     required this.onPlanToggle,
-    required this.onPromoChange,
-    required this.onApplyPromo,
     required this.onNextStep,
     required this.onComplete,
     required this.onAuth,
@@ -1448,11 +1303,6 @@ class _PaywallStep extends StatelessWidget {
       return _PaywallFeatures(
         plan: plan,
         onToggle: onPlanToggle,
-        promoInput: promoInput,
-        appliedPromo: appliedPromo,
-        promoError: promoError,
-        onApply: onApplyPromo,
-        onPromoChange: onPromoChange,
         onSkip: onComplete,
         onNext: onNextStep,
         onAuth: onAuth,
@@ -1472,7 +1322,7 @@ class _PaywallStep extends StatelessWidget {
     }
     return _PaywallTimeline(
         plan: plan,
-        appliedPromo: appliedPromo,
+        appliedPromo: null,
         onComplete: onComplete,
         oText: oText,
         oSub: oSub,
@@ -1483,25 +1333,16 @@ class _PaywallStep extends StatelessWidget {
 
 class _PaywallFeatures extends StatelessWidget {
   final String plan;
-  final String promoInput;
-  final Map<String, dynamic>? appliedPromo;
-  final bool promoError;
   final Function(String) onToggle;
-  final Function(String) onPromoChange;
-  final VoidCallback onApply, onNext, onSkip, onAuth;
+  final VoidCallback onNext, onSkip, onAuth;
   final Color oText, oSub, oCard, oLime;
 
   const _PaywallFeatures({
     required this.plan,
-    required this.promoInput,
-    required this.appliedPromo,
-    required this.promoError,
     required this.onToggle,
-    required this.onPromoChange,
-    required this.onApply,
     required this.onNext,
     required this.onSkip,
-    required this.onAuth, // ADDED
+    required this.onAuth,
     required this.oText,
     required this.oSub,
     required this.oCard,
@@ -1543,29 +1384,23 @@ class _PaywallFeatures extends StatelessWidget {
       physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('MED AI PRO',
-                style: AppTypography.labelLarge.copyWith(
-                    fontSize: 11,
-                    color: oLime,
-                    letterSpacing: 1.2)),
-            Text("World's #1 Advanced AI",
-                style: AppTypography.displayLarge.copyWith(
-                    fontSize: 26,
-                    color: oText,
-                    letterSpacing: -0.5)),
-            Text('Start your free trial',
-                style: AppTypography.titleLarge.copyWith(
-                    fontSize: 18,
-                    color: oSub,
-                    letterSpacing: -0.3)),
-          ]),
-          TextButton(
-              onPressed: onSkip,
-              child: Text('Skip',
-                  style: AppTypography.labelLarge.copyWith(
-                      color: oSub, fontSize: 13))),
+        // ── Header (no skip button here anymore)
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('MED AI PRO',
+              style: AppTypography.labelLarge.copyWith(
+                  fontSize: 11,
+                  color: oLime,
+                  letterSpacing: 1.2)),
+          Text("World's #1 Advanced AI",
+              style: AppTypography.displayLarge.copyWith(
+                  fontSize: 26,
+                  color: oText,
+                  letterSpacing: -0.5)),
+          Text('Start your free trial',
+              style: AppTypography.titleLarge.copyWith(
+                  fontSize: 18,
+                  color: oSub,
+                  letterSpacing: -0.3)),
         ]),
         const SizedBox(height: 20),
         GridView.builder(
@@ -1675,79 +1510,8 @@ class _PaywallFeatures extends StatelessWidget {
             ),
           );
         }),
-        const SizedBox(height: 12),
-        Row(children: [
-          Expanded(
-              child: TextField(
-            onChanged: onPromoChange,
-            controller: TextEditingController(text: promoInput)
-              ..selection = TextSelection.collapsed(offset: promoInput.length),
-            style: AppTypography.labelLarge.copyWith(
-                color: oText, fontSize: 14),
-            decoration: InputDecoration(
-              hintText: 'Promo code (try WELCOME)',
-              hintStyle: AppTypography.bodySmall.copyWith(color: oSub, fontSize: 13),
-              filled: true,
-              fillColor: oCard,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                      color: appliedPromo != null
-                          ? oLime
-                          : (promoError
-                              ? const Color(0xFFFF453A)
-                              : AppColors.oBorder))),
-              enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                      color: appliedPromo != null
-                          ? oLime
-                          : (promoError
-                              ? const Color(0xFFFF453A)
-                              : AppColors.oBorder))),
-            ),
-          )),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: onApply,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: BoxDecoration(
-                  color: appliedPromo != null
-                      ? oLime.withValues(alpha: 0.1)
-                      : oCard,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: appliedPromo != null ? oLime : AppColors.oBorder)),
-              child: Text(appliedPromo != null ? '✓' : 'Apply',
-                  style: AppTypography.titleLarge.copyWith(
-                      fontSize: 14,
-                      color: appliedPromo != null ? oLime : oText,
-                      fontWeight: FontWeight.w700)),
-            ),
-          ),
-        ]),
-        if (promoError)
-          Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text('❌ Invalid promo code',
-                      style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.dRed,
-                          fontSize: 12,
-                          fontFamily: 'Inter')))),
-        if (appliedPromo != null)
-          Padding(
-              padding: const EdgeInsets.only(top: 8, left: 4),
-              child: Text('🎉 ${appliedPromo!['label']} applied!',
-                  style: AppTypography.bodySmall.copyWith(
-                      color: oLime,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700))),
         const SizedBox(height: 32),
+        // ── Primary CTA
         GestureDetector(
           onTap: onNext,
           child: Container(
@@ -1769,7 +1533,7 @@ class _PaywallFeatures extends StatelessWidget {
                     color: const Color(0xFF1A2010))),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Center(
             child: RichText(
                 text: TextSpan(
@@ -1780,8 +1544,30 @@ class _PaywallFeatures extends StatelessWidget {
                   style: AppTypography.bodySmall.copyWith(fontSize: 12, color: oLime, fontWeight: FontWeight.w800)),
                const TextSpan(text: ' · Cancel anytime'),
             ]))),
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
+        // ── Auth Buttons
         _AuthButtons(onAuth: onAuth),
+        const SizedBox(height: 24),
+        // ── Skip link — tiny and low-contrast at the very bottom
+        Center(
+          child: GestureDetector(
+            onTap: () {
+              context.read<AppState>().logPaywallEvent('paywall_skipped');
+              onSkip();
+            },
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                'No thanks, continue for free',
+                style: AppTypography.bodySmall.copyWith(
+                    fontSize: 12,
+                    color: oSub.withValues(alpha: 0.5)),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
       ]),
     );
   }
@@ -2123,7 +1909,14 @@ class _PaywallTimeline extends StatelessWidget {
         ),
         const SizedBox(height: 32),
         GestureDetector(
-          onTap: onComplete,
+          onTap: () async {
+            final state = context.read<AppState>();
+            HapticEngine.selection();
+            await state.purchasePremium(plan);
+            if (state.profile?.isPremium ?? false) {
+              onComplete();
+            }
+          },
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 18),

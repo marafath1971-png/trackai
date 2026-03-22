@@ -141,18 +141,23 @@ class LatencyHeatmap extends StatelessWidget {
                 fontSize: 11,
                 color: L.sub,
                 letterSpacing: 1.2)),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Container(
-          height: 100,
+          height: 140,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: L.fill,
+            color: L.card,
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: L.border),
+            border: Border.all(color: L.border, width: 1.0),
           ),
-          child: Center(
-            child: Text('Start taking doses to see trends',
-                style: AppTypography.bodySmall.copyWith(color: L.sub, fontSize: 13, fontWeight: FontWeight.w600)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.history_rounded, color: L.sub.withValues(alpha: 0.3), size: 32),
+              const SizedBox(height: 12),
+              Text('Log doses to see timing patterns',
+                  style: AppTypography.bodySmall.copyWith(color: L.sub, fontSize: 13, fontWeight: FontWeight.w600)),
+            ],
           ),
         ),
       ],
@@ -173,7 +178,7 @@ class HealthCoachCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (insights.isEmpty) return const SizedBox.shrink();
+    if (insights.isEmpty) return _buildEmptyState(L);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,6 +304,188 @@ class HealthCoachCard extends StatelessWidget {
             ),
           );
         }),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(AppThemeColors L) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text('AI HEALTH COACH',
+                  style: AppTypography.labelLarge.copyWith(
+                      fontSize: 11,
+                      color: L.sub,
+                      letterSpacing: 1.2)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(32),
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: L.card,
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: L.border, width: 1.0),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.auto_awesome_rounded, color: L.purple.withValues(alpha: 0.3), size: 32),
+              const SizedBox(height: 16),
+              Text('Your AI Coach is ready', style: AppTypography.titleLarge.copyWith(fontSize: 18)),
+              const SizedBox(height: 8),
+              Text(
+                'Add your medications and log doses to receive personalized health insights and adherence tips.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodySmall.copyWith(color: L.sub, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class AdherenceTrendChart extends StatelessWidget {
+  final List<Map<String, dynamic>> trendData;
+  final AppThemeColors L;
+
+  const AdherenceTrendChart({super.key, required this.trendData, required this.L});
+
+  @override
+  Widget build(BuildContext context) {
+    if (trendData.isEmpty) return _buildEmptyState(L);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('30-DAY ADHERENCE TREND',
+                style: AppTypography.labelLarge.copyWith(
+                    fontSize: 11,
+                    color: L.sub,
+                    letterSpacing: 1.2)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: L.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'PRO',
+                style: AppTypography.labelMedium.copyWith(
+                    color: L.green, fontSize: 9, letterSpacing: 0.5),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Container(
+          height: 180,
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+          decoration: BoxDecoration(
+            color: L.card,
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: L.border, width: 1.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: trendData.map((day) {
+                    final val = day['value'] as double;
+                    final scheduled = day['scheduled'] as int;
+                    
+                    final isEmptyDay = scheduled == 0;
+                    final color = isEmptyDay 
+                        ? L.border.withValues(alpha: 0.3)
+                        : (val >= 0.8 ? L.green : (val >= 0.4 ? L.amber : L.red));
+                        
+                    final heightFactor = isEmptyDay ? 0.2 : val.clamp(0.1, 1.0);
+
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                        child: FractionallySizedBox(
+                          heightFactor: heightFactor,
+                          alignment: Alignment.bottomCenter,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ).animate(delay: 200.ms).scaleY(
+                            begin: 0.0,
+                            end: 1.0,
+                            duration: 800.ms,
+                            curve: Curves.easeOutBack,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('30 days ago', style: AppTypography.labelMedium.copyWith(color: L.sub, fontSize: 10)),
+                  Text('Today', style: AppTypography.labelMedium.copyWith(color: L.sub, fontSize: 10)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(AppThemeColors L) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('30-DAY ADHERENCE TREND',
+            style: AppTypography.labelLarge.copyWith(
+                fontSize: 11,
+                color: L.sub,
+                letterSpacing: 1.2)),
+        const SizedBox(height: 16),
+        Container(
+          height: 180,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: L.card,
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: L.border, width: 1.0),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.stacked_bar_chart_rounded, color: L.sub.withValues(alpha: 0.3), size: 32),
+              const SizedBox(height: 12),
+              Text('Trend data will appear here',
+                  style: AppTypography.bodySmall.copyWith(color: L.sub, fontSize: 13, fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
       ],
     );
   }

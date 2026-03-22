@@ -26,6 +26,7 @@ import 'data/datasources/local_prefs_datasource.dart';
 import 'data/datasources/firestore_datasource.dart';
 import 'data/repositories/medication_repository_impl.dart';
 import 'data/repositories/user_repository_impl.dart';
+import 'data/repositories/symptom_repository_impl.dart';
 import 'widgets/common/global_error_boundary.dart';
 
 void main() async {
@@ -54,13 +55,17 @@ void main() async {
   final medRepo =
       MedicationRepositoryImpl(localDataSource, firestoreDataSource, storageService);
   final userRepo = UserRepositoryImpl(localDataSource, firestoreDataSource);
+  final symptomRepo = SymptomRepositoryImpl(localDataSource);
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(
     GlobalErrorBoundary(
       child: ChangeNotifierProvider(
-        create: (_) =>
-            AppState(medRepo: medRepo, userRepo: userRepo)..loadFromStorage(),
+        create: (_) => AppState(
+          medRepo: medRepo,
+          userRepo: userRepo,
+          symptomRepo: symptomRepo,
+        )..loadFromStorage(),
         child: const MedAIApp(),
       ),
     ),

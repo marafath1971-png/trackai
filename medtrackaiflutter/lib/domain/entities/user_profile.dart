@@ -30,8 +30,11 @@ class UserProfile {
   final int scansUsed;
   final bool isPremium;
   final String? photoUrl;
+  final DateTime createdAt;
+  final int dosesMarked;
+  final DateTime? lastReviewPromptedAt;
 
-  const UserProfile({
+  UserProfile({
     this.name = '',
     this.age = '',
     this.gender = '',
@@ -63,7 +66,10 @@ class UserProfile {
     this.scansUsed = 0,
     this.isPremium = false,
     this.photoUrl,
-  });
+    DateTime? createdAt,
+    this.dosesMarked = 0,
+    this.lastReviewPromptedAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
         'name': name,
@@ -97,6 +103,9 @@ class UserProfile {
         'scansUsed': scansUsed,
         'isPremium': isPremium,
         'photoUrl': photoUrl,
+        'createdAt': createdAt.toIso8601String(),
+        'dosesMarked': dosesMarked,
+        'lastReviewPromptedAt': lastReviewPromptedAt?.toIso8601String(),
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> j) => UserProfile(
@@ -132,6 +141,13 @@ class UserProfile {
         scansUsed: j['scansUsed'] ?? 0,
         isPremium: j['isPremium'] ?? false,
         photoUrl: j['photoUrl'],
+        createdAt: j['createdAt'] != null
+            ? DateTime.parse(j['createdAt'])
+            : DateTime.now(),
+        dosesMarked: j['dosesMarked'] ?? 0,
+        lastReviewPromptedAt: j['lastReviewPromptedAt'] != null
+            ? DateTime.parse(j['lastReviewPromptedAt'])
+            : null,
       );
 
   UserProfile copyWith({
@@ -140,10 +156,23 @@ class UserProfile {
     String? gender,
     String? goal,
     List<String>? conditions,
-    String? avatar,
+    String? medCount,
+    String? forgetting,
+    Map<String, int>? wakeTime,
+    Map<String, int>? breakfastTime,
+    Map<String, int>? lunchTime,
+    Map<String, int>? dinnerTime,
+    Map<String, int>? sleepTime,
+    String? doctorVisits,
+    String? support,
+    String? challenge,
+    String? prevApp,
+    List<String>? motivation,
+    String? reminderStyle,
     bool? notifPerm,
     bool? notifSound,
     bool? notifRefill,
+    String? avatar,
     bool? biometricEnabled,
     String? accentColor,
     String? appIcon,
@@ -151,6 +180,9 @@ class UserProfile {
     int? scansUsed,
     bool? isPremium,
     String? photoUrl,
+    DateTime? createdAt,
+    int? dosesMarked,
+    DateTime? lastReviewPromptedAt,
   }) =>
       UserProfile(
         name: name ?? this.name,
@@ -158,19 +190,19 @@ class UserProfile {
         gender: gender ?? this.gender,
         goal: goal ?? this.goal,
         conditions: conditions ?? this.conditions,
-        medCount: medCount,
-        forgetting: forgetting,
-        wakeTime: wakeTime,
-        breakfastTime: breakfastTime,
-        lunchTime: lunchTime,
-        dinnerTime: dinnerTime,
-        sleepTime: sleepTime,
-        doctorVisits: doctorVisits,
-        support: support,
-        challenge: challenge,
-        prevApp: prevApp,
-        motivation: motivation,
-        reminderStyle: reminderStyle,
+        medCount: medCount ?? this.medCount,
+        forgetting: forgetting ?? this.forgetting,
+        wakeTime: wakeTime ?? this.wakeTime,
+        breakfastTime: breakfastTime ?? this.breakfastTime,
+        lunchTime: lunchTime ?? this.lunchTime,
+        dinnerTime: dinnerTime ?? this.dinnerTime,
+        sleepTime: sleepTime ?? this.sleepTime,
+        doctorVisits: doctorVisits ?? this.doctorVisits,
+        support: support ?? this.support,
+        challenge: challenge ?? this.challenge,
+        prevApp: prevApp ?? this.prevApp,
+        motivation: motivation ?? this.motivation,
+        reminderStyle: reminderStyle ?? this.reminderStyle,
         notifPerm: notifPerm ?? this.notifPerm,
         notifSound: notifSound ?? this.notifSound,
         notifRefill: notifRefill ?? this.notifRefill,
@@ -184,5 +216,8 @@ class UserProfile {
         scansUsed: scansUsed ?? this.scansUsed,
         isPremium: isPremium ?? this.isPremium,
         photoUrl: photoUrl ?? this.photoUrl,
+        createdAt: createdAt ?? this.createdAt,
+        dosesMarked: dosesMarked ?? this.dosesMarked,
+        lastReviewPromptedAt: lastReviewPromptedAt ?? this.lastReviewPromptedAt,
       );
 }

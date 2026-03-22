@@ -23,10 +23,30 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   int _tab = 0; // 0=home, 1=alarms, 2=family
   bool _showScan = false;
   bool _hideBanner = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      // Auto-lock when app goes to background
+      context.read<AppState>().lockApp();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -240,9 +260,9 @@ class _AppShellState extends State<AppShell>
                       child: Icon(
                         icon,
                         size: 22,
-                        color: selected ? L.secondary : L.text.withValues(alpha: 0.5),
+                        color: selected ? L.secondary : L.text.withValues(alpha: 0.8),
                       ).animate(target: selected ? 1 : 0)
-                       .scale(duration: 200.ms, curve: Curves.easeOutBack)
+                       .scale(duration: 200.ms, curve: Curves.easeOutBack, begin: const Offset(1, 1), end: const Offset(1.2, 1.2))
                        .tint(color: L.secondary, duration: 200.ms),
                   ),
                   if (cnt > 0)
@@ -276,7 +296,7 @@ class _AppShellState extends State<AppShell>
                   fontFamily: 'Inter',
                   fontSize: 10,
                   fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
-                  color: selected ? L.secondary : L.sub,
+                  color: selected ? L.secondary : L.sub.withValues(alpha: 0.9),
                   letterSpacing: -0.1,
                 ),
                 child: Text(label),

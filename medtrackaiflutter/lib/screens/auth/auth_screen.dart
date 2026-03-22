@@ -24,6 +24,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _loading = false;
   String? _error;
   bool _showPass = false;
+  bool _loadingApple = false;
 
   @override
   void dispose() {
@@ -61,8 +62,32 @@ class _AuthScreenState extends State<AuthScreen> {
       await AuthService.signInWithGoogle();
     } on FirebaseAuthException catch (e) {
       setState(() => _error = _friendlyError(e.code));
+    } catch (e) {
+      setState(() => _error = 'Google sign-in failed. Please try again.');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _appleSignIn() async {
+    setState(() {
+      _error = null;
+      _loadingApple = true;
+    });
+    try {
+      await AuthService.signInWithApple();
+    } on FirebaseAuthException catch (e) {
+      setState(() => _error = _friendlyError(e.code));
+    } catch (e) {
+      // User cancelled is a normal case — don't show error
+      final msg = e.toString();
+      if (!msg.contains('AuthorizationErrorCode.canceled') &&
+          !msg.contains('com.apple.AuthenticationServices') &&
+          !msg.contains('canceled')) {
+        setState(() => _error = 'Apple sign-in failed. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _loadingApple = false);
     }
   }
 
@@ -169,6 +194,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
               // ── Google Sign In ─────────────────────────────────────
               _GoogleBtn(onTap: _googleSignIn, loading: _loading),
+              const SizedBox(height: 12),
+              // ── Apple Sign In ──────────────────────────────────────
+              _AppleBtn(onTap: _appleSignIn, loading: _loadingApple),
               const SizedBox(height: 20),
 
               // ── Divider ────────────────────────────────────────────
@@ -325,18 +353,57 @@ class _GoogleBtn extends StatelessWidget {
           border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          // Google G logo — Using a better visual or asset
-          Image.network(
-            'https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png',
-            width: 20,
-            height: 20,
-            errorBuilder: (c, e, s) => Text('G',
-                style: AppTypography.displayLarge.copyWith(
-                    fontSize: 16,
-                    color: L.text)),
-          ),
+          loading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70),
+                )
+              : Image.asset(
+                  'assets/images/google_logo.png',
+                  width: 20,
+                  height: 20,
+                ),
           const SizedBox(width: 12),
           Text('Continue with Google',
+              style: AppTypography.titleLarge.copyWith(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: L.text)),
+        ]),
+      ),
+    );
+  }
+}
+
+class _AppleBtn extends StatelessWidget {
+  final VoidCallback onTap;
+  final bool loading;
+  const _AppleBtn({required this.onTap, required this.loading});
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+    return GestureDetector(
+      onTap: loading ? null : onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: AppRadius.roundXL,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          loading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70),
+                )
+              : Icon(Icons.apple_rounded, size: 22, color: L.text),
+          const SizedBox(width: 12),
+          Text('Continue with Apple',
               style: AppTypography.titleLarge.copyWith(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,

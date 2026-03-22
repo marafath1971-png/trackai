@@ -15,7 +15,7 @@ import '../../core/utils/date_formatter.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../../widgets/common/modern_time_picker.dart';
 import '../../widgets/common/unified_header.dart';
-import '../../widgets/modals/premium_paywall.dart';
+import '../../widgets/common/paywall_sheet.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as p;
 import 'package:flutter/services.dart';
@@ -140,8 +140,8 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     if (_controller == null || !_controller!.value.isInitialized) return;
 
     final state = Provider.of<AppState>(context, listen: false);
-    if ((state.profile?.scansUsed ?? 0) >= 1 && !(state.profile?.isPremium ?? false)) {
-      _showPaywall();
+    if ((state.profile?.scansUsed ?? 0) >= 3 && !(state.profile?.isPremium ?? false)) {
+      PaywallSheet.show(context);
       return;
     }
 
@@ -156,8 +156,8 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
 
   Future<void> _pickFromGallery() async {
     final state = Provider.of<AppState>(context, listen: false);
-    if ((state.profile?.scansUsed ?? 0) >= 1 && !(state.profile?.isPremium ?? false)) {
-      _showPaywall();
+    if ((state.profile?.scansUsed ?? 0) >= 3 && !(state.profile?.isPremium ?? false)) {
+      PaywallSheet.show(context);
       return;
     }
 
@@ -168,14 +168,6 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     }
   }
 
-  void _showPaywall() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const PremiumPaywall(),
-    );
-  }
 
   Future<File?> _compressImage(File file) async {
     final tempDir = await path_provider.getTemporaryDirectory();

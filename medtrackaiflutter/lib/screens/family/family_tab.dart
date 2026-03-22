@@ -17,6 +17,7 @@ import 'widgets/alert_log_widgets.dart';
 import 'widgets/demo_widgets.dart';
 import '../../widgets/common/unified_header.dart';
 import '../../widgets/common/premium_empty_state.dart';
+import '../../widgets/common/paywall_sheet.dart';
 
 // ══════════════════════════════════════════════
 // FAMILY HUB TAB
@@ -192,13 +193,31 @@ class _FamilyTabState extends State<FamilyTab> {
               isScrolled: _isScrolled,
               scrollController: _scrollController,
               onPivotChanged: (v) => setState(() => _pivot = v),
-              onAddCg: () => setState(() => _view = FamilyView.addStep1),
-              onJoin: () => setState(() => _view = FamilyView.join),
+              onAddCg: () {
+                if (state.isPremium) {
+                  setState(() => _view = FamilyView.addStep1);
+                } else {
+                  PaywallSheet.show(context);
+                }
+              },
+              onJoin: () {
+                if (state.isPremium) {
+                  setState(() => _view = FamilyView.join);
+                } else {
+                  PaywallSheet.show(context);
+                }
+              },
               onDashboard: (cg) => setState(() => _dashboardCg = cg),
               onAlertDetail: (a) => setState(() => _alertDetail = a),
               onMarkSeen: () => state.markAlertsAsSeen(),
-              onEscalationDemo: () =>
-                  setState(() => _view = FamilyView.escalation));
+              onEscalationDemo: () {
+                if (state.isPremium) {
+                  setState(() => _view = FamilyView.escalation);
+                } else {
+                  PaywallSheet.show(context);
+                }
+              }
+);
       }
     }
 
@@ -487,6 +506,7 @@ class HubView extends StatelessWidget {
             child: UnifiedHeader(
               showBrand: true,
               isScrolled: isScrolled,
+              showProBadge: !state.isPremium,
               title: 'Family Circle',
               subtitle: activeCount > 0
                   ? '$activeCount caregivers monitoring you'

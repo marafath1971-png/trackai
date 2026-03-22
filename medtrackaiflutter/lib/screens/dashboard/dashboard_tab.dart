@@ -9,6 +9,8 @@ import '../../widgets/common/unified_header.dart';
 import '../../widgets/modals/trend_drilldown_sheet.dart';
 import '../../widgets/common/app_loading_indicator.dart';
 import '../../core/utils/haptic_engine.dart';
+import '../../services/report_service.dart';
+import '../../widgets/common/paywall_sheet.dart';
 
 class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key});
@@ -50,6 +52,7 @@ class _DashboardTabState extends State<DashboardTab> {
     final L = context.L;
     // Granular selection
     final latency = context.select<AppState, List<Map<String, dynamic>>>((s) => s.getLatencyData());
+    final trendData = context.select<AppState, List<Map<String, dynamic>>>((s) => s.getTrendData());
     final adherence = context.select<AppState, double>((s) => s.getAdherenceScore());
     final streak = context.select<AppState, int>((s) => s.getStreak());
     final loadingInsight = context.select<AppState, bool>((s) => s.loadingInsight);
@@ -107,6 +110,17 @@ class _DashboardTabState extends State<DashboardTab> {
 
             const SizedBox(height: AppSpacing.xl),
 
+            // --- 30-DAY ADHERENCE TREND ---
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+              child: AdherenceTrendChart(trendData: trendData, L: L)
+                  .animate()
+                  .fadeIn(duration: 600.ms)
+                  .slideY(begin: 0.1, end: 0),
+            ),
+
+            const SizedBox(height: AppSpacing.xl),
+
             // --- LATENCY HEATMAP ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
@@ -129,6 +143,42 @@ class _DashboardTabState extends State<DashboardTab> {
                     onRetry: () => context.read<AppState>().fetchHealthInsights(),
                   ).animate().fadeIn(duration: 800.ms),
             ),
+
+            const SizedBox(height: AppSpacing.xxl),
+
+            // --- EXPORT PDF BUTTON (PREMIUM) ---
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    HapticEngine.selection();
+                    final state = context.read<AppState>();
+                    if (!state.isPremium) {
+                      PaywallSheet.show(context);
+                      return;
+                    }
+                    ReportService.generateAndShareReport(
+                      userName: state.profile?.name ?? 'User',
+                      adherence: adherence,
+                      meds: state.meds,
+                      symptoms: state.symptoms,
+                      history: state.history,
+                    );
+                  },
+                  icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
+                  label: const Text('GENERATE MEDICAL REPORT', 
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: L.text,
+                    shape: RoundedRectangleBorder(borderRadius: AppRadius.roundL),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ).animate(delay: 100.ms).fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0),
 
             const SizedBox(height: AppSpacing.xxl),
 
@@ -213,14 +263,16 @@ class _DashboardTabState extends State<DashboardTab> {
                       child: Icon(icon, color: color, size: 16),
                     ),
                     const SizedBox(width: 10),
-                    Text(label, 
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.labelLarge.copyWith(
-                        fontSize: 11, 
-                        color: L.sub, 
-                        letterSpacing: 0.8
-                      )),
+                    Expanded(
+                      child: Text(label, 
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.labelLarge.copyWith(
+                          fontSize: 11, 
+                          color: L.sub, 
+                          letterSpacing: 0.8
+                        )),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),

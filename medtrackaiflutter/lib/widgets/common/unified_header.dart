@@ -18,6 +18,7 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
   final bool isScrolled;
   final bool blurred;
   final bool showBorder;
+  final bool showProBadge; // New: optional PRO badge next to title
   final VoidCallback? onTap;
 
   const UnifiedHeader({
@@ -34,6 +35,7 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
     this.backgroundColor,
     this.showBrand = false,
     this.isScrolled = false,
+    this.showProBadge = false,
     this.onTap,
   });
 
@@ -101,21 +103,41 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
                             .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
                         ] else ...[
                           if (titleWidget != null || title != null)
-                            Row(
-                              children: [
-                                titleWidget ?? Text(
-                                  title!,
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w800,
-                                    color: L.text,
-                                    letterSpacing: -0.8,
-                                    height: 1.1,
+                             Row(
+                                children: [
+                                  titleWidget ?? Text(
+                                    title!,
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w800,
+                                      color: L.text,
+                                      letterSpacing: -0.8,
+                                      height: 1.1,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.05),
+                                  if (showProBadge) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      margin: const EdgeInsets.only(top: 4),
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.lime.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Text(
+                                        "PRO",
+                                        style: TextStyle(
+                                          color: AppColors.lime,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 0.8,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.05),
                         ],
                         if (subtitle != null)
                           Padding(

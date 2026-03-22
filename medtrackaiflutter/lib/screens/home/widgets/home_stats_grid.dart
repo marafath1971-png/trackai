@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../providers/app_state.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/shared/shared_widgets.dart';
@@ -105,11 +106,27 @@ class HomeStatsGrid extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 2),
-                      Text('Adherence (30d)',
-                          style: AppTypography.labelMedium.copyWith(
-                              fontSize: 11,
-                              color: L.sub,
-                              letterSpacing: 0.1)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text('Adherence (30d)',
+                                style: AppTypography.labelMedium.copyWith(
+                                    fontSize: 11,
+                                    color: L.sub,
+                                    letterSpacing: 0.1)),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Share.share(
+                                "I'm staying on top of my health with MedAI! My medication adherence is $adherence% for the last 30 days. 💎📈 #MedAI #HealthTracking",
+                                subject: "My Health Progress",
+                              );
+                            },
+                            child: Icon(Icons.share_rounded, size: 14, color: L.sub),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 20),
                       Container(
                         height: 5,

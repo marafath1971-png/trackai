@@ -297,12 +297,15 @@ class FamStatJSX extends StatelessWidget {
                   letterSpacing: -1.0,
                   height: 1.0)),
           const SizedBox(height: 6),
-          Text(label.toUpperCase(),
-              style: AppTypography.labelLarge.copyWith(
-                  fontSize: 10,
-                  color: L.sub,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(label.toUpperCase(),
+                style: AppTypography.labelLarge.copyWith(
+                    fontSize: 10,
+                    color: L.sub,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5)),
+          ),
         ]),
       ),
     );

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'widgets/home_insight_card.dart';
+import 'widgets/complete_profile_card.dart';
+import 'widgets/trial_countdown_card.dart';
 import '../../providers/app_state.dart';
 import '../../domain/entities/entities.dart';
 import '../../theme/app_theme.dart';
@@ -11,12 +13,13 @@ import 'widgets/home_header.dart';
 import 'widgets/home_stats_grid.dart';
 import 'widgets/home_banners.dart';
 import 'widgets/home_dose_section.dart';
+import '../../core/utils/haptic_engine.dart';
+import 'widgets/quick_log_symptom.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'widgets/home_meds_section.dart';
 import 'widgets/med_card.dart';
 import 'widgets/missed_dose_sheet.dart';
 import '../../widgets/modals/dose_celebration_modal.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import '../../core/utils/haptic_engine.dart';
 
 class HomeTab extends StatefulWidget {
   final VoidCallback onScan;
@@ -142,11 +145,27 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
 
-              // --- 3.1 AI HEALTH INSIGHTS ---
+              // --- 3.01 COMPLETE PROFILE ---
+              const SliverToBoxAdapter(
+                child: CompleteProfileCard(),
+              ),
+              const SliverToBoxAdapter(
+                child: TrialCountdownCard(),
+              ),
+
+              // --- 3.1 QUICK SYMPTOM LOG ---
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.only(top: AppSpacing.m, bottom: AppSpacing.s),
+                  child: QuickLogSymptom(),
+                ),
+              ),
+
+              // --- 3.2 AI HEALTH INSIGHTS ---
               SliverToBoxAdapter(
                 child: HomeInsightCard(
                   state: context.read<AppState>(),
-                  onLoadInsight: () => context.read<AppState>().refreshHealthInsights(),
+                  onLoadInsight: () => context.read<AppState>().fetchHealthInsights(),
                 ),
               ),
 
@@ -427,6 +446,7 @@ class _HomeTabState extends State<HomeTab> {
                       L: L,
                       onTake: () {
                         if (!taken) {
+                          HapticEngine.selection();
                           state.toggleDose(d);
                           DoseCelebrationModal.show(context, d.med.name);
                         }

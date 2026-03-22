@@ -4,6 +4,7 @@ import '../../../../providers/app_state.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../domain/entities/entities.dart';
+import '../../../../widgets/common/paywall_sheet.dart';
 import 'settings_shared.dart';
 
 class ProfileTab extends StatefulWidget {
@@ -101,13 +102,31 @@ class _ProfileTabState extends State<ProfileTab> {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  Text(p?.name ?? 'Your Name',
-                      style: TextStyle(
-                          fontFamily: ff,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: L.text,
-                          letterSpacing: -0.3)),
+                  Row(
+                    children: [
+                      Text(p?.name ?? 'Your Name',
+                          style: TextStyle(
+                              fontFamily: ff,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: L.text,
+                              letterSpacing: -0.3)),
+                      if (widget.state.isPremium) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: L.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: L.primary, width: 0.5),
+                          ),
+                          child: Text('PRO', style: TextStyle(
+                            fontFamily: ff, fontSize: 9, fontWeight: FontWeight.w900, color: L.primary
+                          )),
+                        ),
+                      ],
+                    ],
+                  ),
                   const SizedBox(height: 2),
                   Text(
                       '${p?.age != null && p!.age.isNotEmpty ? "Age ${p.age}" : "Age not set"}${p?.gender != null && p!.gender.isNotEmpty ? " · ${p.gender}" : ""}',
@@ -275,6 +294,52 @@ class _ProfileTabState extends State<ProfileTab> {
                     border: false),
               ])),
           
+          if (!widget.state.isPremium)
+            GestureDetector(
+              onTap: () => PaywallSheet.show(context),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [L.primary, L.primary.withValues(alpha: 0.7)]),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [BoxShadow(color: L.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))],
+                ),
+                child: Row(children: [
+                  const Text('🚀', style: TextStyle(fontSize: 24)),
+                  const SizedBox(width: 14),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const Text('Upgrade to MedAI Pro', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 16)),
+                    Text('Unlock AI insights, Family Sharing & more', style: TextStyle(color: Colors.black.withValues(alpha: 0.7), fontSize: 12, fontWeight: FontWeight.w600)),
+                  ])),
+                  const Icon(Icons.chevron_right_rounded, color: Colors.black),
+                ]),
+              ),
+            ).animate(onPlay: (c) => c.repeat()).shimmer(delay: 2.seconds, duration: 1.5.seconds),
+
+          SettingsSection(
+            title: 'Subscription',
+            child: Column(children: [
+              if (widget.state.isPremium)
+                SettingsModalRow(
+                  icon: '💳',
+                  label: 'Manage Subscription',
+                  sub: 'View or cancel your plan',
+                  onClick: () => widget.state.manageSubscription(),
+                  first: true,
+                  border: true,
+                ),
+              SettingsModalRow(
+                icon: '🔄',
+                label: 'Restore Purchases',
+                sub: 'Already paid? Restore here',
+                onClick: () => widget.state.restorePurchases(),
+                first: !widget.state.isPremium,
+                last: true,
+                border: false,
+              ),
+            ]),
+          ),
           SettingsSection(
             title: 'Account',
             child: Column(

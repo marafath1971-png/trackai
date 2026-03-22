@@ -326,22 +326,24 @@ class InsightsContent extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: L.bg,
+      appBar: UnifiedHeader(
+        leading: HeaderActionBtn(
+          onTap: onBack,
+          child: Icon(Icons.arrow_back_ios_new_rounded, color: L.sub, size: 18),
+        ),
+        title: 'Protector Insights',
+        subtitle: 'Monitoring ${cg.name}\'s adherence',
+        backgroundColor: Colors.transparent,
+        blurred: false,
+        showBorder: false,
+      ),
       body: SafeArea(
           child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, 0, AppSpacing.screenPadding, AppSpacing.screenPadding),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    UnifiedHeader(
-                      leading: HeaderActionBtn(
-                        onTap: onBack,
-                        child: Icon(Icons.arrow_back_ios_new_rounded, color: L.sub, size: 18),
-                      ),
-                      title: 'Protector Insights',
-                      subtitle: 'Monitoring ${cg.name}\'s adherence',
-                      backgroundColor: Colors.transparent,
-                    ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.m),
                       decoration: BoxDecoration(

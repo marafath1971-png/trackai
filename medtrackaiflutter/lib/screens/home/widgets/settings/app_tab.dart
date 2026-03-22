@@ -9,6 +9,7 @@ import '../../../../widgets/shared/shared_widgets.dart';
 import '../../../../core/utils/color_utils.dart';
 import '../../../../domain/entities/entities.dart';
 import '../../../settings/privacy_policy_screen.dart';
+import '../../../../widgets/common/paywall_sheet.dart';
 import 'settings_shared.dart';
 
 class AppTab extends StatefulWidget {
@@ -340,7 +341,14 @@ class _AppTabState extends State<AppTab> {
                 sub: 'Unlock with FaceID / Fingerprint',
                 right: AppToggle(
                     value: profile?.biometricEnabled ?? false,
-                    onChanged: (v) => context.read<AppState>().toggleBiometricLock(v)),
+                    onChanged: (v) {
+                      final s = context.read<AppState>();
+                      if (s.isPremium) {
+                        s.toggleBiometricLock(v);
+                      } else {
+                        PaywallSheet.show(context);
+                      }
+                    }),
                 border: false)),
         SettingsSection(
             title: 'Support & Feedback',

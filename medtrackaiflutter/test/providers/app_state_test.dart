@@ -3,11 +3,13 @@ import 'package:mocktail/mocktail.dart';
 import 'package:medtrackaiflutter/providers/app_state.dart';
 import 'package:medtrackaiflutter/domain/repositories/medication_repository.dart';
 import 'package:medtrackaiflutter/domain/repositories/user_repository.dart';
+import 'package:medtrackaiflutter/domain/repositories/symptom_repository.dart';
 import 'package:medtrackaiflutter/domain/entities/entities.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class MockMedicationRepository extends Mock implements IMedicationRepository {}
 class MockUserRepository extends Mock implements IUserRepository {}
+class MockSymptomRepository extends Mock implements SymptomRepository {}
 class MockAudioPlayer extends Mock implements AudioPlayer {}
 
 class FakeUserProfile extends Fake implements UserProfile {}
@@ -24,11 +26,13 @@ void main() {
   late AppState appState;
   late MockMedicationRepository mockMedRepo;
   late MockUserRepository mockUserRepo;
+  late MockSymptomRepository mockSymptomRepo;
   late MockAudioPlayer mockAudioPlayer;
 
   setup() {
     mockMedRepo = MockMedicationRepository();
     mockUserRepo = MockUserRepository();
+    mockSymptomRepo = MockSymptomRepository();
     mockAudioPlayer = MockAudioPlayer();
     
     // Default mock behavior
@@ -42,10 +46,12 @@ void main() {
     when(() => mockMedRepo.saveTakenToday(any())).thenAnswer((_) => Future.value());
     when(() => mockMedRepo.saveHistory(any(), onlyDateKey: any(named: 'onlyDateKey'))).thenAnswer((_) => Future.value());
     when(() => mockMedRepo.updateMedicine(any())).thenAnswer((_) => Future.value());
+    when(() => mockSymptomRepo.getSymptoms()).thenAnswer((_) => Future.value([]));
     
     appState = AppState(
       medRepo: mockMedRepo,
       userRepo: mockUserRepo,
+      symptomRepo: mockSymptomRepo,
       audioPlayer: mockAudioPlayer,
     );
   }

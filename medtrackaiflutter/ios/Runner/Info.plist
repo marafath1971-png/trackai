@@ -70,6 +70,8 @@
 	<string>This app requires access to the photo library to select images for analysis.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app requires access to the camera to take photos for analysis.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>This app requires FaceID to secure your medical data and medication history.</string>
 	<key>CFBundleIcons</key>
 	<dict>
 		<key>CFBundleAlternateIcons</key>

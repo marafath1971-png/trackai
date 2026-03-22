@@ -4,8 +4,24 @@ import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-class LockScreen extends StatelessWidget {
+class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
+
+  @override
+  State<LockScreen> createState() => _LockScreenState();
+}
+
+class _LockScreenState extends State<LockScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Auto-trigger unlock after a small delay for smooth transition
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        context.read<AppState>().unlockApp();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

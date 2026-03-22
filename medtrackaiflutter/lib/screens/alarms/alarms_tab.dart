@@ -201,7 +201,6 @@ class _AlarmsTabState extends State<AlarmsTab> {
           left: 0,
           right: 0,
           child: UnifiedHeader(
-            showBrand: true,
             isScrolled: _isScrolled,
             title: "Reminders",
             subtitle: activeCount > 0 

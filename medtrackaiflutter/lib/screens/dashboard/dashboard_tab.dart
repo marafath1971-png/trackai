@@ -218,7 +218,6 @@ class _DashboardTabState extends State<DashboardTab> {
           left: 0,
           right: 0,
           child: UnifiedHeader(
-            showBrand: true,
             isScrolled: _isScrolled,
             title: 'Insights',
             subtitle: 'Analytics & health patterns',

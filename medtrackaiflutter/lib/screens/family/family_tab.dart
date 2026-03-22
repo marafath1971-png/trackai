@@ -504,7 +504,6 @@ class HubView extends StatelessWidget {
             left: 0,
             right: 0,
             child: UnifiedHeader(
-              showBrand: true,
               isScrolled: isScrolled,
               showProBadge: !state.isPremium,
               title: 'Family Circle',

@@ -34,21 +34,11 @@ class HomeHeader extends StatelessWidget {
 
     return UnifiedHeader(
       showBrand: false,
-      leading: GestureDetector(
-        onTap: () {
-          HapticEngine.medium();
-          onOpenSettings();
-        },
-        child: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: L.fill,
-            shape: BoxShape.circle,
-            border: Border.all(color: L.border.withValues(alpha: 0.1)),
-          ),
-          child: Center(child: Text(avatar, style: const TextStyle(fontSize: 22))),
-        ),
+      leading: Image.asset(
+        'assets/images/home_logo.png',
+        width: 32,
+        height: 32,
+        fit: BoxFit.contain,
       ),
       isScrolled: isScrolled,
       onTap: onTap,
@@ -64,6 +54,10 @@ class HomeHeader extends StatelessWidget {
       subtitle: _getCompactStatus(),
       actions: [
         _StreakBtn(streak: streak, onTap: onOpenStreak),
+        HeaderActionBtn(
+          onTap: onOpenSettings,
+          child: Icon(Icons.settings_outlined, color: L.text, size: 20),
+        ),
       ],
       bottom: Padding(
         padding: const EdgeInsets.only(bottom: 8),

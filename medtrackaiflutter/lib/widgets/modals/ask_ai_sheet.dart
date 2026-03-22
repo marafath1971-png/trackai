@@ -61,11 +61,13 @@ class _AskAiSheetState extends State<AskAiSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.45,
-            ),
-            child: _messages.isEmpty
+          // Using Flexible + ListView for better responsiveness
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.5,
+              ),
+              child: _messages.isEmpty
                 ? Center(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 32),
@@ -79,7 +81,7 @@ class _AskAiSheetState extends State<AskAiSheet> {
                 : ListView.builder(
                     shrinkWrap: true,
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.only(bottom: 24),
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final msg = _messages[index];
@@ -96,23 +98,31 @@ class _AskAiSheetState extends State<AskAiSheet> {
                               bottomRight: !isAi ? const Radius.circular(4) : null,
                             ),
                             border: isAi ? Border.all(color: L.border.withValues(alpha: 0.1)) : null,
+                            boxShadow: isAi ? null : [
+                              BoxShadow(
+                                color: L.text.withValues(alpha: 0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
                           ),
                           child: Text(
                             msg['content']!,
                             style: TextStyle(
                               color: isAi ? L.text : L.bg,
                               fontSize: 14,
-                              fontWeight: isAi ? FontWeight.w500 : FontWeight.w600,
+                              fontWeight: isAi ? FontWeight.w500 : FontWeight.w700,
                             ),
                           ),
                         ),
                       );
                     },
                   ),
+            ),
           ),
           if (_isLoading)
             Padding(
-              padding: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.only(bottom: 16, top: 8),
               child: Row(
                 children: [
                   const AppLoadingIndicator(size: 14),
@@ -126,12 +136,14 @@ class _AskAiSheetState extends State<AskAiSheet> {
               ),
             ),
           const SizedBox(height: 8),
+          // Input Area
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
               color: L.card,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: L.border.withValues(alpha: 0.1)),
+              boxShadow: L.shadowSoft,
             ),
             child: Row(
               children: [
@@ -156,6 +168,7 @@ class _AskAiSheetState extends State<AskAiSheet> {
               ],
             ),
           ),
+          const SizedBox(height: 12),
         ],
       ),
     );

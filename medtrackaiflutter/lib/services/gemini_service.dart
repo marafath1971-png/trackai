@@ -19,11 +19,12 @@ class GeminiService {
   /// Standardized models and their versions for all AI tasks.
   /// Using verified identifiers from 2026 API diagnostics.
   static const List<Map<String, String>> _standardModels = [
-    {'model': 'gemini-1.5-flash-latest', 'version': 'v1beta'},
-    {'model': 'gemini-1.5-flash-8b', 'version': 'v1beta'},
-    {'model': 'gemini-1.5-pro-latest', 'version': 'v1beta'},
+    {'model': 'gemini-1.5-flash', 'version': 'v1beta'},
+    {'model': 'gemini-1.5-pro', 'version': 'v1beta'},
     {'model': 'gemini-2.0-flash-exp', 'version': 'v1beta'},
-    {'model': 'gemini-2.0-flash-lite-preview-02-05', 'version': 'v1beta'},
+    {'model': 'gemini-1.5-flash-8b', 'version': 'v1beta'},
+    {'model': 'gemini-1.5-flash', 'version': 'v1'}, // Fallback to v1 stable
+    {'model': 'gemini-1.0-pro', 'version': 'v1'},
   ];
 
   static GenerativeModel _getModel(String modelName, {String apiVersion = 'v1'}) {

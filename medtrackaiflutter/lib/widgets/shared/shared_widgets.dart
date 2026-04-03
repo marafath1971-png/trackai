@@ -43,16 +43,15 @@ class RingChart extends StatelessWidget {
         ),
         Column(mainAxisSize: MainAxisSize.min, children: [
           Text(label,
-              style: TextStyle(
-                  fontFamily: 'Inter',
+              style: AppTypography.titleLarge.copyWith(
                   fontWeight: FontWeight.w800,
                   fontSize: size * 0.185,
                   color: L.text,
                   letterSpacing: -0.5)),
           if (sub.isNotEmpty)
             Text(sub,
-                style: TextStyle(
-                    fontFamily: 'Inter', fontSize: size * 0.1, color: L.sub),
+                style: AppTypography.labelSmall
+                    .copyWith(fontSize: size * 0.1, color: L.sub),
                 textAlign: TextAlign.center),
         ]),
       ]),
@@ -149,33 +148,33 @@ class AppToggle extends StatelessWidget {
               ),
           ],
         ),
-        child: Stack(
-          children: [
-            AnimatedAlign(
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.elasticOut,
-              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: value ? L.bg : Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
+        child: Stack(children: [
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.elasticOut,
+            alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: value ? L.bg : L.onBg,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                        color: L.onBg.withValues(alpha: 0.15),
                         blurRadius: 4,
                         offset: const Offset(0, 2))
                   ],
                 ),
               ),
             ),
-          ).animate(target: value ? 1 : 0)
-            .then()
-            .scale(begin: const Offset(1.1, 1.1), end: const Offset(1, 1), duration: 150.ms),
+          ).animate(target: value ? 1 : 0).then().scale(
+              begin: const Offset(1.1, 1.1),
+              end: const Offset(1, 1),
+              duration: 150.ms),
         ]),
       ),
     );
@@ -204,11 +203,10 @@ class AppBadge extends StatelessWidget {
       decoration:
           BoxDecoration(color: bg, borderRadius: BorderRadius.circular(99)),
       child: Text(text,
-          style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: textColor,
-              fontFamily: 'Inter')),
+          style: AppTypography.labelSmall.copyWith(
+            fontWeight: FontWeight.w700,
+            color: textColor,
+          )),
     );
   }
 }
@@ -228,7 +226,7 @@ class AppToast extends StatelessWidget {
     final L = context.L;
     final Color bg;
     final IconData icon;
-    
+
     switch (type) {
       case 'error':
         bg = L.red;
@@ -265,10 +263,11 @@ class AppToast extends StatelessWidget {
             decoration: BoxDecoration(
               color: bg.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.0),
+              border:
+                  Border.all(color: L.onBg.withValues(alpha: 0.1), width: 1.0),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: L.onBg.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -282,16 +281,14 @@ class AppToast extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: Colors.white, size: 18),
+                Icon(icon, color: L.onPrimary, size: 18),
                 const SizedBox(width: 10),
                 Flexible(
                   child: Text(
                     message,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: L.onPrimary,
                       fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                      fontFamily: 'Inter',
                       letterSpacing: -0.2,
                     ),
                   ),
@@ -399,15 +396,15 @@ class SettingsRow extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                 Text(label,
-                    style: TextStyle(
-                        color: L.text,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        fontFamily: 'Inter')),
+                    style: AppTypography.titleMedium.copyWith(
+                      color: L.text,
+                      fontWeight: FontWeight.w600,
+                    )),
                 if (subtitle != null)
                   Text(subtitle!,
-                      style: TextStyle(
-                          color: L.sub, fontSize: 12, fontFamily: 'Inter')),
+                      style: AppTypography.labelSmall.copyWith(
+                        color: L.sub,
+                      )),
               ])),
           if (trailing != null) trailing!,
         ]),
@@ -430,12 +427,11 @@ class SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Text(
         text.toUpperCase(),
-        style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.08 * 11,
-            color: context.L.sub,
-            fontFamily: 'Inter'),
+        style: AppTypography.labelSmall.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.08 * 11,
+          color: context.L.sub,
+        ),
       ),
     );
   }
@@ -460,14 +456,15 @@ class InfoRow extends StatelessWidget {
     final L = context.L;
     return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
       Text(label,
-          style: TextStyle(fontSize: 13, color: L.sub, fontFamily: 'Inter')),
+          style: AppTypography.bodySmall.copyWith(
+            color: L.sub,
+          )),
       Flexible(
           child: Text(value,
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: isWarning ? L.red : L.text,
-                  fontFamily: 'Inter'),
+              style: AppTypography.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isWarning ? L.red : L.text,
+              ),
               textAlign: TextAlign.right)),
     ]);
   }
@@ -500,12 +497,11 @@ class LightInput extends StatelessWidget {
     final L = context.L;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(label.toUpperCase(),
-          style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.08 * 10,
-              color: L.sub,
-              fontFamily: 'Inter')),
+          style: AppTypography.labelSmall.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.08 * 10,
+            color: L.sub,
+          )),
       const SizedBox(height: 5),
       TextFormField(
         initialValue: value,
@@ -513,14 +509,15 @@ class LightInput extends StatelessWidget {
         keyboardType: keyboardType,
         maxLines: maxLines,
         cursorColor: L.text,
-        style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: L.text,
-            fontFamily: 'Inter'),
+        style: AppTypography.bodyMedium.copyWith(
+          fontWeight: FontWeight.w500,
+          color: L.text,
+        ),
         decoration: InputDecoration(
           hintText: placeholder,
-          hintStyle: TextStyle(color: L.sub, fontFamily: 'Inter'),
+          hintStyle: AppTypography.bodyMedium.copyWith(
+            color: L.sub,
+          ),
           filled: true,
           fillColor: L.bg,
           contentPadding:
@@ -533,9 +530,7 @@ class LightInput extends StatelessWidget {
               borderSide: BorderSide(color: L.border, width: 1.0)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide(
-                  color: L.text,
-                  width: 1.0)),
+              borderSide: BorderSide(color: L.text, width: 1.0)),
         ),
       ),
     ]);
@@ -618,5 +613,3 @@ class MedImage extends StatelessWidget {
     return image;
   }
 }
-
-

@@ -8,6 +8,12 @@ Med AI is a state-of-the-art Flutter application designed to revolutionize medic
 
 The "Masterpiece" update brings unprecedented personalization and security to your health journey.
 
+### 🌍 Global UX Adaptation
+Med AI is built for developed markets worldwide (US, UK, Canada, Australia, Japan, South Korea, Singapore):
+- **Dynamic Inventory Tracking**: Differentiated visualizations for pills, blister packs, patches, and specific units.
+- **Meal-Based Rituals**: Support for "With Lunch", "Before Sleep" tracking deeply ingrained in East Asian adherence models.
+- **Advanced Pharmacy Tracking**: Built-in 1-Tap Pharmacy Dialing for low-stock medications, and dedicated Rx Number fields to streamline North American pharmacy workflows.
+
 ### 🔐 Biometric Security
 Stay protected with seamless integration of **FaceID**, **TouchID**, and **Fingerprint** authentication. Your medical data is encrypted and accessible only to you.
 
@@ -61,8 +67,8 @@ Med AI follows a **Premium Dark/Light** aesthetic:
 
 ## 📜 Documentation & Task Audit
 Detailed implementation logs and verification results can be found in the `brain/` directory:
-- [Walkthrough](file:///Users/arafathossain/.gemini/antigravity/brain/01782e5a-a69d-41c5-ae1f-6359e050bd27/walkthrough.md)
-- [Task Audit](file:///Users/arafathossain/.gemini/antigravity/brain/01782e5a-a69d-41c5-ae1f-6359e050bd27/task.md)
+- [Walkthrough](file:///Users/arafathossain/.gemini/antigravity/brain/8367e94f-fb77-4d8f-b003-6511d09819ce/walkthrough.md)
+- [Task Audit](file:///Users/arafathossain/.gemini/antigravity/brain/8367e94f-fb77-4d8f-b003-6511d09819ce/task.md)
 
 ---
 *Built with ❤️ by the Med AI Team.*

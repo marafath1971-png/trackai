@@ -13,8 +13,9 @@ import '../../services/gemini_service.dart';
 import '../../services/auth_service.dart';
 import '../../core/utils/date_formatter.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import '../../services/share_service.dart';
+import '../../services/review_service.dart';
 import '../../widgets/common/modern_time_picker.dart';
-import '../../widgets/common/unified_header.dart';
 import '../../widgets/common/paywall_sheet.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as p;
@@ -22,6 +23,7 @@ import 'package:flutter/services.dart';
 import '../../core/utils/haptic_engine.dart';
 import '../../widgets/common/app_loading_indicator.dart';
 import '../../core/utils/result.dart';
+import '../../widgets/common/bouncing_button.dart';
 
 class ScanTab extends StatefulWidget {
   final void Function(Medicine)? onSave;
@@ -45,6 +47,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
   CameraController? _controller;
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
+  bool _cameraError = false; // NEW: Track hardware/permission errors
   bool _isScanning = false;
   File? _imageFile;
   String _selectedCategory = 'Tablet';
@@ -86,25 +89,37 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
   }
 
   Future<void> _initCamera() async {
-    _cameras = await availableCameras();
-    if (_cameras != null && _cameras!.isNotEmpty) {
-      _controller = CameraController(
-        _cameras![0],
-        ResolutionPreset.high,
-        enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.jpeg,
-      );
+    try {
+      _cameras = await availableCameras();
+      if (_cameras != null && _cameras!.isNotEmpty) {
+        _controller = CameraController(
+          _cameras![0],
+          ResolutionPreset.high,
+          enableAudio: false,
+          imageFormatGroup: ImageFormatGroup.jpeg,
+        );
 
-      try {
         await _controller!.initialize();
-        await _controller!.setFlashMode(_flashMode);
+        if (_flashSupported) {
+          await _controller!.setFlashMode(_flashMode);
+        }
+
         if (mounted) {
           setState(() {
             _isCameraInitialized = true;
+            _cameraError = false;
           });
         }
-      } catch (e) {
-        debugPrint('Camera initialization error: $e');
+      } else {
+        if (mounted) setState(() => _cameraError = true);
+      }
+    } catch (e) {
+      debugPrint('Camera initialization error: $e');
+      if (mounted) {
+        setState(() {
+          _isCameraInitialized = false;
+          _cameraError = true;
+        });
       }
     }
   }
@@ -140,7 +155,8 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     if (_controller == null || !_controller!.value.isInitialized) return;
 
     final state = Provider.of<AppState>(context, listen: false);
-    if ((state.profile?.scansUsed ?? 0) >= 3 && !(state.profile?.isPremium ?? false)) {
+    if ((state.profile?.scansUsed ?? 0) >= 3 &&
+        !(state.profile?.isPremium ?? false)) {
       PaywallSheet.show(context);
       return;
     }
@@ -151,12 +167,17 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
       _processImage(File(image.path));
     } catch (e) {
       debugPrint('Capture error: $e');
+      if (mounted) {
+        state.showToast('Camera error. Please try again or pick from gallery.',
+            type: 'error');
+      }
     }
   }
 
   Future<void> _pickFromGallery() async {
     final state = Provider.of<AppState>(context, listen: false);
-    if ((state.profile?.scansUsed ?? 0) >= 3 && !(state.profile?.isPremium ?? false)) {
+    if ((state.profile?.scansUsed ?? 0) >= 3 &&
+        !(state.profile?.isPremium ?? false)) {
       PaywallSheet.show(context);
       return;
     }
@@ -168,11 +189,11 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     }
   }
 
-
   Future<File?> _compressImage(File file) async {
     final tempDir = await path_provider.getTemporaryDirectory();
-    final targetPath = p.join(tempDir.path, "${DateTime.now().millisecondsSinceEpoch}_comp.jpg");
-    
+    final targetPath = p.join(
+        tempDir.path, "${DateTime.now().millisecondsSinceEpoch}_comp.jpg");
+
     final result = await FlutterImageCompress.compressAndGetFile(
       file.absolute.path,
       targetPath,
@@ -180,7 +201,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
       minWidth: 1024,
       minHeight: 1024,
     );
-    
+
     return result != null ? File(result.path) : null;
   }
 
@@ -196,16 +217,18 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     Future.doWhile(() async {
       await Future.delayed(const Duration(milliseconds: 1400));
       if (!mounted || !_isScanning) return false;
+      HapticEngine.light();
       setState(() => _scanStep = (_scanStep + 1) % _scanSteps.length);
       return _isScanning;
     });
 
     final compressedFile = await _compressImage(file);
     final fileToScan = compressedFile ?? file;
-    
+
     // Parallelize AI scan and Image upload for better UX
     final results = await Future.wait([
-      GeminiService.scanMedicine(fileToScan),
+      GeminiService.scanMedicine(fileToScan,
+          country: state.profile?.country ?? ''),
       state.uploadImage(fileToScan),
     ]);
 
@@ -222,30 +245,33 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
           // Auto-detect mapping
           if (success.isLiquid) {
             _selectedCategory = 'Liquid';
-          } else if (success.isSpray || success.form.toLowerCase().contains('spray')) {
+          } else if (success.isSpray ||
+              success.form.toLowerCase().contains('spray')) {
             _selectedCategory = 'Spray';
-          } else if (success.form.toLowerCase().contains('tablet') || success.form.toLowerCase().contains('pill') || success.form.toLowerCase().contains('capsule')) {
+          } else if (success.form.toLowerCase().contains('tablet') ||
+              success.form.toLowerCase().contains('pill') ||
+              success.form.toLowerCase().contains('capsule')) {
             _selectedCategory = 'Tablet';
           }
         });
-        
+
         await state.incrementScanCount();
 
         _showResultModal(success.copyWith(
-          imageUrl: cloudUrl ?? file.path, 
-          category: _selectedCategory,
-          description: success.name.isNotEmpty ? success.name : null,
-          form: success.form
-        ));
+            imageUrl: cloudUrl ?? file.path,
+            category: _selectedCategory,
+            description: success.name.isNotEmpty ? success.name : null,
+            form: success.form));
       },
       (failure) {
         // NEVER show an error to the user face. Instead, transition to "Smart Manual Entry".
         HapticEngine.selection();
         setState(() => _isScanning = false);
-        
+
         _showResultModal(ScanResult(
           identified: false,
-          systemBusy: true, // This will trigger the "Smart Assist" UI in the modal
+          systemBusy:
+              true, // This will trigger the "Smart Assist" UI in the modal
           imageUrl: cloudUrl ?? file.path,
           category: _selectedCategory,
         ));
@@ -267,6 +293,27 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
           } else {
             final appState = Provider.of<AppState>(context, listen: false);
             appState.addMedicine(med);
+
+            // Viral & Growth Loop: Share the "Magic Moment" of AI Scan
+            if (med.id != 0) {
+              Future.delayed(const Duration(milliseconds: 500), () {
+                if (mounted) {
+                  ShareService.shareAchievement(
+                    title: 'New Medicine Scanned! ⚡',
+                    subtitle:
+                        'I just used Med AI to verify ${med.name}. Magic! ✨',
+                    emoji: '🧬',
+                  );
+
+                  // Trigger review if first few scans are successful
+                  if ((appState.profile?.scansUsed ?? 0) == 1 ||
+                      (appState.profile?.scansUsed ?? 0) == 5) {
+                    ReviewService.requestReview();
+                  }
+                }
+              });
+            }
+
             if (widget.onScanAdded != null) widget.onScanAdded!();
           }
         },
@@ -274,14 +321,88 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildCameraErrorUI() {
+    final L = context.L;
+    return Container(
+      color: Colors.black,
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: L.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.videocam_off_rounded, color: L.error, size: 32),
+            ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+            const SizedBox(height: 24),
+            Text(
+              'Camera Unavailable',
+              style: AppTypography.titleLarge.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'We couldn\'t access your camera. You can still add your medicine manually.',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMedium.copyWith(
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 32),
+            BouncingButton(
+              onTap: widget.onManualAdd ?? () => Navigator.pop(context),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(
+                    'ADD MANUALLY',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
+            ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: _initCamera,
+              child: Text(
+                'RETRY CAMERA',
+                style: AppTypography.labelMedium.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isScanning) return _buildAnalyzingState();
+    if (_cameraError) return _buildCameraErrorUI();
 
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.black,
       body: Stack(
         children: [
           // 1. Full-screen Camera Preview
@@ -291,8 +412,9 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                 fit: BoxFit.cover,
                 child: SizedBox(
                   width: _controller!.value.previewSize!.height,
-                  height: _controller!.value.previewSize!.width,
-                  child: CameraPreview(_controller!),
+                  child: RepaintBoundary(
+                    child: CameraPreview(_controller!),
+                  ),
                 ),
               ),
             ).animate().fadeIn(duration: 400.ms)
@@ -305,63 +427,62 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
               margin: const EdgeInsets.only(bottom: 100), // Offset slightly up
               width: size.width * 0.8,
               height: size.width * 0.8,
-              child: CustomPaint(
-                painter: ScanFramePainter(category: _selectedCategory),
-                child: _buildScanningLine(),
+              child: RepaintBoundary(
+                child: CustomPaint(
+                  painter: ScanFramePainter(
+                    category: _selectedCategory,
+                    primaryColor: context.L.primary,
+                  ),
+                  child: _buildScanningLine(),
+                ),
               ),
             ),
           ).animate().scale(begin: const Offset(0.9, 0.9), delay: 200.ms),
 
-          // 3. Header Controls
           Positioned(
-            top: 0,
+            top: MediaQuery.of(context).padding.top + 16,
             left: 0,
             right: 0,
-            child: UnifiedHeader(
-              backgroundColor: Colors.transparent,
-              blurred: false,
-              showBorder: false,
-              leading: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Image.asset(
-                    'assets/images/ghost_scan.png',
-                    width: 24,
-                    errorBuilder: (c, e, s) =>
-                        const Text("👻", style: TextStyle(fontSize: 20)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildCircularBtn(
+                    icon: Icons.close_rounded,
+                    onTap: widget.onClose ?? () => Navigator.pop(context),
                   ),
-                ),
+                  _buildScanLimitPill(context),
+                  _buildCircularBtn(
+                    icon: Icons.history_rounded,
+                    onTap: () {
+                      HapticEngine.selection();
+                      // Future: Show scan history
+                    },
+                  ),
+                ],
               ),
-              title: "Scanner",
-              actions: [
-                _buildCircularBlurBtn(
-                  icon: Icons.close,
-                  onTap: widget.onClose ?? () => Navigator.pop(context),
-                ),
-              ],
             ),
           ).animate().fadeIn(delay: 300.ms).slideY(begin: -0.2, end: 0),
 
           // 4. Bottom Controls Cluster (Category + Shutter)
-          Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + 120, // Raised to avoid nav bar overlap
-            left: 0,
-            right: 0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildCategoryPill(),
-                const SizedBox(height: 24),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  child: _buildBottomControls(),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildCategoryPill(),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: _buildBottomControls(),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
         ],
@@ -371,102 +492,113 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
 
   Widget _buildAnalyzingState() {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: AppColors.black,
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 28),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Image Preview with animated glow
+                // ── Image thumbnail with pulsing glow ──────────────────
                 if (_imageFile != null)
                   AnimatedBuilder(
                     animation: _pulseController,
-                    builder: (context, child) {
-                      final glow = 0.2 + _pulseController.value * 0.4;
+                    builder: (context, _) {
+                      final glow = 0.15 + _pulseController.value * 0.2;
                       return Container(
                         width: 140,
                         height: 140,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(36),
-                          border: Border.all(
-                            color: context.L.green.withValues(alpha: 0.3),
-                            width: 2,
-                          ),
+                          borderRadius: BorderRadius.circular(32),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.white.withValues(alpha: glow * 0.5),
+                              color: AppColors.primaryBlue.withValues(alpha: glow),
                               blurRadius: 40,
-                              spreadRadius: 4,
+                              spreadRadius: 8,
                             ),
                           ],
                         ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: context.L.card,
-                            borderRadius: BorderRadius.circular(34),
-                          ),
-                          child: Center(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(28),
-                              child: Image.file(_imageFile!,
-                                  fit: BoxFit.cover, width: 120, height: 120),
-                            ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(30),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.file(_imageFile!,
+                                  fit: BoxFit.cover, width: 140, height: 140),
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: AppColors.primaryBlue
+                                        .withValues(alpha: 0.4 + _pulseController.value * 0.3),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );
                     },
+                  )
+                else
+                  Container(
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.3)),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.document_scanner_rounded,
+                          color: AppColors.primaryBlue, size: 48),
+                    ),
                   ),
-                const SizedBox(height: 40),
 
-                // Logo / Ghost
-                Image.asset(
-                  'assets/images/ghost_scan.png',
-                  width: 80,
-                  errorBuilder: (c, e, s) => const Text('🤖', style: TextStyle(fontSize: 64)),
-                ).animate(onPlay: (c) => c.repeat(reverse: true))
-                  .scale(begin: const Offset(1, 1), end: const Offset(1.08, 1.08), duration: 900.ms),
+                const SizedBox(height: 36),
 
-                const SizedBox(height: 32),
-
-                // Step indicator text (animated transition)
+                // ── Animated step label ────────────────────────────────
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
+                  duration: const Duration(milliseconds: 450),
                   transitionBuilder: (child, anim) => FadeTransition(
                     opacity: anim,
                     child: SlideTransition(
-                      position: Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(anim),
+                      position:
+                          Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero)
+                              .animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
                       child: child,
                     ),
                   ),
                   child: SmoothingText(
                     key: ValueKey(_scanStep),
                     text: '${_scanStepIcons[_scanStep]}  ${_scanSteps[_scanStep]}',
-                    style: const TextStyle(
+                    style: AppTypography.titleLarge.copyWith(
                       color: Colors.white,
+                      letterSpacing: -0.2,
+                      fontWeight: FontWeight.w900,
                       fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.3,
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
 
-                // Step progress dots
+                // ── Step progress pills ───────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(_scanSteps.length, (i) {
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 400),
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: i == _scanStep ? 24 : 8,
+                      curve: Curves.easeOutCubic,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: i == _scanStep ? 28 : 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: i == _scanStep
-                            ? Colors.white
-                            : Colors.white.withValues(alpha: 0.2),
+                        color: i <= _scanStep
+                            ? AppColors.primaryBlue
+                            : Colors.white12,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
@@ -475,58 +607,89 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
 
                 const SizedBox(height: 40),
 
-                // Step list
-                ...List.generate(_scanSteps.length, (i) {
-                  final done = i < _scanStep;
-                  final active = i == _scanStep;
-                  return AnimatedOpacity(
-                    duration: const Duration(milliseconds: 400),
-                    opacity: done || active ? 1.0 : 0.25,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 400),
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: done
-                                  ? Colors.white
-                                  : active
-                                      ? Colors.white.withValues(alpha: 0.1)
-                                      : Colors.white.withValues(alpha: 0.05),
-                              border: Border.all(
-                                color: done || active
-                                    ? Colors.white
-                                    : Colors.white.withValues(alpha: 0.1),
-                                width: 1.0,
+                // ── Step list ─────────────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                  ),
+                  child: Column(
+                    children: List.generate(_scanSteps.length, (i) {
+                      final done = i < _scanStep;
+                      final active = i == _scanStep;
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: i < _scanSteps.length - 1 ? 16 : 0),
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 500),
+                          opacity: done || active ? 1.0 : 0.3,
+                          child: Row(
+                            children: [
+                              // Step circle
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 400),
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: done
+                                      ? AppColors.primaryBlue
+                                      : active
+                                          ? AppColors.primaryBlue.withValues(alpha: 0.15)
+                                          : Colors.white.withValues(alpha: 0.05),
+                                  border: Border.all(
+                                    color: done || active
+                                        ? AppColors.primaryBlue
+                                        : Colors.white12,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: done
+                                      ? const Icon(Icons.check_rounded,
+                                          size: 16, color: Colors.white)
+                                      : active
+                                          ? const AppLoadingIndicator(size: 14)
+                                          : Text(
+                                              '${i + 1}',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.w900,
+                                                  fontSize: 11,
+                                                  color: Colors.white38),
+                                            ),
+                                ),
                               ),
-                            ),
-                            child: Center(
-                              child: done
-                                  ? const Icon(Icons.check_rounded, size: 16, color: Colors.black)
-                                  : active
-                                      ? const AppLoadingIndicator(size: 14)
-                                      : Text('${i + 1}',
-                                          style: const TextStyle(color: Colors.white54, fontSize: 11)),
-                            ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Text(
+                                  '${_scanStepIcons[i]}  ${_scanSteps[i]}',
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: done || active
+                                        ? Colors.white
+                                        : Colors.white38,
+                                    fontWeight: active
+                                        ? FontWeight.w800
+                                        : FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            _scanSteps[i],
-                            style: TextStyle(
-                              color: done || active ? Colors.white : Colors.white38,
-                              fontSize: 14,
-                              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'AI-powered analysis in progress...',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: Colors.white38,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
@@ -559,24 +722,17 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
         Positioned(
           top: _scanLineController.value *
               (MediaQuery.of(context).size.width * 0.75),
-          left: 10,
-          right: 10,
-          child: Container(
-            height: 6,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  blurRadius: 20,
-                  spreadRadius: 8,
-                ),
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.4),
-                  blurRadius: 40,
-                  spreadRadius: 15,
-                ),
-              ],
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              height: 4,
+              width: MediaQuery.of(context).size.width * 0.6,
+              decoration: BoxDecoration(
+                color: context.L.primary,
+                borderRadius: BorderRadius.circular(2),
+                boxShadow: AppShadows.glow(context.L.primary, intensity: 0.2),
+              ),
             ),
           ),
         ),
@@ -594,13 +750,13 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white
+            color: context.L.primary
                 .withValues(alpha: 0.8 * (1.0 - _scanLineController.value)),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.white
+              color: context.L.primary
                   .withValues(alpha: 0.2 * (1.0 - _scanLineController.value)),
               blurRadius: 15,
               spreadRadius: 5,
@@ -628,7 +784,10 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.8),
                 shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: Colors.white.withValues(alpha: 0.3), blurRadius: 4)],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.3), blurRadius: 4)
+                ],
               ),
             ),
           ),
@@ -659,18 +818,77 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildCircularBlurBtn(
-      {required IconData icon, required VoidCallback onTap}) {
-    return GestureDetector(
+  Widget _buildCircularBtn(
+      {required IconData icon,
+      required VoidCallback onTap,
+      bool isActive = false}) {
+    return BouncingButton(
       onTap: onTap,
       child: Container(
-        width: 44,
-        height: 44,
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: isActive ? context.L.primary : context.L.card,
           shape: BoxShape.circle,
+          border: Border.all(
+              color: isActive ? context.L.primary : context.L.border,
+              width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+            if (isActive)
+              BoxShadow(
+                color: context.L.primary.withValues(alpha: 0.3),
+                blurRadius: 12,
+                spreadRadius: 2,
+              ),
+          ],
         ),
-        child: Icon(icon, color: Colors.white, size: 22),
+        child:
+            Icon(icon, color: isActive ? Colors.black : Colors.white, size: 24),
+      ),
+    );
+  }
+
+  Widget _buildScanLimitPill(BuildContext context) {
+    final state = context.watch<AppState>();
+    final used = state.profile?.scansUsed ?? 0;
+    final isPremium = state.profile?.isPremium ?? false;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: context.L.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.L.border, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          isPremium
+              ? Icon(Icons.verified_rounded, color: context.L.primary, size: 16)
+              : const Text(" ✨", style: TextStyle(fontSize: 12)),
+          const SizedBox(width: 8),
+          Text(
+            isPremium ? "PRO UNLIMITED" : "$used OF 3 SCANS",
+            style: AppTypography.labelSmall.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -680,8 +898,16 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: context.L.card,
           borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: context.L.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(
@@ -691,14 +917,14 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
             mainAxisSize: MainAxisSize.min,
             children: _categories.map((cat) {
               final isSelected = _selectedCategory == cat['name'];
-              return GestureDetector(
+              return BouncingButton(
                 onTap: () {
                   HapticEngine.selection();
                   setState(() => _selectedCategory = cat['name']);
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: isSelected ? Colors.white : Colors.transparent,
                     borderRadius: BorderRadius.circular(24),
@@ -714,7 +940,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                         const SizedBox(width: 8),
                         Text(
                           cat['name'],
-                          style: const TextStyle(
+                          style: AppTypography.labelMedium.copyWith(
                             color: Colors.black,
                             fontWeight: FontWeight.w700,
                             fontSize: 13,
@@ -724,7 +950,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                         const SizedBox(width: 6),
                         Text(
                           cat['name'],
-                          style: const TextStyle(
+                          style: AppTypography.labelMedium.copyWith(
                             color: Colors.white70,
                             fontWeight: FontWeight.w500,
                             fontSize: 12,
@@ -761,13 +987,14 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildCircularBlurBtn(
+        _buildCircularBtn(
           icon: Icons.image_outlined,
           onTap: _pickFromGallery,
         ),
         const SizedBox(width: 40), // Added spacing
-        GestureDetector(
+        BouncingButton(
           onTap: _capturePhoto,
+          scaleFactor: 0.95,
           child: Container(
             width: 88,
             height: 88,
@@ -792,12 +1019,14 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                 duration: 1000.ms,
                 curve: Curves.easeInOut,
               )
-              .shimmer(delay: 2000.ms, duration: 1500.ms, color: Colors.white24),
+              .shimmer(
+                  delay: 2000.ms, duration: 1500.ms, color: Colors.white24),
         ),
         const SizedBox(width: 40), // Added spacing
-        _buildCircularBlurBtn(
+        _buildCircularBtn(
           icon: flashIcon,
           onTap: _toggleFlash,
+          isActive: _flashMode != FlashMode.off,
         ),
       ],
     );
@@ -825,7 +1054,7 @@ class _ResultModalState extends State<_ResultModal> {
   late TextEditingController _doseController;
   late TextEditingController _formController;
   late TextEditingController _unitController; // NEW
-  
+
   // Clinical Controllers
   late TextEditingController _descController;
   late TextEditingController _howController;
@@ -833,6 +1062,11 @@ class _ResultModalState extends State<_ResultModal> {
   late TextEditingController _interactionsController;
   late TextEditingController _warningsController;
   late TextEditingController _additionalController; // NEW
+
+  // Rx Details Controllers
+  late TextEditingController _pharmacyNameController;
+  late TextEditingController _pharmacyPhoneController;
+  late TextEditingController _rxNumberController;
 
   @override
   void initState() {
@@ -844,25 +1078,46 @@ class _ResultModalState extends State<_ResultModal> {
     _doseController = TextEditingController(text: widget.result.dose);
     _formController = TextEditingController(text: widget.result.form);
     _unitController = TextEditingController(text: widget.result.unit);
-    
+
     _descController = TextEditingController(text: widget.result.description);
-    _howController = TextEditingController(text: "${widget.result.howToTake}\n\n${widget.result.whenToTake}");
-    _sideEffectsController = TextEditingController(text: widget.result.sideEffects);
-    _interactionsController = TextEditingController(text: widget.result.interactions);
+    _howController = TextEditingController(
+        text: "${widget.result.howToTake}\n\n${widget.result.whenToTake}");
+    _sideEffectsController =
+        TextEditingController(text: widget.result.sideEffects);
+    _interactionsController =
+        TextEditingController(text: widget.result.interactions);
     _warningsController = TextEditingController(text: widget.result.warnings);
     _additionalController = TextEditingController();
 
+    _pharmacyNameController = TextEditingController();
+    _pharmacyPhoneController = TextEditingController();
+    _rxNumberController = TextEditingController();
+
     // Convert ScanResult slots to ScheduleEntry entities
     if (widget.result.scheduleSlots.isNotEmpty) {
-      _manualSchedule = widget.result.scheduleSlots.map((s) => ScheduleEntry(
-        h: s['h'] ?? 8,
-        m: s['m'] ?? 0,
-        label: s['label'] ?? 'Reminder',
-        days: List<int>.from(s['days'] ?? [0, 1, 2, 3, 4, 5, 6]),
-      )).toList();
+      _manualSchedule = widget.result.scheduleSlots.map((s) {
+        String ritualStr = s['ritual'] ?? 'none';
+        Ritual ritual = Ritual.values.firstWhere(
+          (r) => r.name == ritualStr,
+          orElse: () => Ritual.none,
+        );
+
+        return ScheduleEntry(
+          h: s['h'] ?? 8,
+          m: s['m'] ?? 0,
+          label: s['label'] ?? 'Reminder',
+          days: List<int>.from(s['days'] ?? [0, 1, 2, 3, 4, 5, 6]),
+          ritual: ritual != Ritual.none ? ritual : _getAutoRitual(s['h'] ?? 8),
+        );
+      }).toList();
     } else {
       _manualSchedule = [
-        ScheduleEntry(h: 8, m: 0, label: 'Morning', days: [0, 1, 2, 3, 4, 5, 6]),
+        ScheduleEntry(
+            h: 8,
+            m: 0,
+            label: 'Morning',
+            days: [0, 1, 2, 3, 4, 5, 6],
+            ritual: _getAutoRitual(8)),
       ];
     }
   }
@@ -880,6 +1135,10 @@ class _ResultModalState extends State<_ResultModal> {
     _interactionsController.dispose();
     _warningsController.dispose();
     _additionalController.dispose();
+
+    _pharmacyNameController.dispose();
+    _pharmacyPhoneController.dispose();
+    _rxNumberController.dispose();
     super.dispose();
   }
 
@@ -889,77 +1148,134 @@ class _ResultModalState extends State<_ResultModal> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
         decoration: BoxDecoration(
-          color: const Color(0xFF111111),
+          color: context.L.bg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
+          border: Border.all(
+              color: context.L.border.withValues(alpha: 0.5), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.black.withValues(alpha: 0.5),
+              blurRadius: 40,
+              offset: const Offset(0, -10),
+            )
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Handle
             Container(
-              width: 80,
-              height: 80,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
-                color: context.L.text.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
+                color: context.L.border.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
               ),
-              child: const Center(child: Text('🛡️', style: TextStyle(fontSize: 40))),
             ),
-            const SizedBox(height: 24),
-            const Text(
-              "Secure Your Data",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 26,
+            const SizedBox(height: 32),
+            Container(
+              width: 84,
+              height: 84,
+              decoration: BoxDecoration(
+                color: context.L.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                    color: context.L.primary.withValues(alpha: 0.2), width: 2),
+              ),
+              child: Center(
+                  child: Text('🛡️',
+                      style:
+                          AppTypography.displayMedium.copyWith(fontSize: 44))),
+            ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                begin: const Offset(1, 1),
+                end: const Offset(1.05, 1.05),
+                duration: 2.seconds),
+            const SizedBox(height: 28),
+            Text(
+              "Secure Your Health Data",
+              textAlign: TextAlign.center,
+              style: AppTypography.displayLarge.copyWith(
+                color: context.L.text,
+                fontSize: 28,
                 fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
+                letterSpacing: -1.0,
               ),
             ),
             const SizedBox(height: 12),
             Text(
               "Sign in now to sync your medicines and never lose your streak. It only takes a second.",
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontSize: 15,
+              style: AppTypography.bodyMedium.copyWith(
+                color: context.L.sub,
+                fontSize: 16,
                 height: 1.5,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await AuthService.signInWithGoogle();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            const SizedBox(height: 40),
+            BouncingButton(
+              onTap: () async {
+                HapticEngine.selection();
+                Navigator.pop(context);
+                await AuthService.signInWithGoogle();
+              },
+              child: Container(
+                width: double.infinity,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: context.L.text,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.L.text.withValues(alpha: 0.2),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    )
+                  ],
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("G", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: context.L.text)),
-                    const SizedBox(width: 12),
-                    const Text("Continue with Google", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                          color: AppColors.white, shape: BoxShape.circle),
+                      child: const Text("G",
+                          style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 14,
+                              color: AppColors.black)),
+                    ),
+                    const SizedBox(width: 14),
+                    Text("Continue with Google",
+                        style: AppTypography.titleMedium.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: context.L.bg,
+                            fontSize: 16)),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                "Maybe Later",
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontWeight: FontWeight.w600),
+            BouncingButton(
+              onTap: () {
+                HapticEngine.light();
+                Navigator.pop(context);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  "Maybe Later",
+                  style: AppTypography.labelLarge.copyWith(
+                      color: context.L.sub.withValues(alpha: 0.6),
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5),
+                ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -967,16 +1283,20 @@ class _ResultModalState extends State<_ResultModal> {
   }
 
   void _showReviewHelp() {
+    final L = context.L;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.edit_note_rounded, color: context.L.text),
+            Icon(Icons.edit_note_rounded, color: L.text),
             const SizedBox(width: 12),
-            const Expanded(child: Text("Everything is editable! Tap any text field to correct or add details.")),
+            const Expanded(
+                child: Text(
+                    "Everything is editable! Tap any text field to correct or add details.")),
           ],
         ),
-        backgroundColor: const Color(0xFF111111),
+        backgroundColor: L.card,
+        elevation: 10,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         margin: const EdgeInsets.all(20),
@@ -988,23 +1308,28 @@ class _ResultModalState extends State<_ResultModal> {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    final size = MediaQuery.of(context).size;
 
     return Container(
-      constraints: BoxConstraints(maxHeight: size.height * 0.9),
-      padding: EdgeInsets.only(
+      margin: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
         top: 12,
       ),
       decoration: BoxDecoration(
-        color: L.bg,
+        color: context.L.card,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border.all(color: L.border, width: 1),
+        border: Border.all(color: context.L.border, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.5),
+            blurRadius: 30,
+            offset: const Offset(0, -10),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-              const SizedBox(height: 12),
+          const SizedBox(height: 12),
           Container(
             width: 48,
             height: 6,
@@ -1014,7 +1339,6 @@ class _ResultModalState extends State<_ResultModal> {
             ),
           ),
           const SizedBox(height: 24),
-
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1025,34 +1349,51 @@ class _ResultModalState extends State<_ResultModal> {
                   if (widget.result.systemBusy)
                     Container(
                       margin: const EdgeInsets.only(bottom: 24),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: L.green.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: L.green.withValues(alpha: 0.2)),
+                        color: L.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                            color: L.primary.withValues(alpha: 0.2),
+                            width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                              color: L.primary.withValues(alpha: 0.05),
+                              blurRadius: 20,
+                              spreadRadius: 2),
+                        ],
                       ),
                       child: Row(
                         children: [
-                          const Text("✨", style: TextStyle(fontSize: 20)),
-                          const SizedBox(width: 12),
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                                color: L.primary.withValues(alpha: 0.1),
+                                shape: BoxShape.circle),
+                            child: const Center(
+                                child:
+                                    Text("✨", style: TextStyle(fontSize: 20))),
+                          ),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "Smart Assist Active",
-                                  style: TextStyle(
-                                    color: L.green,
+                                  "SMART ASSIST ACTIVE",
+                                  style: AppTypography.labelSmall.copyWith(
+                                    color: L.primary,
                                     fontWeight: FontWeight.w900,
-                                    fontSize: 14,
+                                    letterSpacing: 1.2,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 4),
                                 Text(
-                                  "Our AI is busy, but your photo is ready! Please confirm the details manually below.",
-                                  style: TextStyle(
-                                    color: L.text.withValues(alpha: 0.7),
-                                    fontSize: 12,
+                                  "Our AI is offline but your photo is ready. Please confirm the details below.",
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: L.text.withValues(alpha: 0.8),
+                                    fontWeight: FontWeight.w600,
                                     height: 1.4,
                                   ),
                                 ),
@@ -1061,37 +1402,45 @@ class _ResultModalState extends State<_ResultModal> {
                           ),
                         ],
                       ),
-                    ).animate().fadeIn().slideY(begin: 0.2, end: 0),
+                    )
+                        .animate()
+                        .fadeIn(duration: 600.ms)
+                        .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuart),
 
                   // Verification Badge
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildStatusBadge(widget.result.identified, widget.result.systemBusy),
-                      GestureDetector(
+                      _buildStatusBadge(
+                          widget.result.identified, widget.result.systemBusy),
+                      BouncingButton(
                         onTap: () {
-                          HapticFeedback.lightImpact();
+                          HapticEngine.light();
                           _showReviewHelp();
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
                             color: L.fill,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: L.border.withValues(alpha: 0.4)),
                           ),
                           child: Row(
                             children: [
                               Text(
                                 "Review Details",
-                                style: TextStyle(
-                                  color: L.text.withValues(alpha: 0.6),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
+                                style: AppTypography.labelMedium.copyWith(
+                                  color: L.text.withValues(alpha: 0.7),
+                                  fontWeight: FontWeight.w800,
                                   letterSpacing: 0.2,
                                 ),
                               ),
-                              const SizedBox(width: 4),
-                              Icon(Icons.help_outline_rounded, size: 14, color: L.text.withValues(alpha: 0.3)),
+                              const SizedBox(width: 6),
+                              Icon(Icons.help_outline_rounded,
+                                  size: 14,
+                                  color: L.text.withValues(alpha: 0.4)),
                             ],
                           ),
                         ),
@@ -1105,17 +1454,34 @@ class _ResultModalState extends State<_ResultModal> {
                     controller: _nameController,
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
-                    hint: widget.result.category == 'Beauty' ? "Product Name" : "Medicine Name",
+                    hint: widget.result.category == 'Beauty'
+                        ? "Product Name"
+                        : "Medicine Name",
                     L: L,
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(child: _buildEditableChip(controller: _brandController, icon: "🏢", hint: "Brand", L: L)),
+                      Expanded(
+                          child: _buildEditableChip(
+                              controller: _brandController,
+                              icon: "🏢",
+                              hint: "Brand",
+                              L: L)),
                       const SizedBox(width: 8),
-                      Expanded(child: _buildEditableChip(controller: _doseController, icon: "⚡", hint: "Dose", L: L)),
+                      Expanded(
+                          child: _buildEditableChip(
+                              controller: _doseController,
+                              icon: "⚡",
+                              hint: "Dose",
+                              L: L)),
                       const SizedBox(width: 8),
-                      Expanded(child: _buildEditableChip(controller: _formController, icon: "📦", hint: "Form", L: L)),
+                      Expanded(
+                          child: _buildEditableChip(
+                              controller: _formController,
+                              icon: "📦",
+                              hint: "Form",
+                              L: L)),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -1134,8 +1500,38 @@ class _ResultModalState extends State<_ResultModal> {
 
                   const SizedBox(height: 32),
 
+                  // Pharmacy & Rx
+                  _buildSectionHeader("🏥 PHARMACY & REFILL", L),
+                  _buildExpandableCard(
+                    title: "Pharmacy Name",
+                    icon: Icons.local_pharmacy_rounded,
+                    controller: _pharmacyNameController,
+                    L: L,
+                    hint: "e.g. CVS, Walgreens (Optional)",
+                  ),
+                  _buildExpandableCard(
+                    title: "Pharmacy Phone",
+                    icon: Icons.phone_rounded,
+                    controller: _pharmacyPhoneController,
+                    L: L,
+                    hint: "e.g. 555-0123 (Optional)",
+                  ),
+                  _buildExpandableCard(
+                    title: "Rx Number",
+                    icon: Icons.receipt_long_rounded,
+                    controller: _rxNumberController,
+                    L: L,
+                    hint: "e.g. 1234567-89 (Optional)",
+                  ),
+
+                  const SizedBox(height: 32),
+
                   // Info Sections
-                  _buildSectionHeader(widget.result.category == 'Beauty' ? "✨ PRODUCT INFO" : "ℹ️ CLINICAL INFO", L),
+                  _buildSectionHeader(
+                      widget.result.category == 'Beauty'
+                          ? "✨ PRODUCT INFO"
+                          : "ℹ️ CLINICAL INFO",
+                      L),
                   _buildExpandableCard(
                     title: "Medical Purpose",
                     icon: Icons.info_outline_rounded,
@@ -1179,7 +1575,8 @@ class _ResultModalState extends State<_ResultModal> {
                     controller: _additionalController,
                     L: L,
                     accentColor: context.L.text,
-                    hint: "Add any special instructions or doctor's notes here...",
+                    hint:
+                        "Add any special instructions or doctor's notes here...",
                   ),
 
                   const SizedBox(height: 24),
@@ -1192,17 +1589,24 @@ class _ResultModalState extends State<_ResultModal> {
                     decoration: BoxDecoration(
                       color: L.card,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: L.border.withValues(alpha: 0.5)),
+                      border:
+                          Border.all(color: L.border.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [
                         Expanded(
-                          child: _buildToggleBtn("Auto suggested ✨", _useAutoSchedule,
-                              () => setState(() => _useAutoSchedule = true), L),
+                          child: _buildToggleBtn(
+                              "Auto suggested ✨",
+                              _useAutoSchedule,
+                              () => setState(() => _useAutoSchedule = true),
+                              L),
                         ),
                         Expanded(
-                          child: _buildToggleBtn("Manual config ⚙️", !_useAutoSchedule,
-                              () => setState(() => _useAutoSchedule = false), L),
+                          child: _buildToggleBtn(
+                              "Manual config ⚙️",
+                              !_useAutoSchedule,
+                              () => setState(() => _useAutoSchedule = false),
+                              L),
                         ),
                       ],
                     ),
@@ -1217,61 +1621,90 @@ class _ResultModalState extends State<_ResultModal> {
                   const SizedBox(height: 32),
 
                   // Inventory section
-                  _buildSectionHeader(widget.result.category == 'Liquid' ? "💧 LIQUID INVENTORY" : "📦 INVENTORY", L),
+                  _buildSectionHeader(
+                      widget.result.category == 'Liquid'
+                          ? "💧 LIQUID INVENTORY"
+                          : "📦 INVENTORY",
+                      L),
                   const SizedBox(height: 16),
                   _buildInventorySelector(L),
 
                   const SizedBox(height: 48),
 
                   // Primary Action
-                  SizedBox(
-                    width: double.infinity,
-                    height: 70,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        HapticFeedback.mediumImpact();
-                        final med = Medicine(
-                          id: DateTime.now().millisecondsSinceEpoch,
-                          name: _nameController.text,
-                          brand: _brandController.text,
-                          dose: _doseController.text,
-                          form: _formController.text,
-                          category: widget.result.category,
-                          count: _count,
-                          totalCount: _count,
-                          imageUrl: widget.result.imageUrl,
-                          notes: "PURPOSE:\n${_descController.text}\n\nINSTRUCTIONS:\n${_howController.text}\n\nWARNINGS:\n${_warningsController.text}\n\nNOTES:\n${_additionalController.text}",
-                          courseStartDate: todayStr(),
-                          unit: _unitController.text,
-                          schedule: _manualSchedule,
-                        );
-                        widget.onSave(med);
+                  BouncingButton(
+                    onTap: () {
+                      HapticEngine.successScan();
+                      final med = Medicine(
+                        id: DateTime.now().millisecondsSinceEpoch,
+                        name: _nameController.text,
+                        brand: _brandController.text,
+                        dose: _doseController.text,
+                        form: _formController.text,
+                        category: widget.result.category,
+                        count: _count,
+                        totalCount: _count,
+                        imageUrl: widget.result.imageUrl,
+                        notes:
+                            "PURPOSE:\n${_descController.text}\n\nINSTRUCTIONS:\n${_howController.text}\n\nWARNINGS:\n${_warningsController.text}\n\nNOTES:\n${_additionalController.text}",
+                        courseStartDate: todayStr(),
+                        unit: _unitController.text,
+                        schedule: _manualSchedule,
+                        refillInfo: (_pharmacyNameController.text.isNotEmpty ||
+                                _pharmacyPhoneController.text.isNotEmpty ||
+                                _rxNumberController.text.isNotEmpty)
+                            ? RefillInfo(
+                                pharmacyName:
+                                    _pharmacyNameController.text.trim(),
+                                pharmacyPhone:
+                                    _pharmacyPhoneController.text.trim(),
+                                rxNumber: _rxNumberController.text.trim(),
+                                totalQuantity: _count.toDouble(),
+                                currentInventory: _count.toDouble(),
+                                refillThreshold: 10,
+                              )
+                            : null,
+                      );
+                      widget.onSave(med);
 
-                        // If NOT logged in, show auth prompt
-                        if (!AuthService.isLoggedIn) {
-                          _showAuthPrompt(context);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.L.text,
-                        foregroundColor: context.L.bg,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      // If NOT logged in, show auth prompt
+                      if (!AuthService.isLoggedIn) {
+                        _showAuthPrompt(context);
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: 70,
+                      decoration: BoxDecoration(
+                        color: context.L.text,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: context.L.text.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          )
+                        ],
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.check_circle_rounded),
-                          SizedBox(width: 12),
+                          Icon(Icons.check_circle_rounded, color: context.L.bg),
+                          const SizedBox(width: 12),
                           Text(
                             "Confirm & Save Medicine",
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: AppTypography.titleLarge.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: context.L.bg,
+                                letterSpacing: -0.5),
                           ),
                         ],
                       ),
-                    ).animate(onPlay: (c) => c.repeat(reverse: true))
-                        .shimmer(delay: 3.seconds, duration: 2.seconds, color: Colors.white24),
-                  ),
+                    ),
+                  ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(
+                      delay: 3.seconds,
+                      duration: 2.seconds,
+                      color: L.bg.withValues(alpha: 0.3)),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -1281,19 +1714,21 @@ class _ResultModalState extends State<_ResultModal> {
       ),
     );
   }
+
   Widget _buildStatusBadge(bool identified, bool systemBusy) {
     final L = context.L;
-    
+
     String label = identified ? "AI VERIFIED" : "MANUAL REVIEW";
-    IconData icon = identified ? Icons.verified_rounded : Icons.help_center_rounded;
+    IconData icon =
+        identified ? Icons.verified_rounded : Icons.help_center_rounded;
     Color color = identified ? L.text : L.sub;
-    Color bg = identified ? color.withValues(alpha: 0.15) : L.fill;
+    Color bg = identified ? L.fill : L.fill.withValues(alpha: 0.5);
 
     if (systemBusy) {
       label = "SMART ASSIST";
       icon = Icons.auto_awesome_rounded;
-      color = L.green;
-      bg = color.withValues(alpha: 0.1);
+      color = L.primary;
+      bg = L.primary.withValues(alpha: 0.1);
     }
 
     return Container(
@@ -1301,7 +1736,7 @@ class _ResultModalState extends State<_ResultModal> {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1310,9 +1745,8 @@ class _ResultModalState extends State<_ResultModal> {
           const SizedBox(width: 8),
           Text(
             label,
-            style: TextStyle(
+            style: AppTypography.labelSmall.copyWith(
               color: color,
-              fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.2,
             ),
@@ -1331,7 +1765,7 @@ class _ResultModalState extends State<_ResultModal> {
   }) {
     return TextField(
       controller: controller,
-      style: TextStyle(
+      style: AppTypography.headlineMedium.copyWith(
         fontSize: fontSize,
         fontWeight: fontWeight,
         color: L.text,
@@ -1340,7 +1774,8 @@ class _ResultModalState extends State<_ResultModal> {
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: L.text.withValues(alpha: 0.2)),
+        hintStyle: AppTypography.bodyMedium
+            .copyWith(color: L.text.withValues(alpha: 0.3)),
         border: InputBorder.none,
         isDense: true,
         contentPadding: EdgeInsets.zero,
@@ -1363,19 +1798,19 @@ class _ResultModalState extends State<_ResultModal> {
       ),
       child: Row(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 12)),
+          Text(icon, style: AppTypography.bodySmall.copyWith(fontSize: 12)),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: controller,
-              style: TextStyle(
+              style: AppTypography.labelMedium.copyWith(
                 color: L.text,
-                fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: TextStyle(color: L.text.withValues(alpha: 0.2)),
+                hintStyle: AppTypography.labelMedium
+                    .copyWith(color: L.text.withValues(alpha: 0.3)),
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
@@ -1387,14 +1822,12 @@ class _ResultModalState extends State<_ResultModal> {
     );
   }
 
-
   Widget _buildSectionHeader(String title, AppThemeColors L) {
     return Text(
       title,
-      style: TextStyle(
-        fontSize: 12,
+      style: AppTypography.labelMedium.copyWith(
         fontWeight: FontWeight.w900,
-        color: L.text.withValues(alpha: 0.4),
+        color: L.text.withValues(alpha: 0.5),
         letterSpacing: 1.5,
       ),
     );
@@ -1409,25 +1842,29 @@ class _ResultModalState extends State<_ResultModal> {
     String? hint,
   }) {
     // Show if text not empty OR if it's the "Personal Notes" field
-    if (controller.text.isEmpty && title != "Personal Notes") return const SizedBox();
+    if (controller.text.isEmpty && title != "Personal Notes") {
+      return const SizedBox();
+    }
     return Container(
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: L.border),
+        color: L.fill,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: L.border, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: accentColor ?? L.text.withValues(alpha: 0.5), size: 20),
+              Icon(icon,
+                  color: accentColor ?? L.text.withValues(alpha: 0.5),
+                  size: 20),
               const SizedBox(width: 12),
               Text(
                 title,
-                style: TextStyle(
+                style: AppTypography.titleMedium.copyWith(
                   color: L.text.withValues(alpha: 0.9),
                   fontWeight: FontWeight.w800,
                   fontSize: 15,
@@ -1439,15 +1876,15 @@ class _ResultModalState extends State<_ResultModal> {
           TextField(
             controller: controller,
             maxLines: null,
-            style: TextStyle(
+            style: AppTypography.bodyMedium.copyWith(
               color: L.text.withValues(alpha: 0.6),
-              fontSize: 14,
               height: 1.4,
               fontWeight: FontWeight.w500,
             ),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: TextStyle(color: L.text.withValues(alpha: 0.2)),
+              hintStyle: AppTypography.bodyMedium
+                  .copyWith(color: L.text.withValues(alpha: 0.3)),
               border: InputBorder.none,
               isDense: true,
               contentPadding: EdgeInsets.zero,
@@ -1462,9 +1899,9 @@ class _ResultModalState extends State<_ResultModal> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: L.card,
+        color: L.fill,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border.withValues(alpha: 0.5)),
+        border: Border.all(color: L.border, width: 1.5),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1473,14 +1910,14 @@ class _ResultModalState extends State<_ResultModal> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text("Total Quantity",
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: L.text)),
-              Text(widget.result.category == 'Liquid' ? "volume detected" : "${_unitController.text} supply detected",
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: L.text.withValues(alpha: 0.4))),
+                  style: AppTypography.titleMedium
+                      .copyWith(fontWeight: FontWeight.w800, color: L.text)),
+              Text(
+                  widget.result.category == 'Liquid'
+                      ? "volume detected"
+                      : "${_unitController.text} supply detected",
+                  style: AppTypography.bodySmall
+                      .copyWith(color: L.text.withValues(alpha: 0.5))),
             ],
           ),
           Row(
@@ -1495,8 +1932,7 @@ class _ResultModalState extends State<_ResultModal> {
               const SizedBox(width: 16),
               Text(
                 "$_count",
-                style: TextStyle(
-                  fontSize: 24,
+                style: AppTypography.headlineLarge.copyWith(
                   fontWeight: FontWeight.w900,
                   color: L.text,
                 ),
@@ -1518,7 +1954,7 @@ class _ResultModalState extends State<_ResultModal> {
 
   Widget _buildToggleBtn(
       String label, bool active, VoidCallback onTap, AppThemeColors L) {
-    return GestureDetector(
+    return BouncingButton(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
@@ -1538,10 +1974,9 @@ class _ResultModalState extends State<_ResultModal> {
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: active ? L.text : L.text.withValues(alpha: 0.4),
+          style: AppTypography.labelLarge.copyWith(
+            color: active ? L.text : L.text.withValues(alpha: 0.5),
             fontWeight: active ? FontWeight.w900 : FontWeight.w600,
-            fontSize: 14,
           ),
         ),
       ),
@@ -1554,7 +1989,7 @@ class _ResultModalState extends State<_ResultModal> {
       decoration: BoxDecoration(
         color: context.L.fill,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: context.L.border.withValues(alpha: 0.2)),
+        border: Border.all(color: context.L.border, width: 1.5),
       ),
       child: Column(
         children: [
@@ -1565,7 +2000,7 @@ class _ResultModalState extends State<_ResultModal> {
               Expanded(
                 child: Text(
                   "AI suggested schedule by frequency",
-                  style: TextStyle(
+                  style: AppTypography.labelMedium.copyWith(
                     color: L.text.withValues(alpha: 0.7),
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -1575,7 +2010,10 @@ class _ResultModalState extends State<_ResultModal> {
             ],
           ),
           const SizedBox(height: 20),
-          ..._manualSchedule.asMap().entries.map((e) => _buildScheduleItem(e.key, e.value, L)),
+          ..._manualSchedule
+              .asMap()
+              .entries
+              .map((e) => _buildScheduleItem(e.key, e.value, L)),
         ],
       ),
     );
@@ -1584,22 +2022,29 @@ class _ResultModalState extends State<_ResultModal> {
   Widget _buildManualScheduleView(AppThemeColors L) {
     return Column(
       children: [
-        ..._manualSchedule.asMap().entries.map((e) => _buildScheduleItem(e.key, e.value, L)),
+        ..._manualSchedule
+            .asMap()
+            .entries
+            .map((e) => _buildScheduleItem(e.key, e.value, L)),
         const SizedBox(height: 12),
-        GestureDetector(
+        BouncingButton(
           onTap: () {
-            HapticFeedback.lightImpact();
+            HapticEngine.light();
             setState(() {
               _manualSchedule.add(ScheduleEntry(
-                  h: 12, m: 0, label: _getAutoLabel(12), days: [0, 1, 2, 3, 4, 5, 6]));
+                  h: 12,
+                  m: 0,
+                  label: _getAutoLabel(12),
+                  ritual: _getAutoRitual(12),
+                  days: [0, 1, 2, 3, 4, 5, 6]));
             });
           },
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 18),
             decoration: BoxDecoration(
-              color: L.card,
+              color: L.fill,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: L.border.withValues(alpha: 0.5)),
+              border: Border.all(color: L.border, width: 1.5),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1608,7 +2053,7 @@ class _ResultModalState extends State<_ResultModal> {
                     size: 20, color: L.text.withValues(alpha: 0.5)),
                 const SizedBox(width: 12),
                 Text("Add custom time",
-                    style: TextStyle(
+                    style: AppTypography.labelLarge.copyWith(
                         color: L.text.withValues(alpha: 0.8),
                         fontWeight: FontWeight.w800)),
               ],
@@ -1626,24 +2071,59 @@ class _ResultModalState extends State<_ResultModal> {
     return 'Night';
   }
 
+  Ritual _getAutoRitual(int h) {
+    if (h >= 6 && h <= 9) return Ritual.afterBreakfast;
+    if (h >= 11 && h <= 14) return Ritual.afterLunch;
+    if (h >= 17 && h <= 20) return Ritual.afterDinner;
+    if (h >= 21) return Ritual.beforeSleep;
+    return Ritual.none;
+  }
+
+  String _getRitualLabel(Ritual ritual) {
+    switch (ritual) {
+      case Ritual.beforeBreakfast:
+        return 'Before Breakfast';
+      case Ritual.withBreakfast:
+        return 'With Breakfast';
+      case Ritual.afterBreakfast:
+        return 'After Breakfast';
+      case Ritual.beforeLunch:
+        return 'Before Lunch';
+      case Ritual.withLunch:
+        return 'With Lunch';
+      case Ritual.afterLunch:
+        return 'After Lunch';
+      case Ritual.beforeDinner:
+        return 'Before Dinner';
+      case Ritual.withDinner:
+        return 'With Dinner';
+      case Ritual.afterDinner:
+        return 'After Dinner';
+      case Ritual.beforeSleep:
+        return 'Before Sleep';
+      default:
+        return 'No Meal Ritual';
+    }
+  }
+
   Widget _buildScheduleItem(int idx, ScheduleEntry s, AppThemeColors L) {
     final timeStr = fmtTime(s.h, s.m, context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: L.card,
+        color: L.fill,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border.withValues(alpha: 0.5)),
+        border: Border.all(color: L.border, width: 1.5),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              GestureDetector(
+              BouncingButton(
                 onTap: () async {
-                  HapticFeedback.lightImpact();
+                  HapticEngine.selection();
                   final result = await ModernTimePicker.show(
                     context,
                     initialTime: TimeOfDay(hour: s.h, minute: s.m),
@@ -1654,26 +2134,29 @@ class _ResultModalState extends State<_ResultModal> {
                       s.h = result.hour;
                       s.m = result.minute;
                       s.label = _getAutoLabel(result.hour);
+                      if (s.ritual == Ritual.none) {
+                        s.ritual = _getAutoRitual(result.hour);
+                      }
                     });
                   }
                 },
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: L.bg,
+                    color: L.card,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: L.border.withValues(alpha: 0.3)),
+                    border: Border.all(color: L.border),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.alarm_rounded, color: context.L.text, size: 16),
+                      Icon(Icons.alarm_rounded,
+                          color: context.L.text, size: 16),
                       const SizedBox(width: 8),
                       Text(
                         timeStr,
-                        style: TextStyle(
+                        style: AppTypography.titleMedium.copyWith(
                           color: L.text,
                           fontWeight: FontWeight.w900,
-                          fontSize: 16,
                           letterSpacing: -0.5,
                         ),
                       ),
@@ -1685,18 +2168,39 @@ class _ResultModalState extends State<_ResultModal> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    s.label.toUpperCase(),
-                    style: TextStyle(
-                      color: L.sub,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 10,
-                      letterSpacing: 0.5,
+                  BouncingButton(
+                    onTap: () {
+                      HapticEngine.light();
+                      _showRitualPicker(s);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: s.ritual != Ritual.none
+                            ? L.primary.withValues(alpha: 0.1)
+                            : L.card,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: s.ritual != Ritual.none
+                              ? L.primary.withValues(alpha: 0.3)
+                              : L.border,
+                        ),
+                      ),
+                      child: Text(
+                        _getRitualLabel(s.ritual).toUpperCase(),
+                        style: AppTypography.labelSmall.copyWith(
+                          color: s.ritual != Ritual.none ? L.green : L.sub,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 4),
                   Text(
-                    "Daily Reminder",
-                    style: TextStyle(
+                    s.label,
+                    style: AppTypography.labelLarge.copyWith(
                       color: L.text.withValues(alpha: 0.7),
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
@@ -1713,11 +2217,61 @@ class _ResultModalState extends State<_ResultModal> {
                 _manualSchedule.removeAt(idx);
               });
             },
-            icon: Icon(Icons.remove_circle_outline_rounded, color: L.red.withValues(alpha: 0.7)),
+            icon: Icon(Icons.remove_circle_outline_rounded,
+                color: L.red.withValues(alpha: 0.5)),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showRitualPicker(ScheduleEntry s) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: context.L.card,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          border: Border.all(color: context.L.border, width: 1.5),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Select Meal Ritual",
+                style: AppTypography.titleLarge.copyWith(
+                    fontWeight: FontWeight.w900, color: context.L.text)),
+            const SizedBox(height: 20),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: Ritual.values.map((r) {
+                  final isSelected = s.ritual == r;
+                  return ListTile(
+                    onTap: () {
+                      setState(() => s.ritual = r);
+                      Navigator.pop(context);
+                    },
+                    title: Text(_getRitualLabel(r),
+                        style: AppTypography.bodyLarge.copyWith(
+                            color:
+                                isSelected ? context.L.green : context.L.text,
+                            fontWeight: isSelected
+                                ? FontWeight.w800
+                                : FontWeight.w500)),
+                    trailing: isSelected
+                        ? Icon(Icons.check_circle_rounded,
+                            color: context.L.green)
+                        : null,
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1731,14 +2285,14 @@ class _ModalQtyBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    return GestureDetector(
+    return BouncingButton(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: L.bg,
+          color: context.L.fill,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: L.border.withValues(alpha: 0.6)),
+          border: Border.all(color: L.border, width: 1.5),
         ),
         child: Icon(icon, size: 22, color: L.text),
       ),
@@ -1746,26 +2300,25 @@ class _ModalQtyBtn extends StatelessWidget {
   }
 }
 
-
 class ScanFramePainter extends CustomPainter {
   final String category;
-  ScanFramePainter({required this.category});
+  final Color primaryColor;
+  ScanFramePainter({required this.category, required this.primaryColor});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white
+      ..color = primaryColor
       ..strokeWidth = 4.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final glowPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.3)
-      ..strokeWidth = 10.0
+      ..color = primaryColor.withValues(alpha: 0.4)
+      ..strokeWidth = 12.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
 
     switch (category) {
       case 'Liquid':
@@ -1782,7 +2335,8 @@ class ScanFramePainter extends CustomPainter {
     }
   }
 
-  void _paintTabletFrame(Canvas canvas, Size size, Paint paint, Paint glowPaint) {
+  void _paintTabletFrame(
+      Canvas canvas, Size size, Paint paint, Paint glowPaint) {
     const cornerSize = 48.0;
     final path = Path();
     // Top Left
@@ -1806,12 +2360,16 @@ class ScanFramePainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _paintLiquidFrame(Canvas canvas, Size size, Paint paint, Paint glowPaint) {
-    canvas.drawCircle(Offset(size.width / 2, size.height / 2), size.width / 2.2, glowPaint);
-    canvas.drawCircle(Offset(size.width / 2, size.height / 2), size.width / 2.2, paint);
+  void _paintLiquidFrame(
+      Canvas canvas, Size size, Paint paint, Paint glowPaint) {
+    canvas.drawCircle(
+        Offset(size.width / 2, size.height / 2), size.width / 2.2, glowPaint);
+    canvas.drawCircle(
+        Offset(size.width / 2, size.height / 2), size.width / 2.2, paint);
   }
 
-  void _paintSprayFrame(Canvas canvas, Size size, Paint paint, Paint glowPaint) {
+  void _paintSprayFrame(
+      Canvas canvas, Size size, Paint paint, Paint glowPaint) {
     final center = Offset(size.width / 2, size.height / 2);
     const armSize = 40.0;
     const gap = 20.0;
@@ -1831,7 +2389,8 @@ class ScanFramePainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _paintBeautyFrame(Canvas canvas, Size size, Paint paint, Paint glowPaint) {
+  void _paintBeautyFrame(
+      Canvas canvas, Size size, Paint paint, Paint glowPaint) {
     final path = Path();
     const inset = 30.0;
     path.moveTo(size.width / 2, inset);

@@ -29,11 +29,9 @@ service cloud.firestore {
       }
 
       match /caregivers/{cgKey} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-        allow read: if request.auth != null && request.auth.uid == cgKey;
-        // Allow caregiver to set/update their own status during join flow
-        allow create, update: if request.auth != null && request.auth.uid == cgKey
-                      && request.resource.data.status == 'active';
+        allow read: if request.auth != null && (request.auth.uid == userId || request.auth.uid == cgKey);
+        allow delete: if request.auth != null && (request.auth.uid == userId || request.auth.uid == cgKey);
+        // create/update is now restricted to Cloud Functions (admin SDK)
       }
 
       // Monitoring List: Owned by the caregiver to track their patients

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import '../../core/utils/logger.dart';
+import '../../theme/app_theme.dart';
 
 class GlobalErrorBoundary extends StatefulWidget {
   final Widget child;
@@ -19,21 +20,34 @@ class _GlobalErrorBoundaryState extends State<GlobalErrorBoundary> {
   @override
   void initState() {
     super.initState();
-    // Configure Flutter's built-in error display to be silent in production
-    // and rely on our boundary for the UI.
+
+    // Capture background errors for logging without crashing the UI
+    final originalOnError = FlutterError.onError;
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FirebaseCrashlytics.instance.recordFlutterError(details);
+      if (originalOnError != null) originalOnError(details);
+    };
+
+    // Replace the "Red Screen of Death" with our professional recovery UI
     ErrorWidget.builder = (FlutterErrorDetails details) {
       _handleError(details.exception, details.stack ?? StackTrace.current);
-      return const SizedBox.shrink();
+      return const SizedBox.shrink(); // Handled by our stateful boundary
     };
   }
 
   void _handleError(Object error, StackTrace stack) {
-    appLogger.e('[GlobalErrorBoundary] Caught exception: $error', stackTrace: stack);
+    appLogger.e('[GlobalErrorBoundary] Caught exception: $error',
+        stackTrace: stack);
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     if (mounted) {
-      setState(() {
-        _hasError = true;
-        _lastError = error;
+      // Defer setState to avoid calling it during a build frame
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _hasError = true;
+            _lastError = error;
+          });
+        }
       });
     }
   }
@@ -53,16 +67,15 @@ class _GlobalErrorBoundaryState extends State<GlobalErrorBoundary> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       '✨',
-                      style: TextStyle(fontSize: 64),
+                      style: AppTypography.displayLarge.copyWith(fontSize: 64),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
+                    Text(
                       'Something went wrong',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
+                      style: AppTypography.headlineLarge.copyWith(
                         fontSize: 24,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
@@ -70,11 +83,10 @@ class _GlobalErrorBoundaryState extends State<GlobalErrorBoundary> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      "We've encountered an unexpected issue. Don't worry, your data is safe. Please restart the app.",
+                    Text(
+                      "We've encountered a temporary issue. Don't worry, your data is safe and synchronized. Let's get you back on track.",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
+                      style: AppTypography.bodyMedium.copyWith(
                         fontSize: 15,
                         color: Colors.white70,
                         height: 1.5,
@@ -82,16 +94,26 @@ class _GlobalErrorBoundaryState extends State<GlobalErrorBoundary> {
                     ),
                     const SizedBox(height: 48),
                     _ActionButton(
+                      label: 'RESUME SESSION',
+                      onTap: () {
+                        setState(() {
+                          _hasError = false;
+                          _lastError = null;
+                        });
+                      },
+                      primary: true,
+                    ),
+                    const SizedBox(height: 16),
+                    _ActionButton(
                       label: 'RESTART APP',
                       onTap: () => SystemNavigator.pop(),
-                      primary: true,
+                      primary: false,
                     ),
                     const SizedBox(height: 16),
                     if (_lastError != null)
                       Text(
                         'Technical snippet: ${_lastError.toString().split('\n').first}',
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
+                        style: AppTypography.labelSmall.copyWith(
                           fontSize: 10,
                           color: Colors.white24,
                         ),
@@ -137,8 +159,7 @@ class _ActionButton extends StatelessWidget {
         child: Center(
           child: Text(
             label,
-            style: TextStyle(
-              fontFamily: 'Inter',
+            style: AppTypography.labelLarge.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.w900,
               color: primary ? Colors.black : Colors.white,

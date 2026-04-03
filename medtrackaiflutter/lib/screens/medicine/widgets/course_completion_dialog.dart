@@ -39,22 +39,20 @@ class CourseCompletionDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('🎉', style: TextStyle(fontSize: 64)),
+            Text('🎉',
+                style: AppTypography.headlineLarge.copyWith(fontSize: 64)),
             const SizedBox(height: 16),
             Text(
               'Course Completed!',
-              style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: L.text),
+              style: AppTypography.titleLarge
+                  .copyWith(fontWeight: FontWeight.w800, color: L.text),
             ),
             const SizedBox(height: 8),
             Text(
               'Great job finishing your course of ${med.name}. You\'ve successfully completed all prescribed doses.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontFamily: 'Inter', fontSize: 15, color: L.sub, height: 1.5),
+              style:
+                  AppTypography.bodyMedium.copyWith(color: L.sub, height: 1.5),
             ),
             const SizedBox(height: 24),
             Container(
@@ -80,16 +78,11 @@ class CourseCompletionDialog extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Achievement Unlocked',
-                            style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: L.green)),
+                            style: AppTypography.labelMedium.copyWith(
+                                fontWeight: FontWeight.w800, color: L.green)),
                         Text('100% Adherence for this course',
-                            style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 12,
-                                color: L.sub.withValues(alpha: 0.8))),
+                            style: AppTypography.labelSmall
+                                .copyWith(color: L.sub.withValues(alpha: 0.8))),
                       ],
                     ),
                   ),
@@ -113,9 +106,9 @@ class CourseCompletionDialog extends StatelessWidget {
                           borderRadius: BorderRadius.circular(24)),
                       elevation: 0,
                     ),
-                    child: const Text('Archive & Finish',
-                        style: TextStyle(
-                            fontFamily: 'Inter', fontWeight: FontWeight.w700)),
+                    child: Text('Archive & Finish',
+                        style: AppTypography.labelLarge
+                            .copyWith(fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],
@@ -124,10 +117,8 @@ class CourseCompletionDialog extends StatelessWidget {
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text('Close',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
-                      color: L.sub,
-                      fontWeight: FontWeight.w600)),
+                  style: AppTypography.labelLarge
+                      .copyWith(color: L.sub, fontWeight: FontWeight.w600)),
             ),
           ],
         ),

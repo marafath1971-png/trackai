@@ -18,11 +18,14 @@ class SymptomRepositoryImpl implements SymptomRepository {
     final uid = AuthService.uid;
     if (uid != null) {
       try {
-        final snap = await _db.collection('users').doc(uid).collection('symptoms').get();
-        final cloudSymptoms = snap.docs.map((doc) => Symptom.fromJson(doc.data())).toList();
-        
+        final snap =
+            await _db.collection('users').doc(uid).collection('symptoms').get();
+        final cloudSymptoms =
+            snap.docs.map((doc) => Symptom.fromJson(doc.data())).toList();
+
         // Update local cache
-        _storage.setString(_key, jsonEncode(cloudSymptoms.map((s) => s.toJson()).toList()));
+        _storage.setString(
+            _key, jsonEncode(cloudSymptoms.map((s) => s.toJson()).toList()));
         return cloudSymptoms;
       } catch (e) {
         appLogger.e('[SymptomRepo] Failed to fetch from Firestore', error: e);
@@ -40,7 +43,7 @@ class SymptomRepositoryImpl implements SymptomRepository {
   @override
   Future<void> saveSymptom(Symptom symptom) async {
     final uid = AuthService.uid;
-    
+
     // Save locally
     final symptoms = await getSymptoms();
     final idx = symptoms.indexWhere((s) => s.id == symptom.id);
@@ -49,12 +52,18 @@ class SymptomRepositoryImpl implements SymptomRepository {
     } else {
       symptoms.add(symptom);
     }
-    await _storage.setString(_key, jsonEncode(symptoms.map((s) => s.toJson()).toList()));
+    await _storage.setString(
+        _key, jsonEncode(symptoms.map((s) => s.toJson()).toList()));
 
     // Save to Firestore
     if (uid != null) {
       try {
-        await _db.collection('users').doc(uid).collection('symptoms').doc(symptom.id).set(symptom.toJson());
+        await _db
+            .collection('users')
+            .doc(uid)
+            .collection('symptoms')
+            .doc(symptom.id)
+            .set(symptom.toJson());
       } catch (e) {
         appLogger.e('[SymptomRepo] Failed to save to Firestore', error: e);
       }
@@ -64,16 +73,22 @@ class SymptomRepositoryImpl implements SymptomRepository {
   @override
   Future<void> deleteSymptom(String id) async {
     final uid = AuthService.uid;
-    
+
     // Delete locally
     final symptoms = await getSymptoms();
     symptoms.removeWhere((s) => s.id == id);
-    await _storage.setString(_key, jsonEncode(symptoms.map((s) => s.toJson()).toList()));
+    await _storage.setString(
+        _key, jsonEncode(symptoms.map((s) => s.toJson()).toList()));
 
     // Delete from Firestore
     if (uid != null) {
       try {
-        await _db.collection('users').doc(uid).collection('symptoms').doc(id).delete();
+        await _db
+            .collection('users')
+            .doc(uid)
+            .collection('symptoms')
+            .doc(id)
+            .delete();
       } catch (e) {
         appLogger.e('[SymptomRepo] Failed to delete from Firestore', error: e);
       }
@@ -83,7 +98,7 @@ class SymptomRepositoryImpl implements SymptomRepository {
   @override
   Future<void> clearSymptoms() async {
     await _storage.remove(_key);
-    // Clearing Firestore requires more logic (batch delete or cloud function), 
+    // Clearing Firestore requires more logic (batch delete or cloud function),
     // but for now we focus on the local/session experience.
   }
 }

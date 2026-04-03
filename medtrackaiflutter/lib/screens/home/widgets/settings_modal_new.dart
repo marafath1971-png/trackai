@@ -7,6 +7,8 @@ import 'settings/profile_tab.dart';
 import 'settings/stats_tab.dart';
 import 'settings/app_tab.dart';
 import 'settings/data_tab.dart';
+import '../../../screens/settings/global_settings_screen.dart';
+import '../../../l10n/app_localizations.dart';
 
 class SettingsModal extends StatefulWidget {
   final VoidCallback onClose;
@@ -17,20 +19,21 @@ class SettingsModal extends StatefulWidget {
 }
 
 class _SettingsModalState extends State<SettingsModal> {
-  String _activeTab = 'profile'; // profile | stats | app | data
-  final String ff = 'Inter';
+  String _activeTab = 'profile'; // profile | stats | app | data | global
 
   @override
   Widget build(BuildContext context) {
     final state = context.read<AppState>();
     final L = context.L;
+    final s = AppLocalizations.of(context)!;
     final size = MediaQuery.of(context).size;
 
     final tabs = [
-      {'id': 'profile', 'label': 'Profile', 'icon': '👤'},
-      {'id': 'stats', 'label': 'Stats', 'icon': '📊'},
-      {'id': 'app', 'label': 'App', 'icon': '⚙️'},
-      {'id': 'data', 'label': 'Data', 'icon': '🗂️'},
+      {'id': 'profile', 'label': s.settingsProfile, 'icon': '👤'},
+      {'id': 'stats', 'label': s.settingsStats, 'icon': '📊'},
+      {'id': 'app', 'label': s.settingsApp, 'icon': '⚙️'},
+      {'id': 'data', 'label': s.settingsData, 'icon': '🗂️'},
+      {'id': 'global', 'label': s.settingsGlobal, 'icon': '🌍'},
     ];
 
     return GestureDetector(
@@ -49,7 +52,7 @@ class _SettingsModalState extends State<SettingsModal> {
                   color: L.bg,
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(32)),
-                  border: Border.all(color: L.border, width: 1.0)),
+                  border: Border.all(color: L.border, width: 1.5)),
               child: Column(children: [
                 const SizedBox(height: 10),
                 Center(
@@ -63,12 +66,10 @@ class _SettingsModalState extends State<SettingsModal> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Settings',
-                            style: TextStyle(
-                                fontFamily: ff,
-                                fontSize: 24,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                        Text(s.settings,
+                            style: AppTypography.displaySmall.copyWith(
                                 fontWeight: FontWeight.w900,
                                 color: L.text,
                                 letterSpacing: -0.7)),
@@ -84,11 +85,15 @@ class _SettingsModalState extends State<SettingsModal> {
                                     color: L.sub, size: 22)),
                           ),
                         ),
-                      ]).animate().fade(duration: 400.ms).slideY(begin: -0.1, end: 0),
+                      ])
+                      .animate()
+                      .fade(duration: 400.ms)
+                      .slideY(begin: -0.1, end: 0),
                 ),
                 // Tab Bar
                 SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                  physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics()),
                   scrollDirection: Axis.horizontal,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -106,24 +111,28 @@ class _SettingsModalState extends State<SettingsModal> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 10),
                           decoration: BoxDecoration(
-                              color: isAct ? const Color(0xFF111111) : Colors.white.withValues(alpha: 0.05),
+                              color: isAct
+                                  ? L.card
+                                  : L.fill.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(99),
                               border: Border.all(
-                                color: isAct ? Colors.white.withValues(alpha: 0.15) : L.border.withValues(alpha: 0.3)
-                              )),
+                                  color: isAct
+                                      ? L.primary.withValues(alpha: 0.5)
+                                      : L.border.withValues(alpha: 0.3),
+                                  width: 1.5)),
                           child: Row(children: [
-                            Text(t['icon']!,
-                                style: const TextStyle(fontSize: 14)),
+                            Text(t['icon']!, style: AppTypography.labelLarge),
                             const SizedBox(width: 8),
                             Text(t['label']!,
-                                style: TextStyle(
-                                    fontFamily: ff,
-                                    fontSize: 13,
+                                style: AppTypography.labelLarge.copyWith(
                                     fontWeight: FontWeight.w800,
                                     color: isAct ? Colors.white : L.text)),
                           ]),
                         ),
-                      ).animate().fade(delay: (idx * 50).ms).scale(begin: const Offset(0.9, 0.9)),
+                      )
+                          .animate()
+                          .fade(delay: (idx * 50).ms)
+                          .scale(begin: const Offset(0.9, 0.9)),
                     );
                   }).toList()),
                 ),
@@ -140,13 +149,15 @@ class _SettingsModalState extends State<SettingsModal> {
   Widget _buildContent(AppState state, AppThemeColors L) {
     switch (_activeTab) {
       case 'profile':
-        return ProfileTab(state: state, L: L, ff: ff);
+        return ProfileTab(state: state, L: L);
       case 'stats':
-        return StatsTab(state: state, L: L, ff: ff);
+        return StatsTab(state: state, L: L);
       case 'app':
-        return AppTab(state: state, L: L, ff: ff, onClose: widget.onClose);
+        return AppTab(state: state, L: L, onClose: widget.onClose);
       case 'data':
-        return DataTab(state: state, L: L, ff: ff, onClose: widget.onClose);
+        return DataTab(state: state, L: L, onClose: widget.onClose);
+      case 'global':
+        return const GlobalSettingsScreen();
       default:
         return const SizedBox();
     }

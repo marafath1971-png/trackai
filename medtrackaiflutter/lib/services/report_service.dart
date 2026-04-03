@@ -2,9 +2,11 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../domain/entities/entities.dart';
+import '../l10n/app_localizations.dart';
 
 class ReportService {
   static Future<void> generateAndShareReport({
+    required AppLocalizations s,
     required String userName,
     required double adherence,
     required List<Medicine> meds,
@@ -26,15 +28,15 @@ class ReportService {
         ),
         build: (pw.Context context) {
           return [
-            _buildHeader(userName),
+            _buildHeader(s, userName),
             pw.SizedBox(height: 20),
-            _buildSummarySection(adherence, meds.length),
+            _buildSummarySection(s, adherence, meds.length),
             pw.SizedBox(height: 30),
-            _buildMedicationTable(meds),
+            _buildMedicationTable(s, meds),
             pw.SizedBox(height: 30),
-            _buildSymptomSection(symptoms),
+            _buildSymptomSection(s, symptoms),
             pw.SizedBox(height: 40),
-            _buildFooter(),
+            _buildFooter(s),
           ];
         },
       ),
@@ -42,35 +44,40 @@ class ReportService {
 
     await Printing.sharePdf(
       bytes: await pdf.save(),
-      filename: 'MedAI_Health_Report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      filename:
+          'MedAI_Health_Report_${DateTime.now().millisecondsSinceEpoch}.pdf',
     );
   }
 
-  static pw.Widget _buildHeader(String name) {
+  static pw.Widget _buildHeader(AppLocalizations s, String name) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text('MedAI Health Report',
-                style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
-            pw.Text('Personal Medical Summary & Adherence Trends',
-                style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+            pw.Text(s.healthReportTitle,
+                style:
+                    pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+            pw.Text(s.medicalSummarySubtitle,
+                style:
+                    const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
           ],
         ),
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.end,
           children: [
-            pw.Text('Patient: $name', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-            pw.Text('Date: ${DateTime.now().toString().split(' ')[0]}'),
+            pw.Text(s.patientLabel(name),
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+            pw.Text(s.reportDate(DateTime.now().toString().split(' ')[0])),
           ],
         ),
       ],
     );
   }
 
-  static pw.Widget _buildSummarySection(double adherence, int medCount) {
+  static pw.Widget _buildSummarySection(
+      AppLocalizations s, double adherence, int medCount) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(15),
       decoration: const pw.BoxDecoration(
@@ -80,9 +87,9 @@ class ReportService {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
         children: [
-          _buildStatBox('Overall Adherence', '${(adherence * 100).round()}%'),
-          _buildStatBox('Active Medications', '$medCount'),
-          _buildStatBox('Report Period', 'Last 30 Days'),
+          _buildStatBox(s.overallAdherence, '${(adherence * 100).round()}%'),
+          _buildStatBox(s.activeMedications, '$medCount'),
+          _buildStatBox(s.reportPeriod, s.last30Days),
         ],
       ),
     );
@@ -91,28 +98,37 @@ class ReportService {
   static pw.Widget _buildStatBox(String label, String value) {
     return pw.Column(
       children: [
-        pw.Text(label, style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+        pw.Text(label,
+            style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
         pw.Text(value,
             style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
       ],
     );
   }
 
-  static pw.Widget _buildMedicationTable(List<Medicine> meds) {
+  static pw.Widget _buildMedicationTable(
+      AppLocalizations s, List<Medicine> meds) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text('Current Medications',
+        pw.Text(s.currentMedications,
             style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 10),
         pw.TableHelper.fromTextArray(
-          headers: ['Medicine', 'Dose', 'Frequency', 'Stock Remaining'],
-          data: meds.map((m) => [
-            m.name,
-            m.dose,
-            m.frequency,
-            '${m.count} / ${m.totalCount}',
-          ]).toList(),
+          headers: [
+            s.medicineCol,
+            s.doseCol,
+            s.frequencyCol,
+            s.stockRemainingCol
+          ],
+          data: meds
+              .map((m) => [
+                    m.name,
+                    m.dose,
+                    m.frequency,
+                    '${m.count} / ${m.totalCount}',
+                  ])
+              .toList(),
           headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
           headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
           cellHeight: 30,
@@ -127,26 +143,36 @@ class ReportService {
     );
   }
 
-  static pw.Widget _buildSymptomSection(List<Symptom> symptoms) {
+  static pw.Widget _buildSymptomSection(
+      AppLocalizations s, List<Symptom> symptoms) {
     if (symptoms.isEmpty) {
-      return pw.Text('No symptoms logged in this period.',
-          style: pw.TextStyle(color: PdfColors.grey600, fontStyle: pw.FontStyle.italic));
+      return pw.Text(s.noSymptomsLogged,
+          style: pw.TextStyle(
+              color: PdfColors.grey600, fontStyle: pw.FontStyle.italic));
     }
 
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text('Recent Symptoms & Well-being',
+        pw.Text(s.recentSymptoms,
             style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 10),
         pw.TableHelper.fromTextArray(
-          headers: ['Date', 'Symptom', 'Severity', 'Notes'],
-          data: symptoms.take(20).map((s) => [
-            s.timestamp.toString().split(' ')[0],
-            s.name,
-            '${s.severity}/10',
-            s.notes ?? '-',
-          ]).toList(),
+          headers: [
+            s.symptomDateCol,
+            s.symptomNameCol,
+            s.severityCol,
+            s.notesCol
+          ],
+          data: symptoms
+              .take(20)
+              .map((sy) => [
+                    sy.timestamp.toString().split(' ')[0],
+                    sy.name,
+                    '${sy.severity}/10',
+                    sy.notes ?? '-',
+                  ])
+              .toList(),
           headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
           headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
           cellHeight: 25,
@@ -155,13 +181,13 @@ class ReportService {
     );
   }
 
-  static pw.Widget _buildFooter() {
+  static pw.Widget _buildFooter(AppLocalizations s) {
     return pw.Column(
       children: [
         pw.Divider(color: PdfColors.grey),
         pw.SizedBox(height: 10),
         pw.Text(
-          'Generated by MedAI Pro. This report is for informational purposes only and should be reviewed by a qualified healthcare professional.',
+          s.reportFooter,
           textAlign: pw.TextAlign.center,
           style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
         ),

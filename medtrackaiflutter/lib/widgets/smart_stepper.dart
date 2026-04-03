@@ -78,7 +78,7 @@ class _SmartStepperState extends State<SmartStepper>
               ],
         border: Border.all(
             color: L.border.withValues(alpha: widget.isSmall ? 0.2 : 0.5),
-            width: widget.isSmall ? 1.0 : 1.5),
+            width: widget.isSmall ? 1.0 : 2.0),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -98,8 +98,10 @@ class _SmartStepperState extends State<SmartStepper>
               children: [
                 Text(
                   '$_currentValue',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
+                  style: (widget.isSmall
+                          ? AppTypography.bodyMedium
+                          : AppTypography.headlineMedium)
+                      .copyWith(
                     fontSize: widget.isSmall ? 14 : 20,
                     fontWeight: FontWeight.w800,
                     color: L.text,
@@ -110,8 +112,10 @@ class _SmartStepperState extends State<SmartStepper>
                   SizedBox(width: widget.isSmall ? 2 : 4),
                   Text(
                     widget.label,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: (widget.isSmall
+                            ? AppTypography.labelSmall
+                            : AppTypography.labelLarge)
+                        .copyWith(
                       fontSize: widget.isSmall ? 11 : 14,
                       fontWeight: FontWeight.w600,
                       color: L.sub,

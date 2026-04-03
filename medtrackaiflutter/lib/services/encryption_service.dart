@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter/foundation.dart';
+import '../../core/utils/logger.dart';
 
 class EncryptionService {
   static const _storage = FlutterSecureStorage();
@@ -39,7 +39,7 @@ class EncryptionService {
       final combined = iv.bytes + encrypted.bytes;
       return base64.encode(combined);
     } catch (e) {
-      debugPrint('Encryption failed: $e');
+      appLogger.e('Encryption failed', error: e);
       return plainText; // Fail safe
     }
   }
@@ -71,7 +71,7 @@ class EncryptionService {
 
       return _encrypter!.decrypt(encrypted, iv: iv);
     } catch (e) {
-      debugPrint('Decryption failed: $e');
+      appLogger.e('Decryption failed', error: e);
       return encryptedBase64; // Return original if failed (might not be encrypted)
     }
   }

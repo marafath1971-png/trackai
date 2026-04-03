@@ -28,7 +28,7 @@ class HomeMissedAlertsBanner extends StatelessWidget {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
+              color: L.onBg.withValues(alpha: 0.25),
               blurRadius: 30,
               offset: const Offset(0, 15),
               spreadRadius: -5,
@@ -43,7 +43,8 @@ class HomeMissedAlertsBanner extends StatelessWidget {
                 color: L.bg.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.notifications_active_rounded, color: L.bg, size: 18),
+              child: Icon(Icons.notifications_active_rounded,
+                  color: L.bg, size: 18),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -52,8 +53,7 @@ class HomeMissedAlertsBanner extends StatelessWidget {
                 children: [
                   Text(
                     'MISSED DOSES',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: AppTypography.labelLarge.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                       color: L.bg.withValues(alpha: 0.6),
@@ -63,8 +63,7 @@ class HomeMissedAlertsBanner extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     'Tap to clear recent alerts',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: AppTypography.titleMedium.copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: L.bg,
@@ -74,7 +73,8 @@ class HomeMissedAlertsBanner extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: L.bg.withValues(alpha: 0.4)),
+            Icon(Icons.chevron_right_rounded,
+                color: L.bg.withValues(alpha: 0.4)),
           ],
         ),
       ),
@@ -112,7 +112,7 @@ class HomeLowStockBanner extends StatelessWidget {
           border: Border.all(color: L.red.withValues(alpha: 0.2), width: 1.0),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: L.onBg.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -135,8 +135,7 @@ class HomeLowStockBanner extends StatelessWidget {
                 children: [
                   Text(
                     'REFILL NEEDED',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: AppTypography.labelLarge.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                       color: L.red,
@@ -146,8 +145,7 @@ class HomeLowStockBanner extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '${lowMeds.length} items running low',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
+                    style: AppTypography.titleMedium.copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: L.text,
@@ -157,7 +155,8 @@ class HomeLowStockBanner extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: L.sub.withValues(alpha: 0.3)),
+            Icon(Icons.chevron_right_rounded,
+                color: L.sub.withValues(alpha: 0.3)),
           ],
         ),
       ),

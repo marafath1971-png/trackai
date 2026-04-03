@@ -4,7 +4,8 @@ import '../../../theme/app_theme.dart';
 class SimulateMissCard extends StatefulWidget {
   final AppThemeColors L;
   final VoidCallback onSimulate;
-  const SimulateMissCard({super.key, required this.L, required this.onSimulate});
+  const SimulateMissCard(
+      {super.key, required this.L, required this.onSimulate});
   @override
   State<SimulateMissCard> createState() => _SimulateMissCardState();
 }
@@ -42,14 +43,10 @@ class _SimulateMissCardState extends State<SimulateMissCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                 Text('Test Alert Cycle',
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: L.text)),
+                    style: AppTypography.labelLarge
+                        .copyWith(fontWeight: FontWeight.w700, color: L.text)),
                 Text('Simulate a missed dose alert',
-                    style: TextStyle(
-                        fontFamily: 'Inter', fontSize: 11, color: L.sub)),
+                    style: AppTypography.labelSmall.copyWith(color: L.sub)),
               ])),
           GestureDetector(
             onTap: _simulating
@@ -66,11 +63,8 @@ class _SimulateMissCardState extends State<SimulateMissCard> {
                   color: _simulating ? L.border : const Color(0xFF111111),
                   borderRadius: BorderRadius.circular(20)),
               child: Text(_simulating ? 'Sending...' : 'Trigger',
-                  style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white)),
+                  style: AppTypography.labelSmall.copyWith(
+                      fontWeight: FontWeight.w700, color: Colors.white)),
             ),
           )
         ]),

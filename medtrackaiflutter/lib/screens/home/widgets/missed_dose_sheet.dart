@@ -90,17 +90,14 @@ class MissedDoseProtocolSheet extends StatelessWidget {
                       children: [
                     Text(
                       'Missed Dose',
-                      style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 20,
+                      style: AppTypography.titleLarge.copyWith(
                           fontWeight: FontWeight.w800,
                           color: L.text,
                           letterSpacing: -0.4),
                     ),
                     Text(
                       '${dose.med.name} · ${dose.sched.label}',
-                      style: TextStyle(
-                          fontFamily: 'Inter', fontSize: 13, color: L.sub),
+                      style: AppTypography.bodySmall.copyWith(color: L.sub),
                     ),
                   ])),
             ]),
@@ -122,11 +119,8 @@ class MissedDoseProtocolSheet extends StatelessWidget {
                   hoursLate > 0
                       ? 'You are $hoursLate h ${minsLate}m late'
                       : 'You are ${minsLate}m late',
-                  style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: L.text),
+                  style: AppTypography.labelLarge
+                      .copyWith(fontWeight: FontWeight.w600, color: L.text),
                 ),
               ]),
             ),
@@ -168,9 +162,7 @@ class MissedDoseProtocolSheet extends StatelessWidget {
                 Expanded(
                     child: Text(
                   state.getDoseGuidance(dose),
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13,
+                  style: AppTypography.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: minutesLate < 120
                         ? const Color(0xFF10B981)
@@ -272,16 +264,15 @@ class _ActionBtn extends StatelessWidget {
         decoration: BoxDecoration(
           color: outlined ? Colors.transparent : color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: outlined ? L.border : color.withValues(alpha: 0.3)),
+          border: Border.all(
+              color: outlined ? L.border : color.withValues(alpha: 0.3)),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Icon(icon, size: 18, color: outlined ? L.sub : color),
           const SizedBox(width: 10),
           Text(
             label,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 15,
+            style: AppTypography.labelLarge.copyWith(
               fontWeight: FontWeight.w700,
               color: outlined ? L.sub : color,
             ),

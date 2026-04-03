@@ -3,23 +3,23 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../providers/app_state.dart';
 import '../../../../services/export_service.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../domain/entities/entities.dart';
+import '../../../../l10n/app_localizations.dart';
 import 'settings_shared.dart';
 
 class DataTab extends StatefulWidget {
   final AppState state;
   final AppThemeColors L;
-  final String ff;
   final VoidCallback onClose;
 
   const DataTab({
     super.key,
     required this.state,
     required this.L,
-    required this.ff,
     required this.onClose,
   });
 
@@ -42,13 +42,20 @@ class _DataTabState extends State<DataTab> {
     } catch (_) {}
   }
 
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final L = widget.L;
-    final ff = widget.ff;
-    
-    // Select history and meds to react to changes
-    final history = context.select<AppState, Map<String, List<DoseEntry>>>((s) => s.history);
+    final s = AppLocalizations.of(context)!;
+
+    final history = context
+        .select<AppState, Map<String, List<DoseEntry>>>((s) => s.history);
     final medsCount = context.select<AppState, int>((s) => s.meds.length);
 
     final totalTaken =
@@ -57,23 +64,24 @@ class _DataTabState extends State<DataTab> {
     final daysTracked = history.keys.length;
 
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      physics:
+          const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
       child: Column(children: [
-        // Data Summary Hero
+        // ── Data Summary Hero ─────────────────────────────────────────
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-              color: const Color(0xFF111111),
-              borderRadius: BorderRadius.circular(24)),
+              color: L.card,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: L.border, width: 1.5)),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('YOUR DATA SUMMARY',
-                style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13,
+            Text(s.dataSummaryTitle,
+                style: AppTypography.labelLarge.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: Colors.white)),
+                    color: L.text,
+                    letterSpacing: 0.5)),
             const SizedBox(height: 16),
             GridView.count(
               crossAxisCount: 2,
@@ -83,45 +91,45 @@ class _DataTabState extends State<DataTab> {
               crossAxisSpacing: 8,
               childAspectRatio: 2.2,
               children: [
-                _SummaryBox(l: 'Medicines', v: '$medsCount', ff: ff),
-                _SummaryBox(
-                    l: 'Alarms set',
-                    v: '$medsCount',
-                    ff: ff), // Mocked for now
-                _SummaryBox(l: 'Days tracked', v: '$daysTracked', ff: ff),
-                _SummaryBox(l: 'Doses logged', v: '$totalDoses', ff: ff),
+                _SummaryBox(l: s.dataMedicinesLabel, v: '$medsCount', L: L),
+                _SummaryBox(l: s.dataAlarmsLabel, v: '$medsCount', L: L),
+                _SummaryBox(l: s.dataDaysTrackedLabel, v: '$daysTracked', L: L),
+                _SummaryBox(l: s.dataDosesLoggedLabel, v: '$totalDoses', L: L),
               ],
             ),
           ]),
         ),
         const SizedBox(height: 16),
 
+        // ── Export & Backup ───────────────────────────────────────────
         SettingsSection(
-            title: 'Export & Backup',
+            title: s.exportAndBackup,
             child: Column(children: [
               SettingsModalRow(
                   icon: Icons.picture_as_pdf_rounded,
                   iconBg: const Color(0xFF6366F1),
-                  label: 'Export PDF Report',
-                  sub: 'For doctors and caregivers',
-                  onClick: () => ExportService.exportAdherenceReport(context.read<AppState>()),
+                  label: s.exportPdfReport,
+                  sub: s.exportPdfSubtitle,
+                  onClick: () => ExportService.exportAdherenceReport(
+                      context.read<AppState>()),
                   border: true),
               SettingsModalRow(
                   icon: Icons.download_rounded,
                   iconBg: const Color(0xFF22C55E),
-                  label: 'Export History as CSV',
-                  sub: '$totalTaken dose records',
+                  label: s.exportCsv,
+                  sub: s.exportCsvSubtitle(totalTaken),
                   onClick: _exportCSV,
                   border: false),
             ])),
 
+        // ── Reset ─────────────────────────────────────────────────────
         SettingsSection(
-            title: 'Reset',
+            title: s.resetSection,
             child: SettingsModalRow(
                 icon: Icons.delete_outline_rounded,
                 iconBg: const Color(0xFFEF4444),
-                label: 'Delete All Data',
-                sub: 'Removes all medicines, history & settings',
+                label: s.deleteAllData,
+                sub: s.deleteAllDataSubtitle,
                 onClick: () => setState(() => _confirming = true),
                 border: false)),
 
@@ -134,17 +142,13 @@ class _DataTabState extends State<DataTab> {
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: L.red.withValues(alpha: 0.2))),
             child: Column(children: [
-              Text('Delete All Data?',
-                  style: TextStyle(
-                      fontFamily: ff,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: L.red)),
+              Text(s.deleteConfirmTitle,
+                  style: AppTypography.titleMedium
+                      .copyWith(fontWeight: FontWeight.w800, color: L.red)),
               const SizedBox(height: 6),
-              const Text(
-                  'This will permanently delete all your data. This cannot be undone.',
+              Text(s.deleteConfirmBody,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontFamily: 'Inter', fontSize: 13)),
+                  style: AppTypography.bodySmall.copyWith(color: L.sub)),
               const SizedBox(height: 16),
               Row(children: [
                 Expanded(
@@ -154,12 +158,14 @@ class _DataTabState extends State<DataTab> {
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
                                 color: L.fill,
-                                borderRadius: BorderRadius.circular(24)),
+                                borderRadius: BorderRadius.circular(24),
+                                border:
+                                    Border.all(color: L.border, width: 1.5)),
                             child: Center(
-                                child: Text('Cancel',
-                                    style: TextStyle(
-                                        fontFamily: ff,
-                                        fontWeight: FontWeight.w700)))))),
+                                child: Text(s.cancel,
+                                    style: AppTypography.labelLarge.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: L.text)))))),
                 const SizedBox(width: 8),
                 Expanded(
                     child: GestureDetector(
@@ -172,46 +178,75 @@ class _DataTabState extends State<DataTab> {
                             decoration: BoxDecoration(
                                 color: L.red,
                                 borderRadius: BorderRadius.circular(24)),
-                            child: const Center(
-                                child: Text('Delete Everything',
-                                    style: TextStyle(
-                                        fontFamily: 'Inter',
+                            child: Center(
+                                child: Text(s.deleteButton,
+                                    style: AppTypography.labelLarge.copyWith(
                                         fontWeight: FontWeight.w800,
                                         color: Colors.white)))))),
               ]),
             ]),
           ),
         ],
-        const SizedBox(height: 120),
+
+        const SizedBox(height: 16),
+
+        // ── Legal (App Store Mandatory) ───────────────────────────────
+        SettingsSection(
+            title: s.legalSection,
+            child: Column(children: [
+              SettingsModalRow(
+                  icon: Icons.shield_outlined,
+                  iconBg: const Color(0xFF0EA5E9),
+                  label: s.privacyPolicy,
+                  sub: s.privacyPolicySubtitle,
+                  onClick: () =>
+                      _launchUrl('https://medtrackaiflutter.app/privacy'),
+                  border: true),
+              SettingsModalRow(
+                  icon: Icons.gavel_rounded,
+                  iconBg: const Color(0xFF8B5CF6),
+                  label: s.termsOfService,
+                  sub: s.termsOfServiceSubtitle,
+                  onClick: () =>
+                      _launchUrl('https://medtrackaiflutter.app/terms'),
+                  border: false),
+            ])),
+
+        const SizedBox(height: 16),
+
+        // ── App Version ───────────────────────────────────────────────
+        Center(
+          child: Text('${s.appVersionLabel}: ${s.appVersionValue}',
+              style: AppTypography.labelSmall
+                  .copyWith(color: L.sub, letterSpacing: 0.5)),
+        ),
+        const SizedBox(height: 80),
       ]),
     );
   }
 }
 
 class _SummaryBox extends StatelessWidget {
-  final String l, v, ff;
-  const _SummaryBox({required this.l, required this.v, required this.ff});
+  final String l, v;
+  final AppThemeColors L;
+  const _SummaryBox({required this.l, required this.v, required this.L});
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16)),
+          color: L.fill.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: L.border, width: 1.0)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(v,
-            style: TextStyle(
-                fontFamily: ff,
-                fontSize: 22,
+            style: AppTypography.displaySmall.copyWith(
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: L.text,
                 letterSpacing: -0.8)),
         Text(l,
-            style: TextStyle(
-                fontFamily: ff,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.white.withValues(alpha: 0.45))),
+            style: AppTypography.labelSmall
+                .copyWith(fontWeight: FontWeight.w600, color: L.sub)),
       ]),
     );
   }

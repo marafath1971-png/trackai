@@ -1,7 +1,7 @@
 name: medtrackaiflutter
 description: Med AI - Your intelligent medicine tracker
 publish_to: 'none'
-version: 2.0.0+1
+version: 1.0.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -72,6 +72,7 @@ dependencies:
   firebase_crashlytics: ^4.3.10
   firebase_analytics: ^11.6.0
   firebase_performance: ^0.10.1+10
+  firebase_app_check: ^0.3.1+15
   pdf: ^3.11.3
   printing: ^5.14.2
   encrypt: ^5.0.3
@@ -83,6 +84,8 @@ dependencies:
   flutter_dynamic_icon_plus: ^1.4.0
   purchases_flutter: ^8.0.0
   in_app_review: ^2.0.9
+  url_launcher: ^6.3.2
+  app_links: ^6.1.1
 
 dev_dependencies:
   flutter_test:
@@ -94,6 +97,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
+  remove_alpha_ios: true
   macos:
     generate: true
     image_path: "assets/images/app_icon.png"

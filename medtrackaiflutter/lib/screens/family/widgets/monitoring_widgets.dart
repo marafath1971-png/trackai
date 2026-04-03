@@ -7,13 +7,62 @@ import '../../../services/auth_service.dart';
 import './caregiver_widgets.dart';
 import '../../../widgets/common/unified_header.dart';
 import '../../../core/utils/haptic_engine.dart';
+import '../../../core/utils/refill_helper.dart';
+import '../../../widgets/common/paywall_sheet.dart';
+import '../../../widgets/common/bouncing_button.dart';
+import 'ai_protector_card.dart';
+
+int _calculateStreak(
+    Map<String, List<DoseEntry>> history, List<Medicine> meds) {
+  if (history.isEmpty) return 0;
+
+  final sortedKeys = history.keys.toList()..sort((a, b) => b.compareTo(a));
+  int streak = 0;
+  final now = DateTime.now();
+  final yesterdayKey =
+      now.subtract(const Duration(days: 1)).toIso8601String().substring(0, 10);
+  final todayKey = now.toIso8601String().substring(0, 10);
+
+  // Start from today or yesterday
+  if (sortedKeys.isNotEmpty &&
+      sortedKeys[0] != todayKey &&
+      sortedKeys[0] != yesterdayKey) {
+    return 0; // Streak broken if no entry for today or yesterday
+  }
+
+  for (final key in sortedKeys) {
+    final date = DateTime.parse(key);
+    final dayIdx = date.weekday % 7;
+
+    final medsScheduledThisDay = meds
+        .where(
+            (m) => m.schedule.any((s) => s.enabled && s.days.contains(dayIdx)))
+        .toList();
+    final expectedCount = medsScheduledThisDay.length;
+
+    final entries = history[key] ?? [];
+    final takenCount = entries.where((e) => e.taken).length;
+
+    if (expectedCount > 0 && takenCount >= expectedCount) {
+      streak++;
+    } else if (expectedCount > 0) {
+      break; // Streak broken
+    }
+  }
+  return streak;
+}
 
 class PatientCard extends StatelessWidget {
   final Map<String, dynamic> patient;
   final AppState state;
   final AppThemeColors L;
   final VoidCallback onTap;
-  const PatientCard({super.key, required this.patient, required this.state, required this.L, required this.onTap});
+  const PatientCard(
+      {super.key,
+      required this.patient,
+      required this.state,
+      required this.L,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -24,102 +73,110 @@ class PatientCard extends StatelessWidget {
           stream: state.getPatientHistory(patient['uid']),
           builder: (context, historySnap) {
             final history = historySnap.data ?? {};
-            
-            // Calculate today's adherence for this patient
             final dateKey = DateTime.now().toIso8601String().substring(0, 10);
             final entries = history[dateKey] ?? [];
             final taken = entries.where((e) => e.taken).length;
             final total = entries.length;
             final adherence = total == 0 ? 1.0 : (taken / total);
 
-            return GestureDetector(
-              onTap: () {
-                HapticEngine.light();
-                onTap();
-              },
+            return BouncingButton(
+              onTap: onTap,
               child: Container(
-                margin: const EdgeInsets.only(bottom: AppSpacing.m),
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
                   color: L.card,
                   borderRadius: AppRadius.roundL,
-                  border: Border.all(color: L.border),
-                  boxShadow: L.shadowSoft,
+                  border: Border.all(color: L.border, width: 1.5),
+                  boxShadow: AppShadows.soft,
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.l),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: L.fill,
-                              borderRadius: BorderRadius.circular(AppRadius.m),
-                              border: Border.all(color: L.border),
-                            ),
-                            child: Center(
-                              child: Text(patient['avatar'] ?? '👤', style: const TextStyle(fontSize: 28)),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(patient['name'] ?? 'Unknown',
-                                    style: AppTypography.titleLarge.copyWith(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
-                                    color: L.text)),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '$total doses scheduled · $taken taken',
+                child: Row(
+                  children: [
+                    Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: L.primary.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: L.primary.withValues(alpha: 0.2), width: 1),
+                      ),
+                      child: Center(
+                        child: Text(patient['avatar'] ?? '👤',
+                            style: const TextStyle(fontSize: 26)),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(patient['name'] ?? 'Patient',
+                              style: AppTypography.titleLarge.copyWith(
+                                  color: L.text,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -0.5)),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Text('$total scheduled · $taken taken',
                                   style: AppTypography.bodySmall.copyWith(
-                                      fontSize: 12,
                                       color: L.sub,
-                                      fontWeight: FontWeight.w500),
+                                      fontWeight: FontWeight.w600)),
+                              if (medSnap.data?.any(
+                                      (m) => RefillHelper.isCriticallyLow(m)) ??
+                                  false) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                      color: L.red, shape: BoxShape.circle),
                                 ),
                               ],
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text('${(adherence * 100).toInt()}%',
-                                  style: AppTypography.displayLarge.copyWith(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w900,
-                                      color: adherence >= 0.8 ? L.secondary : L.warning)),
-                              Text('TODAY',
-                                  style: AppTypography.labelLarge.copyWith(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w800,
-                                      color: L.sub,
-                                      letterSpacing: 0.5)),
-                                ],
-                              ),
-                              const SizedBox(width: 12),
-                          GestureDetector(
-                            onTap: () {
-                              state.nudgePatient(patient['uid']);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: L.fill,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: L.border.withValues(alpha: 0.1)),
-                              ),
-                              child: Icon(Icons.notifications_active_outlined, size: 20, color: L.sub),
-                            ),
+                            ],
                           ),
                         ],
                       ),
                     ),
-                  ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('${(adherence * 100).toInt()}%',
+                            style: AppTypography.displayLarge.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                color: adherence >= 0.8
+                                    ? L.secondary
+                                    : L.warning)),
+                        Text('ADHERENCE',
+                            style: AppTypography.labelLarge.copyWith(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w900,
+                                color: L.sub,
+                                letterSpacing: 0.8)),
+                      ],
+                    ),
+                    const SizedBox(width: 12),
+                    BouncingButton(
+                      onTap: () {
+                        HapticEngine.selection();
+                        state.nudgePatient(patient['uid']);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: L.primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.notifications_active_rounded,
+                            size: 18, color: L.primary),
+                      ),
+                    ),
+                  ],
                 ),
+              ),
             );
           },
         );
@@ -132,7 +189,8 @@ class WeeklyAdherenceChart extends StatelessWidget {
   final List<Medicine> meds;
   final Map<String, List<DoseEntry>> history;
   final AppThemeColors L;
-  const WeeklyAdherenceChart({super.key, required this.meds, required this.history, required this.L});
+  const WeeklyAdherenceChart(
+      {super.key, required this.meds, required this.history, required this.L});
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +232,7 @@ class WeeklyAdherenceChart extends StatelessWidget {
             children: [
               Text('Weekly Adherence',
                   style: AppTypography.titleLarge.copyWith(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: L.text)),
               const Spacer(),
@@ -196,7 +254,7 @@ class WeeklyAdherenceChart extends StatelessWidget {
                     : pct > 0.0
                         ? L.warning
                         : L.bg;
-            
+
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Column(
@@ -212,9 +270,7 @@ class WeeklyAdherenceChart extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(e.key,
                           style: AppTypography.labelLarge.copyWith(
-                              fontSize: 11,
-                              color: L.sub,
-                              fontWeight: FontWeight.w600)),
+                              color: L.sub, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 );
@@ -243,6 +299,82 @@ class ProtectorInsights extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMe = cg.patientUid.isEmpty || cg.patientUid == AuthService.uid;
 
+    // Premium Gating: Monitoring others is a Pro feature
+    if (!isMe && !(state.profile?.isPremium ?? false)) {
+      return Scaffold(
+        backgroundColor: L.bg,
+        appBar: AppBar(
+          backgroundColor: L.bg,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: L.text),
+            onPressed: onBack,
+          ),
+          title: Text('Protector Insights',
+              style: AppTypography.titleLarge.copyWith(
+                  color: L.text, fontSize: 18, fontWeight: FontWeight.w800)),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: L.secondary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(Icons.lock_person_rounded,
+                        color: L.secondary, size: 40),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text('Pro Feature',
+                    style: AppTypography.displayLarge.copyWith(
+                        fontSize: 24,
+                        color: L.text,
+                        fontWeight: FontWeight.w900)),
+                const SizedBox(height: 12),
+                Text(
+                  'Remote monitoring and real-time adherence insights for family members require a Pro subscription.',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodySmall
+                      .copyWith(fontSize: 15, color: L.sub, height: 1.5),
+                ),
+                const SizedBox(height: 32),
+                BouncingButton(
+                  onTap: () => PaywallSheet.show(context),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                        color: L.primary,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                              color: L.primary.withValues(alpha: 0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5))
+                        ]),
+                    child: Text('Upgrade to Pro',
+                        style: AppTypography.labelLarge.copyWith(
+                            color: L.onPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     if (isMe) {
       return InsightsContent(
         cg: cg,
@@ -267,7 +399,7 @@ class ProtectorInsights extends StatelessWidget {
               cg: cg,
               meds: meds,
               history: history,
-              streak: 0, // Streak calculation for patient needs history traversal
+              streak: _calculateStreak(history, meds),
               L: L,
               onBack: onBack,
               state: state,
@@ -299,8 +431,14 @@ class InsightsContent extends StatelessWidget {
     required this.state,
   });
 
+  void _triggerInsight(BuildContext context) {
+    // Phase 10: Trigger AI insight generation
+    state.fetchProtectorInsight(cg, meds, history);
+  }
+
   @override
   Widget build(BuildContext context) {
+    _triggerInsight(context);
     // Dose calculation logic
     final doses = <DoseItem>[];
     for (final med in meds) {
@@ -312,16 +450,18 @@ class InsightsContent extends StatelessWidget {
         ));
       }
     }
-    
+
     final dateKey = DateTime.now().toIso8601String().substring(0, 10);
     final historyEntries = history[dateKey] ?? [];
-    
+
     // Status helper
     String getStatusText(DoseItem d) {
-       final match = historyEntries.where((e) => e.medId == d.med.id && e.label == d.sched.label).firstOrNull;
-       if (match != null && match.taken) return 'Taken ✓';
-       // simplified logic for protector mode
-       return 'Upcoming';
+      final match = historyEntries
+          .where((e) => e.medId == d.med.id && e.label == d.sched.label)
+          .firstOrNull;
+      if (match != null && match.taken) return 'Taken ✓';
+      // simplified logic for protector mode
+      return 'Upcoming';
     }
 
     return Scaffold(
@@ -339,7 +479,8 @@ class InsightsContent extends StatelessWidget {
       ),
       body: SafeArea(
           child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, 0, AppSpacing.screenPadding, AppSpacing.screenPadding),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, 0,
+                  AppSpacing.screenPadding, AppSpacing.screenPadding),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -357,10 +498,12 @@ class InsightsContent extends StatelessWidget {
                             decoration: BoxDecoration(
                                 color: L.fill,
                                 borderRadius: BorderRadius.circular(24),
-                                border: Border.all(color: L.border.withValues(alpha: 0.1))),
+                                border: Border.all(
+                                    color: L.border.withValues(alpha: 0.1))),
                             child: Center(
                                 child: Text(cg.avatar,
-                                    style: const TextStyle(fontSize: 34)))),
+                                    style: AppTypography.displaySmall
+                                        .copyWith(fontSize: 34)))),
                         const SizedBox(width: 18),
                         Expanded(
                             child: Column(
@@ -395,7 +538,15 @@ class InsightsContent extends StatelessWidget {
                           child: FamStatJSX(
                               emoji: '📈',
                               label: 'Adherence',
-                              value: (meds.isEmpty ? 100 : (historyEntries.where((e) => e.taken).length / historyEntries.length.clamp(1, 1000)) * 100).toInt(),
+                              value: (meds.isEmpty
+                                      ? 100
+                                      : (historyEntries
+                                                  .where((e) => e.taken)
+                                                  .length /
+                                              historyEntries.length
+                                                  .clamp(1, 1000)) *
+                                          100)
+                                  .toInt(),
                               color: L.green)),
                       const SizedBox(width: 12),
                       Expanded(
@@ -420,10 +571,11 @@ class InsightsContent extends StatelessWidget {
                         borderRadius: BorderRadius.circular(AppRadius.l),
                         border: Border.all(color: L.border, width: 1.0),
                       ),
-                      child: WeeklyAdherenceChart(meds: meds, history: history, L: L),
+                      child: WeeklyAdherenceChart(
+                          meds: meds, history: history, L: L),
                     ),
                     const SizedBox(height: 24),
-
+                    AIProtectorCard(cg: cg, state: state), // NEW (Phase 10)
                     const SizedBox(height: 32),
                     Text('REAL-TIME STATUS',
                         style: AppTypography.labelLarge.copyWith(
@@ -450,17 +602,14 @@ class InsightsContent extends StatelessWidget {
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                  color: (isTaken
-                                          ? L.secondary
-                                          : L.sub)
+                                  color: (isTaken ? L.secondary : L.sub)
                                       .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(AppRadius.m)),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.m)),
                               child: Center(
-                                  child: Text(
-                                      isTaken
-                                          ? '✅'
-                                          : '⏳',
-                                      style: const TextStyle(fontSize: 18)))),
+                                  child: Text(isTaken ? '✅' : '⏳',
+                                      style: AppTypography.titleLarge
+                                          .copyWith(fontSize: 18)))),
                           const SizedBox(width: 14),
                           Expanded(
                               child: Column(

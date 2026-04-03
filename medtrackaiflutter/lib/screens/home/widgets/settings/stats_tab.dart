@@ -9,34 +9,36 @@ import 'settings_shared.dart';
 class StatsTab extends StatelessWidget {
   final AppState state;
   final AppThemeColors L;
-  final String ff;
-  
+
   const StatsTab({
     super.key,
     required this.state,
     required this.L,
-    required this.ff,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Select only what we need for bulk calculations if necessary, 
+    // Select only what we need for bulk calculations if necessary,
     // but better to use cached getters if we added them.
     // We already have getStreak() and getAdherenceScore().
-    
-    final overallAdh = (context.select<AppState, double>((s) => s.getAdherenceScore()) * 100).round();
+
+    final overallAdh =
+        (context.select<AppState, double>((s) => s.getAdherenceScore()) * 100)
+            .round();
     final streak = context.select<AppState, int>((s) => s.getStreak());
-    
-    // For the rest, we still need some history data. 
+
+    // For the rest, we still need some history data.
     // Let's select the history keys to react to history changes.
-    final historyKeys = context.select<AppState, List<String>>((s) => s.history.keys.toList());
+    final historyKeys =
+        context.select<AppState, List<String>>((s) => s.history.keys.toList());
     final daysTracked = historyKeys.length;
 
     // We still need the full history for the complex week and total counts.
     // To be truly granular, we should probably add getters to AppState for these too.
     // For now, let's select the whole history but at least we're using select.
-    final history = context.select<AppState, Map<String, List<DoseEntry>>>((s) => s.history);
-    
+    final history = context
+        .select<AppState, Map<String, List<DoseEntry>>>((s) => s.history);
+
     final allEntries = history.values.expand((e) => e).toList();
     final taken = allEntries.where((e) => e.taken).length;
     final total = allEntries.length;
@@ -49,8 +51,7 @@ class StatsTab extends StatelessWidget {
             .subtract(Duration(days: i))
             .toIso8601String()
             .substring(0, 10));
-    final last7Entries =
-        last7Keys.expand((k) => history[k] ?? []).toList();
+    final last7Entries = last7Keys.expand((k) => history[k] ?? []).toList();
     final last7Adh = last7Entries.isNotEmpty
         ? (last7Entries.where((e) => e.taken).length *
             100 ~/
@@ -70,7 +71,8 @@ class StatsTab extends StatelessWidget {
     });
 
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      physics:
+          const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
       child: Column(children: [
         // Adherence Hero
@@ -82,8 +84,7 @@ class StatsTab extends StatelessWidget {
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('OVERALL ADHERENCE',
-                style: TextStyle(
-                    fontFamily: ff,
+                style: AppTypography.labelLarge.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: Colors.white.withValues(alpha: 0.45),
@@ -91,8 +92,7 @@ class StatsTab extends StatelessWidget {
             const SizedBox(height: 12),
             Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
               Text('$overallAdh%',
-                  style: TextStyle(
-                      fontFamily: ff,
+                  style: AppTypography.displayLarge.copyWith(
                       fontSize: 56,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
@@ -101,9 +101,11 @@ class StatsTab extends StatelessWidget {
               const SizedBox(width: 10),
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: Text(overallAdh >= 80 ? 'EXCELLENT' : (overallAdh >= 60 ? 'STABLE' : 'KEEP GOING'),
-                    style: TextStyle(
-                        fontFamily: ff,
+                child: Text(
+                    overallAdh >= 80
+                        ? 'EXCELLENT'
+                        : (overallAdh >= 60 ? 'STABLE' : 'KEEP GOING'),
+                    style: AppTypography.labelLarge.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.0,
@@ -141,33 +143,41 @@ class StatsTab extends StatelessWidget {
           childAspectRatio: 1.4,
           children: [
             SettingsStatCard(
-                label: 'Doses Taken',
-                val: '$taken',
-                sub: 'of $total total',
-                emoji: '✅',
-                L: L,
-                ff: ff).animate().fade(delay: 100.ms).slideY(begin: 0.2, end: 0),
+                    label: 'Doses Taken',
+                    val: '$taken',
+                    sub: 'of $total total',
+                    emoji: '✅',
+                    L: L)
+                .animate()
+                .fade(delay: 100.ms)
+                .slideY(begin: 0.2, end: 0),
             SettingsStatCard(
-                label: '7-Day Rate',
-                val: '$last7Adh%',
-                sub: 'Last 7 days',
-                emoji: '📈',
-                L: L,
-                ff: ff).animate().fade(delay: 200.ms).slideY(begin: 0.2, end: 0),
+                    label: '7-Day Rate',
+                    val: '$last7Adh%',
+                    sub: 'Last 7 days',
+                    emoji: '📈',
+                    L: L)
+                .animate()
+                .fade(delay: 200.ms)
+                .slideY(begin: 0.2, end: 0),
             SettingsStatCard(
-                label: 'Current Streak',
-                val: '${streak}d',
-                sub: 'days in a row',
-                emoji: '🔥',
-                L: L,
-                ff: ff).animate().fade(delay: 300.ms).slideY(begin: 0.2, end: 0),
+                    label: 'Current Streak',
+                    val: '${streak}d',
+                    sub: 'days in a row',
+                    emoji: '🔥',
+                    L: L)
+                .animate()
+                .fade(delay: 300.ms)
+                .slideY(begin: 0.2, end: 0),
             SettingsStatCard(
-                label: 'Days Tracked',
-                val: '$daysTracked',
-                sub: 'days of data',
-                emoji: '📅',
-                L: L,
-                ff: ff).animate().fade(delay: 400.ms).slideY(begin: 0.2, end: 0),
+                    label: 'Days Tracked',
+                    val: '$daysTracked',
+                    sub: 'days of data',
+                    emoji: '📅',
+                    L: L)
+                .animate()
+                .fade(delay: 400.ms)
+                .slideY(begin: 0.2, end: 0),
           ],
         ),
         const SizedBox(height: 16),
@@ -195,8 +205,7 @@ class StatsTab extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(w['day'] as String,
-                          style: TextStyle(
-                              fontFamily: ff,
+                          style: AppTypography.labelLarge.copyWith(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               color: L.sub)),

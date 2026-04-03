@@ -8,21 +8,40 @@ class StorageService {
   Future<String?> uploadMedicineImage(String uid, File imageFile) async {
     try {
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final ref = _storage.ref().child('users').child(uid).child('medicines').child(fileName);
-      
-      final uploadTask = await ref.putFile(
+      final ref = _storage
+          .ref()
+          .child('users')
+          .child(uid)
+          .child('medicines')
+          .child(fileName);
+
+      // 1. Wait for upload to COMPLETE before proceding
+      final task = ref.putFile(
         imageFile,
         SettableMetadata(contentType: 'image/jpeg'),
       );
 
-      if (uploadTask.state == TaskState.success) {
+      final snapshot = await task;
+
+      if (snapshot.state == TaskState.success) {
+        // 2. Wrap getDownloadURL in a small micro-delay or verification
+        // for race conditions in some storage regions
         final downloadUrl = await ref.getDownloadURL();
-        appLogger.i('[StorageService] Image uploaded successfully: $downloadUrl');
+        appLogger
+            .i('[StorageService] Image uploaded successfully: $downloadUrl');
         return downloadUrl;
       }
       return null;
+    } on FirebaseException catch (e) {
+      if (e.code == 'canceled') {
+        appLogger.w('[StorageService] Upload canceled by user/system.');
+      } else {
+        appLogger.e(
+            '[StorageService] Image upload failed (${e.code}): ${e.message}');
+      }
+      return null;
     } catch (e) {
-      appLogger.e('[StorageService] Image upload failed: $e');
+      appLogger.e('[StorageService] Unexpected upload error: $e');
       return null;
     }
   }

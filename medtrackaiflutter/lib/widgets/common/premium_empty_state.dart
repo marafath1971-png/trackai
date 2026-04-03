@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/app_theme.dart';
+import 'bouncing_button.dart';
 
 class PremiumEmptyState extends StatelessWidget {
   final String title;
@@ -23,87 +24,126 @@ class PremiumEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: AppSpacing.xxl),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
       width: double.infinity,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icon/Emoji Container
+          // Icon/Emoji Container with Premium Glassmorphism & Gradient
           Container(
-            width: 100,
-            height: 100,
+            width: 110,
+            height: 110,
             decoration: BoxDecoration(
-              color: L.fill,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  L.card,
+                  L.fill.withValues(alpha: 0.5),
+                ],
+              ),
               shape: BoxShape.circle,
-              border: Border.all(color: L.border, width: 1.0),
+              border: Border.all(
+                  color: L.border.withValues(alpha: 0.5), width: 2.0),
+              boxShadow: [
+                BoxShadow(
+                  color: L.onBg.withValues(alpha: 0.1),
+                  blurRadius: 40,
+                  offset: const Offset(0, 20),
+                  spreadRadius: -10,
+                ),
+              ],
             ),
             child: Center(
-              child: icon != null 
-                ? Icon(icon, size: 40, color: L.sub)
-                : Text(emoji, style: const TextStyle(fontSize: 40)),
+              child: icon != null
+                  ? Icon(icon, size: 44, color: L.text.withValues(alpha: 0.8))
+                  : Text(emoji,
+                      style: AppTypography.displayLarge.copyWith(fontSize: 44)),
             ),
-          ).animate(onPlay: (c) => c.repeat(reverse: true))
-           .moveY(begin: 0, end: -8, duration: 2000.ms, curve: Curves.easeInOut)
-           .scale(begin: const Offset(1, 1), end: const Offset(1.05, 1.05), duration: 2000.ms),
-          
-          const SizedBox(height: AppSpacing.xl),
-          
+          )
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .moveY(
+                  begin: 0,
+                  end: -12,
+                  duration: 2500.ms,
+                  curve: Curves.easeInOutSine)
+              .scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.08, 1.08),
+                  duration: 2500.ms),
+
+          const SizedBox(height: 32),
+
           Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Inter',
+            style: AppTypography.headlineLarge.copyWith(
               color: L.text,
-              fontSize: 22,
+              fontSize: 24,
               fontWeight: FontWeight.w900,
-              letterSpacing: -0.8,
+              letterSpacing: -1.0,
             ),
-          ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0),
-          
-          const SizedBox(height: AppSpacing.s),
-          
+          ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.1, end: 0),
+
+          const SizedBox(height: 12),
+
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Inter',
+            style: AppTypography.bodyMedium.copyWith(
               color: L.sub,
               fontSize: 15,
-              fontWeight: FontWeight.w400,
-              height: 1.5,
+              fontWeight: FontWeight.w500,
+              height: 1.6,
+              letterSpacing: -0.2,
             ),
-          ).animate().fadeIn(duration: 600.ms, delay: 100.ms).slideY(begin: 0.2, end: 0),
-          
+          )
+              .animate()
+              .fadeIn(duration: 800.ms, delay: 200.ms)
+              .slideY(begin: 0.1, end: 0),
+
           if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: AppSpacing.xl),
-            GestureDetector(
-              onTap: onAction,
+            const SizedBox(height: 40),
+            BouncingButton(
+              onTap: onAction!,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.m),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
                 decoration: BoxDecoration(
-                  color: L.primary,
-                  borderRadius: BorderRadius.circular(AppRadius.l),
+                  color: L.text,
+                  borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: L.text.withValues(alpha: 0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: L.text.withValues(alpha: 0.25),
+                      blurRadius: 30,
+                      offset: const Offset(0, 15),
+                      spreadRadius: -5,
                     ),
                   ],
                 ),
-                child: Text(
-                  actionLabel!,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    color: L.onPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      actionLabel!,
+                      style: AppTypography.labelLarge.copyWith(
+                        color: L.bg,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(Icons.arrow_forward_rounded, color: L.bg, size: 18),
+                  ],
                 ),
               ),
-            ).animate().fadeIn(duration: 600.ms, delay: 300.ms).scale(begin: const Offset(0.9, 0.9)),
+            )
+                .animate()
+                .fadeIn(duration: 800.ms, delay: 400.ms)
+                .scale(begin: const Offset(0.8, 0.8)),
           ],
         ],
       ),

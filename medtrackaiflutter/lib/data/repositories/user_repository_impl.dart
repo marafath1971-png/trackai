@@ -39,6 +39,12 @@ class UserRepositoryImpl implements IUserRepository {
   }
 
   @override
+  Stream<UserProfile?> getProfileStream() {
+    if (!_hasAuth) return Stream.value(null);
+    return firestoreDataSource.getProfileStream(_uid!);
+  }
+
+  @override
   Future<void> saveProfile(UserProfile profile) async {
     await localDataSource.setJson('profile', profile.toJson(), encrypt: true);
     if (_hasAuth) {
@@ -79,26 +85,6 @@ class UserRepositoryImpl implements IUserRepository {
     }
   }
 
-  @override
-  Future<void> joinCaregiver({
-    required String patientUid,
-    required int cgId,
-    required String patientName,
-    required String patientAvatar,
-    required String relation,
-  }) async {
-    if (_hasAuth) {
-      await firestoreDataSource.joinCaregiver(
-        caregiverUid: _uid!,
-        patientUid: patientUid,
-        cgId: cgId,
-        patientName: patientName,
-        patientAvatar: patientAvatar,
-        relation: relation,
-      );
-    }
-  }
-
   // ── Streak ─────────────────────────────────────────────────────────
   @override
   Future<StreakData> getStreakData() async {
@@ -135,6 +121,26 @@ class UserRepositoryImpl implements IUserRepository {
     await localDataSource.setBool('darkMode', darkMode);
     if (_hasAuth) {
       firestoreDataSource.saveDarkMode(_uid!, darkMode).catchError((_) {});
+    }
+  }
+
+  @override
+  Future<String> getLanguage() async {
+    if (_hasAuth) {
+      final cloud = await firestoreDataSource.getLanguage(_uid!);
+      if (cloud != null) {
+        await localDataSource.setString('language', cloud);
+        return cloud;
+      }
+    }
+    return localDataSource.getString('language') ?? 'en';
+  }
+
+  @override
+  Future<void> saveLanguage(String language) async {
+    await localDataSource.setString('language', language);
+    if (_hasAuth) {
+      firestoreDataSource.saveLanguage(_uid!, language).catchError((_) {});
     }
   }
 
@@ -182,7 +188,8 @@ class UserRepositoryImpl implements IUserRepository {
       appLogger.i('[UserRepositoryImpl] No auth, skipping monitoring stream');
       return Stream.value([]);
     }
-    appLogger.i('[UserRepositoryImpl] Starting monitoring stream for UID: $_uid');
+    appLogger
+        .i('[UserRepositoryImpl] Starting monitoring stream for UID: $_uid');
     return firestoreDataSource.getMonitoringPatientsStream(_uid!);
   }
 
@@ -192,7 +199,8 @@ class UserRepositoryImpl implements IUserRepository {
   }
 
   @override
-  Stream<Map<String, List<DoseEntry>>> getPatientHistoryStream(String patientUid) {
+  Stream<Map<String, List<DoseEntry>>> getPatientHistoryStream(
+      String patientUid) {
     return firestoreDataSource.getPatientHistoryStream(patientUid);
   }
 
@@ -234,6 +242,11 @@ class UserRepositoryImpl implements IUserRepository {
       final dm = localDataSource.getBool('darkMode');
       if (dm != null) {
         firestoreDataSource.saveDarkMode(_uid!, dm).catchError((_) {});
+      }
+      // Language
+      final lang = localDataSource.getString('language');
+      if (lang != null) {
+        firestoreDataSource.saveLanguage(_uid!, lang).catchError((_) {});
       }
     } catch (_) {}
   }

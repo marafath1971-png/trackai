@@ -24,7 +24,9 @@ class RefinedSheetWrapper extends StatelessWidget {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     Widget content = Padding(
-      padding: padding ?? const EdgeInsets.fromLTRB(AppSpacing.screenPadding, 0, AppSpacing.screenPadding, AppSpacing.l),
+      padding: padding ??
+          const EdgeInsets.fromLTRB(AppSpacing.screenPadding, 0,
+              AppSpacing.screenPadding, AppSpacing.l),
       child: child,
     );
 
@@ -39,13 +41,15 @@ class RefinedSheetWrapper extends StatelessWidget {
     }
 
     return Container(
-      padding: EdgeInsets.only(bottom: bottomInset > 0 ? bottomInset : bottomPadding),
+      padding: EdgeInsets.only(
+          bottom: bottomInset > 0 ? bottomInset : bottomPadding),
       decoration: BoxDecoration(
         color: L.bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: L.onBg.withValues(alpha: 0.2),
             blurRadius: 40,
             offset: const Offset(0, -10),
           ),
@@ -70,7 +74,8 @@ class RefinedSheetWrapper extends StatelessWidget {
           if (title != null) ...[
             const SizedBox(height: AppSpacing.l),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screenPadding),
               child: Row(
                 children: [
                   if (icon != null) ...[
@@ -80,8 +85,7 @@ class RefinedSheetWrapper extends StatelessWidget {
                   Expanded(
                     child: Text(
                       title!,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
+                      style: AppTypography.headlineMedium.copyWith(
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
                         color: L.text,

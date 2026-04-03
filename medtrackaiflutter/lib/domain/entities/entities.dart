@@ -6,3 +6,5 @@ export 'streak_data.dart';
 export 'scan_result.dart';
 export 'health_insight.dart';
 export 'symptom.dart';
+export 'symptom_analysis.dart';
+export 'ai_safety_profile.dart';

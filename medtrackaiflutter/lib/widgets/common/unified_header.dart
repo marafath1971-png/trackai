@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import '../../theme/app_theme.dart';
-import '../../core/utils/haptic_engine.dart';
+import 'bouncing_button.dart';
 
 class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
@@ -19,6 +18,8 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
   final bool blurred;
   final bool showBorder;
   final bool showProBadge; // New: optional PRO badge next to title
+  final bool showBack; // New: show back button
+  final VoidCallback? onBack; // New: back button press
   final VoidCallback? onTap;
 
   const UnifiedHeader({
@@ -36,12 +37,14 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
     this.showBrand = false,
     this.isScrolled = false,
     this.showProBadge = false,
+    this.showBack = false,
+    this.onBack,
     this.onTap,
   });
 
   @override
-  Size get preferredSize => Size.fromHeight(
-      122 + (bottomHeight ?? (bottom != null ? 60 : 0)));
+  Size get preferredSize =>
+      Size.fromHeight(122 + (bottomHeight ?? (bottom != null ? 60 : 0)));
 
   @override
   Widget build(BuildContext context) {
@@ -49,86 +52,105 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
     final bg = backgroundColor ?? L.bg;
     Widget child = Container(
       decoration: BoxDecoration(
-        color: blurred ? bg.withValues(alpha: isScrolled ? 0.9 : 0.8) : bg,
-        border: showBorder 
-          ? Border(
-              bottom: BorderSide(
-                color: isScrolled ? L.border : Colors.transparent,
-                width: 1.0,
-              ),
-            )
-          : null,
+        color: bg,
+        border: showBorder
+            ? Border(
+                bottom: BorderSide(
+                  color: isScrolled ? L.border : Colors.transparent,
+                  width: 1.0,
+                ),
+              )
+            : null,
       ),
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: SafeArea(
           bottom: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, 8, AppSpacing.screenPadding, 8),
-              child: Row(
-                children: [
-                  if (leading != null) ...[
-                    leading!,
-                    const SizedBox(width: 14),
-                  ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (showBrand) ...[
-                          _buildBrandRow(L)
-                              .animate()
-                              .fadeIn(duration: 400.ms)
-                              .slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic),
-                          const SizedBox(height: 8),
-                          if (title != null || titleWidget != null) 
-                            Padding(
-                              padding: const EdgeInsets.only(left: 2),
-                              child: titleWidget ?? Text(
-                                title!,
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: L.text.withValues(alpha: 0.6),
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                            )
-                            .animate()
-                            .fadeIn(duration: 400.ms, delay: 100.ms)
-                            .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
-                        ] else ...[
-                          if (titleWidget != null || title != null)
-                             Row(
-                                children: [
-                                  titleWidget ?? Text(
-                                    title!,
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 26,
-                                      fontWeight: FontWeight.w800,
-                                      color: L.text,
-                                      letterSpacing: -0.8,
-                                      height: 1.1,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.screenPadding, 8, AppSpacing.screenPadding, 8),
+                child: Row(
+                  children: [
+                    if (showBack) ...[
+                      HeaderActionBtn(
+                        onTap: onBack ?? () => Navigator.maybePop(context),
+                        child: const Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 16),
+                      ),
+                      const SizedBox(width: 14),
+                    ] else if (leading != null) ...[
+                      leading!,
+                      const SizedBox(width: 14),
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (showBrand) ...[
+                            _buildBrandRow(L)
+                                .animate()
+                                .fadeIn(duration: 400.ms)
+                                .slideY(
+                                    begin: 0.1,
+                                    end: 0,
+                                    curve: Curves.easeOutCubic),
+                            const SizedBox(height: 8),
+                            if (title != null || titleWidget != null)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 2),
+                                child: titleWidget ??
+                                    Text(
+                                      title!,
+                                      style: AppTypography.labelLarge.copyWith(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: L.text.withValues(alpha: 0.6),
+                                        letterSpacing: -0.2,
+                                      ),
                                     ),
-                                  ),
+                              )
+                                  .animate()
+                                  .fadeIn(duration: 400.ms, delay: 100.ms)
+                                  .slideY(
+                                      begin: 0.2,
+                                      end: 0,
+                                      curve: Curves.easeOutCubic),
+                          ] else ...[
+                            if (titleWidget != null || title != null)
+                              Row(
+                                children: [
+                                  titleWidget ??
+                                      Text(
+                                        title!,
+                                        style: AppTypography.headlineLarge
+                                            .copyWith(
+                                          fontSize: 26,
+                                          fontWeight: FontWeight.w800,
+                                          color: L.text,
+                                          letterSpacing: -0.8,
+                                          height: 1.1,
+                                        ),
+                                      ),
                                   if (showProBadge) ...[
                                     const SizedBox(width: 8),
                                     Container(
                                       margin: const EdgeInsets.only(top: 4),
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: AppColors.lime.withValues(alpha: 0.15),
+                                        color: AppColors.primaryBlue
+                                            .withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
-                                      child: const Text(
+                                      child: Text(
                                         "PRO",
-                                        style: TextStyle(
-                                          color: AppColors.lime,
+                                        style:
+                                            AppTypography.labelLarge.copyWith(
+                                          color: AppColors.primaryBlue,
                                           fontSize: 10,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 0.8,
@@ -137,56 +159,56 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
                                     ),
                                   ],
                                 ],
-                              ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.05),
-                        ],
-                        if (subtitle != null)
-                          Padding(
-                            padding: EdgeInsets.only(left: showBrand ? 2 : 0),
-                            child: Text(
-                              subtitle!,
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 12,
-                                fontWeight: FontWeight.w400,
-                                color: L.sub,
-                                height: 1.2,
+                              )
+                                  .animate()
+                                  .fadeIn(duration: 400.ms)
+                                  .slideX(begin: -0.05),
+                          ],
+                          if (subtitle != null)
+                            Padding(
+                              padding: EdgeInsets.only(left: showBrand ? 2 : 0),
+                              child: Text(
+                                subtitle!,
+                                style: AppTypography.bodySmall.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: L.sub,
+                                  height: 1.2,
+                                ),
                               ),
-                            ),
-                          )
+                            )
+                                .animate()
+                                .fadeIn(duration: 400.ms, delay: 200.ms)
+                                .slideY(
+                                    begin: 0.3,
+                                    end: 0,
+                                    curve: Curves.easeOutCubic),
+                        ],
+                      ),
+                    ),
+                    if (actions != null)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: actions!
+                            .map((a) => Padding(
+                                  padding: const EdgeInsets.only(left: 8),
+                                  child: a,
+                                ))
+                            .toList(),
+                      )
                           .animate()
                           .fadeIn(duration: 400.ms, delay: 200.ms)
-                          .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic),
-                      ],
-                    ),
-                  ),
-                  if (actions != null)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: actions!
-                          .map((a) => Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: a,
-                              ))
-                          .toList(),
-                    ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideX(begin: 0.05),
-                ],
+                          .slideX(begin: 0.05),
+                  ],
+                ),
               ),
-            ),
-            if (bottom != null) bottom!,
-          ],
+              if (bottom != null) bottom!,
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
 
-    if (blurred) {
-      return ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: child,
-        ),
-      );
-    }
     return child;
   }
 
@@ -204,7 +226,7 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
         const SizedBox(width: 10),
         Text(
           'Med AI',
-          style: GoogleFonts.outfit(
+          style: AppTypography.displayLarge.copyWith(
             fontSize: 24,
             fontWeight: FontWeight.w900,
             color: L.text,
@@ -232,12 +254,8 @@ class HeaderActionBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    return GestureDetector(
-      onTap: () {
-        HapticEngine.selection();
-        onTap();
-      },
-      behavior: HitTestBehavior.opaque,
+    return BouncingButton(
+      onTap: onTap,
       child: Container(
         width: 38,
         height: 38,
@@ -296,14 +314,12 @@ class SliverUnifiedHeader extends StatelessWidget {
       flexibleSpace: FlexibleSpaceBar(
         stretchModes: const [
           StretchMode.zoomBackground,
-          StretchMode.blurBackground,
         ],
         centerTitle: true,
         titlePadding: const EdgeInsets.only(bottom: 16, left: 40, right: 40),
         title: Text(
           title,
-          style: TextStyle(
-            fontFamily: 'Inter',
+          style: AppTypography.headlineMedium.copyWith(
             fontWeight: FontWeight.w800,
             color: L.text,
             letterSpacing: -0.5,

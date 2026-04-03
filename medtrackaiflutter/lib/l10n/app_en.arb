@@ -9,5 +9,188 @@
   "alarmsTab": "Alarms",
   "dashboardTab": "Trends",
   "familyTab": "Circle",
-  "scanTab": "Scan"
+  "scanTab": "Scan",
+  "countrySelectionTitle": "Where are you located?",
+  "countrySelectionSubtitle": "Helps us identify local medicine brands",
+  "prnLabel": "As Needed",
+  "prnUndoToast": "PRN dose removed",
+  "dailyLogTitle": "Daily Log",
+  "noMedicinesScheduled": "No medicines scheduled for this day.",
+  "remaining": "remaining",
+  "refillRequired": "Refill Required",
+  "settings": "Settings",
+  "profile": "Profile",
+  "language": "Language",
+  "country": "Country",
+  "saveChanges": "SAVE CHANGES",
+  "inventory": "Inventory",
+  "noMedicines": "No medicines",
+  "takeNow": "Take Now",
+  "snooze": "Snooze",
+  "skip": "Skip",
+  "pharmacyLabel": "Pharmacy",
+  "pharmacyPhoneLabel": "Pharmacy Phone",
+  "rxNumberLabel": "Rx Number",
+  "globalSettings": "Global Settings",
+  "religiousObservance": "Religious Observance",
+  "shabbatMode": "Shabbat Mode",
+  "prayerAwareReminders": "Prayer-Aware Reminders",
+  "halalDetection": "Halal & Gelatin Detection",
+  "amoledMode": "AMOLED Mode (Pixel Save)",
+  "diabetesMode": "Diabetes Mode",
+  "hypertensionMode": "Hypertension Mode",
+  "supportedMarkets": "Supported Markets",
+  "halalSafe": "Halal Safe",
+  "gelatinWarning": "Contains Gelatin",
+  "halalUncertain": "Halal Uncertain",
+  "edit": "Edit",
+  "editProfile": "Edit Profile",
+  "cancel": "Cancel",
+  "globalSettingsSubtitle": "Manage international market settings",
+  "medicationDisplay": "Medication Display",
+  "showGenericNames": "Show Generic (INN) Names",
+  "showGenericNamesSubtitle": "Display international non-proprietary names instead of brand names",
+  "pbsSafetyNet": "PBS Safety Net Tracker",
+  "pbsSafetyNetSubtitle": "Australia — track annual co-payment spend",
+  "pbsThreshold": "Annual threshold: $1,622.90",
+  "pbsSpent": "Spent: ${amount}",
+  "pbsRemaining": "${amount} to go",
+  "reached": "Reached!",
+  "medsSubsidised": "Meds now subsidised!",
+  "spentAmountSubtitle": "Drag to update your annual spent amount (co-payments for all PBS prescriptions this calendar year)",
+  "clinicalModes": "Clinical Modes",
+  "clinicalModesSubtitle": "USA · UK · UAE · Malaysia",
+  "diabetesModeSubtitle": "Log blood glucose alongside insulin / diabetes medications",
+  "hypertensionModeSubtitle": "Log blood pressure alongside antihypertensive medications",
+  "displaySettings": "Display",
+  "amoledModeSubtitle": "Use true #000000 background to optimise AMOLED displays and save battery",
+  "shabbatModeSubtitle": "Gentle vibrate-only reminders from Friday sunset to Saturday night",
+  "selectCountry": "Select Country",
+  "selectLanguage": "Select Language",
+  "aiSafetyProfile": "AI Safety Profile",
+  "verified": "Verified",
+  "criticalWarnings": "Critical Warnings",
+  "drugInteractions": "Drug Interactions",
+  "dietaryLifestyleRules": "Dietary & Lifestyle Rules",
+  "ahaInsight": "Aha! Insight",
+  "generateSafetyProfile": "Generate Safety Profile",
+  "analyzingClinicalLimits": "Analyzing Clinical Limits...",
+  "safetyLoadingSubtitle": "Please wait while AI verifies interactions, dangers, and food rules.",
+  "safetyPromptSubtitle": "Tap to instantly analyze this medication for dangers, drug interactions, and lifestyle rules.",
+  "goodMorning": "Good morning",
+  "goodAfternoon": "Good afternoon",
+  "goodEvening": "Good evening",
+  "hiUser": "Hi, {name} 👋",
+  "@hiUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "startJourney": "Let's start your health journey ✨",
+  "allDosesTaken": "All doses taken today! 🌟",
+  "dosesOverdue": "{count} doses overdue — take them now ⚠️",
+  "@dosesOverdue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dosesLeft": "{count} doses left today",
+  "@dosesLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthReportTitle": "MedAI Health Report",
+  "medicalSummarySubtitle": "Personal Medical Summary & Adherence Trends",
+  "patientLabel": "Patient: {name}",
+  "@patientLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reportDate": "Date: {date}",
+  "@reportDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "overallAdherence": "Overall Adherence",
+  "activeMedications": "Active Medications",
+  "reportPeriod": "Report Period",
+  "last30Days": "Last 30 Days",
+  "currentMedications": "Current Medications",
+  "medicineCol": "Medicine",
+  "doseCol": "Dose",
+  "frequencyCol": "Frequency",
+  "stockRemainingCol": "Stock Remaining",
+  "recentSymptoms": "Recent Symptoms & Well-being",
+  "symptomDateCol": "Date",
+  "symptomNameCol": "Symptom",
+  "severityCol": "Severity",
+  "notesCol": "Notes",
+  "noSymptomsLogged": "No symptoms logged in this period.",
+  "reportFooter": "Generated by MedAI Pro. This report is for informational purposes only and should be reviewed by a qualified healthcare professional.",
+  "settingsStats": "Stats",
+  "settingsApp": "App Settings",
+  "settingsData": "Data & Privacy",
+  "settingsGlobal": "Global Settings",
+  "settingsProfile": "My Profile",
+  "adherenceLabel": "ADHERENCE",
+  "streakLabel": "STREAK",
+  "streakDays": "{count} Days",
+  "@streakDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "generateClinicalReport": "GENERATE CLINICAL REPORT",
+  "fetchingAiInsights": "FETCHING AI INSIGHTS...",
+  "aiCoachDisclaimer": "This dashboard uses AI to analyze patterns. Always consult your doctor for medical advice.",
+  "insightsTitle": "Insights",
+  "insightsSubtitle": "Analytics & health patterns",
+  "dataSummaryTitle": "YOUR DATA SUMMARY",
+  "dataMedicinesLabel": "Medicines",
+  "dataAlarmsLabel": "Alarms set",
+  "dataDaysTrackedLabel": "Days tracked",
+  "dataDosesLoggedLabel": "Doses logged",
+  "exportAndBackup": "Export & Backup",
+  "exportPdfReport": "Export PDF Report",
+  "exportPdfSubtitle": "For doctors and caregivers",
+  "exportCsv": "Export History as CSV",
+  "exportCsvSubtitle": "{count} dose records",
+  "@exportCsvSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "resetSection": "Reset",
+  "deleteAllData": "Delete All Data",
+  "deleteAllDataSubtitle": "Removes all medicines, history & settings",
+  "deleteConfirmTitle": "Delete All Data?",
+  "deleteConfirmBody": "This will permanently delete all your data. This cannot be undone.",
+  "deleteButton": "Delete Everything",
+  "legalSection": "Legal",
+  "privacyPolicy": "Privacy Policy",
+  "privacyPolicySubtitle": "How we protect your health data",
+  "termsOfService": "Terms of Service",
+  "termsOfServiceSubtitle": "Rules for using MedAI",
+  "appVersionLabel": "App Version",
+  "appVersionValue": "1.0.0",
+  "analysisFailed": "Analysis Failed",
+  "somethingWentWrong": "Something went wrong. Please try again.",
+  "retry": "Retry"
 }

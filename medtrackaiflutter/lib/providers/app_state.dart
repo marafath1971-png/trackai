@@ -11,15 +11,23 @@ import '../services/notification_service.dart';
 import '../services/auth_service.dart';
 import '../domain/repositories/symptom_repository.dart';
 import '../services/purchases_service.dart';
-import '../services/review_service.dart';
 import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:cloud_functions/cloud_functions.dart' hide Result;
+import 'package:firebase_performance/firebase_performance.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../services/gemini_service.dart';
 import '../services/biometric_service.dart';
 import '../core/utils/haptic_engine.dart';
+import '../services/analytics_service.dart';
 import '../core/utils/logger.dart';
+import '../core/utils/result.dart';
+import '../widgets/modals/daily_log_sheet.dart';
+import '../services/link_service.dart';
+import '../services/circle_service.dart';
+import 'package:in_app_review/in_app_review.dart';
 
 enum AppPhase { loading, onboarding, auth, app }
 
@@ -43,10 +51,21 @@ class AppState extends ChangeNotifier {
   final IUserRepository userRepo;
   final SymptomRepository symptomRepo;
 
+  bool _isDisposed = false;
+
+  void safeNotifyListeners() {
+    if (!_isDisposed) {
+      super.notifyListeners();
+    }
+  }
+
   AppPhase phase = AppPhase.loading;
   UserProfile? profile;
   List<Medicine> meds = [];
   Map<String, List<DoseEntry>> history = {};
+  Map<int, String> medInteractions = {};
+  Map<String, String> protectorInsights =
+      {}; // NEW (Phase 10): patientUid -> Insight String
   Map<String, bool> takenToday = {};
   StreakData streakData = const StreakData();
   List<Caregiver> caregivers = [];
@@ -59,19 +78,99 @@ class AppState extends ChangeNotifier {
   List<Symptom> symptoms = [];
   bool loadingInsight = false;
   bool isLocked = false;
+  String language = 'en';
+  SymptomAnalysis? symptomAnalysis;
+  bool analyzingSymptom = false;
+  // Drug interaction warning (shown after adding a new medicine)
+  String? interactionWarning;
+  String? interactionWarningMedName;
   StreamSubscription? _cgSub;
   StreamSubscription? _notifSub;
+  StreamSubscription? _monitoringSub;
+  String? pendingJoinCode;
+  final LinkService _linkService = LinkService();
   final AudioPlayer _audioPlayer;
 
-  bool get isPremium => profile?.isPremium ?? false;
+  // ── Growth & Metrics (Phase 12) ────────────────────────────────────
+  int _scanCount = 0;
+  DateTime? _lastReviewRequest;
+  int get scanCount => _scanCount;
+
+  // ── PENDING ACTIONS (WAL) ──────────────────────────────────────────
+  List<Map<String, dynamic>> _pendingActions = [];
+  bool _isSyncing = false;
+
+  Future<void> _loadPendingActions() async {
+    _pendingActions = await medRepo.getPendingActions();
+  }
+
+  Future<void> _savePendingActions() async {
+    await medRepo.savePendingActions(_pendingActions);
+  }
+
+  Future<void> _syncPendingActions() async {
+    if (_isSyncing || _pendingActions.isEmpty) return;
+    _isSyncing = true;
+
+    FirebaseCrashlytics.instance
+        .log('Syncing ${_pendingActions.length} pending actions');
+    final trace = FirebasePerformance.instance.newTrace('wal_sync');
+    await trace.start();
+    trace.setMetric('queue_size', _pendingActions.length);
+
+    try {
+      final toProcess = List<Map<String, dynamic>>.from(_pendingActions);
+      for (final action in toProcess) {
+        try {
+          if (action['type'] == 'takeDose') {
+            await FirebaseFunctions.instance
+                .httpsCallable('takeDose')
+                .call(action['data']);
+          }
+          _pendingActions.remove(action);
+          await _savePendingActions();
+        } catch (e) {
+          final errStr = e.toString().toLowerCase();
+          appLogger.e('[AppState] Sync failed for $action: $e');
+
+          if (errStr.contains('not-found') || errStr.contains('404')) {
+            appLogger.w(
+                '[AppState] Cloud Function not found. Suspending sync for this session.');
+            break; // Stop attempting to sync if the backend is missing
+          }
+
+          if (errStr.contains('network') || errStr.contains('unavailable')) {
+            trace.putAttribute('exit_reason', 'network_failure');
+            break;
+          }
+          _pendingActions.remove(action);
+          await _savePendingActions();
+        }
+      }
+    } finally {
+      _isSyncing = false;
+      await trace.stop();
+    }
+  }
+
+  bool get isPremium {
+    // Return the profile premium status directly
+    return profile?.isPremium ?? false;
+  }
+
   bool _isPurchasing = false;
   bool get isPurchasing => _isPurchasing;
 
   void setPurchasing(bool value) {
     _isPurchasing = value;
-    notifyListeners();
+    safeNotifyListeners();
   }
- 
+
+  int getBonusDaysRemaining() {
+    if (profile == null) return 0;
+    return 0; // Hardened release: Trial system disabled or simplified
+  }
+
   // ── Calculation Cache ──────────────────────────────────────────────
   int? _cachedStreak;
   double? _cachedAdherence;
@@ -92,6 +191,19 @@ class AppState extends ChangeNotifier {
   }) : _audioPlayer = audioPlayer ?? AudioPlayer() {
     _notifSub = NotificationService.actionStream.stream
         .listen(_handleNotificationAction);
+
+    // Deep Link Integration (Phase 7)
+    _linkService.onJoinCodeDetected = (code) {
+      pendingJoinCode = code;
+      appLogger.i('[AppState] Pending join code set: $code');
+      if (phase == AppPhase.app && profile != null) {
+        joinCaregiver(code);
+        pendingJoinCode = null;
+      }
+      safeNotifyListeners();
+    };
+
+    _linkService.init();
   }
 
   // ── Load from storage ──────────────────────────────────────────────
@@ -121,6 +233,8 @@ class AppState extends ChangeNotifier {
       });
 
       profile = profileResult;
+      // HIPAA-conscious user identification (Anonymous ID)
+      AnalyticsService.setUserId(AuthService.uid);
       meds = medsResult;
       history = historyResult;
       caregivers = caregiversResult;
@@ -128,44 +242,65 @@ class AppState extends ChangeNotifier {
 
       // Other less critical loads
       try {
-        streakData = await userRepo.getStreakData();
+        final prefs = await medRepo.getPrefs();
+        _scanCount = prefs.getInt('scan_count') ?? 0;
+        final lastRev = prefs.getString('last_review_request');
+        if (lastRev != null) _lastReviewRequest = DateTime.tryParse(lastRev);
+
         takenToday = await medRepo.getTakenToday();
         darkMode = await userRepo.getDarkMode();
+        language = await userRepo.getLanguage();
       } catch (e) {
         appLogger.w('[AppState] Secondary data load failed', error: e);
       }
 
       // If user is signed in but Firestore had no data, push our local data up.
-      if (AuthService.uid != null &&
-          profile == null &&
-          meds.isEmpty) {
+      if (AuthService.uid != null && profile == null && meds.isEmpty) {
         _syncLocalToCloud();
       }
 
-      phase = profile != null && profile!.name.isNotEmpty
-          ? AppPhase.app
-          : AppPhase.onboarding;
-      
+      if (profile != null) {
+        phase = AppPhase.app;
+
+        // Handle deferred deep link join codes
+        if (pendingJoinCode != null && AuthService.uid != null) {
+          appLogger.i(
+              '[AppState] Processing deferred join code on load: $pendingJoinCode');
+          joinCaregiver(pendingJoinCode!);
+          pendingJoinCode = null;
+        }
+      } else {
+        phase = AppPhase.onboarding;
+      }
+
       _updateNotifications();
       _listenToCaregivers();
+      _listenToProfileChanges();
       _listenToMonitoring();
+
+      // Initialize WAL (Restore)
+      await _loadPendingActions();
+      Timer.periodic(const Duration(minutes: 1), (_) => _syncPendingActions());
+      _syncPendingActions();
 
       if (AuthService.uid != null) {
         _syncUserProfileFromAuth();
         _initPushNotifications();
       }
 
-      // Check for biometric lock
+      // WAL initialization and sync handled below
+      _invalidateCache();
       if (profile?.biometricEnabled ?? false) {
         isLocked = true;
       }
 
       _invalidateCache();
-      notifyListeners();
+      safeNotifyListeners();
     } catch (e, stack) {
-      appLogger.e('[AppState] Critical load failure', error: e, stackTrace: stack);
+      appLogger.e('[AppState] Critical load failure',
+          error: e, stackTrace: stack);
       phase = AppPhase.onboarding;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 
@@ -178,22 +313,52 @@ class AppState extends ChangeNotifier {
   void _listenToCaregivers() {
     _cgSub?.cancel();
     _cgSub = userRepo.getCaregiversStream().listen((list) {
-    caregivers = list;
-    _invalidateCache();
-    notifyListeners();
+      caregivers = list;
+      _invalidateCache();
+      safeNotifyListeners();
+    });
+  }
+
+  StreamSubscription? _profileSub;
+  void _listenToProfileChanges() {
+    _profileSub?.cancel();
+    _profileSub = userRepo.getProfileStream().listen((updatedProfile) {
+      if (updatedProfile == null) return;
+
+      // Check for Nudges
+      if (profile != null && updatedProfile.lastNudgeAt != null) {
+        final lastOld = profile?.lastNudgeAt;
+        final lastNew = updatedProfile.lastNudgeAt;
+
+        if (lastNew != lastOld && lastNew != null) {
+          // WE GOT NUDGED!
+          HapticEngine.heavyImpact();
+          _audioPlayer.play(AssetSource('sounds/nudge.mp3')).catchError((_) {});
+          showToast('Family is checking on you! Please take your meds. 💙',
+              type: 'info');
+        }
+      }
+
+      profile = updatedProfile;
+      safeNotifyListeners();
     });
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
     _cgSub?.cancel();
     _notifSub?.cancel();
+    _monitoringSub?.cancel();
+    _profileSub?.cancel();
     _audioPlayer.dispose();
     super.dispose();
   }
 
-  void _listenToMonitoring() {
-    // Monitoring logic can be implemented here if needed for peer tracking
+  void setLanguage(String lang) {
+    language = lang;
+    userRepo.saveLanguage(lang);
+    safeNotifyListeners();
   }
 
   void _handleNotificationAction(String payloadStr) {
@@ -278,14 +443,46 @@ class AppState extends ChangeNotifier {
 
   Future<void> saveProfile(UserProfile p) async {
     profile = p;
+    phase = AppPhase.app;
+
+    // Ensure AppState language is synced with profile preferredLanguage
+    if (p.preferredLanguage != language) {
+      language = p.preferredLanguage;
+      userRepo.saveLanguage(language);
+    }
+
     await userRepo.saveProfile(p);
-    notifyListeners();
+
+    _updateNotifications();
+    if (pendingJoinCode != null) {
+      appLogger.i(
+          '[AppState] Processing deferred join code on login: $pendingJoinCode');
+      joinCaregiver(pendingJoinCode!);
+      pendingJoinCode = null;
+    }
+
+    _updateNotifications();
+    safeNotifyListeners();
   }
 
+  /// Increments the scan counter and evaluates if the user should be
+  /// prompted for a review. Call this after successful AI operations.
   Future<void> incrementScanCount() async {
     if (profile == null) return;
+
+    // 1. Profile Persistence (Existing logic)
     final newCount = profile!.scansUsed + 1;
     await saveProfile(profile!.copyWith(scansUsed: newCount));
+
+    // 2. Growth Milestone Tracking (Phase 12)
+    _scanCount++;
+    final prefs = await medRepo.getPrefs();
+    await prefs.setInt('scan_count', _scanCount);
+
+    // Logic: Request review on specific milestones (e.g., 3rd and 10th successful scan)
+    if ([3, 10, 50].contains(_scanCount)) {
+      triggerReviewIfEligible();
+    }
   }
 
   Future<String?> uploadImage(File file) async {
@@ -297,13 +494,18 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> unlockPremium() async {
-    if (profile == null) return;
-    await saveProfile(profile!.copyWith(isPremium: true));
-    showToast('Premium Unlocked! Full access granted 💎✨', type: 'success');
+  Future<void> unlockPremium({String? packageId}) async {
+    if (profile != null) {
+      if (packageId != null) {
+        AnalyticsService.logSubscriptionStart(packageId);
+      }
+      await saveProfile(profile!.copyWith(isPremium: true));
+      showToast('Premium Unlocked! Full access granted 💎✨', type: 'success');
+    }
   }
 
-  Future<void> logPaywallEvent(String name, {Map<String, Object>? params}) async {
+  Future<void> logPaywallEvent(String name,
+      {Map<String, Object>? params}) async {
     try {
       await FirebaseAnalytics.instance.logEvent(name: name, parameters: params);
       debugPrint('📊 Analytics: $name $params');
@@ -313,16 +515,19 @@ class AppState extends ChangeNotifier {
   }
 
   Future<bool> purchasePremium(String packageId) async {
-    await logPaywallEvent('paywall_purchase_attempt', params: {'package_id': packageId});
+    await logPaywallEvent('paywall_purchase_attempt',
+        params: {'package_id': packageId});
     setPurchasing(true);
     final success = await PurchasesService.purchasePackage(packageId);
     setPurchasing(false);
     if (success) {
-      await logPaywallEvent('paywall_purchase_success', params: {'package_id': packageId});
-      await unlockPremium();
+      await logPaywallEvent('paywall_purchase_success',
+          params: {'package_id': packageId});
+      await unlockPremium(packageId: packageId);
       return true;
     } else {
-      await logPaywallEvent('paywall_purchase_failed', params: {'package_id': packageId});
+      await logPaywallEvent('paywall_purchase_failed',
+          params: {'package_id': packageId});
       showToast('Purchase failed or cancelled', type: 'error');
       return false;
     }
@@ -387,10 +592,10 @@ class AppState extends ChangeNotifier {
 
   void _syncUserProfileFromAuth() {
     if (AuthService.currentUser == null) return;
-    
+
     final user = AuthService.currentUser!;
     final currentProfile = profile ?? UserProfile();
-    
+
     // Only update if current profile is empty or placeholder
     String? newName = currentProfile.name.isEmpty ? user.displayName : null;
     String? newPhoto = currentProfile.photoUrl == null ? user.photoURL : null;
@@ -405,7 +610,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> toggleBiometricLock(bool enabled) async {
     if (profile == null) return;
-    
+
     if (enabled) {
       // Verify they CAN use biometrics before enabling
       final canUse = await BiometricService.canCheckBiometrics();
@@ -413,30 +618,33 @@ class AppState extends ChangeNotifier {
         showToast('Biometrics are not available on this device', type: 'error');
         return;
       }
-      
+
       // Force an authentication check before enabling
       final authenticated = await BiometricService.authenticate();
       if (!authenticated) {
-        showToast('Authentication failed. Biometric lock not enabled.', type: 'error');
+        showToast('Authentication failed. Biometric lock not enabled.',
+            type: 'error');
         return;
       }
     }
-    
+
     await saveProfile(profile!.copyWith(biometricEnabled: enabled));
-    showToast(enabled ? 'Biometric lock enabled 🛡️' : 'Biometric lock disabled', type: 'info');
+    showToast(
+        enabled ? 'Biometric lock enabled 🛡️' : 'Biometric lock disabled',
+        type: 'info');
   }
 
   Future<void> unlockApp() async {
     if (!(profile?.biometricEnabled ?? false)) {
       isLocked = false;
-      notifyListeners();
+      safeNotifyListeners();
       return;
     }
 
     final authenticated = await BiometricService.authenticate();
     if (authenticated) {
       isLocked = false;
-      notifyListeners();
+      safeNotifyListeners();
     } else {
       showToast('Authentication failed', type: 'error');
     }
@@ -445,7 +653,7 @@ class AppState extends ChangeNotifier {
   void lockApp() {
     if (profile?.biometricEnabled ?? false) {
       isLocked = true;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 
@@ -459,7 +667,7 @@ class AppState extends ChangeNotifier {
     if (profile == null) return;
     await saveProfile(profile!.copyWith(appIcon: iconKey));
     showToast('App icon choice saved! ✨');
-    
+
     // Note: Native dynamic icon switching requires specific platform setup (Info.plist/AndroidManifest)
     // and is currently scoped for a future update.
   }
@@ -469,7 +677,7 @@ class AppState extends ChangeNotifier {
     await saveProfile(profile!.copyWith(reminderSound: soundKey));
     _updateNotifications(); // Refresh notifications with new sound
     showToast('Reminder sound updated! 🎵');
-    
+
     // Play the preview automatically when selected
     playReminderSoundPreview(soundKey);
   }
@@ -477,15 +685,16 @@ class AppState extends ChangeNotifier {
   Future<void> playReminderSoundPreview(String soundKey) async {
     try {
       await _audioPlayer.stop();
-      if (soundKey == 'Default') return; // Don't play default for now or use a specific asset
-      
+      if (soundKey == 'Default') {
+        return; // Don't play default for now or use a specific asset
+      }
+
       final fileName = soundKey.toLowerCase();
       await _audioPlayer.play(AssetSource('audio/$fileName.mp3'));
     } catch (e) {
       debugPrint('Failed to play sound preview: $e');
     }
   }
-
 
   Future<void> _updateNotifications() async {
     await NotificationService.cancelAll();
@@ -518,6 +727,7 @@ class AppState extends ChangeNotifier {
                   true, // Using notifSound for both as per UI
               isTakenToday: isTakenTodayFlag,
               dayIdx: dayIdx,
+              isShabbatMode: profile?.shabbatMode ?? false,
             );
           }
         }
@@ -544,9 +754,62 @@ class AppState extends ChangeNotifier {
       } else {
         symptoms.add(symptom);
       }
-      notifyListeners();
+
+      // Automatic AI Analysis
+      analyzingSymptom = true;
+      symptomAnalysis = null;
+      safeNotifyListeners();
+
+      final result = await GeminiService.analyzeSymptom(symptom, meds);
+      if (result is Success<SymptomAnalysis>) {
+        symptomAnalysis = result.value;
+      }
+      analyzingSymptom = false;
+      safeNotifyListeners();
     } catch (e) {
       appLogger.e('[AppState] logSymptom failed', error: e);
+      analyzingSymptom = false;
+      safeNotifyListeners();
+    }
+  }
+
+  void executeStepAction(String step, BuildContext context) {
+    HapticEngine.selection();
+    final action = step.toLowerCase();
+
+    if (action.contains('log')) {
+      DailyLogSheet.show(context);
+    } else if (action.contains('insight') || action.contains('refresh')) {
+      fetchHealthInsights();
+      showToast('Refreshing health insights... ✨', type: 'info');
+    } else if (action.contains('med') || action.contains('detail')) {
+      // Potentially navigate to meds tab or show details
+      showToast('Check your Medications tab for details! 💊');
+    } else if (action.contains('streak')) {
+      showToast('Current Streak: ${getStreak()} days! 🔥');
+    } else if (action.contains('doctor')) {
+      showToast('Always consult your physician for medical concerns. 👨‍🏼‍⚕️');
+    } else {
+      showToast('Action noted: $step');
+    }
+  }
+
+  void handleInsightAction(String actionId, BuildContext context) {
+    HapticEngine.selection();
+    switch (actionId) {
+      case 'ACTION_VIEW_LOG':
+        DailyLogSheet.show(context);
+        break;
+      case 'ACTION_OPEN_STREAK':
+        // This usually happens in HomeTab via state. Trigger a toast for now
+        // if we can't easily reach the state toggle here.
+        showToast('Check your streak in the Home tab! 🔥');
+        break;
+      case 'ACTION_REFRESH_INSIGHTS':
+        fetchHealthInsights();
+        break;
+      default:
+        debugPrint('Unknown AI Action: $actionId');
     }
   }
 
@@ -554,20 +817,26 @@ class AppState extends ChangeNotifier {
     try {
       await symptomRepo.deleteSymptom(id);
       symptoms.removeWhere((s) => s.id == id);
-      notifyListeners();
+      safeNotifyListeners();
     } catch (e) {
       appLogger.e('[AppState] deleteSymptom failed', error: e);
     }
+  }
+
+  void clearInteractionWarning() {
+    interactionWarning = null;
+    interactionWarningMedName = null;
+    safeNotifyListeners();
   }
 
   // ── Toast ─────────────────────────────────────────────────────────
   void showToast(String message, {String type = 'success'}) {
     toast = message;
     toastType = type;
-    notifyListeners();
+    safeNotifyListeners();
     Future.delayed(const Duration(seconds: 3), () {
       toast = null;
-      notifyListeners();
+      safeNotifyListeners();
     });
   }
 
@@ -588,7 +857,7 @@ class AppState extends ChangeNotifier {
     }
     items.sort(
         (a, b) => (a.sched.h * 60 + a.sched.m) - (b.sched.h * 60 + b.sched.m));
-    
+
     _cachedDoses = items;
     _isDosesDirty = false;
     return items;
@@ -647,9 +916,11 @@ class AppState extends ChangeNotifier {
   }
 
   double getAdherenceScore() {
-    if (!_isAdherenceDirty && _cachedAdherence != null) return _cachedAdherence!;
+    if (!_isAdherenceDirty && _cachedAdherence != null) {
+      return _cachedAdherence!;
+    }
     if (history.isEmpty) return 1.0;
-    
+
     int totalScheduled = 0;
     int totalTaken = 0;
 
@@ -657,18 +928,23 @@ class AppState extends ChangeNotifier {
     final now = DateTime.now();
     for (int i = 0; i < 30; i++) {
       final date = now.subtract(Duration(days: i));
-      final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final dateKey =
+          "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
       final dayOfWeek = date.weekday % 7;
 
       // Count what WAS scheduled on that day
-      final scheduledOnDay = meds.where((m) => 
-        m.schedule.any((s) => s.enabled && s.days.contains(dayOfWeek))
-      ).length;
+      final scheduledOnDay = meds
+          .where((m) =>
+              m.schedule.any((s) => s.enabled && s.days.contains(dayOfWeek)))
+          .length;
 
       if (scheduledOnDay > 0) {
         totalScheduled += scheduledOnDay;
-        final entries = history[dateKey] ?? [];
-        totalTaken += entries.where((e) => e.taken).length;
+        final dailyEntries = history[dateKey] ?? [];
+        // Only count taken doses that are NOT PRN
+        totalTaken += dailyEntries
+            .where((e) => e.taken && !e.label.startsWith('PRN-'))
+            .length;
       }
     }
 
@@ -707,12 +983,14 @@ class AppState extends ChangeNotifier {
     final now = DateTime.now();
     for (int i = 29; i >= 0; i--) {
       final date = now.subtract(Duration(days: i));
-      final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final dateKey =
+          "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
       final dayOfWeek = date.weekday % 7;
 
-      final scheduledOnDay = meds.where((m) => 
-        m.schedule.any((s) => s.enabled && s.days.contains(dayOfWeek))
-      ).length;
+      final scheduledOnDay = meds
+          .where((m) =>
+              m.schedule.any((s) => s.enabled && s.days.contains(dayOfWeek)))
+          .length;
 
       double adherence = 1.0;
       if (scheduledOnDay > 0) {
@@ -731,21 +1009,20 @@ class AppState extends ChangeNotifier {
   }
 
   int getAdherenceForMed(int medId) {
-    final medHistory = history.values
-        .expand((e) => e)
-        .where((e) => e.medId == medId)
-        .toList();
+    final medHistory =
+        history.values.expand((e) => e).where((e) => e.medId == medId).toList();
     final takenCount = medHistory.where((e) => e.taken).length;
     final totalDoses = medHistory.length;
     return totalDoses == 0 ? 0 : (takenCount * 100 / totalDoses).round();
   }
 
   ({int taken, int total}) getHistoryCountForMed(int medId) {
-    final medHistory = history.values
-        .expand((e) => e)
-        .where((e) => e.medId == medId)
-        .toList();
-    return (taken: medHistory.where((e) => e.taken).length, total: medHistory.length);
+    final medHistory =
+        history.values.expand((e) => e).where((e) => e.medId == medId).toList();
+    return (
+      taken: medHistory.where((e) => e.taken).length,
+      total: medHistory.length
+    );
   }
 
   int get unseenAlertsCount => missedAlerts.where((a) => !a.seen).length;
@@ -758,13 +1035,13 @@ class AppState extends ChangeNotifier {
     profile = p;
     phase = AppPhase.app; // Go directly to App so user can scan immediately
     saveProfile(p);
-    notifyListeners();
+    safeNotifyListeners();
   }
 
   void updateProfile(UserProfile p) {
     profile = p;
     saveProfile(p);
-    notifyListeners();
+    safeNotifyListeners();
   }
 
   void updateProfileFromMap(Map<String, dynamic> updates) {
@@ -773,12 +1050,12 @@ class AppState extends ChangeNotifier {
     json.addAll(updates);
     profile = UserProfile.fromJson(json);
     saveProfile(profile!);
-    notifyListeners();
+    safeNotifyListeners();
   }
 
   void skipAuth() {
     phase = AppPhase.app;
-    notifyListeners();
+    safeNotifyListeners();
   }
 
   // ── Dark mode ──────────────────────────────────────────────────────
@@ -786,7 +1063,7 @@ class AppState extends ChangeNotifier {
     darkMode = !darkMode;
     userRepo.saveDarkMode(darkMode);
     _invalidateCache();
-    notifyListeners();
+    safeNotifyListeners();
   }
 
   // ── Toggle dose taken ──────────────────────────────────────────────
@@ -804,43 +1081,35 @@ class AppState extends ChangeNotifier {
 
       // Optimistic UI update instantly for perceived speed.
       _invalidateCache();
-      notifyListeners();
+      safeNotifyListeners();
 
       final todayKey = todayStr();
       if (!wasTaken) {
         showToast('✓ ${dose.med.name} taken');
         HapticEngine.heavyImpact(); // Premium success haptic
-        
-        // --- V2: Increment dosesMarked & check for review prompt ---
-        final currentDoses = profile?.dosesMarked ?? 0;
-        final nextDoses = currentDoses + 1;
-        
-        saveProfile(profile?.copyWith(
-          dosesMarked: nextDoses,
-        ) ?? UserProfile(dosesMarked: nextDoses));
 
-        if (nextDoses == 20 && profile?.lastReviewPromptedAt == null) {
-          ReviewService.requestReview();
-          saveProfile(profile?.copyWith(
-            lastReviewPromptedAt: DateTime.now(),
-          ) ?? UserProfile(lastReviewPromptedAt: DateTime.now()));
-        }
-        
-        // Update stock
+        // 1. Local Optimistic Update (Inventory)
         final medIdx = meds.indexWhere((m) => m.id == dose.med.id);
         if (medIdx != -1) {
           final m = meds[medIdx];
           if (m.count > 0) {
-            final updatedMed = m.copyWith(count: m.count - 1);
+            final updatedRefill = m.refillInfo?.copyWith(
+              currentInventory: (m.refillInfo!.currentInventory - 1)
+                  .clamp(0, m.refillInfo!.totalQuantity),
+            );
+            final updatedMed = m.copyWith(
+              count: m.count - 1,
+              refillInfo: updatedRefill ?? m.refillInfo,
+            );
             meds[medIdx] = updatedMed;
-            medRepo.updateMedicine(updatedMed);
+            medRepo.updateMedicine(updatedMed); // Offline repo update
           }
         }
 
-        // --- V2: Record history entry with timestamp ---
+        // 2. Local Optimistic Update (History)
         final now = DateTime.now();
-        final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-        
+        final timeStr =
+            '${dose.sched.h.toString().padLeft(2, '0')}:${dose.sched.m.toString().padLeft(2, '0')}';
         final entry = DoseEntry(
           medId: dose.med.id,
           label: dose.sched.label,
@@ -852,18 +1121,43 @@ class AppState extends ChangeNotifier {
         history = {
           ...history,
           todayKey: [
-            ...(history[todayKey] ?? []).where((e) => e.label != dose.sched.label || e.medId != dose.med.id),
+            ...(history[todayKey] ?? []).where(
+                (e) => e.label != dose.sched.label || e.medId != dose.med.id),
             entry,
           ],
         };
+
+        triggerReviewIfEligible();
+
+        // 3. Queue for Cloud Sync (WAL)
+        final action = {
+          'id': DateTime.now().millisecondsSinceEpoch.toString(),
+          'type': 'takeDose',
+          'data': {
+            'medId': dose.med.id,
+            'dayKey': todayKey,
+            'doseEntry': entry.toJson(),
+          }
+        };
+        _pendingActions.add(action);
+        _savePendingActions();
+        _syncPendingActions(); // Try sync immediately
       } else {
+        // Unmarking logic (Legacy path for now)
         showToast('Dose unmarked', type: 'info');
-        
-        // Revert stock
+
+        // Revert stock — restore both count AND refillInfo.currentInventory
         final medIdx = meds.indexWhere((m) => m.id == dose.med.id);
         if (medIdx != -1) {
           final m = meds[medIdx];
-          final updatedMed = m.copyWith(count: m.count + 1);
+          final updatedRefill = m.refillInfo?.copyWith(
+            currentInventory: (m.refillInfo!.currentInventory + 1)
+                .clamp(0, m.refillInfo!.totalQuantity),
+          );
+          final updatedMed = m.copyWith(
+            count: m.count + 1,
+            refillInfo: updatedRefill ?? m.refillInfo,
+          );
           meds[medIdx] = updatedMed;
           medRepo.updateMedicine(updatedMed);
         }
@@ -872,7 +1166,8 @@ class AppState extends ChangeNotifier {
         history = {
           ...history,
           todayKey: (history[todayKey] ?? [])
-              .where((e) => e.label != dose.sched.label || e.medId != dose.med.id)
+              .where(
+                  (e) => e.label != dose.sched.label || e.medId != dose.med.id)
               .toList(),
         };
       }
@@ -919,25 +1214,159 @@ class AppState extends ChangeNotifier {
   Future<void> nudgePatient(String patientUid) async {
     try {
       await userRepo.nudgePatient(patientUid);
-      showToast('Nudge sent! 🔔', type: 'success');
+      showToast('Nudge sent! 💨');
       HapticEngine.selection();
     } catch (e) {
-      showToast('Failed to send nudge', type: 'error');
+      appLogger.e('[AppState] nudgePatient failed', error: e);
     }
   }
 
   // ── Medicine CRUD ──────────────────────────────────────────────────
-  void addMedicine(Medicine med) {
+  void addMedicine(Medicine med, {BuildContext? context}) {
     final isPremium = profile?.isPremium ?? false;
     if (!isPremium && meds.length >= 3) {
-      showToast('Free plan limited to 3 medicines. Upgrade to Pro for unlimited! 💎', type: 'error');
+      showToast(
+          'Free plan limited to 3 medicines. Upgrade to Pro for unlimited! 💎',
+          type: 'error');
       return;
     }
     meds = [...meds, med];
     medRepo.addMedicine(med);
     _updateNotifications();
     _invalidateCache();
-    notifyListeners();
+    safeNotifyListeners();
+
+    // Async drug interaction check — run in background, show toast if risk found
+    _checkDrugInteractionsAsync(med);
+  }
+
+  Future<void> _checkDrugInteractionsAsync(Medicine newMed) async {
+    if (meds.length < 2) return; // Only 1 med, no interactions possible
+    try {
+      final otherMeds = meds.where((m) => m.id != newMed.id).toList();
+      final result = await GeminiService.checkInteractions(
+        newMed: newMed,
+        existingMeds: otherMeds,
+      );
+      if (result != null && result.isNotEmpty) {
+        // Trigger an in-app alert with the interaction warning
+        interactionWarning = result;
+        interactionWarningMedName = newMed.name;
+        safeNotifyListeners();
+      }
+    } catch (e) {
+      appLogger.w('[AppState] Drug interaction check failed: $e');
+    }
+  }
+
+  /// Manually triggers an AI Safety Scan for a specific medicine.
+  Future<Result<AISafetyProfile>> analyzeMedicineSafety(Medicine med) async {
+    final result = await GeminiService.generateSafetyProfile(
+        med: med, country: profile?.country ?? '');
+
+    if (result is Success<AISafetyProfile>) {
+      // Create a copy of the medicine with the new AI safety profile
+      final updatedMed = med.copyWith(aiSafetyProfile: result.data);
+
+      // Update local state
+      final idx = meds.indexWhere((m) => m.id == med.id);
+      if (idx != -1) {
+        final newMeds = [...meds];
+        newMeds[idx] = updatedMed;
+        meds = newMeds;
+
+        // Save to DB
+        await medRepo.updateMedicine(updatedMed);
+        safeNotifyListeners();
+      }
+    }
+    return result;
+  }
+
+  /// Log a PRN (as-needed) dose for a medicine outside its schedule.
+  Future<void> logPrnDose(Medicine med) async {
+    final medIdx = meds.indexWhere((m) => m.id == med.id);
+    if (medIdx == -1) return;
+
+    final now = DateTime.now();
+    final todayKey = todayStr();
+    final timeStr =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final prnLabel = 'PRN-$timeStr';
+
+    // Record in history
+    history = {
+      ...history,
+      todayKey: [
+        ...(history[todayKey] ?? []),
+        DoseEntry(
+          medId: med.id,
+          label: prnLabel,
+          time: timeStr,
+          taken: true,
+          takenAt: now.toIso8601String(),
+        ),
+      ],
+    };
+
+    // Decrement stock
+    final m = meds[medIdx];
+    if (m.count > 0) {
+      final updatedRefill = m.refillInfo?.copyWith(
+        currentInventory: (m.refillInfo!.currentInventory - 1)
+            .clamp(0, m.refillInfo!.totalQuantity),
+      );
+      final updatedMed = m.copyWith(
+        count: m.count - 1,
+        refillInfo: updatedRefill ?? m.refillInfo,
+      );
+      meds[medIdx] = updatedMed;
+      medRepo.updateMedicine(updatedMed);
+    }
+
+    await _persistAll(dateKey: todayKey);
+    _invalidateCache();
+    safeNotifyListeners();
+    HapticEngine.heavyImpact();
+    showToast('✓ ${med.name} PRN dose logged');
+  }
+
+  /// Undo a PRN dose by removing it from history and restoring inventory.
+  Future<void> undoPrnDose(int medId, String timeStr) async {
+    final todayKey = todayStr();
+    final List<DoseEntry> entries = List.from(history[todayKey] ?? []);
+    final idx = entries.indexWhere((e) =>
+        e.medId == medId && e.time == timeStr && e.label.startsWith('PRN-'));
+
+    if (idx == -1) return;
+
+    entries.removeAt(idx);
+    history = {
+      ...history,
+      todayKey: entries,
+    };
+
+    // Increment stock back
+    final medIdx = meds.indexWhere((m) => m.id == medId);
+    if (medIdx != -1) {
+      final m = meds[medIdx];
+      final updatedRefill = m.refillInfo?.copyWith(
+        currentInventory: (m.refillInfo!.currentInventory + 1)
+            .clamp(0, m.refillInfo!.totalQuantity),
+      );
+      final updatedMed = m.copyWith(
+        count: m.count + 1,
+        refillInfo: updatedRefill ?? m.refillInfo,
+      );
+      meds[medIdx] = updatedMed;
+      medRepo.updateMedicine(updatedMed);
+    }
+
+    await _persistAll(dateKey: todayKey);
+    _invalidateCache();
+    safeNotifyListeners();
+    HapticEngine.selection();
+    showToast('PRN dose removed');
   }
 
   void updateMed(
@@ -980,7 +1409,15 @@ class AppState extends ChangeNotifier {
       _updateNotifications();
     }
     _invalidateCache();
-    notifyListeners();
+    safeNotifyListeners();
+  }
+
+  void updateMedDirect(Medicine updated) {
+    meds = meds.map((m) => m.id == updated.id ? updated : m).toList();
+    medRepo.updateMedicine(updated);
+    _updateNotifications();
+    _invalidateCache();
+    safeNotifyListeners();
   }
 
   void deleteMed(int id) {
@@ -988,7 +1425,7 @@ class AppState extends ChangeNotifier {
     medRepo.deleteMedicine(id);
     _updateNotifications();
     _invalidateCache();
-    notifyListeners();
+    safeNotifyListeners();
     showToast('Medicine removed');
   }
 
@@ -1016,29 +1453,29 @@ class AppState extends ChangeNotifier {
     };
     takenToday = {...takenToday, key: false};
     _persistAll(dateKey: todayKey);
-    notifyListeners();
+    safeNotifyListeners();
     showToast('Dose skipped', type: 'info');
   }
-
 
   // ── Dashboard Data & Insights ──────────────────────────────────────
 
   Future<void> fetchHealthInsights() async {
     if (meds.isEmpty) return;
     loadingInsight = true;
-    notifyListeners();
+    safeNotifyListeners();
 
     try {
       final adherence = getAdherenceScore();
       final streak = getStreak();
       final latency = getLatencyData();
-      
+
       final result = await GeminiService.getHealthInsight(
         meds: meds,
         streak: streak,
         adherence: adherence,
         latencyData: latency,
         symptoms: symptoms,
+        country: profile?.country ?? '',
       );
 
       result.fold(
@@ -1054,7 +1491,7 @@ class AppState extends ChangeNotifier {
       debugPrint('Error fetching health insights: $e');
     } finally {
       loadingInsight = false;
-      notifyListeners();
+      safeNotifyListeners();
     }
   }
 
@@ -1066,36 +1503,44 @@ class AppState extends ChangeNotifier {
 
     // Last 7 days
     for (int i = 0; i < 7; i++) {
-        final date = now.subtract(Duration(days: i));
-        final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-        final entries = history[dateKey] ?? [];
+      final date = now.subtract(Duration(days: i));
+      final dateKey =
+          "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final entries = history[dateKey] ?? [];
 
-        for (final e in entries) {
-            if (e.taken && e.takenAt != null) {
-                try {
-                    final actual = DateTime.parse(e.takenAt!);
-                    // Parse scheduled time from 'HH:mm'
-                    final timeParts = e.time.split(':');
-                    final scheduled = DateTime(
-                        actual.year, actual.month, actual.day, 
-                        int.parse(timeParts[0]), int.parse(timeParts[1])
-                    );
-                    
-                    final diffMins = actual.difference(scheduled).inMinutes;
-                    latency.add({
-                        'date': dateKey,
-                        'time': e.time,
-                        'latency': diffMins,
-                        'medName': meds.firstWhere((m) => m.id == e.medId, orElse: () => Medicine(id: 0, name: 'Unknown', count: 0, totalCount: 0, courseStartDate: '')).name,
-                    });
-                } catch (_) {}
-            }
+      for (final e in entries) {
+        if (e.taken && e.takenAt != null) {
+          try {
+            final actual = DateTime.parse(e.takenAt!);
+            // Parse scheduled time from 'HH:mm'
+            final timeParts = e.time.split(':');
+            final scheduled = DateTime(actual.year, actual.month, actual.day,
+                int.parse(timeParts[0]), int.parse(timeParts[1]));
+
+            final diffMins = actual.difference(scheduled).inMinutes;
+            latency.add({
+              'date': dateKey,
+              'time': e.time,
+              'latency': diffMins,
+              'medName': meds
+                  .firstWhere((m) => m.id == e.medId,
+                      orElse: () => Medicine(
+                          id: 0,
+                          name: 'Unknown',
+                          count: 0,
+                          totalCount: 0,
+                          courseStartDate: ''))
+                  .name,
+            });
+          } catch (_) {}
         }
+      }
     }
     _cachedLatency = latency;
     _isLatencyDirty = false;
     return latency;
   }
+
   void addSchedule(int medId, ScheduleEntry s) {
     final med = meds.firstWhere((m) => m.id == medId);
     updateMed(medId, schedule: [...med.schedule, s]);
@@ -1118,29 +1563,101 @@ class AppState extends ChangeNotifier {
     showToast('Reminder removed');
   }
 
+  void updateSchedule(int medId, int idx, ScheduleEntry s) {
+    final med = meds.firstWhere((m) => m.id == medId);
+    final newSched = [...med.schedule];
+    newSched[idx] = s;
+    updateMed(medId, schedule: newSched);
+  }
+
   // ── Caregivers ─────────────────────────────────────────────────────
   void addCaregiver(Caregiver cg) {
     caregivers = [...caregivers, cg];
     userRepo.saveCaregivers(caregivers);
-    notifyListeners();
+    safeNotifyListeners();
     showToast('${cg.name} added as caregiver');
   }
 
   /// Write invite to Firestore so any device can look it up via the 6-char code.
-  Future<void> createInvite(Caregiver cg) async {
+  Future<String> createInvite(Caregiver cg) async {
     final uid = AuthService.uid;
-    if (uid == null) return; // no-op when offline / not signed in
+    if (uid == null) return '';
     try {
-      await userRepo.createInvite(uid, cg);
-    } catch (_) {}
+      final code = await CircleService.generateInviteCode(
+        patientName: profile?.name ?? 'Member',
+        patientAvatar: profile?.avatar ?? '👤',
+        relation: cg.relation,
+        alertDelay: cg.alertDelay,
+      );
+
+      if (code.isNotEmpty) {
+        // Update the caregiver with the generated code
+        caregivers = caregivers.map((c) {
+          if (c.id == cg.id) {
+            return c.copyWith(inviteCode: code);
+          }
+          return c;
+        }).toList();
+        userRepo.saveCaregivers(caregivers);
+        safeNotifyListeners();
+      }
+
+      return code;
+    } catch (e) {
+      appLogger.e('[AppState] createInvite failed', error: e);
+      return '';
+    }
   }
 
-  /// Look up an invite code globally in Firestore. Returns null if not found.
-  Future<Caregiver?> lookupInvite(String code) async {
+  /// NEW (Phase 10): Fetch AI analysis for a family member.
+  Future<void> fetchProtectorInsight(Caregiver cg, List<Medicine> meds,
+      Map<String, List<DoseEntry>> history) async {
+    // Only fetch if missing or user is Pro
+    if (protectorInsights.containsKey(cg.patientUid)) return;
+
+    appLogger.d('[AppState] Fetching AI Protector Insight for ${cg.name}');
     try {
-      return await userRepo.getInvite(code);
-    } catch (_) {
-      return null;
+      final insight = await GeminiService.getProtectorInsight(
+        patientName: cg.name,
+        meds: meds,
+        history: history,
+      );
+      protectorInsights[cg.patientUid] = insight;
+      safeNotifyListeners();
+    } catch (e) {
+      appLogger.w('[AppState] fetchProtectorInsight failed: $e');
+    }
+  }
+
+  /// Look up and join a care team via invite code.
+  Future<void> joinCareTeam(String code) async {
+    if (AuthService.uid == null) {
+      showToast('Authentication required', type: 'error');
+      return;
+    }
+
+    final trace = FirebasePerformance.instance.newTrace('join_care_team');
+    await trace.start();
+    FirebaseCrashlytics.instance
+        .log('User joining care team via CircleService: $code');
+
+    try {
+      final result = await CircleService.verifyAndJoin(code);
+
+      if (result['success'] == true) {
+        trace.putAttribute('status', 'success');
+        showToast('Joined ${result['patientName']}\'s care team! ✓');
+
+        // Refresh caregivers and monitoring
+        _listenToCaregivers();
+        _listenToMonitoring();
+      }
+    } catch (e) {
+      trace.putAttribute('status', 'error');
+      appLogger.e('[AppState] joinCareTeam failed', error: e);
+      showToast(e.toString().replaceAll('Exception: ', ''), type: 'error');
+    } finally {
+      await trace.stop();
     }
   }
 
@@ -1149,72 +1666,46 @@ class AppState extends ChangeNotifier {
         .map((c) => c.id == id ? c.copyWith(status: 'active') : c)
         .toList();
     userRepo.saveCaregivers(caregivers);
-    notifyListeners();
+    safeNotifyListeners();
     showToast('Caregiver activated ✓');
   }
 
   void removeCaregiver(int id) {
     caregivers = caregivers.where((c) => c.id != id).toList();
     userRepo.saveCaregivers(caregivers);
-    notifyListeners();
+    safeNotifyListeners();
     showToast('Caregiver removed', type: 'warning');
   }
 
-  Future<void> joinCaregiver(String patientUid, int cgId) async {
+  Future<void> joinCaregiver(String code) async {
     try {
-      await userRepo.joinCaregiver(
-        patientUid: patientUid,
-        cgId: cgId,
-        patientName: profile?.name ?? 'Unknown Patient',
-        patientAvatar: profile?.avatar ?? '😊',
-        relation: 'Connected Patient',
-      );
-      activateCaregiver(cgId);
-      showToast('Successfully joined! Monitoring active ✓');
-    } catch (e) {
-      showToast('Failed to join: $e', type: 'error');
-    }
-  }
-
-  Future<void> joinForce(String patientUid, int cgId) async {
-    try {
-      await userRepo.joinCaregiver(
-        patientUid: patientUid,
-        cgId: cgId,
-        patientName: profile?.name ?? 'Unknown Patient',
-        patientAvatar: profile?.avatar ?? '😊',
-        relation: 'Connected Patient',
-      );
-      
-      // Ensure it's in our local list or refreshed
-      final match = caregivers.where((c) => c.id == cgId).firstOrNull;
-      if (match != null) {
-        activateCaregiver(cgId);
-      } else {
-        await userRepo.getCaregivers();
+      final result = await CircleService.verifyAndJoin(code);
+      if (result['success'] == true) {
+        showToast('Successfully joined ${result['patientName']}\'s circle! ✓');
+        _updateNotifications(); // Refresh
+        _listenToCaregivers(); // Refresh
+        _listenToMonitoring(); // Refresh
       }
-
-      // Add to monitoring list if we are the one joining (caregiver role)
-      await initMonitoring();
-      
-      showToast('Joined successfully! ✓');
-    } catch (_) {
-      activateCaregiver(cgId);
+    } catch (e) {
+      showToast('Join failed: ${e.toString().replaceAll('Exception: ', '')}',
+          type: 'error');
     }
   }
 
   // ── Monitoring Logic ──
 
-  StreamSubscription? _monitoringSub;
-
-  Future<void> initMonitoring() async {
+  Future<void> _listenToMonitoring() async {
     _monitoringSub?.cancel();
     final uid = AuthService.uid;
     if (uid == null) return;
 
+    appLogger.i('[AppState] Initializing monitoring stream for $uid');
     _monitoringSub = userRepo.getMonitoringPatientsStream().listen((patients) {
+      appLogger.d('[AppState] Received ${patients.length} monitoring updates');
       monitoredPatients = patients;
-      notifyListeners();
+      safeNotifyListeners();
+    }, onError: (e) {
+      appLogger.e('[AppState] Monitoring stream error', error: e);
     });
   }
 
@@ -1229,7 +1720,7 @@ class AppState extends ChangeNotifier {
 
   void addMissedAlert(MissedAlert alert) {
     missedAlerts = [alert, ...missedAlerts].take(20).toList();
-    notifyListeners();
+    safeNotifyListeners();
   }
 
   void markAlertsAsSeen() {
@@ -1244,23 +1735,26 @@ class AppState extends ChangeNotifier {
               seen: true,
             ))
         .toList();
-    notifyListeners();
+    safeNotifyListeners();
   }
 
   void simulateMissedDose() {
-    showToast('Missed dose simulation not available in this version', type: 'info');
+    showToast('Missed dose simulation not available in this version',
+        type: 'info');
   }
 
   // ── Streak Freeze ──────────────────────────────────────────────────
   void useStreakFreeze() {
     final isPremium = profile?.isPremium ?? false;
     if (!isPremium) {
-      showToast('Streak Freeze is a MedAI Pro feature! Upgrade to protect your progress. 🧊💎', type: 'error');
+      showToast(
+          'Streak Freeze is a MedAI Pro feature! Upgrade to protect your progress. 🧊💎',
+          type: 'error');
       return;
     }
     streakData = streakData.copyWith(frozen: true, freezeUsedWeek: true);
     userRepo.saveStreakData(streakData);
-    notifyListeners();
+    safeNotifyListeners();
   }
 
   // ── Delete all data ────────────────────────────────────────────────
@@ -1278,14 +1772,14 @@ class AppState extends ChangeNotifier {
       userRepo.saveCaregivers([]),
       userRepo.saveStreakData(const StreakData()),
     ]);
-    notifyListeners();
+    safeNotifyListeners();
   }
 
   // ── Reset taken today at midnight ──────────────────────────────────
   void resetTakenToday() {
     takenToday = {};
     medRepo.saveTakenToday({});
-    notifyListeners();
+    safeNotifyListeners();
   }
 
   // ── Data Export ─────────────────────────────────────────────────────
@@ -1318,5 +1812,33 @@ class AppState extends ChangeNotifier {
     _isDosesDirty = true;
     _isAllSchedulesDirty = true;
     _isLatencyDirty = true;
+  }
+
+  // ── Smart Review Engine (Phase 12) ──
+  // logic merged into incrementScanCount above.
+
+  Future<void> triggerReviewIfEligible() async {
+    final InAppReview inAppReview = InAppReview.instance;
+
+    // Reliability: Check if we've asked in the last 30 days to avoid fatigue
+    if (_lastReviewRequest != null) {
+      if (DateTime.now().difference(_lastReviewRequest!).inDays < 30) {
+        return;
+      }
+    }
+
+    try {
+      if (await inAppReview.isAvailable()) {
+        await inAppReview.requestReview();
+        _lastReviewRequest = DateTime.now();
+        final prefs = await medRepo.getPrefs();
+        await prefs.setString(
+            'last_review_request', _lastReviewRequest!.toIso8601String());
+        appLogger
+            .i('[AppState] Smart Review requested at milestone $_scanCount');
+      }
+    } catch (e) {
+      appLogger.e('[AppState] Failed to request review: $e');
+    }
   }
 }

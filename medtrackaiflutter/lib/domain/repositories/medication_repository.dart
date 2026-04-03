@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../entities/entities.dart';
 
 abstract class IMedicationRepository {
@@ -6,7 +7,7 @@ abstract class IMedicationRepository {
   Future<void> addMedicine(Medicine med);
   Future<void> updateMedicine(Medicine med);
   Future<void> deleteMedicine(int id);
-  
+
   Future<String?> uploadMedicineImage(File imageFile);
 
   Future<Map<String, List<DoseEntry>>> getHistory();
@@ -15,4 +16,9 @@ abstract class IMedicationRepository {
 
   Future<Map<String, bool>> getTakenToday();
   Future<void> saveTakenToday(Map<String, bool> takenToday);
+
+  Future<List<Map<String, dynamic>>> getPendingActions();
+  Future<void> savePendingActions(List<Map<String, dynamic>> actions);
+
+  Future<SharedPreferences> getPrefs();
 }

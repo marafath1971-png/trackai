@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../providers/app_state.dart';
 import '../../../theme/app_theme.dart';
 import '../../../core/utils/color_utils.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/haptic_engine.dart';
+import '../../../domain/entities/medicine.dart';
 
 class DoseCard extends StatefulWidget {
   final DoseItem dose;
@@ -31,25 +33,67 @@ class DoseCard extends StatefulWidget {
   State<DoseCard> createState() => _DoseCardState();
 }
 
-class _DoseCardState extends State<DoseCard> {
+class _DoseCardState extends State<DoseCard>
+    with SingleTickerProviderStateMixin {
   bool _pressed = false;
+  late AnimationController _checkController;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+  }
+
+  @override
+  void dispose() {
+    _checkController.dispose();
+    super.dispose();
+  }
+
+  void _handleTake() {
+    if (widget.taken) return;
+    HapticFeedback.selectionClick();
+    _checkController.forward();
+    widget.onTap();
+  }
 
   @override
   Widget build(BuildContext context) {
     final medColor = hexToColor(widget.dose.med.color);
+    final L = widget.L;
+
+    // Card border glow: lime for NEXT, red for overdue
+    Color borderColor;
+    if (widget.isNext && !widget.taken) {
+      borderColor = L.secondary.withValues(alpha: 0.5);
+    } else if (widget.overdue && !widget.taken) {
+      borderColor = L.error.withValues(alpha: 0.3);
+    } else if (widget.taken) {
+      borderColor = L.border.withValues(alpha: 0.08);
+    } else {
+      borderColor = L.border.withValues(alpha: 0.15);
+    }
+
+    // Card background
+    Color cardBg;
+    if (widget.taken) {
+      cardBg = L.bg;
+    } else if (widget.overdue) {
+      cardBg = L.error.withValues(alpha: 0.03);
+    } else if (widget.isNext) {
+      cardBg = L.secondary.withValues(alpha: 0.04);
+    } else {
+      cardBg = L.card;
+    }
 
     return Dismissible(
       key: ValueKey('dose_${widget.dose.key}'),
-      direction: widget.taken ? DismissDirection.none : DismissDirection.horizontal,
-      onDismissed: (direction) {
-        if (direction == DismissDirection.startToEnd) {
-          HapticEngine.doseTaken();
-          widget.onTake();
-        } else {
-          HapticEngine.light();
-          widget.onSnooze();
-        }
-      },
+      direction:
+          widget.taken ? DismissDirection.none : DismissDirection.horizontal,
+      onDismissed: (direction) {},
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
           HapticEngine.doseTaken();
@@ -58,178 +102,272 @@ class _DoseCardState extends State<DoseCard> {
           HapticEngine.light();
           widget.onSnooze();
         }
-        return false; // Prevent removal from tree
+        return false;
       },
       background: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         alignment: Alignment.centerLeft,
         decoration: BoxDecoration(
-            color: widget.L.text, borderRadius: BorderRadius.circular(24)),
-        child: Icon(Icons.check_rounded, color: widget.L.bg, size: 24),
+            gradient: AppGradients.main, borderRadius: AppRadius.roundXL),
+        child: const Icon(Icons.check_rounded, color: Colors.white, size: 24),
       ),
       secondaryBackground: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         alignment: Alignment.centerRight,
         decoration: BoxDecoration(
-            color: widget.L.sub.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(24)),
-        child: Icon(Icons.more_horiz_rounded, color: widget.L.text, size: 24),
+            color: L.sub.withValues(alpha: 0.08),
+            borderRadius: AppRadius.roundXL),
+        child: Icon(Icons.more_horiz_rounded, color: L.text, size: 24),
       ),
       child: GestureDetector(
         onTapDown: (_) => setState(() => _pressed = true),
         onTapUp: (_) => setState(() => _pressed = false),
         onTapCancel: () => setState(() => _pressed = false),
-        onTap: widget.taken
-            ? null
-            : () {
-                HapticFeedback.selectionClick();
-                widget.onTap();
-              },
+        onTap: widget.taken ? null : _handleTake,
         child: AnimatedScale(
-          scale: _pressed ? 0.98 : 1.0,
+          scale: _pressed ? 0.975 : 1.0,
           duration: const Duration(milliseconds: 100),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
-              color: widget.taken
-                  ? widget.L.bg
-                  : (widget.overdue
-                      ? widget.L.text.withValues(alpha: 0.03)
-                      : widget.L.card),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: widget.isNext
-                    ? widget.L.text.withValues(alpha: 0.4)
-                    : widget.taken
-                        ? widget.L.border.withValues(alpha: 0.05)
-                        : widget.L.border.withValues(alpha: 0.1),
-                width: 1.0,
-              ),
+              color: cardBg,
+              borderRadius: AppRadius.roundXL,
+              border: Border.all(color: borderColor, width: 1.0),
+              boxShadow: widget.isNext && !widget.taken
+                  ? AppShadows.glow(L.secondary, intensity: 0.08)
+                  : null,
             ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+            child: ClipRRect(
+              borderRadius: AppRadius.roundXL,
+              child: IntrinsicHeight(
+                child: Row(
                   children: [
-                    Text(fmtTime(widget.dose.sched.h, widget.dose.sched.m, context),
-                        style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                            color: widget.taken
-                                ? widget.L.sub.withValues(alpha: 0.4)
-                                : widget.L.text,
-                            letterSpacing: -0.5)),
-                    const SizedBox(height: 1),
-                    Row(children: [
-                      Container(
-                          width: 5,
-                          height: 5,
-                          decoration: BoxDecoration(
-                              color: medColor, shape: BoxShape.circle)),
-                      const SizedBox(width: 4),
-                      Text(widget.dose.sched.label,
-                          style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                              color: widget.L.sub)),
-                    ]),
+                    // Left accent strip (medicine color)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: 4,
+                      decoration: BoxDecoration(
+                        color: widget.taken
+                            ? medColor.withValues(alpha: 0.2)
+                            : medColor,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(AppRadius.xl),
+                          bottomLeft: Radius.circular(AppRadius.xl),
+                        ),
+                      ),
+                    ),
+                    // Content
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        child: Row(children: [
+                          // Time column
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                  fmtTime(widget.dose.sched.h,
+                                      widget.dose.sched.m, context),
+                                  style: AppTypography.titleMedium.copyWith(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w900,
+                                    color: widget.taken
+                                        ? L.sub.withValues(alpha: 0.4)
+                                        : L.text,
+                                    letterSpacing: -0.5,
+                                  )),
+                              const SizedBox(height: 2),
+                              Text(
+                                widget.dose.sched.label,
+                                style: AppTypography.labelSmall.copyWith(
+                                  fontSize: 10,
+                                  color: L.sub.withValues(alpha: 0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 14),
+                          // Medicine name & dose
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  widget.dose.sched.ritual != Ritual.none
+                                      ? '${widget.dose.sched.ritual.displayName} ${widget.dose.sched.ritual.emoji}'
+                                          .trim()
+                                      : widget.dose.med.name,
+                                  style: AppTypography.titleMedium.copyWith(
+                                    fontSize:
+                                        widget.dose.sched.ritual != Ritual.none
+                                            ? 14
+                                            : 15,
+                                    fontWeight: FontWeight.w800,
+                                    color: widget.taken
+                                        ? L.sub.withValues(alpha: 0.3)
+                                        : (widget.dose.sched.ritual !=
+                                                Ritual.none
+                                            ? L.text.withValues(alpha: 0.7)
+                                            : L.text),
+                                    decoration: widget.taken
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                                    letterSpacing: -0.2,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 1),
+                                Text(
+                                  widget.dose.sched.ritual != Ritual.none
+                                      ? '${widget.dose.med.name} · ${widget.dose.med.dose}'
+                                      : widget.dose.med.dose,
+                                  style: AppTypography.labelMedium.copyWith(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: widget.taken
+                                        ? L.sub.withValues(alpha: 0.25)
+                                        : L.sub,
+                                    decoration: widget.taken &&
+                                            widget.dose.sched.ritual !=
+                                                Ritual.none
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Right CTA area
+                          _buildCta(L),
+                        ]),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                      Text(widget.dose.med.name,
-                          style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: widget.taken
-                                  ? widget.L.sub.withValues(alpha: 0.3)
-                                  : widget.L.text,
-                              decoration: widget.taken
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                              letterSpacing: -0.2),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                      const SizedBox(height: 1),
-                      Text(widget.dose.med.dose,
-                          style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: widget.L.sub,
-                              letterSpacing: 0.1),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                    ])),
-                if (widget.taken)
-                  Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                          color: widget.L.text.withValues(alpha: 0.05),
-                          shape: BoxShape.circle),
-                      child: Icon(Icons.check_rounded,
-                          color: widget.L.text, size: 14))
-                else if (widget.overdue)
-                  _StatusBadge(dose: widget.dose, L: widget.L)
-                else if (widget.isNext)
-                  Text('NEXT',
-                      style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          color: widget.L.text,
-                          letterSpacing: 0.5))
-                else
-                  Text('TAKE',
-                      style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          color: widget.L.sub.withValues(alpha: 0.4),
-                          letterSpacing: 0.5)),
-              ]),
+              ),
             ),
           ),
         ),
       ),
     );
   }
-}
 
-class _StatusBadge extends StatelessWidget {
-  final DoseItem dose;
-  final AppThemeColors L;
-  const _StatusBadge({required this.dose, required this.L});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: L.text,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        'LATE',
-        style: TextStyle(
-            fontFamily: 'Inter',
+  Widget _buildCta(AppThemeColors L) {
+    if (widget.taken) {
+      // Animated check badge
+      return ScaleTransition(
+        scale: CurvedAnimation(
+          parent: _checkController,
+          curve: Curves.elasticOut,
+        ),
+        child: Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: L.text,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.check_rounded, color: L.bg, size: 14),
+        ),
+      );
+    }
+    if (widget.overdue) {
+      return _OverdueBadge(L: L);
+    }
+    if (widget.isNext) {
+      // Lime pill CTA — "TAKE NOW"
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          gradient: AppGradients.main,
+          borderRadius: BorderRadius.circular(AppRadius.max),
+          boxShadow: AppShadows.glow(L.secondary, intensity: 0.25),
+        ),
+        child: Text(
+          'NOW',
+          style: AppTypography.labelSmall.copyWith(
             fontSize: 10,
             fontWeight: FontWeight.w900,
-            color: L.bg,
-            letterSpacing: 0.5),
+            color: Colors.black,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(
+            duration: 2500.ms,
+            color: Colors.white.withValues(alpha: 0.4),
+          );
+    }
+    // Default "TAKE" label
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: L.fill,
+        borderRadius: BorderRadius.circular(AppRadius.max),
+      ),
+      child: Text(
+        'TAKE',
+        style: AppTypography.labelSmall.copyWith(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: L.sub.withValues(alpha: 0.6),
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// OVERDUE BADGE — Pulsing red
+// ─────────────────────────────────────────────────────────────
+class _OverdueBadge extends StatelessWidget {
+  final AppThemeColors L;
+  const _OverdueBadge({required this.L});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: L.error,
+        borderRadius: BorderRadius.circular(AppRadius.max),
+        boxShadow: AppShadows.glow(L.error, intensity: 0.3),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          )
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .scaleXY(begin: 1, end: 1.5, duration: 700.ms),
+          const SizedBox(width: 5),
+          Text(
+            'LATE',
+            style: AppTypography.labelSmall.copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

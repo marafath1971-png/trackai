@@ -36,7 +36,7 @@ class _LockScreenState extends State<LockScreen> {
               color: L.bg,
             ),
           ),
-          
+
           // Solid Overlay
           Center(
             child: Container(
@@ -45,7 +45,8 @@ class _LockScreenState extends State<LockScreen> {
               decoration: BoxDecoration(
                 color: L.bg.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.0),
+                border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1), width: 1.0),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.2),
@@ -76,9 +77,7 @@ class _LockScreenState extends State<LockScreen> {
                   const SizedBox(height: 24),
                   Text(
                     'App Locked',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 24,
+                    style: AppTypography.displaySmall.copyWith(
                       fontWeight: FontWeight.w800,
                       color: L.text,
                       letterSpacing: -0.5,
@@ -88,9 +87,7 @@ class _LockScreenState extends State<LockScreen> {
                   Text(
                     'Please authenticate to access your sensitive health data and medication history.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
+                    style: AppTypography.bodySmall.copyWith(
                       color: L.sub,
                       height: 1.5,
                     ),
@@ -103,30 +100,31 @@ class _LockScreenState extends State<LockScreen> {
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                        decoration: BoxDecoration(
-                          color: L.green,
-                          borderRadius: BorderRadius.circular(28),
-                          boxShadow: [
-                            BoxShadow(
-                              color: L.green.withValues(alpha: 0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                      child: const Center(
+                      decoration: BoxDecoration(
+                        color: L.green,
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: L.green.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Center(
                         child: Text(
                           'Unlock Now',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 16,
+                          style: AppTypography.labelLarge.copyWith(
                             fontWeight: FontWeight.w800,
                             color: Colors.black,
                           ),
                         ),
                       ),
                     ),
-                  ).animate().slideY(begin: 0.2, end: 0, delay: 400.ms).fadeIn(delay: 400.ms),
+                  )
+                      .animate()
+                      .slideY(begin: 0.2, end: 0, delay: 400.ms)
+                      .fadeIn(delay: 400.ms),
                 ],
               ),
             ),

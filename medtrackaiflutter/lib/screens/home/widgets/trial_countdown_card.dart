@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../theme/app_theme.dart';
 import '../../../providers/app_state.dart';
+import '../../../core/utils/haptic_engine.dart';
+import '../../../widgets/common/bouncing_button.dart';
 import 'package:provider/provider.dart';
 
 class TrialCountdownCard extends StatelessWidget {
@@ -11,123 +13,190 @@ class TrialCountdownCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = Provider.of<AppState>(context);
     final profile = state.profile;
-    
-    if (profile == null || !profile.isPremium) return const SizedBox.shrink();
 
-    // Calculate trial remaining
-    const trialDuration = Duration(days: 7);
-    final elapsed = DateTime.now().difference(profile.createdAt);
-    final remaining = trialDuration - elapsed;
-    
-    // Only show if trial is active (0 to 7 days)
-    if (remaining.isNegative || elapsed.inDays >= 7) return const SizedBox.shrink();
+    // Only show for free-tier users
+    if (profile == null || profile.isPremium) return const SizedBox.shrink();
 
-    final daysLeft = remaining.inDays;
-    final progress = (7 - daysLeft) / 7.0;
+    final scansUsed = profile.scansUsed;
+    final remaining = (3 - scansUsed).clamp(0, 3);
+    final progress = (scansUsed / 3.0).clamp(0.0, 1.0);
+    final isExhausted = scansUsed >= 3;
     final L = context.L;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: L.border, width: 1.5),
-        boxShadow: L.shadowSoft,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+      child: BouncingButton(
+        onTap: () {
+          HapticEngine.selection();
+          state.purchasePremium('annual');
+        },
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: L.card,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isExhausted
+                  ? AppColors.primaryBlue.withValues(alpha: 0.3)
+                  : L.border.withValues(alpha: 0.5),
+            ),
+            boxShadow: isExhausted
+                ? AppShadows.glow(AppColors.primaryBlue, intensity: 0.08)
+                : AppShadows.soft,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: L.green.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.timer_outlined, color: L.green, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Pro Trial Active 💎",
-                      style: TextStyle(
-                        color: L.text,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
+              // ── Header Row ───────────────────────────────────────────
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: AppColors.primaryBlue.withValues(alpha: 0.2)),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.document_scanner_rounded,
+                          color: AppColors.primaryBlue, size: 22),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isExhausted
+                              ? 'Free Scans Exhausted'
+                              : 'Free AI Scans',
+                          style: AppTypography.titleMedium.copyWith(
+                            color: L.text,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          isExhausted
+                              ? 'Upgrade to unlock unlimited scanning'
+                              : '$remaining of 3 free scans remaining',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: L.sub,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // CTA pill
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue,
+                      borderRadius: BorderRadius.circular(AppRadius.max),
+                      boxShadow:
+                          AppShadows.glow(AppColors.primaryBlue, intensity: 0.25),
+                    ),
+                    child: Text(
+                      'GO PRO',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.8,
                       ),
                     ),
-                    Text(
-                      daysLeft == 0 
-                          ? "Ends today! Don't lose access."
-                          : "$daysLeft days remaining in your trial",
-                      style: TextStyle(
-                        color: L.sub,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
+                  )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scaleXY(
+                          begin: 1.0,
+                          end: 1.04,
+                          duration: 1800.ms,
+                          curve: Curves.easeInOut),
+                ],
+              ),
+
+              const SizedBox(height: 18),
+
+              // ── Scan counter dots ────────────────────────────────────
+              Row(
+                children: List.generate(3, (i) {
+                  final used = i < scansUsed;
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(right: i < 2 ? 6 : 0),
+                      child: AnimatedContainer(
+                        duration: 600.ms,
+                        curve: Curves.easeOutQuart,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: used
+                              ? (isExhausted
+                                  ? L.error.withValues(alpha: 0.7)
+                                  : AppColors.primaryBlue)
+                              : L.fill.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(4),
+                          boxShadow: used && !isExhausted
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.primaryBlue
+                                        .withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                  )
+                                ]
+                              : null,
+                        ),
                       ),
                     ),
-                  ],
-                ),
+                  );
+                }),
               ),
-              GestureDetector(
-                onTap: () => state.purchasePremium('pro_monthly'), // Re-trigger purchase to keep it
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+
+              if (isExhausted) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: L.text,
-                    borderRadius: BorderRadius.circular(20),
+                    color: AppColors.primaryBlue.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.12)),
                   ),
-                  child: Text(
-                    "Keep Pro",
-                    style: TextStyle(
-                      color: L.bg,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.star_rounded,
+                          color: AppColors.primaryBlue, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Unlock unlimited scans, interaction checks & more with PRO.',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: L.sub,
+                            fontSize: 12,
+                            height: 1.4,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
+              ],
             ],
           ),
-          const SizedBox(height: 16),
-          // Progress Bar
-          Stack(
-            children: [
-              Container(
-                height: 6,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: L.border,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              AnimatedContainer(
-                duration: 800.ms,
-                height: 6,
-                width: (MediaQuery.of(context).size.width - 80) * (1 - progress),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [L.green, L.green.withValues(alpha: 0.7)],
-                  ),
-                  borderRadius: BorderRadius.circular(3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: L.green.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
+    )
+        .animate()
+        .fadeIn(duration: 400.ms)
+        .slideY(begin: 0.08, end: 0, curve: Curves.easeOutQuart);
   }
 }

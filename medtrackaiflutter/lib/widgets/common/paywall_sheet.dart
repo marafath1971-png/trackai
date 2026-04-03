@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../core/utils/haptic_engine.dart';
+import '../common/bouncing_button.dart';
+import '../common/app_loading_indicator.dart';
 
 class PaywallSheet extends StatefulWidget {
   const PaywallSheet({super.key});
@@ -24,8 +27,20 @@ class _PaywallSheetState extends State<PaywallSheet> {
   int _selIdx = 1; // Monthly by default
 
   final plans = [
-    {'id': 'monthly', 'title': 'Monthly', 'price': '\$9.99', 'period': '/ month', 'desc': 'Flexible, cancel anytime'},
-    {'id': 'annual', 'title': 'Annual', 'price': '\$59.99', 'period': '/ year', 'desc': 'Best value, SAVE 50%'},
+    {
+      'id': 'monthly',
+      'title': 'Monthly',
+      'price': '\$9.99',
+      'period': '/ month',
+      'desc': 'Flexible, cancel anytime'
+    },
+    {
+      'id': 'annual',
+      'title': 'Annual',
+      'price': '\$59.99',
+      'period': '/ year',
+      'desc': 'Best value, SAVE 50%'
+    },
   ];
 
   @override
@@ -54,43 +69,87 @@ class _PaywallSheetState extends State<PaywallSheet> {
             ),
           ),
           const SizedBox(height: 24),
-          
+
           Text(
-            'MedAI Pro',
-            style: AppTypography.displayLarge.copyWith(fontSize: 28),
+            'MedTrack AI Pro',
+            style: AppTypography.displayLarge.copyWith(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1.0,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Unlock all premium features',
-            style: AppTypography.bodyMedium.copyWith(color: L.sub),
+            'Unlock elite safety intelligence',
+            style: AppTypography.bodyMedium.copyWith(
+              color: L.sub,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Social Proof / Trust Badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: L.success.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              border: Border.all(color: L.success.withValues(alpha: 0.15)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.verified_user_rounded, color: L.success, size: 14),
+                const SizedBox(width: 8),
+                Text(
+                  'Join 10,000+ users saving lives with AI Safety',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: L.success,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 32),
 
           // Benefits
-          _buildBenefit('🤖 Unlimited AI Health Insights', L),
-          _buildBenefit('👥 Family Sharing & Monitoring', L),
-          _buildBenefit('❄️ Streak Freeze Protection', L),
-          _buildBenefit('📦 Unlimited Medications', L),
+          _buildBenefit('🤖 Unlimited AI Safety Profiling', L),
+          _buildBenefit('👥 Family Monitoring & Caregiver Alerts', L),
+          _buildBenefit('🛡️ Professional Interaction Checks', L),
+          _buildBenefit('📦 Complete Inventory Management', L),
           const SizedBox(height: 32),
 
           // Plans
           ...plans.asMap().entries.map((e) {
             final isSel = _selIdx == e.key;
-            return GestureDetector(
+            return BouncingButton(
               onTap: () {
                 HapticEngine.light();
                 setState(() => _selIdx = e.key);
               },
-              child: Container(
+              scaleFactor: 0.98,
+              child: AnimatedContainer(
+                duration: 300.ms,
                 margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: isSel ? L.primary.withValues(alpha: 0.1) : L.card,
+                  color: isSel ? L.primary.withValues(alpha: 0.04) : L.card,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isSel ? L.primary : L.border,
+                    color: isSel ? L.primary : L.border.withValues(alpha: 0.1),
                     width: isSel ? 2 : 1,
                   ),
+                  boxShadow: isSel
+                      ? [
+                          BoxShadow(
+                            color: L.primary.withValues(alpha: 0.08),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          )
+                        ]
+                      : null,
                 ),
                 child: Row(
                   children: [
@@ -99,9 +158,17 @@ class _PaywallSheetState extends State<PaywallSheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(e.value['title']!,
-                              style: AppTypography.titleLarge.copyWith(fontSize: 16)),
+                              style: AppTypography.titleLarge.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                color: isSel ? L.primary : L.text,
+                              )),
+                          const SizedBox(height: 2),
                           Text(e.value['desc']!,
-                              style: AppTypography.labelSmall.copyWith(color: L.sub)),
+                              style: AppTypography.labelSmall.copyWith(
+                                color: L.sub,
+                                fontWeight: FontWeight.w600,
+                              )),
                         ],
                       ),
                     ),
@@ -109,9 +176,16 @@ class _PaywallSheetState extends State<PaywallSheet> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(e.value['price']!,
-                            style: AppTypography.displayLarge.copyWith(fontSize: 20, color: isSel ? L.primary : L.text)),
+                            style: AppTypography.displayLarge.copyWith(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: isSel ? L.primary : L.text)),
                         Text(e.value['period']!,
-                            style: AppTypography.labelSmall.copyWith(fontSize: 10, color: L.sub)),
+                            style: AppTypography.labelSmall.copyWith(
+                              fontSize: 10,
+                              color: L.sub,
+                              fontWeight: FontWeight.w800,
+                            )),
                       ],
                     ),
                   ],
@@ -120,48 +194,56 @@ class _PaywallSheetState extends State<PaywallSheet> {
             );
           }),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // CTA
-          GestureDetector(
-            onTap: () async {
-              HapticEngine.light();
-              final success = await state.purchasePremium(plans[_selIdx]['id']!);
-              if (success && context.mounted) {
-                Navigator.pop(context);
-              }
-            },
+          BouncingButton(
+            onTap: state.isPurchasing
+                ? null
+                : () async {
+                    HapticEngine.light();
+                    final success =
+                        await state.purchasePremium(plans[_selIdx]['id']!);
+                    if (success && context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  },
+            scaleFactor: 0.95,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 18),
+              padding: const EdgeInsets.symmetric(vertical: 20),
               decoration: BoxDecoration(
                 color: L.primary,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: L.primary.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  )
-                ],
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: AppShadows.glow(L.primary),
               ),
               child: state.isPurchasing
-                  ? const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)))
+                  ? const Center(child: AppLoadingIndicator(size: 24))
                   : Text(
-                      'Try Free & Subscribe →',
+                      'START PRO MEMBERSHIP →',
                       textAlign: TextAlign.center,
-                      style: AppTypography.titleLarge.copyWith(fontSize: 16, color: L.onPrimary),
+                      style: AppTypography.titleLarge.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        color: L.onPrimary,
+                        letterSpacing: 0.5,
+                      ),
                     ),
             ),
           ),
-          
-          const SizedBox(height: 16),
+
+          const SizedBox(height: 24),
           Center(
-            child: GestureDetector(
+            child: BouncingButton(
               onTap: () => Navigator.pop(context),
+              scaleFactor: 0.98,
               child: Text(
-                'Not now, maybe later',
-                style: AppTypography.labelSmall.copyWith(color: L.sub),
+                'NOT NOW, MAYBE LATER',
+                style: AppTypography.labelSmall.copyWith(
+                  color: L.sub.withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.0,
+                ),
               ),
             ),
           ),
@@ -177,7 +259,9 @@ class _PaywallSheetState extends State<PaywallSheet> {
         children: [
           Icon(Icons.check_circle_rounded, color: L.primary, size: 20),
           const SizedBox(width: 12),
-          Text(text, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+          Text(text,
+              style: AppTypography.bodyMedium
+                  .copyWith(fontWeight: FontWeight.w600)),
         ],
       ),
     );

@@ -1,22 +1,26 @@
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../core/utils/logger.dart';
 
 class PurchasesService {
-  static const String _appleApiKey = 'goog_placeholder_apple'; // TODO: Replace with real Apple API Key
-  static const String _googleApiKey = 'goog_placeholder_google'; // TODO: Replace with real Google API Key
+  static String get _appleApiKey =>
+      dotenv.env['RC_APPLE_KEY'] ?? 're_your_real_apple_key_here';
+  static String get _googleApiKey =>
+      dotenv.env['RC_GOOGLE_KEY'] ?? 're_your_real_google_key_here';
 
-  /// Set this to false and provide real API keys above to enable live production payments.
-  static const bool _isMock = true; 
+  /// If RC_IS_MOCK is set to true in .env, we bypass real payments
+  static bool get _isMock => dotenv.env['RC_IS_MOCK']?.toLowerCase() == 'true';
 
   static Future<void> init() async {
-    if (_isMock) {
-      debugPrint('💰 RevenueCat: Running in MOCK mode');
+    if (_isMock || _appleApiKey.startsWith('re_your_real_')) {
+      appLogger.i(
+          '💰 RevenueCat: Running in MOCK mode (No valid keys provided in .env or RC_IS_MOCK=true)');
       return;
     }
 
-    await Purchases.setLogLevel(LogLevel.debug);
+    await Purchases.setLogLevel(LogLevel.info);
 
     PurchasesConfiguration? configuration;
     if (Platform.isAndroid) {
@@ -36,7 +40,7 @@ class PurchasesService {
       final customerInfo = await Purchases.getCustomerInfo();
       return customerInfo.entitlements.all['premium']?.isActive ?? false;
     } catch (e) {
-      debugPrint('💰 RevenueCat Error: $e');
+      appLogger.e('💰 RevenueCat Error', error: e);
       return false;
     }
   }
@@ -45,14 +49,14 @@ class PurchasesService {
     if (_isMock) {
       // Simulate purchase delay
       await Future.delayed(const Duration(seconds: 2));
-      debugPrint('💰 RevenueCat Mock: Purchased $packageId');
+      appLogger.i('💰 RevenueCat Mock: Purchased $packageId');
       return true;
     }
 
     try {
       final offerings = await Purchases.getOfferings();
       final package = offerings.current?.getPackage(packageId);
-      
+
       if (package != null) {
         final customerInfo = await Purchases.purchasePackage(package);
         return customerInfo.entitlements.all['premium']?.isActive ?? false;
@@ -61,7 +65,7 @@ class PurchasesService {
     } on PlatformException catch (e) {
       final errorCode = PurchasesErrorHelper.getErrorCode(e);
       if (errorCode != PurchasesErrorCode.purchaseCancelledError) {
-        debugPrint('💰 RevenueCat Purchase Error: ${e.message}');
+        appLogger.e('💰 RevenueCat Purchase Error', error: e);
       }
       return false;
     }
@@ -69,19 +73,20 @@ class PurchasesService {
 
   static Future<bool> restorePurchases() async {
     if (_isMock) {
-      debugPrint('💰 RevenueCat Mock: restorePurchases called');
+      appLogger.i('💰 RevenueCat Mock: restorePurchases called');
       return false; // In mock, assume no active subscriptions by default
     }
     try {
       final customerInfo = await Purchases.restorePurchases();
       return customerInfo.entitlements.all['premium']?.isActive ?? false;
     } catch (e) {
-      debugPrint('💰 RevenueCat Restore Error: $e');
+      appLogger.e('💰 RevenueCat Restore Error', error: e);
       return false;
     }
   }
 
   static Future<void> manageSubscriptions() async {
-    debugPrint('💰 RevenueCat: Please manage subscriptions in App Store / Play Store settings.');
+    appLogger.i(
+        '💰 RevenueCat: Please manage subscriptions in App Store / Play Store settings.');
   }
 }

@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/encryption_service.dart';
+import '../../core/utils/logger.dart';
 
 class LocalDataSource {
   final SharedPreferences _prefs;
+
+  SharedPreferences get prefs => _prefs;
 
   LocalDataSource(this._prefs);
 
@@ -39,8 +42,11 @@ class LocalDataSource {
         s = EncryptionService.decrypt(s);
         return jsonDecode(s);
       } catch (e) {
-        // Fallback to decode directly if decryption fails or returns garbage
-        return jsonDecode(_prefs.getString(key)!);
+        // If decryption fails, the data is either corrupted or unauthorized.
+        // Returning null is safer than falling back to plaintext.
+        appLogger.e('[LocalDataSource] Decryption failed for key $key',
+            error: e);
+        return null;
       }
     }
     return s != null ? jsonDecode(s) : null;

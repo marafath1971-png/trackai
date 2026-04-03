@@ -8,19 +8,15 @@ abstract class IUserRepository {
   Future<List<Caregiver>> getCaregivers();
   Stream<List<Caregiver>> getCaregiversStream();
   Future<void> saveCaregivers(List<Caregiver> caregivers);
-  Future<void> joinCaregiver({
-    required String patientUid,
-    required int cgId,
-    required String patientName,
-    required String patientAvatar,
-    required String relation,
-  });
 
   Future<StreakData> getStreakData();
   Future<void> saveStreakData(StreakData data);
 
   Future<bool> getDarkMode();
   Future<void> saveDarkMode(bool darkMode);
+
+  Future<String> getLanguage();
+  Future<void> saveLanguage(String language);
 
   Future<void> createInvite(String patientUid, Caregiver cg);
   Future<Caregiver?> getInvite(String code);
@@ -31,6 +27,8 @@ abstract class IUserRepository {
   // ── Monitoring ──
   Stream<List<Map<String, dynamic>>> getMonitoringPatientsStream();
   Stream<List<Medicine>> getPatientMedsStream(String patientUid);
-  Stream<Map<String, List<DoseEntry>>> getPatientHistoryStream(String patientUid);
+  Stream<Map<String, List<DoseEntry>>> getPatientHistoryStream(
+      String patientUid);
   Future<void> nudgePatient(String patientUid);
+  Stream<UserProfile?> getProfileStream();
 }

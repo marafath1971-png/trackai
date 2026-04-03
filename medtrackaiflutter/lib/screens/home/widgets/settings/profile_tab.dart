@@ -5,18 +5,21 @@ import '../../../../theme/app_theme.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../domain/entities/entities.dart';
 import '../../../../widgets/common/paywall_sheet.dart';
+import '../../../../widgets/common/bouncing_button.dart';
 import 'settings_shared.dart';
+import '../../../../models/constants.dart';
+import '../../../settings/global_settings_screen.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/haptic_engine.dart';
 
 class ProfileTab extends StatefulWidget {
   final AppState state;
   final AppThemeColors L;
-  final String ff;
-  
+
   const ProfileTab({
     super.key,
     required this.state,
     required this.L,
-    required this.ff,
   });
 
   @override
@@ -28,6 +31,7 @@ class _ProfileTabState extends State<ProfileTab> {
   late TextEditingController _ageCtrl;
   String? _genderInput;
   String? _goalInput;
+  String? _countryInput;
   bool _editing = false;
 
   final genders = ["Male", "Female", "Non-binary", "Prefer not to say"];
@@ -48,6 +52,7 @@ class _ProfileTabState extends State<ProfileTab> {
     _ageCtrl = TextEditingController(text: p?.age ?? '');
     _genderInput = p?.gender;
     _goalInput = p?.goal;
+    _countryInput = p?.country;
   }
 
   @override
@@ -61,43 +66,49 @@ class _ProfileTabState extends State<ProfileTab> {
   Widget build(BuildContext context) {
     final p = widget.state.profile;
     final L = widget.L;
-    final ff = widget.ff;
+    final s = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      physics:
+          const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
       child: Column(children: [
         // Avatar + Name Hero
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-              color: L.card,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: L.border, width: 1.0)),
+            color: L.card,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: L.border, width: 1.5),
+            boxShadow: AppShadows.soft,
+          ),
           child: Row(children: [
             Container(
-              width: 60,
-              height: 60,
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(
-                  color: const Color(0xFF111111),
-                  borderRadius: BorderRadius.circular(24)),
+                  color: L.fill,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: L.border.withValues(alpha: 0.1))),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(22),
                 child: Center(
                     child: p?.photoUrl != null
                         ? Image.network(
                             p!.photoUrl!,
                             fit: BoxFit.cover,
-                            width: 60,
-                            height: 60,
+                            width: 64,
+                            height: 64,
                             errorBuilder: (_, __, ___) => Text(p.avatar,
-                                style: const TextStyle(fontSize: 28)),
+                                style: AppTypography.displaySmall
+                                    .copyWith(fontSize: 32)),
                           )
                         : Text(p?.avatar ?? '😊',
-                            style: const TextStyle(fontSize: 28))),
+                            style: AppTypography.displaySmall
+                                .copyWith(fontSize: 32))),
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 16),
             Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,49 +116,56 @@ class _ProfileTabState extends State<ProfileTab> {
                   Row(
                     children: [
                       Text(p?.name ?? 'Your Name',
-                          style: TextStyle(
-                              fontFamily: ff,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
+                          style: AppTypography.titleLarge.copyWith(
+                              fontWeight: FontWeight.w900,
                               color: L.text,
-                              letterSpacing: -0.3)),
+                              fontSize: 20,
+                              letterSpacing: -0.5)),
                       if (widget.state.isPremium) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: L.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: L.primary, width: 0.5),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                                color: L.primary.withValues(alpha: 0.5),
+                                width: 1.0),
                           ),
-                          child: Text('PRO', style: TextStyle(
-                            fontFamily: ff, fontSize: 9, fontWeight: FontWeight.w900, color: L.primary
-                          )),
+                          child: Text('PRO',
+                              style: AppTypography.labelSmall.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 9,
+                                  color: L.primary,
+                                  letterSpacing: 0.5)),
                         ),
                       ],
                     ],
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
                       '${p?.age != null && p!.age.isNotEmpty ? "Age ${p.age}" : "Age not set"}${p?.gender != null && p!.gender.isNotEmpty ? " · ${p.gender}" : ""}',
-                      style: TextStyle(
-                          fontFamily: ff, fontSize: 13, color: L.sub)),
+                      style: AppTypography.bodySmall
+                          .copyWith(color: L.sub, fontWeight: FontWeight.w600)),
                 ])),
             if (!_editing)
-              GestureDetector(
-                onTap: () => setState(() => _editing = true),
+              BouncingButton(
+                onTap: () {
+                  HapticEngine.selection();
+                  setState(() => _editing = true);
+                },
+                scaleFactor: 0.9,
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                      color: const Color(0xFF111111),
-                      borderRadius: BorderRadius.circular(24)),
-                  child: const Text('Edit',
-                      style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white)),
+                      color: L.text, borderRadius: BorderRadius.circular(24)),
+                  child: Text(s.edit,
+                      style: AppTypography.labelLarge.copyWith(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          color: L.bg)),
                 ),
               ),
           ]),
@@ -156,20 +174,18 @@ class _ProfileTabState extends State<ProfileTab> {
 
         if (_editing) ...[
           SettingsSection(
-              title: 'Edit Profile',
+              title: s.editProfile,
               child: Column(children: [
                 SettingsEditField(
                     label: 'Name',
                     ctrl: _nameCtrl,
                     placeholder: 'Your name',
-                    L: L,
-                    ff: ff),
+                    L: L),
                 SettingsEditField(
                     label: 'Age',
                     ctrl: _ageCtrl,
                     placeholder: 'e.g. 35',
                     L: L,
-                    ff: ff,
                     keyboard: TextInputType.number,
                     border: false),
               ])),
@@ -184,7 +200,6 @@ class _ProfileTabState extends State<ProfileTab> {
                           isSel: _genderInput == e.value,
                           onClick: () => setState(() => _genderInput = e.value),
                           L: L,
-                          ff: ff,
                           first: e.key == 0,
                           last: e.key == genders.length - 1,
                           border: e.key < genders.length - 1))
@@ -200,43 +215,62 @@ class _ProfileTabState extends State<ProfileTab> {
                           isSel: _goalInput == e.value,
                           onClick: () => setState(() => _goalInput = e.value),
                           L: L,
-                          ff: ff,
                           first: e.key == 0,
                           last: e.key == goals.length - 1,
                           border: e.key < goals.length - 1))
                       .toList())),
+          SettingsSection(
+              title: 'Country',
+              child: Column(
+                  children: kCountries
+                      .asMap()
+                      .entries
+                      .map((e) => SettingsSelectRow(
+                          label: e.value['v']!,
+                          isSel: _countryInput == e.value['v'],
+                          onClick: () =>
+                              setState(() => _countryInput = e.value['v']),
+                          L: L,
+                          first: e.key == 0,
+                          last: e.key == kCountries.length - 1,
+                          border: e.key < kCountries.length - 1))
+                      .toList())),
           Row(children: [
             Expanded(
-                child: GestureDetector(
-              onTap: () => setState(() {
-                _editing = false;
-                _nameCtrl.text = p?.name ?? '';
-                _ageCtrl.text = p?.age ?? '';
-                _genderInput = p?.gender;
-                _goalInput = p?.goal;
-              }),
+                child: BouncingButton(
+              onTap: () {
+                HapticEngine.selection();
+                setState(() {
+                  _editing = false;
+                  _nameCtrl.text = p?.name ?? '';
+                  _ageCtrl.text = p?.age ?? '';
+                  _genderInput = p?.gender;
+                  _goalInput = p?.goal;
+                  _countryInput = p?.country;
+                });
+              },
+              scaleFactor: 0.95,
               child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   decoration: BoxDecoration(
                       color: L.fill, borderRadius: BorderRadius.circular(24)),
                   child: Center(
-                      child: Text('Cancel',
-                          style: TextStyle(
-                              fontFamily: ff,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: L.text)))),
+                      child: Text(s.cancel,
+                          style: AppTypography.titleMedium.copyWith(
+                              fontWeight: FontWeight.w700, color: L.text)))),
             )),
             const SizedBox(width: 8),
             Expanded(
                 flex: 2,
-                child: GestureDetector(
+                child: BouncingButton(
                   onTap: () {
+                    HapticEngine.selection();
                     final newProfile = p?.copyWith(
                             name: _nameCtrl.text,
                             age: _ageCtrl.text,
                             gender: _genderInput,
-                            goal: _goalInput) ??
+                            goal: _goalInput,
+                            country: _countryInput) ??
                         UserProfile(
                             name: _nameCtrl.text,
                             age: _ageCtrl.text,
@@ -248,16 +282,15 @@ class _ProfileTabState extends State<ProfileTab> {
                     widget.state.saveProfile(newProfile);
                     setState(() => _editing = false);
                   },
+                  scaleFactor: 0.95,
                   child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       decoration: BoxDecoration(
                           color: const Color(0xFF111111),
                           borderRadius: BorderRadius.circular(24)),
-                      child: const Center(
-                          child: Text('Save Changes',
-                              style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 15,
+                      child: Center(
+                          child: Text('SAVE CHANGES',
+                              style: AppTypography.titleMedium.copyWith(
                                   fontWeight: FontWeight.w800,
                                   color: Colors.white)))),
                 )),
@@ -290,33 +323,66 @@ class _ProfileTabState extends State<ProfileTab> {
                     icon: '🧬',
                     label: 'Gender',
                     sub: p?.gender ?? 'Not set',
+                    border: true),
+                SettingsModalRow(
+                    icon: '🌍',
+                    label: 'Country',
+                    sub: p?.country ?? 'Not set',
                     last: true,
                     border: false),
               ])),
-          
           if (!widget.state.isPremium)
-            GestureDetector(
-              onTap: () => PaywallSheet.show(context),
+            BouncingButton(
+              onTap: () {
+                HapticEngine.selection();
+                PaywallSheet.show(context);
+              },
+              scaleFactor: 0.97,
               child: Container(
                 margin: const EdgeInsets.only(bottom: 24),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [L.primary, L.primary.withValues(alpha: 0.7)]),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [BoxShadow(color: L.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))],
+                  color: L.card,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                      color: L.primary.withValues(alpha: 0.3), width: 1.5),
+                  boxShadow: AppShadows.soft,
                 ),
                 child: Row(children: [
-                  const Text('🚀', style: TextStyle(fontSize: 24)),
-                  const SizedBox(width: 14),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('Upgrade to MedAI Pro', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 16)),
-                    Text('Unlock AI insights, Family Sharing & more', style: TextStyle(color: Colors.black.withValues(alpha: 0.7), fontSize: 12, fontWeight: FontWeight.w600)),
-                  ])),
-                  const Icon(Icons.chevron_right_rounded, color: Colors.black),
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: L.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                        child: Text('🚀', style: TextStyle(fontSize: 24))),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                        Text('Upgrade to MedAI Pro',
+                            style: AppTypography.titleLarge.copyWith(
+                                color: L.text,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900)),
+                        const SizedBox(height: 4),
+                        Text('Unlock AI insights, Family Sharing & more',
+                            style: AppTypography.labelSmall.copyWith(
+                                color: L.sub,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.1)),
+                      ])),
+                  Icon(Icons.chevron_right_rounded, color: L.primary, size: 28),
                 ]),
               ),
-            ).animate(onPlay: (c) => c.repeat()).shimmer(delay: 2.seconds, duration: 1.5.seconds),
-
+            ).animate(onPlay: (c) => c.repeat()).shimmer(
+                delay: 3.seconds,
+                duration: 2.seconds,
+                color: L.primary.withValues(alpha: 0.1)),
           SettingsSection(
             title: 'Subscription',
             child: Column(children: [
@@ -335,6 +401,35 @@ class _ProfileTabState extends State<ProfileTab> {
                 sub: 'Already paid? Restore here',
                 onClick: () => widget.state.restorePurchases(),
                 first: !widget.state.isPremium,
+                last: true,
+                border: false,
+              ),
+            ]),
+          ),
+          SettingsSection(
+            title: 'App Settings',
+            child: Column(children: [
+              SettingsModalRow(
+                icon: '🌐',
+                label: s.globalSettings,
+                sub: s.globalSettingsSubtitle,
+                onClick: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const GlobalSettingsScreen()),
+                  );
+                },
+                first: true,
+                border: true,
+              ),
+              SettingsModalRow(
+                icon: widget.state.darkMode
+                    ? Icons.dark_mode_rounded
+                    : Icons.light_mode_rounded,
+                label: 'Appearance',
+                sub: widget.state.darkMode ? 'Dark Mode' : 'Light Mode',
+                onClick: () => widget.state.toggleDarkMode(),
                 last: true,
                 border: false,
               ),

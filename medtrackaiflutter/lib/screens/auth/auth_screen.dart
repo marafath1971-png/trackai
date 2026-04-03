@@ -5,6 +5,7 @@ import '../../services/auth_service.dart';
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/app_loading_indicator.dart';
+import '../../widgets/common/bouncing_button.dart';
 
 // ══════════════════════════════════════════════
 // AUTH SCREEN — Sign In / Sign Up
@@ -134,202 +135,222 @@ class _AuthScreenState extends State<AuthScreen> {
         backgroundColor: L.bg,
         body: SafeArea(
           child: Scrollbar(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(
-                parent: AlwaysScrollableScrollPhysics()),
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: topPad + 40),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics()),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screenPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: topPad + 40),
 
-              // ── Logo ───────────────────────────────────────────────
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: AppRadius.roundXL,
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8))
-                  ],
-                ),
-                child: const Center(
-                    child: Image(
+                  // ── Logo ───────────────────────────────────────────────
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: L.fill,
+                      borderRadius: AppRadius.roundXL,
+                      border: Border.all(color: L.border),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8))
+                      ],
+                    ),
+                    child: const Center(
+                        child: Image(
                       image: AssetImage('assets/images/home_logo.png'),
                       width: 44,
                       height: 44,
                     )),
-              ),
-              const SizedBox(height: 24),
-
-              RichText(
-                  text: TextSpan(
-                style: AppTypography.displayLarge.copyWith(
-                    fontSize: 30,
-                    color: L.text,
-                    letterSpacing: -0.8),
-                children: [
-                  TextSpan(
-                      text: _isSignUp ? 'Create\nyour ' : 'Welcome\nback to '),
-                  TextSpan(text: 'Med ', style: AppTypography.displayLarge.copyWith(fontSize: 30, color: L.text)),
-                  TextSpan(text: 'Ai', style: AppTypography.displayLarge.copyWith(fontSize: 30, color: L.green)),
-                ],
-              )),
-              const SizedBox(height: 8),
-              Text(
-                _isSignUp
-                    ? 'Sign up to sync your medicines across all devices.'
-                    : 'Sign in to access your medicine data.',
-                style: AppTypography.bodySmall.copyWith(
-                    fontSize: 15,
-                    color: L.sub,
-                    height: 1.5),
-              ),
-              const SizedBox(height: 36),
-
-              // ── Google Sign In ─────────────────────────────────────
-              _GoogleBtn(onTap: _googleSignIn, loading: _loading),
-              const SizedBox(height: 12),
-              // ── Apple Sign In ──────────────────────────────────────
-              _AppleBtn(onTap: _appleSignIn, loading: _loadingApple),
-              const SizedBox(height: 20),
-
-              // ── Divider ────────────────────────────────────────────
-              Row(children: [
-                Expanded(child: Divider(color: L.border)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('or',
-                      style: AppTypography.bodySmall.copyWith(fontSize: 13, color: L.sub)),
-                ),
-                Expanded(child: Divider(color: L.border)),
-              ]),
-              const SizedBox(height: 20),
-
-              // ── Email ──────────────────────────────────────────────
-              _AuthField(
-                controller: _emailCtrl,
-                label: 'Email address',
-                keyboardType: TextInputType.emailAddress,
-                L: L,
-              ),
-              const SizedBox(height: 12),
-
-              // ── Password ───────────────────────────────────────────
-              _AuthField(
-                controller: _passCtrl,
-                label: 'Password',
-                obscure: !_showPass,
-                suffix: GestureDetector(
-                  onTap: () => setState(() => _showPass = !_showPass),
-                  child: Icon(
-                      _showPass
-                          ? Icons.visibility_off_rounded
-                          : Icons.visibility_rounded,
-                      color: L.sub,
-                      size: 18),
-                ),
-                L: L,
-              ),
-
-              // ── Forgot password ────────────────────────────────────
-              if (!_isSignUp) ...[
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: GestureDetector(
-                    onTap: _forgotPassword,
-                    child: Text('Forgot password?',
-                        style: AppTypography.labelLarge.copyWith(
-                            fontSize: 13,
-                            color: L.green,
-                            fontWeight: FontWeight.w600)),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 24),
 
-              // ── Error ──────────────────────────────────────────────
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                      color: L.redLight,
-                      borderRadius: AppRadius.roundM),
-                  child: Row(children: [
-                    Icon(Icons.error_outline_rounded, color: L.red, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                        child: Text(_error!,
-                            style: AppTypography.bodySmall.copyWith(
-                                fontSize: 13,
-                                color: L.red))),
-                  ]),
-                ),
-              ],
-              const SizedBox(height: 28),
-
-              // ── Submit Button ──────────────────────────────────────
-              _PrimaryBtn(
-                label: _isSignUp ? 'Create Account' : 'Sign In',
-                loading: _loading,
-                onTap: _submit,
-              ),
-              const SizedBox(height: 20),
-
-              // ── Toggle ─────────────────────────────────────────────
-              Center(
-                child: GestureDetector(
-                  onTap: () => setState(() {
-                    _isSignUp = !_isSignUp;
-                    _error = null;
-                  }),
-                  child: RichText(
+                  RichText(
                       text: TextSpan(
-                    style: AppTypography.bodySmall.copyWith(fontSize: 14, color: L.sub),
+                    style: AppTypography.displayLarge.copyWith(
+                        fontSize: 30, color: L.text, letterSpacing: -0.8),
                     children: [
                       TextSpan(
                           text: _isSignUp
-                              ? 'Already have an account? '
-                              : "Don't have an account? "),
+                              ? 'Create\nyour '
+                              : 'Welcome\nback to '),
                       TextSpan(
-                        text: _isSignUp ? 'Sign In' : 'Sign Up',
-                        style: AppTypography.bodySmall.copyWith(
-                            fontSize: 14,
-                            color: L.green,
-                            fontWeight: FontWeight.w700),
-                      ),
+                          text: 'Med ',
+                          style: AppTypography.displayLarge
+                              .copyWith(fontSize: 30, color: L.text)),
+                      TextSpan(
+                          text: 'Ai',
+                          style: AppTypography.displayLarge
+                              .copyWith(fontSize: 30, color: L.green)),
                     ],
                   )),
-                ),
-              ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _isSignUp
+                        ? 'Sign up to sync your medicines across all devices.'
+                        : 'Sign in to access your medicine data.',
+                    style: AppTypography.bodySmall
+                        .copyWith(fontSize: 15, color: L.sub, height: 1.5),
+                  ),
+                  const SizedBox(height: 36),
 
-              // ── Skip / Continue without account ───────────────────
-              const SizedBox(height: 16),
-              Center(
-                child: GestureDetector(
-                  onTap: () {
-                    context.read<AppState>().skipAuth();
-                  },
-                  child: Text('Continue without account →',
-                      style: AppTypography.bodySmall.copyWith(fontSize: 13, color: L.sub)),
-                ),
+                  // ── Apple Sign In (App Store Requirement to be above others) ──
+                  _AppleBtn(onTap: _appleSignIn, loading: _loadingApple),
+                  const SizedBox(height: 12),
+                  // ── Google Sign In ─────────────────────────────────────
+                  _GoogleBtn(onTap: _googleSignIn, loading: _loading),
+
+                  const SizedBox(height: 20),
+
+                  // ── Divider ────────────────────────────────────────────
+                  Row(children: [
+                    Expanded(child: Divider(color: L.border)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('or',
+                          style: AppTypography.bodySmall
+                              .copyWith(fontSize: 13, color: L.sub)),
+                    ),
+                    Expanded(child: Divider(color: L.border)),
+                  ]),
+                  const SizedBox(height: 20),
+
+                  // ── Email ──────────────────────────────────────────────
+                  _AuthField(
+                    controller: _emailCtrl,
+                    label: 'Email address',
+                    keyboardType: TextInputType.emailAddress,
+                    L: L,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ── Password ───────────────────────────────────────────
+                  _AuthField(
+                    controller: _passCtrl,
+                    label: 'Password',
+                    obscure: !_showPass,
+                    suffix: GestureDetector(
+                      onTap: () => setState(() => _showPass = !_showPass),
+                      child: Icon(
+                          _showPass
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                          color: L.sub,
+                          size: 18),
+                    ),
+                    L: L,
+                  ),
+
+                  // ── Forgot password ────────────────────────────────────
+                  if (!_isSignUp) ...[
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: BouncingButton(
+                        onTap: _forgotPassword,
+                        scaleFactor: 0.95,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('Forgot password?',
+                              style: AppTypography.labelLarge.copyWith(
+                                  fontSize: 13,
+                                  color: L.green,
+                                  fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  // ── Error ──────────────────────────────────────────────
+                  if (_error != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                          color: L.redLight, borderRadius: AppRadius.roundM),
+                      child: Row(children: [
+                        Icon(Icons.error_outline_rounded,
+                            color: L.red, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                            child: Text(_error!,
+                                style: AppTypography.bodySmall
+                                    .copyWith(fontSize: 13, color: L.red))),
+                      ]),
+                    ),
+                  ],
+                  const SizedBox(height: 28),
+
+                  // ── Submit Button ──────────────────────────────────────
+                  _PrimaryBtn(
+                    label: _isSignUp ? 'Create Account' : 'Sign In',
+                    loading: _loading,
+                    onTap: _submit,
+                  ),
+                  const SizedBox(height: 20),
+
+                  // ── Toggle ─────────────────────────────────────────────
+                  Center(
+                    child: BouncingButton(
+                      onTap: () => setState(() {
+                        _isSignUp = !_isSignUp;
+                        _error = null;
+                      }),
+                      scaleFactor: 0.95,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: RichText(
+                            text: TextSpan(
+                          style: AppTypography.bodySmall
+                              .copyWith(fontSize: 14, color: L.sub),
+                          children: [
+                            TextSpan(
+                                text: _isSignUp
+                                    ? 'Already have an account? '
+                                    : "Don't have an account? "),
+                            TextSpan(
+                              text: _isSignUp ? 'Sign In' : 'Sign Up',
+                              style: AppTypography.bodySmall.copyWith(
+                                  fontSize: 14,
+                                  color: L.green,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        )),
+                      ),
+                    ),
+                  ),
+
+                  // ── Skip / Continue without account ───────────────────
+                  const SizedBox(height: 16),
+                  Center(
+                    child: BouncingButton(
+                      onTap: () {
+                        context.read<AppState>().skipAuth();
+                      },
+                      scaleFactor: 0.95,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text('Continue without account →',
+                            style: AppTypography.bodySmall
+                                .copyWith(fontSize: 13, color: L.sub)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 120),
+                ],
               ),
-              const SizedBox(height: 120),
-            ],
+            ),
           ),
         ),
       ),
-    ),
-  ),
-);
-}
+    );
+  }
 }
 
 // ── Reusable widgets ──────────────────────────────────────────────────
@@ -342,23 +363,20 @@ class _GoogleBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    return GestureDetector(
-      onTap: loading ? null : onTap,
+    return BouncingButton(
+      onTap: loading ? () {} : onTap,
+      scaleFactor: 0.98,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
+          color: L.fill,
           borderRadius: AppRadius.roundXL,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(color: L.border),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           loading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70),
-                )
+              ? const AppLoadingIndicator(size: 20)
               : Image.asset(
                   'assets/images/google_logo.png',
                   width: 20,
@@ -367,9 +385,7 @@ class _GoogleBtn extends StatelessWidget {
           const SizedBox(width: 12),
           Text('Continue with Google',
               style: AppTypography.titleLarge.copyWith(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: L.text)),
+                  fontSize: 15, fontWeight: FontWeight.w700, color: L.text)),
         ]),
       ),
     );
@@ -384,30 +400,25 @@ class _AppleBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    return GestureDetector(
-      onTap: loading ? null : onTap,
+    return BouncingButton(
+      onTap: loading ? () {} : onTap,
+      scaleFactor: 0.98,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.03),
+          color: L.fill,
           borderRadius: AppRadius.roundXL,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(color: L.border),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           loading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70),
-                )
+              ? const AppLoadingIndicator(size: 20)
               : Icon(Icons.apple_rounded, size: 22, color: L.text),
           const SizedBox(width: 12),
           Text('Continue with Apple',
               style: AppTypography.titleLarge.copyWith(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: L.text)),
+                  fontSize: 15, fontWeight: FontWeight.w700, color: L.text)),
         ]),
       ),
     );
@@ -435,9 +446,9 @@ class _AuthField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: L.fill,
         borderRadius: AppRadius.roundL,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: L.border),
       ),
       child: TextField(
         controller: controller,
@@ -473,8 +484,8 @@ class _PrimaryBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    return GestureDetector(
-      onTap: loading ? null : onTap,
+    return BouncingButton(
+      onTap: loading ? () {} : onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: double.infinity,
@@ -493,9 +504,8 @@ class _PrimaryBtn extends StatelessWidget {
           child: loading
               ? const AppLoadingIndicator(size: 20)
               : Text(label,
-                  style: AppTypography.titleLarge.copyWith(
-                      fontSize: 16,
-                      color: Colors.black)),
+                  style: AppTypography.titleLarge
+                      .copyWith(fontSize: 16, color: Colors.black)),
         ),
       ),
     );

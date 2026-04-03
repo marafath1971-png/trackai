@@ -11,8 +11,7 @@ class HomeMedsHeader extends StatelessWidget {
     final L = context.L;
     return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
       Text('My Medicines',
-          style: TextStyle(
-              fontFamily: 'Inter',
+          style: AppTypography.titleLarge.copyWith(
               fontSize: 20,
               fontWeight: FontWeight.w900,
               color: L.text,
@@ -20,11 +19,17 @@ class HomeMedsHeader extends StatelessWidget {
       TextButton.icon(
         onPressed: onAdd,
         icon: Icon(Icons.add_rounded, color: L.bg, size: 16),
-        label: Text('ADD', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: L.bg, letterSpacing: 0.5)),
+        label: Text('ADD',
+            style: AppTypography.labelLarge.copyWith(
+                fontWeight: FontWeight.w900,
+                fontSize: 11,
+                color: L.bg,
+                letterSpacing: 0.5)),
         style: TextButton.styleFrom(
           backgroundColor: L.text,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     ]);

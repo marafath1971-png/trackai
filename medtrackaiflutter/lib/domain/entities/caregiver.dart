@@ -10,6 +10,7 @@ class Caregiver {
   final List<String> methods;
   final String addedAt;
   final String patientUid;
+  final String? inviteCode;
 
   Caregiver({
     required this.id,
@@ -23,6 +24,7 @@ class Caregiver {
     this.methods = const ['push', 'sms'],
     this.addedAt = '',
     this.patientUid = '',
+    this.inviteCode,
   });
 
   Map<String, dynamic> toJson() => {
@@ -37,6 +39,7 @@ class Caregiver {
         'methods': methods,
         'addedAt': addedAt,
         'patientUid': patientUid,
+        'inviteCode': inviteCode,
       };
 
   factory Caregiver.fromJson(Map<String, dynamic> j) => Caregiver(
@@ -51,9 +54,10 @@ class Caregiver {
         methods: List<String>.from(j['methods'] ?? ['push', 'sms']),
         addedAt: j['addedAt'] ?? '',
         patientUid: j['patientUid'] ?? '',
+        inviteCode: j['inviteCode'],
       );
 
-  Caregiver copyWith({String? status}) => Caregiver(
+  Caregiver copyWith({String? status, String? inviteCode}) => Caregiver(
         id: id,
         name: name,
         relation: relation,
@@ -65,9 +69,8 @@ class Caregiver {
         methods: methods,
         addedAt: addedAt,
         patientUid: patientUid,
+        inviteCode: inviteCode ?? this.inviteCode,
       );
 
-  String get inviteCode =>
-      'MT-${id.abs().toRadixString(16).toUpperCase().padLeft(6, '0').substring(0, 6)}';
-  String get inviteUrl => 'https://medai.app/join/$patientUid/$inviteCode';
+  String get inviteUrl => 'https://medai-3ce9c.web.app/join?code=$inviteCode';
 }

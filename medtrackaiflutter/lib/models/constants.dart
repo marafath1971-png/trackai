@@ -195,3 +195,17 @@ const List<String> kMedForms = [
   'injection',
   'other',
 ];
+
+// Supported countries for regional AI context
+const List<Map<String, String>> kCountries = [
+  {'v': 'United States', 'e': '🇺🇸'},
+  {'v': 'United Kingdom', 'e': '🇬🇧'},
+  {'v': 'Japan', 'e': '🇯🇵'},
+  {'v': 'Australia', 'e': '🇦🇺'},
+  {'v': 'Canada', 'e': '🇨🇦'},
+  {'v': 'Germany', 'e': '🇩🇪'},
+  {'v': 'France', 'e': '🇫🇷'},
+  {'v': 'India', 'e': '🇮🇳'},
+  {'v': 'Brazil', 'e': '🇧🇷'},
+  {'v': 'Singapore', 'e': '🇸🇬'},
+];

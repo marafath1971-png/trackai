@@ -22,8 +22,7 @@ class AlertLogCard extends StatelessWidget {
               color: L.card,
               borderRadius: BorderRadius.circular(AppRadius.l),
               border: Border.all(
-                  color: alert.seen ? L.border : L.error,
-                  width: 1.0),
+                  color: alert.seen ? L.border : L.error, width: 1.0),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -53,7 +52,7 @@ class AlertLogCard extends StatelessWidget {
                         children: [
                       Text(alert.medName,
                           style: AppTypography.titleLarge.copyWith(
-                              fontSize: 16,
+                              fontSize: 18,
                               fontWeight: FontWeight.w800,
                               color: L.text),
                           overflow: TextOverflow.ellipsis,
@@ -61,15 +60,12 @@ class AlertLogCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text('Missed ${alert.doseLabel} at ${alert.time}',
                           style: AppTypography.bodySmall.copyWith(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: L.sub),
+                              fontWeight: FontWeight.w500, color: L.sub),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1),
                       const SizedBox(height: 6),
                       Text(alert.timestamp,
                           style: AppTypography.labelLarge.copyWith(
-                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: L.sub.withValues(alpha: 0.6))),
                     ])),
@@ -93,18 +89,15 @@ class EscalationDemoView extends StatefulWidget {
   final AppThemeColors L;
   final VoidCallback onBack;
   const EscalationDemoView({super.key, required this.L, required this.onBack});
-
   @override
   State<EscalationDemoView> createState() => _EscalationDemoViewState();
 }
 
 class _EscalationDemoViewState extends State<EscalationDemoView> {
   int _step = 1;
-
   @override
   Widget build(BuildContext context) {
     final L = widget.L;
-
     return Scaffold(
       backgroundColor: L.bg,
       body: Stack(
@@ -126,14 +119,12 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                               children: [
                                 Text('Escalation Logic',
                                     style: AppTypography.titleLarge.copyWith(
-                                        fontSize: 18,
                                         fontWeight: FontWeight.w800,
                                         color: L.text)),
                                 Text(
                                     'How missed doses trigger caregiver alerts',
-                                    style: AppTypography.bodySmall.copyWith(
-                                        fontSize: 12,
-                                        color: L.sub))
+                                    style: AppTypography.bodySmall
+                                        .copyWith(color: L.sub))
                               ])
                         ]),
                         const SizedBox(height: 32),
@@ -151,10 +142,10 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                     color: _step <= 1 ? L.border : L.card,
-                                    borderRadius: BorderRadius.circular(AppRadius.m)),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.m)),
                                 child: Text('← Back',
                                     style: AppTypography.labelLarge.copyWith(
-                                        fontSize: 13,
                                         fontWeight: FontWeight.w700,
                                         color: _step <= 1 ? L.sub : L.text))),
                           )),
@@ -195,9 +186,11 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                                                   ],
                                                 ),
                                                 child: Row(children: [
-                                                  const Text('⚠️',
-                                                      style: TextStyle(
-                                                          fontSize: 24)),
+                                                  Text('⚠️',
+                                                      style: AppTypography
+                                                          .titleLarge
+                                                          .copyWith(
+                                                              fontSize: 24)),
                                                   const SizedBox(width: 12),
                                                   Expanded(
                                                       child: Column(
@@ -205,26 +198,30 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                                                               CrossAxisAlignment
                                                                   .start,
                                                           children: [
-                                                        Text('CRITICAL ALERT',
-                                                            style: AppTypography.labelLarge.copyWith(
-                                                                fontSize: 11,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w900,
-                                                                color: L.red,
-                                                                letterSpacing:
-                                                                    1.0)),
-                                                        const Text(
+                                                        Text(
+                                                            'CRITICAL ALERT',
+                                                            style: AppTypography
+                                                                .labelLarge
+                                                                .copyWith(
+                                                                    fontSize:
+                                                                        11,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w900,
+                                                                    color:
+                                                                        L.red,
+                                                                    letterSpacing:
+                                                                        1.0)),
+                                                        Text(
                                                             'Sarah J. missed their BP medication. Please check on them immediately.',
-                                                            style: TextStyle(
-                                                                fontFamily:
-                                                                    'Inter',
-                                                                fontSize: 13,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600,
-                                                                color: Colors
-                                                                    .white)),
+                                                            style: AppTypography
+                                                                .bodySmall
+                                                                .copyWith(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                    color: Colors
+                                                                        .white)),
                                                       ])),
                                                 ]),
                                               ),
@@ -237,20 +234,20 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                                         vertical: 14),
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
-                                        color: _step >= 4 ? L.border : L.secondary,
+                                        color:
+                                            _step >= 4 ? L.border : L.secondary,
                                         borderRadius:
                                             BorderRadius.circular(AppRadius.m)),
                                     child: Text(
                                         _step >= 4
                                             ? 'Full flow shown ✓'
                                             : 'Next step →',
-                                        style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w700,
-                                            color: _step >= 4
-                                                ? L.sub
-                                                : Colors.white))),
+                                        style: AppTypography.labelLarge
+                                            .copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                color: _step >= 4
+                                                    ? L.sub
+                                                    : Colors.white))),
                               )),
                         ]),
                         if (_step == 4) ...[
@@ -267,34 +264,37 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                   color: L.error.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(AppRadius.l),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.l),
                                   border: Border.all(
                                       color: L.error.withValues(alpha: 0.3))),
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text('⚠️ Alert message sent:',
-                                        style: AppTypography.titleLarge.copyWith(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w700,
-                                            color: L.red)),
+                                        style: AppTypography.titleLarge
+                                            .copyWith(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w700,
+                                                color: L.red)),
                                     const SizedBox(height: 6),
                                     RichText(
                                         text: TextSpan(
-                                            style: AppTypography.bodySmall.copyWith(
-                                                fontSize: 13,
-                                                color: L.text,
-                                                height: 1.5),
-                                            children: const [
-                                          TextSpan(
+                                            style: AppTypography.bodySmall
+                                                .copyWith(
+                                                    color: L.text, height: 1.5),
+                                            children: [
+                                          const TextSpan(
                                               text:
                                                   '"Your family member missed their '),
                                           TextSpan(
                                               text:
                                                   '8:00 PM blood pressure medicine',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.w700)),
-                                          TextSpan(
+                                              style: AppTypography.bodySmall
+                                                  .copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700)),
+                                          const TextSpan(
                                               text:
                                                   '. Please check on them. 🙏"'),
                                         ])),
@@ -306,21 +306,21 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                               color: L.card,
-                               borderRadius: BorderRadius.circular(AppRadius.l)),
+                              color: L.card,
+                              borderRadius: BorderRadius.circular(AppRadius.l)),
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('⏱️ Default alert delay: 30 minutes',
                                     style: AppTypography.titleLarge.copyWith(
-                                        fontSize: 14,
+                                        fontSize: 15,
                                         fontWeight: FontWeight.w700,
                                         color: L.text)),
                                 const SizedBox(height: 4),
                                 Text(
                                     'Configurable per caregiver (0 min → 1 hour)',
-                                    style: TextStyle(
-                                        color: L.sub)),
+                                    style: AppTypography.bodySmall
+                                        .copyWith(color: L.sub)),
                               ]),
                         )
                       ]))),
@@ -333,15 +333,15 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
 class EscalationTimeline extends StatelessWidget {
   final int activeStep;
   final AppThemeColors L;
-  const EscalationTimeline({super.key, required this.activeStep, required this.L});
-
+  const EscalationTimeline(
+      {super.key, required this.activeStep, required this.L});
   @override
   Widget build(BuildContext context) {
     final steps = [
       {
         'title': 'Dose time arrives',
         'detail': '8:00 PM',
-         'icon': '🔔',
+        'icon': '🔔',
         'color': L.warning
       },
       {
@@ -356,20 +356,18 @@ class EscalationTimeline extends StatelessWidget {
         'icon': '❌',
         'color': const Color(0xFFF97316)
       },
-       {
+      {
         'title': 'Caregivers alerted',
         'detail': '⚠️ Alert delivered',
         'icon': '⚠️',
         'color': L.error
       },
     ];
-
     return Column(
       children: List.generate(steps.length, (i) {
         final isActive = activeStep > i;
         final isLast = i == steps.length - 1;
         final color = steps[i]['color'] as Color;
-
         return IntrinsicHeight(
           child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Column(children: [
@@ -385,7 +383,8 @@ class EscalationTimeline extends StatelessWidget {
                         width: 2)),
                 child: Center(
                     child: Text(steps[i]['icon'] as String,
-                        style: const TextStyle(fontSize: 14))),
+                        style: AppTypography.headlineLarge
+                            .copyWith(fontSize: 14))),
               ),
               if (!isLast)
                 Expanded(
@@ -404,12 +403,12 @@ class EscalationTimeline extends StatelessWidget {
                     children: [
                       Text(steps[i]['title'] as String,
                           style: AppTypography.labelLarge.copyWith(
-                              fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: isActive ? L.text : L.sub)),
                       const SizedBox(height: 2),
                       Text(steps[i]['detail'] as String,
-                          style: AppTypography.bodySmall.copyWith(fontSize: 13, color: L.sub)),
+                          style:
+                              AppTypography.bodySmall.copyWith(color: L.sub)),
                     ]),
               ),
             ),
@@ -426,7 +425,6 @@ class AlertDetailView extends StatelessWidget {
   final VoidCallback onBack;
   const AlertDetailView(
       {super.key, required this.alert, required this.L, required this.onBack});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -441,8 +439,7 @@ class AlertDetailView extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Alert Detail',
-                      style: TextStyle(
-                          fontFamily: 'Inter',
+                      style: AppTypography.titleLarge.copyWith(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: L.text,
@@ -453,12 +450,13 @@ class AlertDetailView extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
-               Container(
+              Container(
                 padding: const EdgeInsets.all(AppSpacing.m),
                 decoration: BoxDecoration(
                     color: L.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppRadius.l),
-                    border: Border.all(color: L.error.withValues(alpha: 0.3), width: 1.0),
+                    border: Border.all(
+                        color: L.error.withValues(alpha: 0.3), width: 1.0),
                     gradient: LinearGradient(
                       colors: [L.redLight, L.bg],
                       begin: Alignment.topLeft,
@@ -472,7 +470,9 @@ class AlertDetailView extends StatelessWidget {
                       ),
                     ]),
                 child: Row(children: [
-                  const Text('⚠️', style: TextStyle(fontSize: 26)),
+                  Text("⚠️",
+                      style:
+                          AppTypography.headlineLarge.copyWith(fontSize: 26)),
                   const SizedBox(width: 12),
                   Expanded(
                       child: Column(
@@ -480,20 +480,18 @@ class AlertDetailView extends StatelessWidget {
                           children: [
                         Text(alert.medName,
                             style: AppTypography.titleLarge.copyWith(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.w800,
                                 color: L.red)),
                         Text('Missed ${alert.doseLabel} at ${alert.time}',
-                            style: AppTypography.bodySmall.copyWith(
-                                fontSize: 13,
-                                color: L.sub)),
+                            style:
+                                AppTypography.bodySmall.copyWith(color: L.sub)),
                       ])),
                 ]),
               ),
               const SizedBox(height: 24),
               Text('ESCALATION PATH',
                   style: AppTypography.labelLarge.copyWith(
-                      fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: L.sub,
                       letterSpacing: 1.0)),
@@ -502,7 +500,6 @@ class AlertDetailView extends StatelessWidget {
               const SizedBox(height: 24),
               Text('CAREGIVERS NOTIFIED',
                   style: AppTypography.labelLarge.copyWith(
-                      fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: L.sub,
                       letterSpacing: 1.0)),
@@ -510,7 +507,7 @@ class AlertDetailView extends StatelessWidget {
               ...alert.caregivers.map((cg) => Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.all(14),
-                     decoration: BoxDecoration(
+                    decoration: BoxDecoration(
                         color: L.card,
                         borderRadius: BorderRadius.circular(AppRadius.m),
                         boxShadow: [
@@ -520,26 +517,24 @@ class AlertDetailView extends StatelessWidget {
                               offset: const Offset(0, 1))
                         ]),
                     child: Row(children: [
-                      Text(cg.avatar, style: const TextStyle(fontSize: 22)),
+                      Text(cg.avatar,
+                          style: AppTypography.headlineLarge
+                              .copyWith(fontSize: 22)),
                       const SizedBox(width: 12),
                       Expanded(
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                             Text(cg.name,
-                                style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 13,
+                                style: AppTypography.labelLarge.copyWith(
                                     fontWeight: FontWeight.w700,
                                     color: L.text)),
                             Text(
                                 cg.contact.isNotEmpty
                                     ? cg.contact
                                     : cg.relation,
-                                style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 12,
-                                    color: L.sub)),
+                                style: AppTypography.bodySmall
+                                    .copyWith(color: L.sub)),
                           ])),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -548,9 +543,7 @@ class AlertDetailView extends StatelessWidget {
                             color: L.greenLight,
                             borderRadius: BorderRadius.circular(99)),
                         child: Text('SENT ✓',
-                            style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 10,
+                            style: AppTypography.labelSmall.copyWith(
                                 fontWeight: FontWeight.w800,
                                 color: L.green,
                                 letterSpacing: 0.04)),
@@ -560,7 +553,6 @@ class AlertDetailView extends StatelessWidget {
               const SizedBox(height: 24),
               Text('MESSAGE SENT',
                   style: AppTypography.labelLarge.copyWith(
-                      fontSize: 11,
                       fontWeight: FontWeight.w800,
                       color: L.sub,
                       letterSpacing: 1.0)),
@@ -572,23 +564,20 @@ class AlertDetailView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24)),
                 child: RichText(
                     text: TextSpan(
-                        style: const TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 14,
-                            color: Color(0xFFFEF2F2),
-                            height: 1.7),
+                        style: AppTypography.bodyMedium.copyWith(
+                            color: const Color(0xFFFEF2F2), height: 1.7),
                         children: [
                       const TextSpan(text: '⚠️ '),
-                      const TextSpan(
+                      TextSpan(
                           text: 'Sarah J.',
-                          style: TextStyle(
+                          style: AppTypography.bodyMedium.copyWith(
                               fontWeight: FontWeight.w700,
                               color: Colors.white)),
                       const TextSpan(text: ' missed their '),
                       TextSpan(
                           text: '${alert.doseLabel} dose of ${alert.medName}',
-                          style: const TextStyle(
-                              color: Color(0xFFFCA5A5),
+                          style: AppTypography.bodyMedium.copyWith(
+                              color: const Color(0xFFFCA5A5),
                               fontWeight: FontWeight.w700)),
                       TextSpan(
                           text: ' at ${alert.time}.\nPlease check on them. 🙏'),
@@ -596,10 +585,8 @@ class AlertDetailView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Center(
-                       child: Text(alert.timestamp,
-                      style: AppTypography.bodySmall.copyWith(
-                          fontSize: 12,
-                          color: L.sub))),
+                  child: Text(alert.timestamp,
+                      style: AppTypography.bodySmall.copyWith(color: L.sub))),
             ],
           ),
         ),

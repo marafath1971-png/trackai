@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../providers/app_state.dart';
 import '../../../models/models.dart';
@@ -43,20 +42,22 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
     });
 
     try {
-      final cg = await widget.state.lookupInvite(code);
-      if (cg != null) {
-        HapticFeedback.heavyImpact();
-        // Join flow - joinForce needs patientUid and cgId
-        await widget.state.joinForce(cg.patientUid, cg.id);
-        widget.onJoined(cg);
-      } else {
-        setState(() => _error = "Invalid or expired invite code");
-        HapticFeedback.vibrate();
-      }
+      await widget.state.joinCareTeam(code);
+      // If we reach here, joinCareTeam succeeded (didn't throw).
+      // The FamilyTab will switch views based on state update or we can call onJoined.
+      widget.onJoined(Caregiver(
+        id: 0,
+        name: 'Member',
+        relation: 'Family',
+        patientUid: '',
+        addedAt: '',
+      ));
     } catch (e) {
-      setState(() => _error = "Error looking up code");
+      setState(() => _error = e.toString().contains('Invalid')
+          ? "Invalid code"
+          : "Connection error");
     } finally {
-      setState(() => _isChecking = false);
+      if (mounted) setState(() => _isChecking = false);
     }
   }
 
@@ -88,11 +89,10 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Scan the QR code or enter the invite code to start monitoring.',
+                        Text(
+                            'Scan the QR code or enter the invite code to start monitoring.',
                             style: AppTypography.bodySmall.copyWith(
-                                fontSize: 14,
-                                color: L.sub,
-                                height: 1.5)),
+                                fontSize: 14, color: L.sub, height: 1.5)),
                         const SizedBox(height: 32),
                         Center(
                           child: Container(
@@ -106,7 +106,8 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                               child: MobileScanner(
                                 controller: _scannerCtrl,
                                 onDetect: (capture) {
-                                  final List<Barcode> barcodes = capture.barcodes;
+                                  final List<Barcode> barcodes =
+                                      capture.barcodes;
                                   for (final barcode in barcodes) {
                                     if (barcode.rawValue != null) {
                                       final raw = barcode.rawValue!;
@@ -178,10 +179,11 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                                 child: _isChecking
                                     ? const AppLoadingIndicator(size: 20)
                                     : Text('Verify and Join',
-                                        style: AppTypography.titleLarge.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 15,
-                                            color: Colors.black)))),
+                                        style: AppTypography.titleLarge
+                                            .copyWith(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 15,
+                                                color: Colors.black)))),
                         const SizedBox(height: 40),
                       ]))),
         ])));

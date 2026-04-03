@@ -12,6 +12,7 @@ import '../../widgets/shared/shared_widgets.dart';
 import '../../widgets/common/unified_header.dart';
 import '../../widgets/common/refined_sheet_wrapper.dart';
 import '../../widgets/common/premium_empty_state.dart';
+import '../../widgets/common/bouncing_button.dart';
 import '../../core/utils/haptic_engine.dart';
 
 // ══════════════════════════════════════════════
@@ -52,9 +53,9 @@ class _AlarmsTabState extends State<AlarmsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final allSchedules = context.select<AppState, List<({Medicine med, ScheduleEntry sched, int idx})>>(
-      (s) => s.getAllSchedules()
-    );
+    final allSchedules = context
+        .select<AppState, List<({Medicine med, ScheduleEntry sched, int idx})>>(
+            (s) => s.getAllSchedules());
     final meds = context.select<AppState, List<Medicine>>((s) => s.meds);
     final L = context.L;
     final activeCount = allSchedules.where((x) => x.sched.enabled).length;
@@ -83,101 +84,101 @@ class _AlarmsTabState extends State<AlarmsTab> {
           displacement: 100,
           color: L.secondary,
           backgroundColor: L.bg,
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics()),
-              child: Column(
-                children: [
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
+            child: Column(
+              children: [
                 SizedBox(height: 110 + MediaQuery.of(context).padding.top),
                 const SizedBox(height: AppSpacing.l),
                 if (nextDose != null)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenPadding),
                     child: _NextDoseIndicator(sch: nextDose, L: L),
                   ),
                 const SizedBox(height: AppSpacing.l),
                 if (activeSchedules.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenPadding),
                     child: Text("Active Reminders",
-                        style: AppTypography.titleLarge.copyWith(
-                            fontSize: 18,
-                            color: L.text,
-                            letterSpacing: -0.3)),
+                        style: AppTypography.titleLarge
+                            .copyWith(color: L.text, letterSpacing: -0.3)),
                   ),
                 const SizedBox(height: 16),
-              if (activeSchedules.isNotEmpty)
-                ..._buildGroupedAlarms(activeSchedules, context.read<AppState>(), L, nextDose),
-              if (inactiveSchedules.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
-                  child: Text("Paused",
-                      style: AppTypography.titleLarge.copyWith(
-                          fontSize: 18,
-                          color: L.text,
-                          letterSpacing: -0.3)),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: inactiveSchedules.length,
-                    itemBuilder: (context, idx) {
-                      final sch = inactiveSchedules[idx];
-                      return _TimelineAlarmCard(
-                        sch: sch,
-                        state: context.read<AppState>(),
-                        L: L,
-                        isNext: false,
-                        onToggle: () =>
-                            context.read<AppState>().toggleSchedule(sch.med.id, sch.idx),
-                        onRemove: () =>
-                            context.read<AppState>().removeSchedule(sch.med.id, sch.idx),
-                      );
-                    },
+                if (activeSchedules.isNotEmpty)
+                  ..._buildGroupedAlarms(
+                      activeSchedules, context.read<AppState>(), L, nextDose),
+                if (inactiveSchedules.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
+                    child: Text("Paused",
+                        style: AppTypography.titleLarge
+                            .copyWith(color: L.text, letterSpacing: -0.3)),
                   ),
-                ),
-              ],
-              Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.xxl, AppSpacing.screenPadding, AppSpacing.m),
-                child: Text('All Medicines',
-                    style: AppTypography.titleLarge.copyWith(
-                        fontSize: 18,
-                        color: L.text,
-                        letterSpacing: -0.3)),
-              ),
-              if (meds.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                  child: _buildEmptyState(context, L),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-                  child: ListView.separated(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: meds.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, idx) => _MedAlarmContainer(
-                      med: meds[idx],
-                      state: context.read<AppState>(),
-                      L: L,
-                      onAdd: () => setState(() => _addingFor = meds[idx]),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: inactiveSchedules.length,
+                      itemBuilder: (context, idx) {
+                        final sch = inactiveSchedules[idx];
+                        return _TimelineAlarmCard(
+                          sch: sch,
+                          state: context.read<AppState>(),
+                          L: L,
+                          isNext: false,
+                          onToggle: () => context
+                              .read<AppState>()
+                              .toggleSchedule(sch.med.id, sch.idx),
+                          onRemove: () => context
+                              .read<AppState>()
+                              .removeSchedule(sch.med.id, sch.idx),
+                        );
+                      },
                     ),
                   ),
+                ],
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding,
+                      AppSpacing.xxl, AppSpacing.screenPadding, AppSpacing.m),
+                  child: Text('All Medicines',
+                      style: AppTypography.titleLarge
+                          .copyWith(color: L.text, letterSpacing: -0.3)),
                 ),
-              const SizedBox(height: 120),
-            ],
+                if (meds.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenPadding),
+                    child: _buildEmptyState(context, L),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenPadding),
+                    child: ListView.separated(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: meds.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, idx) => _MedAlarmContainer(
+                        med: meds[idx],
+                        state: context.read<AppState>(),
+                        L: L,
+                        onAdd: () => setState(() => _addingFor = meds[idx]),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 120),
+              ],
+            ),
           ),
         ),
-      ),
-
-
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 350),
           switchInCurve: Curves.easeOutCubic,
@@ -203,8 +204,8 @@ class _AlarmsTabState extends State<AlarmsTab> {
           child: UnifiedHeader(
             isScrolled: _isScrolled,
             title: "Reminders",
-            subtitle: activeCount > 0 
-                ? "$activeCount active alarms" 
+            subtitle: activeCount > 0
+                ? "$activeCount active alarms"
                 : "No active alarms",
           ),
         ),
@@ -235,18 +236,20 @@ List<Widget> _buildGroupedAlarms(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Row(
         children: [
-          Text(_getPeriodEmoji(period), style: const TextStyle(fontSize: 14)),
+          Text(_getPeriodEmoji(period),
+              style: AppTypography.bodyMedium.copyWith(fontSize: 14)),
           const SizedBox(width: 8),
           Text(
             _getPeriodLabel(period).toUpperCase(),
             style: AppTypography.labelLarge.copyWith(
-                fontSize: 11,
-                color: L.sub,
-                letterSpacing: 1),
+                color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.5),
           ),
         ],
       ),
-    ));
+    )
+        .animate()
+        .fadeIn(duration: 400.ms, delay: (widgets.length * 100).ms)
+        .slideX(begin: 0.1, end: 0));
 
     widgets.add(Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -261,7 +264,7 @@ List<Widget> _buildGroupedAlarms(
             sch: sch,
             state: state,
             L: L,
-            isNext: sch == nextDose, // Pass isNext to highlight
+            isNext: sch == nextDose,
             onToggle: () {
               HapticEngine.selection();
               state.toggleSchedule(sch.med.id, sch.idx);
@@ -270,7 +273,12 @@ List<Widget> _buildGroupedAlarms(
               HapticEngine.alertWarning();
               state.removeSchedule(sch.med.id, sch.idx);
             },
-          );
+          )
+              .animate()
+              .fadeIn(
+                  duration: 400.ms,
+                  delay: ((widgets.length * 100) + (idx * 50)).ms)
+              .slideY(begin: 0.1, end: 0);
         },
       ),
     ));
@@ -303,15 +311,24 @@ class _NextDoseIndicator extends StatelessWidget {
     return Animate(
       effects: [
         FadeEffect(duration: 500.ms, curve: Curves.easeOut),
-        ScaleEffect(begin: const Offset(0.95, 0.95), duration: 500.ms, curve: Curves.easeOut),
+        ScaleEffect(
+            begin: const Offset(0.95, 0.95),
+            duration: 500.ms,
+            curve: Curves.easeOut),
       ],
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.xl),
         decoration: BoxDecoration(
           color: L.card,
           borderRadius: AppRadius.roundXL,
-          boxShadow: L.shadowSoft,
-          border: Border.all(color: L.border, width: 1.0),
+          border: Border.all(color: L.border, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -321,17 +338,19 @@ class _NextDoseIndicator extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('NEXT REMINDER',
+                    Text('UPCOMING DOSE',
                         style: AppTypography.labelLarge.copyWith(
-                            fontSize: 10,
                             color: L.secondary,
-                            letterSpacing: 1.5)),
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                            fontSize: 10)),
                     const SizedBox(height: 4),
                     Text(diffStr,
-                        style: AppTypography.displayMedium.copyWith(
-                            fontSize: 28,
+                        style: AppTypography.displayLarge.copyWith(
                             color: L.text,
-                            letterSpacing: -0.5)),
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1.5,
+                            fontSize: 36)),
                   ],
                 ),
                 Container(
@@ -365,7 +384,8 @@ class _NextDoseIndicator extends StatelessWidget {
                     ),
                     child: Center(
                         child: Text(med.form == 'tablet' ? '💊' : '💧',
-                            style: const TextStyle(fontSize: 22))),
+                            style: AppTypography.titleLarge
+                                .copyWith(fontSize: 22))),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -373,22 +393,21 @@ class _NextDoseIndicator extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(med.name,
-                            style: AppTypography.titleLarge.copyWith(
-                                fontSize: 16,
-                                color: L.text,
-                                letterSpacing: -0.3)),
+                            style: AppTypography.titleLarge
+                                .copyWith(color: L.text, letterSpacing: -0.3)),
                         Text('${s.label} · ${fmtTime(s.h, s.m, context)}',
                             style: AppTypography.bodySmall.copyWith(
-                                fontSize: 13,
-                                color: L.sub,
-                                fontWeight: FontWeight.w500)),
+                                color: L.sub, fontWeight: FontWeight.w500)),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+                  const Icon(Icons.chevron_right_rounded,
+                      color: Colors.white38),
                 ],
               ),
-            ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 3.seconds, color: Colors.white.withValues(alpha: 0.05)),
+            ).animate(onPlay: (c) => c.repeat()).shimmer(
+                duration: 3.seconds,
+                color: Colors.white.withValues(alpha: 0.05)),
           ],
         ),
       ),
@@ -457,11 +476,9 @@ class _TimelineAlarmCard extends StatelessWidget {
         color: L.card,
         borderRadius: AppRadius.roundL,
         border: Border.all(
-            color: isNext ? L.secondary.withValues(alpha: 0.5) : L.border,
-            width: 1.0),
-        boxShadow: L.shadowSoft,
+            color: isNext ? L.secondary.withValues(alpha: 0.6) : L.border,
+            width: 1.5),
       ),
-      clipBehavior: Clip.antiAlias,
       child: IntrinsicHeight(
         child: Row(children: [
           // Left Accent Bar (Glow if next)
@@ -473,139 +490,136 @@ class _TimelineAlarmCard extends StatelessWidget {
                       onPlay: (controller) => controller.repeat(reverse: true),
                       effects: [
                         FadeEffect(
-                            begin: 0.5, end: 1.0, duration: 1000.ms, curve: Curves.easeInOut)
+                            begin: 0.5,
+                            end: 1.0,
+                            duration: 1000.ms,
+                            curve: Curves.easeInOut)
                       ],
                       child: Container(color: L.text),
                     )
                   : null),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(children: [
-                          Text(fmtTime(s.h, s.m, context),
-                              style: AppTypography.displayMedium.copyWith(
-                                  fontSize: 24,
-                                  color: L.text,
-                                  letterSpacing: -1.0)),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: L.fill,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(s.label.toUpperCase(),
-                                style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    color: L.sub,
-                                    letterSpacing: 0.5)),
-                          ),
-                        ]),
-                        AppToggle(
-                            value: s.enabled,
-                            onChanged: (v) => onToggle()),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                            color: medColor.withValues(alpha: 0.1),
-                            shape: BoxShape.circle),
-                        child: Center(
-                            child: Icon(Icons.medication_rounded,
-                                size: 16, color: medColor)),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(med.name,
-                                style: AppTypography.titleLarge.copyWith(
-                                    fontSize: 15,
-                                    color: L.text,
-                                    letterSpacing: -0.3)),
-                            Text(med.dose,
-                                style: AppTypography.bodySmall.copyWith(
-                                    fontSize: 12,
-                                    color: L.sub,
-                                    fontWeight: FontWeight.w500)),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: onRemove,
-                        icon: Icon(Icons.delete_outline_rounded, size: 18, color: L.red.withValues(alpha: 0.7)),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ]),
-                    if (s.enabled) ...[
-                      const SizedBox(height: 16),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
                       Row(children: [
-                        _SnoozeBtn(
-                            label: '10m',
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              state.showToast('Snoozed ${med.name} for 10m', type: 'info');
-                            },
-                            L: L),
+                        Text(fmtTime(s.h, s.m, context),
+                            style: AppTypography.displayLarge.copyWith(
+                                color: L.text,
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -1.0)),
                         const SizedBox(width: 8),
-                        _SnoozeBtn(
-                            label: '1h',
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              state.showToast('Snoozed ${med.name} for 1h', type: 'info');
-                            },
-                            L: L),
-                        const Spacer(),
-                        // Days Indicator
-                        Wrap(
-                          spacing: 4,
-                          children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-                              .asMap()
-                              .entries
-                              .map((e) {
-                            final isScheduled = s.days.contains(e.key);
-                            return Container(
-                              width: 18,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: isScheduled
-                                    ? L.card2
-                                    : Colors.transparent,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: isScheduled ? L.card2 : L.border,
-                                    width: 1),
-                              ),
-                              child: Center(
-                                  child: Text(e.value,
-                                      style: AppTypography.labelMedium.copyWith(
-                                          fontSize: 9,
-                                          color: isScheduled ? L.text : L.sub))),
-                            );
-                          }).toList(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: L.fill,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(s.label.toUpperCase(),
+                              style: AppTypography.labelLarge.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: L.sub,
+                                  letterSpacing: 0.5)),
                         ),
                       ]),
+                      AppToggle(value: s.enabled, onChanged: (v) => onToggle()),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                          color: medColor.withValues(alpha: 0.1),
+                          shape: BoxShape.circle),
+                      child: Center(
+                          child: Icon(Icons.medication_rounded,
+                              size: 16, color: medColor)),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(med.name,
+                              style: AppTypography.titleLarge.copyWith(
+                                  color: L.text, letterSpacing: -0.3)),
+                          Text(med.dose,
+                              style: AppTypography.bodySmall.copyWith(
+                                  color: L.sub, fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: onRemove,
+                      icon: Icon(Icons.delete_outline_rounded,
+                          size: 18, color: L.red.withValues(alpha: 0.7)),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ]),
+                  if (s.enabled) ...[
+                    const SizedBox(height: 16),
+                    Row(children: [
+                      _SnoozeBtn(
+                          label: '10m',
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            state.showToast('Snoozed ${med.name} for 10m',
+                                type: 'info');
+                          },
+                          L: L),
+                      const SizedBox(width: 8),
+                      _SnoozeBtn(
+                          label: '1h',
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            state.showToast('Snoozed ${med.name} for 1h',
+                                type: 'info');
+                          },
+                          L: L),
+                      const Spacer(),
+                      // Days Indicator
+                      Wrap(
+                        spacing: 4,
+                        children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+                            .asMap()
+                            .entries
+                            .map((e) {
+                          final isScheduled = s.days.contains(e.key);
+                          return Container(
+                            width: 18,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: isScheduled ? L.card2 : Colors.transparent,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: isScheduled ? L.card2 : L.border,
+                                  width: 1),
+                            ),
+                            child: Center(
+                                child: Text(e.value,
+                                    style: AppTypography.labelMedium.copyWith(
+                                        color: isScheduled ? L.text : L.sub))),
+                          );
+                        }).toList(),
+                      ),
+                    ]),
                   ],
-                ),
+                ],
               ),
             ),
-          ]),
-        ),
+          ),
+        ]),
+      ),
     );
 
     if (isNext) {
@@ -630,7 +644,10 @@ class _TimelineAlarmCard extends StatelessWidget {
     return Animate(
       effects: [
         FadeEffect(duration: 400.ms, curve: Curves.easeOut),
-        SlideEffect(begin: const Offset(0, 0.05), duration: 400.ms, curve: Curves.easeOut),
+        SlideEffect(
+            begin: const Offset(0, 0.05),
+            duration: 400.ms,
+            curve: Curves.easeOut),
       ],
       child: card,
     );
@@ -658,14 +675,7 @@ class _MedAlarmContainer extends StatelessWidget {
       decoration: BoxDecoration(
         color: L.card,
         borderRadius: AppRadius.roundXL,
-        border: Border.all(color: L.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: L.border, width: 1.5),
       ),
       child: Column(children: [
         Row(children: [
@@ -677,7 +687,7 @@ class _MedAlarmContainer extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24)),
             child: Center(
                 child: Text(med.form == 'tablet' ? '💊' : '💧',
-                    style: const TextStyle(fontSize: 22))),
+                    style: AppTypography.titleLarge.copyWith(fontSize: 22))),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -686,26 +696,27 @@ class _MedAlarmContainer extends StatelessWidget {
                   children: [
                 Text(med.name,
                     style: AppTypography.titleLarge.copyWith(
-                        fontSize: 17,
                         color: L.text,
                         letterSpacing: -0.5,
                         overflow: TextOverflow.ellipsis)),
                 Text(
                     '${med.dose}${count > 0 ? " · $count schedule${count != 1 ? "s" : ""}" : " · No schedules"}',
-                    style: AppTypography.bodySmall.copyWith(fontSize: 13, color: L.sub, fontWeight: FontWeight.w500)),
+                    style: AppTypography.bodySmall
+                        .copyWith(color: L.sub, fontWeight: FontWeight.w500)),
               ])),
-          GestureDetector(
+          BouncingButton(
               onTap: () {
                 HapticEngine.selection();
                 onAdd();
               },
+              scaleFactor: 0.85,
               child: Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(
-                      color: L.primary, shape: BoxShape.circle),
-                  child: Icon(Icons.add_rounded,
-                      color: L.onPrimary, size: 20))),
+                  decoration:
+                      BoxDecoration(color: L.primary, shape: BoxShape.circle),
+                  child:
+                      Icon(Icons.add_rounded, color: L.onPrimary, size: 20))),
         ]),
         if (med.schedule.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -714,8 +725,7 @@ class _MedAlarmContainer extends StatelessWidget {
             final s = e.value;
             return Container(
               margin: const EdgeInsets.only(bottom: 8),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                   color: L.fill.withValues(alpha: 0.4),
                   borderRadius: AppRadius.roundM,
@@ -723,16 +733,13 @@ class _MedAlarmContainer extends StatelessWidget {
               child: Row(children: [
                 Text(fmtTime(s.h, s.m, context),
                     style: AppTypography.displaySmall.copyWith(
-                        fontSize: 16,
                         color: s.enabled ? L.text : L.sub,
                         letterSpacing: -0.5)),
                 const SizedBox(width: 12),
                 Expanded(
                     child: Text(s.label,
                         style: AppTypography.bodySmall.copyWith(
-                            fontSize: 13,
-                            color: L.sub,
-                            fontWeight: FontWeight.w600))),
+                            color: L.sub, fontWeight: FontWeight.w600))),
                 AppToggle(
                     value: s.enabled,
                     onChanged: (v) => state.toggleSchedule(med.id, idx)),
@@ -754,10 +761,12 @@ Widget _buildEmptyState(BuildContext context, AppThemeColors L) {
         : 'Set reminders for your medicines to keep track of your doses.',
     icon: Icons.notifications_active_rounded,
     actionLabel: state.meds.isEmpty ? 'Scan Medicine' : null,
-    onAction: state.meds.isEmpty ? () {
-      // This is a placeholder since the navigation to scan is handled in AppShell
-      // But we can trigger a toast or common action if needed.
-    } : null,
+    onAction: state.meds.isEmpty
+        ? () {
+            // This is a placeholder since the navigation to scan is handled in AppShell
+            // But we can trigger a toast or common action if needed.
+          }
+        : null,
   );
 }
 
@@ -783,7 +792,9 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
   @override
   void initState() {
     super.initState();
-    _intake = widget.med.intakeInstructions.isEmpty ? 'None' : widget.med.intakeInstructions;
+    _intake = widget.med.intakeInstructions.isEmpty
+        ? 'None'
+        : widget.med.intakeInstructions;
   }
 
   @override
@@ -795,16 +806,18 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
       title: 'Add Reminder',
       icon: Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: L.green.withValues(alpha: 0.1), shape: BoxShape.circle),
+        decoration: BoxDecoration(
+            color: L.green.withValues(alpha: 0.1), shape: BoxShape.circle),
         child: Icon(Icons.alarm_add_rounded, color: L.green, size: 20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Select a time and frequency for ${widget.med.name}.',
-              style: TextStyle(color: L.sub, fontSize: 13, fontWeight: FontWeight.w500)),
+              style: AppTypography.bodySmall
+                  .copyWith(color: L.sub, fontWeight: FontWeight.w500)),
           const SizedBox(height: 24),
-          
+
           // Time Selector
           GestureDetector(
             onTap: () async {
@@ -834,35 +847,30 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('REMINDER TIME',
-                          style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 10,
+                          style: AppTypography.labelLarge.copyWith(
                               fontWeight: FontWeight.w900,
                               color: L.sub,
                               letterSpacing: 1.2)),
                       const SizedBox(height: 4),
                       Text(fmtTime(_h, _m, context),
-                          style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 32,
+                          style: AppTypography.displayMedium.copyWith(
                               fontWeight: FontWeight.w900,
                               color: L.text,
                               letterSpacing: -1.0)),
                     ],
                   ),
-                  Icon(Icons.access_time_filled_rounded, color: L.green, size: 32),
+                  Icon(Icons.access_time_filled_rounded,
+                      color: L.green, size: 32),
                 ],
               ),
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Label Input
           Text('LABEL',
-              style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 10,
+              style: AppTypography.labelLarge.copyWith(
                   fontWeight: FontWeight.w900,
                   color: L.sub,
                   letterSpacing: 1.2)),
@@ -876,29 +884,30 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
             ),
             child: TextField(
               onChanged: (v) => _label = v,
-              style: TextStyle(color: L.text, fontWeight: FontWeight.w600),
+              style: AppTypography.bodySmall
+                  .copyWith(color: L.text, fontWeight: FontWeight.w600),
               decoration: InputDecoration(
                 hintText: 'e.g. Morning, After Lunch',
-                hintStyle: TextStyle(color: L.sub.withValues(alpha: 0.5)),
+                hintStyle: AppTypography.bodySmall
+                    .copyWith(color: L.sub.withValues(alpha: 0.5)),
                 border: InputBorder.none,
               ),
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Days Selector
           Text('REPEAT ON',
-              style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 10,
+              style: AppTypography.labelLarge.copyWith(
                   fontWeight: FontWeight.w900,
                   color: L.sub,
                   letterSpacing: 1.2)),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: ['S', 'M', 'T', 'W', 'T', 'F', 'S'].asMap().entries.map((e) {
+            children:
+                ['S', 'M', 'T', 'W', 'T', 'F', 'S'].asMap().entries.map((e) {
               final isSel = _days.contains(e.key);
               return GestureDetector(
                 onTap: () {
@@ -917,13 +926,12 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                   decoration: BoxDecoration(
                     color: isSel ? L.text : L.card,
                     shape: BoxShape.circle,
-                    border: Border.all(color: isSel ? L.text : L.border, width: 1.0),
+                    border: Border.all(
+                        color: isSel ? L.text : L.border, width: 1.0),
                   ),
                   child: Center(
                     child: Text(e.value,
-                        style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 12,
+                        style: AppTypography.labelMedium.copyWith(
                             fontWeight: FontWeight.w900,
                             color: isSel ? L.bg : L.text)),
                   ),
@@ -931,15 +939,16 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
               );
             }).toList(),
           ),
-          
+
           const SizedBox(height: 40),
-          
+
           // Save Button
           GestureDetector(
             onTap: () {
               HapticEngine.success();
               if (_intake != widget.med.intakeInstructions) {
-                state.updateMed(widget.med.id, intakeInstructions: _intake, updateNotifs: false);
+                state.updateMed(widget.med.id,
+                    intakeInstructions: _intake, updateNotifs: false);
               }
               state.addSchedule(
                   widget.med.id,
@@ -967,11 +976,8 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
               ),
               child: Center(
                 child: Text('Set Reminder',
-                    style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: L.bg)),
+                    style: AppTypography.titleMedium
+                        .copyWith(fontWeight: FontWeight.w900, color: L.bg)),
               ),
             ),
           ),
@@ -981,8 +987,6 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
   }
 }
 
-
-
 class _SnoozeBtn extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
@@ -991,14 +995,16 @@ class _SnoozeBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return BouncingButton(
       onTap: onTap,
+      scaleFactor: 0.9,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 1.0),
+          border: Border.all(
+              color: Colors.white.withValues(alpha: 0.08), width: 1.0),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
@@ -1009,15 +1015,11 @@ class _SnoozeBtn extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.snooze_rounded,
-                size: 12, color: L.text),
+            Icon(Icons.snooze_rounded, size: 12, color: L.text),
             const SizedBox(width: 4),
             Text(label,
-                style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: L.text)),
+                style: AppTypography.labelMedium
+                    .copyWith(fontWeight: FontWeight.w700, color: L.text)),
           ],
         ),
       ),

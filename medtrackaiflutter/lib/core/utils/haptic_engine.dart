@@ -24,7 +24,7 @@ class HapticEngine {
   static Future<void> light() async {
     await HapticFeedback.lightImpact();
   }
-  
+
   static Future<void> selection() async {
     await HapticFeedback.selectionClick();
   }

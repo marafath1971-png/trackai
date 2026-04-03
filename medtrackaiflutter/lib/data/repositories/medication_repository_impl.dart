@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/repositories/medication_repository.dart';
 import '../datasources/local_prefs_datasource.dart';
@@ -17,7 +18,8 @@ class MedicationRepositoryImpl implements IMedicationRepository {
   final FirestoreDataSource firestoreDataSource;
   final StorageService storageService;
 
-  MedicationRepositoryImpl(this.localDataSource, this.firestoreDataSource, this.storageService);
+  MedicationRepositoryImpl(
+      this.localDataSource, this.firestoreDataSource, this.storageService);
 
   String? get _uid => AuthService.uid;
   bool get _hasAuth => _uid != null;
@@ -198,6 +200,18 @@ class MedicationRepositoryImpl implements IMedicationRepository {
     }
   }
 
+  @override
+  Future<List<Map<String, dynamic>>> getPendingActions() async {
+    final j = localDataSource.getJson('pendingActions', decrypt: true);
+    if (j == null) return [];
+    return List<Map<String, dynamic>>.from(j);
+  }
+
+  @override
+  Future<void> savePendingActions(List<Map<String, dynamic>> actions) async {
+    await localDataSource.setJson('pendingActions', actions, encrypt: true);
+  }
+
   // ── Offline-to-Cloud Sync ──────────────────────────────────────────
   /// Upload all local data to Firestore. Called once after first sign-in
   /// when Firestore has no data yet.
@@ -230,5 +244,10 @@ class MedicationRepositoryImpl implements IMedicationRepository {
     final j = localDataSource.getJson('meds');
     if (j == null) return [];
     return (j as List).map((m) => Medicine.fromJson(m)).toList();
+  }
+
+  @override
+  Future<SharedPreferences> getPrefs() async {
+    return localDataSource.prefs;
   }
 }

@@ -11,5 +11,10 @@ Color hexToColor(String hex) {
 }
 
 String colorToHex(Color color) {
-  return color.toARGB32().toRadixString(16).padLeft(8, '0').toUpperCase().substring(2);
+  return color
+      .toARGB32()
+      .toRadixString(16)
+      .padLeft(8, '0')
+      .toUpperCase()
+      .substring(2);
 }

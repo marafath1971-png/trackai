@@ -30,9 +30,20 @@ class UserProfile {
   final int scansUsed;
   final bool isPremium;
   final String? photoUrl;
+  final String country;
   final DateTime createdAt;
   final int dosesMarked;
   final DateTime? lastReviewPromptedAt;
+  // ── Global Market Settings ──────────────────────────
+  final bool shabbatMode; // IL: gentle mode Friday sunset–Saturday night
+  final String preferredLanguage; // en, fr, ja, ko, he, ms, zh
+  final bool showGenericNames; // UK, IL, CA: show INN names instead of brand
+  final double pbsSpendThisYear; // AU: PBS Safety Net spend tracker
+  final bool diabetesMode; // MY, US: glucose tracking alongside meds
+  final bool hypertensionMode; // MY, US: BP tracking alongside meds
+  final bool amoledMode; // KR: pure black AMOLED display
+  final DateTime? lastNudgeAt;
+  final int nudgeCount;
 
   UserProfile({
     this.name = '',
@@ -66,9 +77,19 @@ class UserProfile {
     this.scansUsed = 0,
     this.isPremium = false,
     this.photoUrl,
+    this.country = '',
     DateTime? createdAt,
     this.dosesMarked = 0,
     this.lastReviewPromptedAt,
+    this.shabbatMode = false,
+    this.preferredLanguage = 'en',
+    this.showGenericNames = false,
+    this.pbsSpendThisYear = 0.0,
+    this.diabetesMode = false,
+    this.hypertensionMode = false,
+    this.amoledMode = false,
+    this.lastNudgeAt,
+    this.nudgeCount = 0,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
@@ -103,9 +124,19 @@ class UserProfile {
         'scansUsed': scansUsed,
         'isPremium': isPremium,
         'photoUrl': photoUrl,
+        'country': country,
         'createdAt': createdAt.toIso8601String(),
         'dosesMarked': dosesMarked,
         'lastReviewPromptedAt': lastReviewPromptedAt?.toIso8601String(),
+        'shabbatMode': shabbatMode,
+        'preferredLanguage': preferredLanguage,
+        'showGenericNames': showGenericNames,
+        'pbsSpendThisYear': pbsSpendThisYear,
+        'diabetesMode': diabetesMode,
+        'hypertensionMode': hypertensionMode,
+        'amoledMode': amoledMode,
+        'lastNudgeAt': lastNudgeAt?.toIso8601String(),
+        'nudgeCount': nudgeCount,
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> j) => UserProfile(
@@ -141,6 +172,7 @@ class UserProfile {
         scansUsed: j['scansUsed'] ?? 0,
         isPremium: j['isPremium'] ?? false,
         photoUrl: j['photoUrl'],
+        country: j['country'] ?? '',
         createdAt: j['createdAt'] != null
             ? DateTime.parse(j['createdAt'])
             : DateTime.now(),
@@ -148,6 +180,16 @@ class UserProfile {
         lastReviewPromptedAt: j['lastReviewPromptedAt'] != null
             ? DateTime.parse(j['lastReviewPromptedAt'])
             : null,
+        shabbatMode: j['shabbatMode'] ?? false,
+        preferredLanguage: j['preferredLanguage'] ?? 'en',
+        showGenericNames: j['showGenericNames'] ?? false,
+        pbsSpendThisYear: (j['pbsSpendThisYear'] ?? 0.0).toDouble(),
+        diabetesMode: j['diabetesMode'] ?? false,
+        hypertensionMode: j['hypertensionMode'] ?? false,
+        amoledMode: j['amoledMode'] ?? false,
+        lastNudgeAt:
+            j['lastNudgeAt'] != null ? DateTime.parse(j['lastNudgeAt']) : null,
+        nudgeCount: j['nudgeCount'] ?? 0,
       );
 
   UserProfile copyWith({
@@ -180,9 +222,19 @@ class UserProfile {
     int? scansUsed,
     bool? isPremium,
     String? photoUrl,
+    String? country,
     DateTime? createdAt,
     int? dosesMarked,
     DateTime? lastReviewPromptedAt,
+    bool? shabbatMode,
+    String? preferredLanguage,
+    bool? showGenericNames,
+    double? pbsSpendThisYear,
+    bool? diabetesMode,
+    bool? hypertensionMode,
+    bool? amoledMode,
+    DateTime? lastNudgeAt,
+    int? nudgeCount,
   }) =>
       UserProfile(
         name: name ?? this.name,
@@ -216,8 +268,18 @@ class UserProfile {
         scansUsed: scansUsed ?? this.scansUsed,
         isPremium: isPremium ?? this.isPremium,
         photoUrl: photoUrl ?? this.photoUrl,
+        country: country ?? this.country,
         createdAt: createdAt ?? this.createdAt,
         dosesMarked: dosesMarked ?? this.dosesMarked,
         lastReviewPromptedAt: lastReviewPromptedAt ?? this.lastReviewPromptedAt,
+        shabbatMode: shabbatMode ?? this.shabbatMode,
+        preferredLanguage: preferredLanguage ?? this.preferredLanguage,
+        showGenericNames: showGenericNames ?? this.showGenericNames,
+        pbsSpendThisYear: pbsSpendThisYear ?? this.pbsSpendThisYear,
+        diabetesMode: diabetesMode ?? this.diabetesMode,
+        hypertensionMode: hypertensionMode ?? this.hypertensionMode,
+        amoledMode: amoledMode ?? this.amoledMode,
+        lastNudgeAt: lastNudgeAt ?? this.lastNudgeAt,
+        nudgeCount: nudgeCount ?? this.nudgeCount,
       );
 }

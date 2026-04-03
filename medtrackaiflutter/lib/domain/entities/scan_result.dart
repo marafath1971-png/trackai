@@ -33,7 +33,14 @@ class ScanResult {
   bool withFood;
   String warnings;
   bool isOngoing;
-  bool systemBusy; // NEW: true if AI quota/network failure occurred
+  bool systemBusy; // true if AI quota/network failure occurred
+  // Global Market Fields
+  String genericName; // INN name (UK, CA, IL)
+  String din; // Drug Identification Number (CA)
+  bool isSachet; // JP, KR sachet/envelope pack
+  String
+      halalStatus; // 'unknown'|'halal'|'contains_gelatin'|'contains_alcohol'|'not_halal'
+  String halalNote; // Brief halal advisory message
 
   ScanResult({
     this.identified = false,
@@ -68,6 +75,11 @@ class ScanResult {
     this.warnings = '',
     this.isOngoing = true,
     this.systemBusy = false,
+    this.genericName = '',
+    this.din = '',
+    this.isSachet = false,
+    this.halalStatus = 'unknown',
+    this.halalNote = '',
   });
 
   int _parseInt(dynamic v, int fallback) {
@@ -116,6 +128,11 @@ class ScanResult {
       withFood: j['withFood'] ?? false,
       warnings: j['warnings'] ?? '',
       isOngoing: j['isOngoing'] ?? (j['courseType'] == 'ongoing'),
+      genericName: j['genericName'] ?? '',
+      din: j['din'] ?? '',
+      isSachet: j['isSachet'] ?? false,
+      halalStatus: j['halalStatus'] ?? 'unknown',
+      halalNote: j['halalNote'] ?? '',
     );
   }
 
@@ -152,6 +169,11 @@ class ScanResult {
     String? warnings,
     bool? isOngoing,
     bool? systemBusy,
+    String? genericName,
+    String? din,
+    bool? isSachet,
+    String? halalStatus,
+    String? halalNote,
   }) =>
       ScanResult(
         identified: identified ?? this.identified,
@@ -186,5 +208,10 @@ class ScanResult {
         warnings: warnings ?? this.warnings,
         isOngoing: isOngoing ?? this.isOngoing,
         systemBusy: systemBusy ?? this.systemBusy,
+        genericName: genericName ?? this.genericName,
+        din: din ?? this.din,
+        isSachet: isSachet ?? this.isSachet,
+        halalStatus: halalStatus ?? this.halalStatus,
+        halalNote: halalNote ?? this.halalNote,
       );
 }

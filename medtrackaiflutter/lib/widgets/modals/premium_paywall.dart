@@ -48,12 +48,19 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
               color: L.green.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Center(
-              child: Text('💎', style: TextStyle(fontSize: 40)),
+            child: Center(
+              child: Text('💎',
+                  style: AppTypography.displayLarge.copyWith(fontSize: 40)),
             ),
-          ).animate(onPlay: (c) => c.repeat())
-            .shimmer(duration: 2.seconds, color: L.green.withValues(alpha: 0.3))
-            .scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 1.seconds, curve: Curves.easeInOut),
+          )
+              .animate(onPlay: (c) => c.repeat())
+              .shimmer(
+                  duration: 2.seconds, color: L.green.withValues(alpha: 0.3))
+              .scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.1, 1.1),
+                  duration: 1.seconds,
+                  curve: Curves.easeInOut),
 
           const SizedBox(height: 24),
 
@@ -61,11 +68,10 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
           Text(
             "World's #1 Advanced AI Medication App",
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: AppTypography.headlineLarge.copyWith(
               color: L.text,
               fontSize: 24,
               fontWeight: FontWeight.w900,
-              fontFamily: 'Inter',
               letterSpacing: -0.5,
             ),
           ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0),
@@ -75,34 +81,33 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
           Text(
             "Never miss a course again. Your healthy life, boosted with precision AI.",
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: AppTypography.bodyLarge.copyWith(
               color: L.sub,
               fontSize: 16,
               fontWeight: FontWeight.w500,
               height: 1.4,
             ),
-          ).animate().fadeIn(delay: 200.ms, duration: 600.ms).slideY(begin: 0.2, end: 0),
+          )
+              .animate()
+              .fadeIn(delay: 200.ms, duration: 600.ms)
+              .slideY(begin: 0.2, end: 0),
 
           const SizedBox(height: 40),
 
           // Benefits List
-          _buildBenefit(Icons.auto_awesome_rounded, "Advanced AI Label Scanning", L),
-          _buildBenefit(Icons.notifications_active_rounded, "Unlimited Smart Reminders", L),
-          _buildBenefit(Icons.family_restroom_rounded, "Full Caregiver Monitoring", L),
-          _buildBenefit(Icons.cloud_done_rounded, "Global Cloud Sync & Security", L),
+          _buildBenefit(
+              Icons.auto_awesome_rounded, "Advanced AI Label Scanning", L),
+          _buildBenefit(Icons.notifications_active_rounded,
+              "Unlimited Smart Reminders", L),
+          _buildBenefit(
+              Icons.family_restroom_rounded, "Full Caregiver Monitoring", L),
+          _buildBenefit(
+              Icons.cloud_done_rounded, "Global Cloud Sync & Security", L),
 
           const SizedBox(height: 48),
 
           // Auth Buttons
           if (!AuthService.isLoggedIn) ...[
-            _buildAuthBtn(
-              "Continue with Google",
-              "assets/images/google_logo.png",
-              AuthService.signInWithGoogle,
-              L.card,
-              L.text,
-            ),
-            const SizedBox(height: 12),
             _buildAuthBtn(
               "Continue with Apple",
               null,
@@ -111,11 +116,22 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
               L.text,
               icon: Icons.apple_rounded,
             ),
+            const SizedBox(height: 12),
+            _buildAuthBtn(
+              "Continue with Google",
+              "assets/images/google_logo.png",
+              AuthService.signInWithGoogle,
+              L.card,
+              L.text,
+            ),
             const SizedBox(height: 24),
             Center(
               child: Text(
                 "OR",
-                style: TextStyle(color: L.sub.withValues(alpha: 0.3), fontWeight: FontWeight.w700, fontSize: 12),
+                style: AppTypography.labelSmall.copyWith(
+                    color: L.sub.withValues(alpha: 0.3),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12),
               ),
             ),
             const SizedBox(height: 24),
@@ -123,10 +139,12 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
 
           // Main Unlock Button
           GestureDetector(
-            onTap: _isProcessing ? null : () {
-              HapticEngine.success();
-              _handleUnlock(state);
-            },
+            onTap: _isProcessing
+                ? null
+                : () {
+                    HapticEngine.success();
+                    _handleUnlock(state);
+                  },
             child: Container(
               width: double.infinity,
               height: 64,
@@ -146,7 +164,7 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
                     ? const AppLoadingIndicator(size: 24)
                     : Text(
                         "Unlock Full Access",
-                        style: TextStyle(
+                        style: AppTypography.titleLarge.copyWith(
                           color: L.bg,
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
@@ -155,12 +173,14 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
                       ),
               ),
             ),
-          ).animate().scale(delay: 800.ms, duration: 400.ms, curve: Curves.elasticOut),
+          )
+              .animate()
+              .scale(delay: 800.ms, duration: 400.ms, curve: Curves.elasticOut),
 
           const SizedBox(height: 16),
           Text(
             "Start today and feel the smoothing difference.",
-            style: TextStyle(
+            style: AppTypography.bodySmall.copyWith(
               color: L.sub.withValues(alpha: 0.5),
               fontSize: 13,
               fontStyle: FontStyle.italic,
@@ -187,7 +207,7 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
           const SizedBox(width: 16),
           Text(
             text,
-            style: TextStyle(
+            style: AppTypography.bodyMedium.copyWith(
               color: L.text,
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -229,13 +249,16 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (asset != null)
-              Image.asset(asset, width: 20, height: 20, errorBuilder: (c, e, s) => const Icon(Icons.login, size: 20))
+              Image.asset(asset,
+                  width: 20,
+                  height: 20,
+                  errorBuilder: (c, e, s) => const Icon(Icons.login, size: 20))
             else if (icon != null)
               Icon(icon, size: 22, color: text),
             const SizedBox(width: 12),
             Text(
               label,
-              style: TextStyle(
+              style: AppTypography.labelLarge.copyWith(
                 color: text,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

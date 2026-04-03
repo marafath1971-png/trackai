@@ -30,7 +30,8 @@ class _AskAiSheetState extends State<AskAiSheet> {
       _controller.clear();
     });
 
-    final result = await GeminiService.askFollowUp(text, widget.contextInsights);
+    final result =
+        await GeminiService.askFollowUp(text, widget.contextInsights);
 
     if (mounted) {
       setState(() {
@@ -68,56 +69,71 @@ class _AskAiSheetState extends State<AskAiSheet> {
                 maxHeight: MediaQuery.of(context).size.height * 0.5,
               ),
               child: _messages.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 32),
-                      child: Text(
-                        'Ask me anything about your current health insights or medications.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: L.sub, fontSize: 13, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  )
-                : ListView.builder(
-                    shrinkWrap: true,
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(bottom: 24),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final msg = _messages[index];
-                      final isAi = msg['role'] == 'ai';
-                      return Align(
-                        alignment: isAi ? Alignment.centerLeft : Alignment.centerRight,
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: isAi ? L.card : L.text,
-                            borderRadius: BorderRadius.circular(20).copyWith(
-                              bottomLeft: isAi ? const Radius.circular(4) : null,
-                              bottomRight: !isAi ? const Radius.circular(4) : null,
-                            ),
-                            border: isAi ? Border.all(color: L.border.withValues(alpha: 0.1)) : null,
-                            boxShadow: isAi ? null : [
-                              BoxShadow(
-                                color: L.text.withValues(alpha: 0.2),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              )
-                            ],
-                          ),
-                          child: Text(
-                            msg['content']!,
-                            style: TextStyle(
-                              color: isAi ? L.text : L.bg,
-                              fontSize: 14,
-                              fontWeight: isAi ? FontWeight.w500 : FontWeight.w700,
-                            ),
-                          ),
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 48, horizontal: 32),
+                        child: Text(
+                          'Ask me anything about your current health insights or medications.',
+                          textAlign: TextAlign.center,
+                          style: AppTypography.bodySmall.copyWith(
+                              color: L.sub,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.only(bottom: 24),
+                      itemCount: _messages.length,
+                      itemBuilder: (context, index) {
+                        final msg = _messages[index];
+                        final isAi = msg['role'] == 'ai';
+                        return Align(
+                          alignment: isAi
+                              ? Alignment.centerLeft
+                              : Alignment.centerRight,
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: isAi ? L.card : L.text,
+                              borderRadius: BorderRadius.circular(20).copyWith(
+                                bottomLeft:
+                                    isAi ? const Radius.circular(4) : null,
+                                bottomRight:
+                                    !isAi ? const Radius.circular(4) : null,
+                              ),
+                              border: isAi
+                                  ? Border.all(
+                                      color: L.border.withValues(alpha: 0.1))
+                                  : null,
+                              boxShadow: isAi
+                                  ? null
+                                  : [
+                                      BoxShadow(
+                                        color: L.text.withValues(alpha: 0.2),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      )
+                                    ],
+                            ),
+                            child: Text(
+                              msg['content']!,
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: isAi ? L.text : L.bg,
+                                fontSize: 14,
+                                fontWeight:
+                                    isAi ? FontWeight.w500 : FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ),
           if (_isLoading)
@@ -128,7 +144,7 @@ class _AskAiSheetState extends State<AskAiSheet> {
                   const AppLoadingIndicator(size: 14),
                   const SizedBox(width: 8),
                   Text('Coach is thinking...',
-                      style: TextStyle(
+                      style: AppTypography.labelLarge.copyWith(
                           color: L.sub,
                           fontSize: 12,
                           fontWeight: FontWeight.w600)),
@@ -152,10 +168,14 @@ class _AskAiSheetState extends State<AskAiSheet> {
                     controller: _controller,
                     autofocus: true,
                     onSubmitted: (_) => _sendMessage(),
-                    style: TextStyle(color: L.text, fontSize: 14, fontWeight: FontWeight.w600),
+                    style: AppTypography.bodyMedium.copyWith(
+                        color: L.text,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600),
                     decoration: InputDecoration(
                       hintText: 'Ask a question...',
-                      hintStyle: TextStyle(color: L.sub.withValues(alpha: 0.5), fontSize: 14),
+                      hintStyle: AppTypography.bodyMedium.copyWith(
+                          color: L.sub.withValues(alpha: 0.5), fontSize: 14),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(vertical: 16),
                     ),

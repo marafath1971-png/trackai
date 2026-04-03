@@ -16,8 +16,6 @@ class FirestoreDataSource {
       _userDoc(uid).collection('history');
   CollectionReference _caregivers(String uid) =>
       _userDoc(uid).collection('caregivers');
-  CollectionReference _monitoring(String uid) =>
-      _userDoc(uid).collection('monitoring');
 
   // ── Profile ────────────────────────────────────────────────────────
   Future<UserProfile?> getProfile(String uid) async {
@@ -34,6 +32,14 @@ class FirestoreDataSource {
   Future<void> saveProfile(String uid, UserProfile profile) async {
     await _userDoc(uid)
         .set({'profile': profile.toJson()}, SetOptions(merge: true));
+  }
+
+  Stream<UserProfile?> getProfileStream(String uid) {
+    return _userDoc(uid).snapshots().map((doc) {
+      final data = doc.data() as Map<String, dynamic>?;
+      if (data == null || !data.containsKey('profile')) return null;
+      return UserProfile.fromJson(data['profile'] as Map<String, dynamic>);
+    });
   }
 
   // ── Medicines ──────────────────────────────────────────────────────
@@ -135,9 +141,14 @@ class FirestoreDataSource {
   }
 
   Stream<List<Caregiver>> getCaregiversStream(String uid) {
-    return _caregivers(uid).snapshots().map((snap) => snap.docs
-        .map((d) => Caregiver.fromJson(d.data() as Map<String, dynamic>))
-        .toList());
+    return _userDoc(uid).snapshots().map((doc) {
+      final data = doc.data() as Map<String, dynamic>?;
+      if (data == null || !data.containsKey('caregivers')) return [];
+      final list = data['caregivers'] as List<dynamic>;
+      return list
+          .map((item) => Caregiver.fromJson(item as Map<String, dynamic>))
+          .toList();
+    });
   }
 
   Future<void> saveCaregivers(String uid, List<Caregiver> caregivers) async {
@@ -160,61 +171,40 @@ class FirestoreDataSource {
         .set(cg.toJson(), SetOptions(merge: true));
   }
 
-  Future<void> joinCaregiver({
-    required String caregiverUid,
-    required String patientUid,
-    required int cgId,
-    required String patientName,
-    required String patientAvatar,
-    required String relation,
-  }) async {
-    // 1. Update status on patient side
-    // CRITICAL: We use caregiverUid as the document ID here to facilitate 
-    // isActiveCaregiver rules which require exists(path/uid).
-    final batch = _db.batch();
-    
-    // Set the new active document
-    batch.set(_caregivers(patientUid).doc(caregiverUid), {
-      'status': 'active',
-      'id': cgId, // Keep original ID for reference
-    }, SetOptions(merge: true));
-
-    // Delete the old pending document (if it was keyed by int ID)
-    batch.delete(_caregivers(patientUid).doc('$cgId'));
-
-    // 2. Create reciprocal link on caregiver side
-    batch.set(_monitoring(caregiverUid).doc(patientUid), {
-      'name': patientName,
-      'avatar': patientAvatar,
-      'relation': relation,
-      'addedAt': DateTime.now().toIso8601String().substring(0, 10),
-    });
-
-    await batch.commit();
-  }
+  // joinCaregiver legacy logic removed in favor of CircleService.verifyAndJoin logic.
 
   // ── Monitoring (For Caregivers) ────────────────────────────────────
-  
+
   Stream<List<Map<String, dynamic>>> getMonitoringPatientsStream(String uid) {
-    appLogger.i('[FirestoreDataSource] Starting monitoring query on: users/$uid/monitoring');
-    return _monitoring(uid).snapshots().map((snap) => snap.docs
-        .map((d) => {'uid': d.id, ...d.data() as Map<String, dynamic>})
-        .toList()).handleError((e) {
-          appLogger.e('[FirestoreDataSource] Monitoring stream error: $e');
-          return <Map<String, dynamic>>[];
-        });
+    appLogger.i(
+        '[FirestoreDataSource] Starting monitoring stream on root user document: $uid');
+    return _userDoc(uid).snapshots().map((doc) {
+      final data = doc.data() as Map<String, dynamic>?;
+      if (data == null || !data.containsKey('monitoring')) {
+        return <Map<String, dynamic>>[];
+      }
+      final list = data['monitoring'] as List<dynamic>;
+      return list.map((item) => item as Map<String, dynamic>).toList();
+    }).handleError((e) {
+      appLogger.e('[FirestoreDataSource] Monitoring stream error: $e');
+      return <Map<String, dynamic>>[];
+    });
   }
 
   Stream<List<Medicine>> getPatientMedsStream(String patientUid) {
-    return _meds(patientUid).snapshots().map((snap) => snap.docs
-        .map((d) => Medicine.fromJson(d.data() as Map<String, dynamic>))
-        .toList()).handleError((e) {
-          appLogger.e('[FirestoreDataSource] Patient meds stream error: $e');
-          return <Medicine>[];
-        });
+    return _meds(patientUid)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((d) => Medicine.fromJson(d.data() as Map<String, dynamic>))
+            .toList())
+        .handleError((e) {
+      appLogger.e('[FirestoreDataSource] Patient meds stream error: $e');
+      return <Medicine>[];
+    });
   }
 
-  Stream<Map<String, List<DoseEntry>>> getPatientHistoryStream(String patientUid) {
+  Stream<Map<String, List<DoseEntry>>> getPatientHistoryStream(
+      String patientUid) {
     return _history(patientUid).snapshots().map((snap) {
       final result = <String, List<DoseEntry>>{};
       for (final doc in snap.docs) {
@@ -263,6 +253,20 @@ class FirestoreDataSource {
 
   Future<void> saveDarkMode(String uid, bool darkMode) async {
     await _userDoc(uid).set({'darkMode': darkMode}, SetOptions(merge: true));
+  }
+
+  Future<String?> getLanguage(String uid) async {
+    try {
+      final doc = await _userDoc(uid).get();
+      final data = doc.data() as Map<String, dynamic>?;
+      return data?['language'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> saveLanguage(String uid, String language) async {
+    await _userDoc(uid).set({'language': language}, SetOptions(merge: true));
   }
 
   // ── FCM Token ──────────────────────────────────────────────────────

@@ -76,25 +76,42 @@ class NotificationService {
     required bool enableSound,
     required bool enableVibration,
     required bool isTakenToday,
+    bool isShabbatMode = false,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
+    bool useSound = enableSound;
+    bool useVibration = enableVibration;
+
+    // Shabbat Window: Friday 18:00 to Saturday 20:00
+    if (isShabbatMode) {
+      final isFriNight = dayIdx == 5 && sched.h >= 18;
+      final isSat = dayIdx == 6 && sched.h < 20;
+      if (isFriNight || isSat) {
+        useSound = false;
+        useVibration = true; // Gentle vibe only
+      }
+    }
+
+    final androidDetails = AndroidNotificationDetails(
       'med_reminders',
       'Medicine Reminders',
       channelDescription: 'Scheduled reminders for taking your medication',
-      importance: Importance.high,
-      priority: Priority.high,
+      importance: useSound ? Importance.high : Importance.low,
+      priority: useSound ? Priority.high : Priority.low,
+      enableVibration: useVibration,
+      playSound: useSound,
       actions: <AndroidNotificationAction>[
-        AndroidNotificationAction('take', 'Take Now', showsUserInterface: true),
-        AndroidNotificationAction('snooze_10', 'Snooze 10m',
+        const AndroidNotificationAction('take', 'Take Now',
             showsUserInterface: true),
-        AndroidNotificationAction('skip', 'Skip',
+        const AndroidNotificationAction('snooze_10', 'Snooze 10m',
+            showsUserInterface: true),
+        const AndroidNotificationAction('skip', 'Skip',
             showsUserInterface: true, cancelNotification: true),
       ],
     );
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
-      presentSound: enableSound,
+      presentSound: useSound,
       categoryIdentifier: 'med_action',
     );
     final details =
@@ -133,7 +150,11 @@ class NotificationService {
     try {
       final payload = '${med.id}|${sched.h}|${sched.m}|${sched.label}';
       final title = '💊 Time to take ${med.name}';
-      final body = '${med.dose} · ${sched.label}';
+
+      String body = '${med.dose} · ${sched.label}';
+      if (sched.ritual != Ritual.none) {
+        body = '${med.dose} · ${_getRitualMessage(sched.ritual)}';
+      }
 
       await _plugin.zonedSchedule(
         id: notifId,
@@ -155,14 +176,45 @@ class NotificationService {
     }
   }
 
+  static String _getRitualMessage(Ritual ritual) {
+    switch (ritual) {
+      case Ritual.beforeBreakfast:
+        return 'Before your breakfast';
+      case Ritual.withBreakfast:
+        return 'With your breakfast';
+      case Ritual.afterBreakfast:
+        return 'After your breakfast';
+      case Ritual.beforeLunch:
+        return 'Before your lunch';
+      case Ritual.withLunch:
+        return 'With your lunch';
+      case Ritual.afterLunch:
+        return 'After your lunch';
+      case Ritual.beforeDinner:
+        return 'Before your dinner';
+      case Ritual.withDinner:
+        return 'With your dinner';
+      case Ritual.afterDinner:
+        return 'After your dinner';
+      case Ritual.beforeSleep:
+        return 'Before you go to sleep';
+      default:
+        return 'Reminder';
+    }
+  }
+
   static Future<void> cancelAll() => _plugin.cancelAll();
   static Future<void> cancel(int id) => _plugin.cancel(id: id);
 
-  static Future<void> showRefillAlert({required Medicine med}) async {
+  static Future<void> showRefillAlert({
+    required Medicine med,
+    String? title,
+    String? body,
+  }) async {
     const androidDetails = AndroidNotificationDetails(
       'refill_alerts',
       'Refill Alerts',
-      channelDescription: 'Alerts when your medicine supply is running low',
+      channelDescription: 'Alerts when your medication supply is running low',
       importance: Importance.high,
       priority: Priority.high,
     );
@@ -172,8 +224,9 @@ class NotificationService {
         NotificationDetails(android: androidDetails, iOS: iosDetails);
     await _plugin.show(
       id: med.id + 100000,
-      title: '💊 Refill Required',
-      body: 'Your supply of ${med.name} is low (${med.count} remaining).',
+      title: title ?? '💊 Refill Required',
+      body:
+          body ?? 'Your supply of ${med.name} is low (${med.count} remaining).',
       notificationDetails: details,
     );
   }
@@ -225,10 +278,8 @@ class NotificationService {
       importance: Importance.high,
       priority: Priority.high,
       actions: <AndroidNotificationAction>[
-        AndroidNotificationAction('take', 'Take Now',
-            showsUserInterface: true),
-        AndroidNotificationAction('skip', 'Skip',
-            showsUserInterface: true),
+        AndroidNotificationAction('take', 'Take Now', showsUserInterface: true),
+        AndroidNotificationAction('skip', 'Skip', showsUserInterface: true),
       ],
     );
     final iosDetails = DarwinNotificationDetails(
@@ -245,26 +296,6 @@ class NotificationService {
       notificationDetails: details,
       payload: payload,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    );
-  }
-
-  static Future<void> showTestNotification() async {
-    const androidDetails = AndroidNotificationDetails(
-      'test_notifications',
-      'Test Notifications',
-      channelDescription: 'Used to test if notifications are working correctly',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-    const iosDetails =
-        DarwinNotificationDetails(presentAlert: true, presentSound: true);
-    const details =
-        NotificationDetails(android: androidDetails, iOS: iosDetails);
-    await _plugin.show(
-      id: 888888,
-      title: 'Success! ✅',
-      body: 'Your Med AI reminders are configured correctly.',
-      notificationDetails: details,
     );
   }
 

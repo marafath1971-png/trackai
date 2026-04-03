@@ -31,7 +31,8 @@ class CompleteProfileCard extends StatelessWidget {
         subtitle: 'Personalises your guidance',
         icon: Icons.person_outline_rounded,
         isDone: profile.gender.isNotEmpty,
-        onTap: () => _showSinglePicker(context, state, 'gender', 'Select Gender', kGenders),
+        onTap: () => _showSinglePicker(
+            context, state, 'gender', 'Select Gender', kGenders),
       ),
       _ProfileTask(
         id: 'forgetting',
@@ -39,7 +40,8 @@ class CompleteProfileCard extends StatelessWidget {
         subtitle: 'Optimises your reminders',
         icon: Icons.psychology_rounded,
         isDone: profile.forgetting.isNotEmpty,
-        onTap: () => _showSinglePicker(context, state, 'forgetting', 'Forget Pattern', kForgetPatterns),
+        onTap: () => _showSinglePicker(
+            context, state, 'forgetting', 'Forget Pattern', kForgetPatterns),
       ),
       _ProfileTask(
         id: 'doctor',
@@ -47,15 +49,19 @@ class CompleteProfileCard extends StatelessWidget {
         subtitle: 'Track your medical frequency',
         icon: Icons.medical_services_outlined,
         isDone: profile.doctorVisits.isNotEmpty,
-        onTap: () => _showSinglePicker(context, state, 'doctorVisits', 'Doctor Visits', kDoctorVisits),
+        onTap: () => _showSinglePicker(
+            context, state, 'doctorVisits', 'Doctor Visits', kDoctorVisits),
       ),
       _ProfileTask(
         id: 'motivation',
         title: 'What motivates you?',
-        subtitle: profile.motivation.isEmpty ? 'Personalised encouragement' : profile.motivation.join(', '),
+        subtitle: profile.motivation.isEmpty
+            ? 'Personalised encouragement'
+            : profile.motivation.join(', '),
         icon: Icons.wb_sunny_outlined,
         isDone: profile.motivation.isNotEmpty,
-        onTap: () => _showMultiPicker(context, state, 'motivation', 'Select Motivation', kMotivation),
+        onTap: () => _showMultiPicker(
+            context, state, 'motivation', 'Select Motivation', kMotivation),
       ),
     ];
 
@@ -66,14 +72,15 @@ class CompleteProfileCard extends StatelessWidget {
     final L = context.L;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.m),
+      margin: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.screenPadding, vertical: AppSpacing.m),
       decoration: BoxDecoration(
         color: L.card,
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: L.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: L.onBg.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 8),
           )
@@ -104,31 +111,32 @@ class CompleteProfileCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: L.secondary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     '${(progress * 100).toInt()}%',
-                    style: AppTypography.labelLarge.copyWith(color: L.secondary, fontWeight: FontWeight.w800),
+                    style: AppTypography.labelLarge.copyWith(
+                        color: L.secondary, fontWeight: FontWeight.w800),
                   ),
                 ),
               ],
             ),
           ),
-          
           LinearProgressIndicator(
             value: progress,
             backgroundColor: L.border,
             color: L.secondary,
             minHeight: 3,
           ),
-
           const SizedBox(height: 8),
-
-          ...tasks.where((t) => !t.isDone).take(2).map((task) => _TaskItem(task: task, L: L)),
-
+          ...tasks
+              .where((t) => !t.isDone)
+              .take(2)
+              .map((task) => _TaskItem(task: task, L: L)),
           const SizedBox(height: 8),
         ],
       ),
@@ -136,13 +144,18 @@ class CompleteProfileCard extends StatelessWidget {
   }
 
   void _showAgePicker(BuildContext context, AppState state) {
+    final L = context.L;
     final controller = TextEditingController(text: state.profile?.age ?? '');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (c) => Container(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(c).viewInsets.bottom, left: 24, right: 24, top: 24),
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(c).viewInsets.bottom,
+            left: 24,
+            right: 24,
+            top: 24),
         decoration: BoxDecoration(
           color: context.L.bg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
@@ -159,7 +172,8 @@ class CompleteProfileCard extends StatelessWidget {
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 hintText: 'e.g. 35',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
               ),
             ),
             const SizedBox(height: 24),
@@ -167,15 +181,17 @@ class CompleteProfileCard extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  state.updateProfile(state.profile!.copyWith(age: controller.text));
+                  state.updateProfile(
+                      state.profile!.copyWith(age: controller.text));
                   Navigator.pop(c);
                   HapticEngine.success();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: context.L.secondary,
-                  foregroundColor: Colors.white,
+                  backgroundColor: L.secondary,
+                  foregroundColor: AppColors.black,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                 ),
                 child: const Text('Save'),
               ),
@@ -187,7 +203,8 @@ class CompleteProfileCard extends StatelessWidget {
     );
   }
 
-  void _showSinglePicker(BuildContext context, AppState state, String field, String title, List<Map<String, String>> options) {
+  void _showSinglePicker(BuildContext context, AppState state, String field,
+      String title, List<Map<String, String>> options) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -203,15 +220,16 @@ class CompleteProfileCard extends StatelessWidget {
             Text(title, style: AppTypography.headlineMedium),
             const SizedBox(height: 16),
             ...options.map((opt) => ListTile(
-              leading: Text(opt['e']!, style: const TextStyle(fontSize: 24)),
-              title: Text(opt['v']!),
-              onTap: () {
-                final Map<String, dynamic> updates = {field: opt['v']};
-                state.updateProfileFromMap(updates);
-                Navigator.pop(c);
-                HapticEngine.selection();
-              },
-            )),
+                  leading: Text(opt['e']!,
+                      style: AppTypography.displayLarge.copyWith(fontSize: 24)),
+                  title: Text(opt['v']!),
+                  onTap: () {
+                    final Map<String, dynamic> updates = {field: opt['v']};
+                    state.updateProfileFromMap(updates);
+                    Navigator.pop(c);
+                    HapticEngine.selection();
+                  },
+                )),
             const SizedBox(height: 24),
           ],
         ),
@@ -219,7 +237,9 @@ class CompleteProfileCard extends StatelessWidget {
     );
   }
 
-  void _showMultiPicker(BuildContext context, AppState state, String field, String title, List<Map<String, String>> options) {
+  void _showMultiPicker(BuildContext context, AppState state, String field,
+      String title, List<Map<String, String>> options) {
+    final L = context.L;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -232,8 +252,9 @@ class CompleteProfileCard extends StatelessWidget {
           return Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: context.L.bg,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+              color: L.bg,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(32)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -244,10 +265,12 @@ class CompleteProfileCard extends StatelessWidget {
                   final val = opt['v']!;
                   final isSel = selected.contains(val);
                   return CheckboxListTile(
-                    secondary: Text(opt['e']!, style: const TextStyle(fontSize: 24)),
+                    secondary: Text(opt['e']!,
+                        style:
+                            AppTypography.displayLarge.copyWith(fontSize: 24)),
                     title: Text(val),
                     value: isSel,
-                    activeColor: context.L.secondary,
+                    activeColor: L.secondary,
                     onChanged: (checked) {
                       setModalState(() {
                         if (checked == true) {
@@ -270,10 +293,11 @@ class CompleteProfileCard extends StatelessWidget {
                       HapticEngine.success();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: context.L.secondary,
-                      foregroundColor: Colors.white,
+                      backgroundColor: L.secondary,
+                      foregroundColor: AppColors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                     ),
                     child: const Text('Save Selection'),
                   ),
@@ -324,7 +348,8 @@ class _TaskItem extends StatelessWidget {
         child: Icon(task.icon, color: L.secondary, size: 20),
       ),
       title: Text(task.title, style: AppTypography.labelLarge),
-      subtitle: Text(task.subtitle, style: AppTypography.bodySmall.copyWith(fontSize: 12)),
+      subtitle: Text(task.subtitle,
+          style: AppTypography.bodySmall.copyWith(fontSize: 12)),
       trailing: const Icon(Icons.chevron_right_rounded, size: 20),
     );
   }

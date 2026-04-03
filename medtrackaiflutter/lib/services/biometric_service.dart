@@ -1,6 +1,6 @@
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
+import '../../core/utils/logger.dart';
 
 class BiometricService {
   static final LocalAuthentication _auth = LocalAuthentication();
@@ -8,30 +8,24 @@ class BiometricService {
   static Future<bool> canCheckBiometrics() async {
     try {
       return await _auth.canCheckBiometrics || await _auth.isDeviceSupported();
-    } on PlatformException catch (_) {
+    } catch (e) {
       return false;
     }
   }
 
   static Future<bool> authenticate() async {
     try {
-      final isAvailable = await canCheckBiometrics();
-      if (!isAvailable) return false;
-
+      // In local_auth 3.0.1, authenticate is the main method, and it doesn't have AuthenticationOptions.
+      // It takes direct parameters.
+      // ignore: deprecated_member_use
       return await _auth.authenticate(
-        localizedReason: 'Secure access to your health records',
+        localizedReason: 'Please authenticate to unlock Med AI',
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
       );
     } on PlatformException catch (e) {
-      debugPrint('Biometric Error: ${e.code} - ${e.message}');
+      appLogger.e('Biometric Error', error: e);
       return false;
-    }
-  }
-
-  static Future<List<BiometricType>> getAvailableBiometrics() async {
-    try {
-      return await _auth.getAvailableBiometrics();
-    } on PlatformException catch (_) {
-      return [];
     }
   }
 }

@@ -471,12 +471,12 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
             alignment: Alignment.bottomCenter,
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.only(bottom: 56), // Moved higher from 24
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildCategoryPill(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24), // Increased spacing from 16
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 40),
                       child: _buildBottomControls(),
@@ -964,13 +964,12 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     }
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildCircularBtn(
           icon: Icons.image_outlined,
           onTap: _pickFromGallery,
         ),
-        const SizedBox(width: 40), // Added spacing
         BouncingButton(
           onTap: _capturePhoto,
           scaleFactor: 0.95,
@@ -1001,7 +1000,6 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
               .shimmer(
                   delay: 2000.ms, duration: 1500.ms, color: Colors.white24),
         ),
-        const SizedBox(width: 40), // Added spacing
         _buildCircularBtn(
           icon: flashIcon,
           onTap: _toggleFlash,

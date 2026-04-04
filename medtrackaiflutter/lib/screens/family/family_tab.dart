@@ -369,10 +369,10 @@ class HubView extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: L.card,
+                              color: L.fill.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                  color: L.border.withValues(alpha: 0.5)),
+                                  color: L.border.withValues(alpha: 0.1), width: 1.0),
                             ),
                             child: Row(
                               children: [
@@ -602,18 +602,23 @@ class _CompactPivotPill extends StatelessWidget {
         onTap();
       },
       child: AnimatedContainer(
-        duration: 200.ms,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        duration: 250.ms,
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? L.card : Colors.transparent,
+          color: active ? L.text : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
+          boxShadow: active
+              ? [BoxShadow(color: L.text.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))]
+              : null,
         ),
         child: Text(
           label,
           style: AppTypography.labelLarge.copyWith(
-            color: active ? L.text : L.sub,
-            fontSize: 12,
+            color: active ? L.card : L.sub.withValues(alpha: 0.8),
+            fontSize: 13,
             fontWeight: active ? FontWeight.w900 : FontWeight.w600,
+            letterSpacing: 0.5,
           ),
         ),
       ),

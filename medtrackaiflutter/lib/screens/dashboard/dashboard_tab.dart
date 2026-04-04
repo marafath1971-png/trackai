@@ -13,6 +13,8 @@ import '../../widgets/common/paywall_sheet.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/common/bouncing_button.dart';
 import '../../widgets/common/shimmer_loader.dart';
+import '../../widgets/modals/daily_log_sheet.dart';
+import 'widgets/dashboard_widgets.dart';
 import 'widgets/dashboard_widgets.dart';
 
 class DashboardTab extends StatefulWidget {
@@ -131,6 +133,13 @@ class _DashboardTabState extends State<DashboardTab> {
                       .animate()
                       .fadeIn(duration: 600.ms)
                       .slideY(begin: 0.1, end: 0),
+                  const SizedBox(height: AppSpacing.l),
+
+                  // --- QUICK ACTIONS ---
+                  _DashboardQuickActionRow(
+                    onLogSymptom: () => DailyLogSheet.show(context),
+                    onAddDose: () => DailyLogSheet.show(context),
+                  ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0),
                   const SizedBox(height: AppSpacing.xl),
 
                   // --- 30-DAY ADHERENCE TREND ---
@@ -407,6 +416,116 @@ class _DashboardTabState extends State<DashboardTab> {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ------------------------------------------------------------------
+// DASHBOARD QUICK ACTIONS
+// ------------------------------------------------------------------
+class _DashboardQuickActionRow extends StatelessWidget {
+  final VoidCallback onLogSymptom;
+  final VoidCallback onAddDose;
+
+  const _DashboardQuickActionRow({
+    required this.onLogSymptom,
+    required this.onAddDose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+      child: Row(
+        children: [
+          Expanded(
+            child: _QuickActionButton(
+              icon: Icons.edit_note_rounded,
+              label: 'Log Symptom',
+              subtitle: 'Track your health logs',
+              onTap: onLogSymptom,
+              L: L,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _QuickActionButton(
+              icon: Icons.medication_rounded,
+              label: 'Extra Dose',
+              subtitle: 'Log an unscheduled event',
+              onTap: onAddDose,
+              L: L,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+  final AppThemeColors L;
+
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+    required this.L,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BouncingButton(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: L.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: L.border.withValues(alpha: 0.15)),
+          boxShadow: L.shadowSoft,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: L.text.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: L.text),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: TextStyle(
+                color: L.text,
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: L.sub,
+                fontSize: 11,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

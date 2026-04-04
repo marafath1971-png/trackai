@@ -37,12 +37,19 @@ class MedicineDetailScreen extends StatefulWidget {
 class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   late bool _editMode;
   late Map<String, dynamic> _editFields;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _editMode = widget.initialEditMode;
     _resetEdit();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _resetEdit() {
@@ -97,10 +104,12 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
 
   Widget _buildViewMode(Medicine med, int adherence, ({int taken, int total}) historyCount, Color medColor, AppThemeColors L) {
     return RawScrollbar(
+      controller: _scrollController,
       thumbColor: L.text.withValues(alpha: 0.1),
       radius: const Radius.circular(10),
       thickness: 4,
       child: CustomScrollView(
+        controller: _scrollController,
         physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         slivers: [
           _buildSliverHeader(med, medColor, L),
@@ -187,10 +196,12 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
 
         Expanded(
           child: RawScrollbar(
+            controller: _scrollController,
             thumbColor: L.text.withValues(alpha: 0.1),
             radius: const Radius.circular(10),
             thickness: 4,
             child: SingleChildScrollView(
+              controller: _scrollController,
               physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
               child: Column(
@@ -559,7 +570,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
       refillInfo: med.refillInfo?.copyWith(pharmacyName: _editFields['pharmacyName'], pharmacyPhone: _editFields['pharmacyPhone'], rxNumber: _editFields['rxNumber']),
       price: double.tryParse(_editFields['price']), currency: _editFields['currency'], color: _editFields['color'],
     );
-    state.updateMed(med.id, updated: updated);
+    state.updateMedDirect(updated);
     setState(() => _editMode = false);
   }
 
@@ -571,12 +582,49 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   }
 
   void _showRitualPicker(int medId, int scheduleIdx, ScheduleEntry s, {bool isNew = false}) {
-    showModalBottomSheet(context: context, builder: (_) => RitualPickerSheet(
-      selectedRitual: s.ritual, onSelected: (r) {
-        final updated = s.copyWith(ritual: r);
-        if (isNew) context.read<AppState>().addSchedule(medId, updated);
-        else context.read<AppState>().updateSchedule(medId, scheduleIdx, updated);
-      }));
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: ctx.L.card,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+          border: Border.all(color: ctx.L.border.withValues(alpha: 0.1), width: 1.5),
+          boxShadow: ctx.L.shadowSoft,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Select Meal Ritual",
+                style: AppTypography.titleLarge.copyWith(
+                    fontWeight: FontWeight.w900, color: ctx.L.text)),
+            const SizedBox(height: 20),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: Ritual.values.map((r) {
+                  final isSelected = s.ritual == r;
+                  return ListTile(
+                    onTap: () {
+                      final updated = s.copyWith(ritual: r);
+                      if (isNew) context.read<AppState>().addSchedule(medId, updated);
+                      else context.read<AppState>().updateSchedule(medId, scheduleIdx, updated);
+                      Navigator.pop(ctx);
+                    },
+                    title: Text(r.name.toUpperCase(),
+                        style: AppTypography.bodyLarge.copyWith(
+                            color: isSelected ? ctx.L.primary : ctx.L.text,
+                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500)),
+                    trailing: isSelected ? Icon(Icons.check_circle_rounded, color: ctx.L.primary) : null,
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildCircularProgress(double pct, AppThemeColors L) {

@@ -165,15 +165,6 @@ class _HomeTabState extends State<HomeTab> {
                   _WellnessSnapshot(state: context.read<AppState>(), L: L),
                 ], delay: 400.ms),
 
-                // --- 5. QUICK ACTIONS ---
-                _sliverStaggerDown([
-                  _QuickActionRow(
-                    onLogSymptom: () => DailyLogSheet.show(context),
-                    onAddDose: () => DailyLogSheet.show(context),
-                    onViewReports: () => widget.onSwitchTab?.call(2),
-                  ),
-                ], delay: 450.ms),
-
                 // --- 6. TIMELINE ---
 
                 if (doses.isNotEmpty) ...[
@@ -748,121 +739,6 @@ class _AlertItem extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// QUICK ACTION ROW
-// ─────────────────────────────────────────────────────────────
-class _QuickActionRow extends StatelessWidget {
-  final VoidCallback onLogSymptom;
-  final VoidCallback onAddDose;
-  final VoidCallback onViewReports;
-
-  const _QuickActionRow({
-    required this.onLogSymptom,
-    required this.onAddDose,
-    required this.onViewReports,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final L = context.L;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-      child: Row(
-        children: [
-          _QuickActionButton(
-            icon: Icons.edit_note_rounded,
-            label: 'Log Symptom',
-            subtitle: 'Track how you feel',
-            onTap: onLogSymptom,
-            L: L,
-          ),
-          const SizedBox(width: 12),
-          _QuickActionButton(
-            icon: Icons.medication_rounded,
-            label: 'Extra Dose',
-            subtitle: 'Log an unscheduled dose',
-            onTap: onAddDose,
-            L: L,
-          ),
-          const SizedBox(width: 12),
-          _QuickActionButton(
-            icon: Icons.bar_chart_rounded,
-            label: 'Reports',
-            subtitle: 'View analytics',
-            onTap: onViewReports,
-            L: L,
-          ),
-          const SizedBox(width: 12),
-        ],
-      ),
-    );
-  }
-}
-class _QuickActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final VoidCallback onTap;
-  final AppThemeColors L;
-
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.onTap,
-    required this.L,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BouncingButton(
-      onTap: onTap,
-      child: Container(
-        width: 150,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: L.card,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: L.border.withValues(alpha: 0.15)),
-          boxShadow: L.shadowSoft,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: L.text.withValues(alpha: 0.07),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, size: 18, color: L.text),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              label,
-              style: AppTypography.labelLarge.copyWith(
-                color: L.text,
-                fontWeight: FontWeight.w800,
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: AppTypography.labelSmall.copyWith(
-                color: L.sub,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ------------------------------------------------------------------
 // WELLNESS SNAPSHOT
 // ------------------------------------------------------------------
@@ -1031,6 +907,8 @@ class _HomeDoseGroupState extends State<HomeDoseGroup> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${d.med.name} marked as taken'),
+        showCloseIcon: true,
+        closeIconColor: Colors.white70,
         action: SnackBarAction(
           label: 'UNDO',
           onPressed: () => widget.state.toggleDose(d),

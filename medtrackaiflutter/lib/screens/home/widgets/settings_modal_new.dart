@@ -9,6 +9,7 @@ import 'settings/app_tab.dart';
 import 'settings/data_tab.dart';
 import '../../../screens/settings/global_settings_screen.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/haptic_engine.dart';
 
 class SettingsModal extends StatefulWidget {
   final VoidCallback onClose;

@@ -107,12 +107,16 @@ class GeminiService {
           return Success(parsed);
         } catch (e) {
           final s = e.toString().toLowerCase();
+          final isAppCheckFailure = s.contains('unavailable') || 
+                                   s.contains('unauthenticated') || 
+                                   s.contains('app-check') ||
+                                   s.contains('not-permitted');
 
-          // ── 1.0 FALLBACK: If Cloud Function is missing/misconfigured ──────
-          if ((s.contains('not-found') || s.contains('404')) &&
+          // ── 1.0 FALLBACK: If Cloud Function is missing, misconfigured, or App Check/Proxy fails ──────
+          if ((s.contains('not-found') || s.contains('404') || isAppCheckFailure) &&
               _apiKey.isNotEmpty) {
             appLogger.w(
-                '[GeminiService] Proxy missing. Falling back to direct API for $modelName.');
+                '[GeminiService] Proxy unreachable or App Check failed. Falling back to direct API for $modelName.');
             try {
               final model =
                   _getModel(modelName, apiVersion: config['version']!);
@@ -131,7 +135,7 @@ class GeminiService {
               }
             } catch (fallbackErr) {
               appLogger.e(
-                  '[GeminiService] Fallback $modelName also failed: $fallbackErr');
+                  '[GeminiService] Direct Fallback also failed: $fallbackErr');
             }
           }
 
@@ -214,12 +218,16 @@ class GeminiService {
           }
         } catch (e) {
           final s = e.toString().toLowerCase();
+          final isAppCheckFailure = s.contains('unavailable') || 
+                                   s.contains('unauthenticated') || 
+                                   s.contains('app-check') ||
+                                   s.contains('not-permitted');
 
-          // ── 1.0 FALLBACK: If Cloud Function is missing/misconfigured ──────
-          if ((s.contains('not-found') || s.contains('404')) &&
+          // ── 1.0 FALLBACK: If Cloud Function is missing, misconfigured, or App Check fails ──────
+          if ((s.contains('not-found') || s.contains('404') || isAppCheckFailure) &&
               _apiKey.isNotEmpty) {
             appLogger.w(
-                '[GeminiService] Proxy missing. Falling back to direct API for $modelName.');
+                '[GeminiService] Proxy Insight unreachable or App Check failed. Falling back to direct API for $modelName.');
             try {
               final model =
                   _getModel(modelName, apiVersion: config['version']!);
@@ -252,7 +260,7 @@ class GeminiService {
               }
             } catch (fallbackErr) {
               appLogger.e(
-                  '[GeminiService] Fallback $modelName also failed: $fallbackErr');
+                  '[GeminiService] Direct Insight Fallback also failed: $fallbackErr');
             }
           }
 
@@ -379,11 +387,11 @@ Notes:
     // Summarize latency for the AI
     final avgLatency = latencyData.isEmpty
         ? 0
-        : latencyData.map((e) => e['latency'] as int).reduce((a, b) => a + b) /
+        : latencyData.map((e) => (e['latency'] as int?) ?? 0).reduce((a, b) => a + b) /
             latencyData.length;
     final morningDelays = latencyData
         .where((e) =>
-            (e['latency'] as int) > 30 && (e['time'] as String).startsWith('0'))
+            ((e['latency'] as int?) ?? 0) > 30 && (e['time'] as String).startsWith('0'))
         .length;
 
     // Summarize symptoms for the AI
@@ -577,6 +585,14 @@ Use emojis ✨.
       return true;
     }
 
+    // Do NOT retry if it's a background-induced SSL abort/connection abort
+    // to avoid trying to use a detached engine.
+    if (errStr.contains('abort') || 
+        errStr.contains('connection abort') || 
+        errStr.contains('handshake aborted')) {
+      return false;
+    }
+
     return true; // Default to retry for transient exceptions
   }
 
@@ -610,6 +626,10 @@ Use emojis ✨.
     }
     if (s.contains('401') || s.contains('key') || s.contains('auth')) {
       return "Something is wrong with our AI connection. Please try again later or contact support.";
+    }
+
+    if (s.contains('abort') || s.contains('connection abort')) {
+       return "Interrupted. We'll try again as soon as you're back! ✨";
     }
 
     return "The AI couldn't identify this medicine. Please try again with a clearer photo of the label. 💊";

@@ -60,9 +60,9 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
       child: Container(
         decoration: BoxDecoration(
           color: L.card,
-          borderRadius: AppRadius.roundL,
-          border:
-              Border.all(color: L.border.withValues(alpha: 0.1), width: 1.0),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
+          boxShadow: L.shadowSoft,
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
@@ -82,8 +82,10 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: L.text.withValues(alpha: 0.05),
+                                color: L.text.withValues(alpha: 0.03),
                                 shape: BoxShape.circle,
+                                border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1),
+                                boxShadow: AppShadows.subtle,
                               ),
                               child: Icon(Icons.auto_awesome_rounded,
                                   color: L.text, size: 18),
@@ -98,6 +100,33 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                                           fontWeight: FontWeight.w700,
                                           color: L.sub,
                                           letterSpacing: 0.5)),
+                                  if (state.hasNewDataForAI && isPremium) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: L.green.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(
+                                            color: L.green
+                                                .withValues(alpha: 0.3),
+                                            width: 0.5),
+                                      ),
+                                      child: Text(
+                                        "NEW DATA",
+                                        style:
+                                            AppTypography.labelSmall.copyWith(
+                                          color: L.green,
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 0.3,
+                                        ),
+                                      ),
+                                    ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+                                     .shimmer(duration: 2.seconds, color: L.green.withValues(alpha: 0.2))
+                                     .scale(begin: const Offset(1, 1), end: const Offset(1.05, 1.05), duration: 1.seconds),
+                                  ],
                                   if (!isPremium) ...[
                                     const SizedBox(width: 8),
                                     Container(
@@ -136,9 +165,10 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                                     horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: L.text.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(AppRadius.max),
                                   border: Border.all(
-                                      color: L.text.withValues(alpha: 0.1)),
+                                      color: L.text.withValues(alpha: 0.03)),
+                                  boxShadow: AppShadows.subtle,
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -240,13 +270,14 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                                                         vertical: 6),
                                                 decoration: BoxDecoration(
                                                   color: L.text
-                                                      .withValues(alpha: 0.03),
+                                                      .withValues(alpha: 0.02),
                                                   borderRadius:
-                                                      BorderRadius.circular(12),
+                                                      BorderRadius.circular(AppRadius.m),
                                                   border: Border.all(
                                                       color: L.border
                                                           .withValues(
-                                                              alpha: 0.05)),
+                                                              alpha: 0.03)),
+                                                  boxShadow: AppShadows.subtle,
                                                 ),
                                                 child: Row(
                                                   mainAxisSize:
@@ -319,13 +350,13 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: AppRadius.roundL,
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        L.card.withValues(alpha: 0.3),
-                        L.card,
+                        L.card.withValues(alpha: 0.1),
+                        L.card.withValues(alpha: 0.8),
                         L.card,
                       ],
                       stops: const [0.0, 0.4, 1.0],
@@ -367,13 +398,14 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                               horizontal: 24, vertical: 12),
                           decoration: BoxDecoration(
                             color: L.secondary,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(AppRadius.max),
                             boxShadow: [
                               BoxShadow(
                                 color: L.secondary.withValues(alpha: 0.3),
-                                blurRadius: 15,
+                                blurRadius: 25,
                                 offset: const Offset(0, 8),
                               ),
+                              ...L.shadowSoft,
                             ],
                           ),
                           child: const Text(
@@ -393,6 +425,9 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
           ],
         ),
       ),
-    ).animate().fade().slideY(begin: 0.05, end: 0);
+    ).animate(target: state.hasNewDataForAI ? 1 : 0)
+     .shimmer(duration: 3.seconds, color: L.text.withValues(alpha: 0.05))
+     .fade()
+     .slideY(begin: 0.05, end: 0);
   }
 }

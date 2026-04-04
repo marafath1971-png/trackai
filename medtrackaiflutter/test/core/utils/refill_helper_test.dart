@@ -56,5 +56,40 @@ void main() {
       final noSchedMed = testMed.copyWith(schedule: []);
       expect(RefillHelper.calculateExhaustionDate(noSchedMed), isNull);
     });
+
+    test('calculateExhaustionDate returns null if all schedules are disabled (PRN)', () {
+      final prnMed = testMed.copyWith(schedule: [
+        ScheduleEntry(h: 8, m: 0, label: 'Morning', days: [1, 2, 3, 4, 5, 6, 0], enabled: false),
+      ]);
+      expect(RefillHelper.calculateExhaustionDate(prnMed), isNull);
+    });
+
+    test('calculateExhaustionDate returns null if count is 0', () {
+      final zeroCountMed = testMed.copyWith(count: 0);
+      expect(RefillHelper.calculateExhaustionDate(zeroCountMed), isNull);
+    });
+
+    test('calculateExhaustionDate correctly handles multiple doses per day', () {
+      final multiDoseMed = testMed.copyWith(
+        count: 10,
+        schedule: [
+          ScheduleEntry(h: 8, m: 0, label: 'Morning', days: [1, 2, 3, 4, 5, 6, 0], enabled: true),
+          ScheduleEntry(h: 20, m: 0, label: 'Evening', days: [1, 2, 3, 4, 5, 6, 0], enabled: true),
+        ],
+      );
+      final date = RefillHelper.calculateExhaustionDate(multiDoseMed);
+      expect(date, isNotNull);
+      final diff = date!.difference(DateTime.now()).inDays;
+      // 10 pills, 2 per day = exactly 5 days
+      expect(diff, closeTo(5, 1)); // Allowing small variance for time-of-day
+    });
+
+    test('getExhaustionStatus returns "Runs out today" when exhausted today', () {
+      final exhaustedMed = testMed.copyWith(
+        count: 1, // 1 pill left, 1 dose per day
+      );
+      final status = RefillHelper.getExhaustionStatus(exhaustedMed);
+      expect(status, anyOf('Runs out today', 'Runs out tomorrow')); // Depends on exact time of test execution
+    });
   });
 }

@@ -81,7 +81,7 @@ class AppTheme {
           backgroundColor: AppColors.primaryBlue,
           foregroundColor: AppColors.white,
           textStyle: AppTypography.labelLarge,
-          minimumSize: const Size(double.infinity, 56),
+          minimumSize: const Size(double.infinity, 64),
           shape: RoundedRectangleBorder(borderRadius: AppRadius.roundL),
           elevation: 0,
         ),
@@ -108,7 +108,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.grey100,
         labelStyle: AppTypography.labelMedium.copyWith(color: const Color(0xFF111827)),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: AppRadius.roundM),
         side: BorderSide.none,
       ),
@@ -181,7 +181,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.grey800,
         labelStyle: AppTypography.labelMedium.copyWith(color: AppColors.white),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: AppRadius.roundM),
         side: BorderSide.none,
       ),
@@ -279,15 +279,27 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     final bg = isDark
         ? (amoled ? AppColors.black : AppColors.grey950)
         : AppColors.grey50;
-    final card = amoled
-        ? AppColors.black
-        : (isDark ? AppColors.grey900 : AppColors.white);
-    final card2 = amoled
-        ? const Color(0xFF080808)
-        : (isDark ? AppColors.grey800 : AppColors.grey100);
+    
+    // Inject a tiny hint of primary into the surfaces for a premium "Tinted" look
+    final tintColor = scheme.primary.withValues(alpha: isDark ? 0.02 : 0.01);
+    
+    final card = Color.alphaBlend(
+      tintColor,
+      amoled
+          ? AppColors.black
+          : (isDark ? AppColors.grey900 : AppColors.white),
+    );
+    
+    final card2 = Color.alphaBlend(
+      tintColor,
+      amoled
+          ? const Color(0xFF080808)
+          : (isDark ? AppColors.grey800 : AppColors.grey100),
+    );
+    
     final fill = isDark
-        ? AppColors.white.withValues(alpha: 0.06)
-        : AppColors.grey200.withValues(alpha: 0.8);
+        ? AppColors.white.withValues(alpha: 0.08)
+        : AppColors.grey200.withValues(alpha: 0.6);
 
     return AppThemeColors(
       bg: bg,

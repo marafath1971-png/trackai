@@ -11,6 +11,8 @@ import '../../services/notification_service.dart';
 import '../../services/auth_service.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../l10n/app_localizations.dart';
+import 'package:confetti/confetti.dart';
+import 'dart:async';
 
 // ══════════════════════════════════════════════
 // ONBOARDING SCREEN
@@ -102,18 +104,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             emoji: '✨',
             title: 'The Magic of Med AI',
             subtitle: 'Never type a medicine name again. Just scan the box.'),
-        const _OBStep(
-            id: 'medCount',
-            type: 'single',
-            emoji: '💊',
-            title: 'How many medications do you take?',
-            subtitle: 'Include vitamins, supplements & prescriptions',
-            field: 'medCount',
-            options: kMedCounts),
         const _OBStep(id: 'notif', type: 'notif'),
         const _OBStep(id: 'plan', type: 'plan'),
-        const _OBStep(id: 'paywall', type: 'paywall'),
         const _OBStep(id: 'celebration', type: 'celebration'),
+        const _OBStep(id: 'paywall', type: 'paywall'),
       ];
 
   @override
@@ -189,7 +183,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     if (step.type == 'splash' ||
         step.type == 'notif' ||
         step.type == 'plan' ||
-        step.type == 'scan_demo') {
+        step.type == 'scan_demo' ||
+        step.type == 'lung_test') {
       return true;
     }
     if (step.type == 'paywall') return true;
@@ -225,36 +220,46 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           child: Column(children: [
             // ── Progress bar (not on splash/paywall)
             if (step.type != 'splash' && step.type != 'paywall')
-              Container(
-                margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                height: 6,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: progress),
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, _) {
-                    return FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: value,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Row(
+                  children: [
+                    Expanded(
                       child: Container(
+                        height: 6,
                         decoration: BoxDecoration(
-                          gradient: AppGradients.main,
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(99),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.grey900.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              spreadRadius: 1,
-                            )
-                          ],
+                        ),
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: progress),
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, _) {
+                            return FractionallySizedBox(
+                              alignment: Alignment.centerLeft,
+                              widthFactor: value,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: AppGradients.main,
+                                  borderRadius: BorderRadius.circular(99),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
-                    );
-                  },
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '${_step + 1} of ${_steps.length}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: oSub.withValues(alpha: 0.5),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -286,7 +291,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
 
             // ── CTA
-            if (!isPaywall) _buildCTA(step, oLime, oText),
+            if (!isPaywall && step.type != 'lung_test')
+              _buildCTA(step, oLime, oText),
           ]),
         ),
       ),
@@ -368,7 +374,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         );
       case 'celebration':
         return _CelebrationStep(
-            onComplete: _complete,
+            onComplete: _next, // Now goes to paywall instead of finishing
             oLime: oLime,
             oText: oText,
             oSub: oSub,
@@ -376,6 +382,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       case 'scan_demo':
         return _ScanDemoStep(
             step: step, oText: oText, oSub: oSub, oCard: oCard, oLime: oLime);
+      case 'lung_test':
+        return _LungTestStep(
+            step: step, oText: oText, oSub: oSub, oCard: oCard, oLime: oLime, onComplete: _next);
       default:
         return const SizedBox.shrink();
     }
@@ -530,11 +539,10 @@ class _SplashStep extends StatelessWidget {
                         width: 88,
                         height: 88,
                         decoration: BoxDecoration(
-                          color: AppColors.grey900.withValues(alpha: 0.1),
-                          borderRadius: AppRadius.roundXL,
-                          border:
-                              Border.all(color: oLime.withValues(alpha: 0.3)),
-                          boxShadow: AppShadows.glow(oLime, intensity: 0.2),
+                          color: context.L.bg,
+                          borderRadius: BorderRadius.circular(AppRadius.xl),
+                          border: Border.all(color: oLime.withValues(alpha: 0.2), width: 1.5),
+                          boxShadow: context.L.shadowSoft,
                         ),
                         child: Center(
                             child: Image.asset('assets/images/app_logo.png',
@@ -583,17 +591,11 @@ class _SplashStep extends StatelessWidget {
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
                         color: oCard,
-                        borderRadius: AppRadius.roundL,
+                        borderRadius: BorderRadius.circular(AppRadius.l),
                         border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.1),
+                            color: Colors.white.withValues(alpha: 0.05),
                             width: 1.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        boxShadow: context.L.shadowSoft,
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -744,8 +746,9 @@ class _ScanDemoStepState extends State<_ScanDemoStep> {
             height: 320,
             decoration: BoxDecoration(
               color: widget.oCard,
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: widget.oText.withValues(alpha: 0.05)),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              border: Border.all(color: widget.oText.withValues(alpha: 0.05), width: 1.5),
+              boxShadow: context.L.shadowSoft,
               image: const DecorationImage(
                 image: NetworkImage(
                     'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'),
@@ -798,14 +801,9 @@ class _ScanDemoStepState extends State<_ScanDemoStep> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 24, vertical: 14),
                       decoration: BoxDecoration(
-                        color: widget.oLime,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                              color: widget.oLime.withValues(alpha: 0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10))
-                        ],
+                        gradient: AppGradients.main,
+                        borderRadius: BorderRadius.circular(AppRadius.l),
+                        boxShadow: AppShadows.glow(widget.oLime, intensity: 0.3),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -829,10 +827,10 @@ class _ScanDemoStepState extends State<_ScanDemoStep> {
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: widget.oCard,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(AppRadius.l),
                       border: Border.all(
-                          color: widget.oLime.withValues(alpha: 0.3), width: 2),
-                      boxShadow: AppShadows.glow(widget.oLime, intensity: 0.1),
+                          color: widget.oLime.withValues(alpha: 0.1), width: 1.5),
+                      boxShadow: context.L.shadowSoft,
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -1096,12 +1094,12 @@ class _SingleStep extends StatelessWidget {
                 horizontal: isGrid ? 12 : 18, vertical: 14),
             decoration: BoxDecoration(
               color: isSelected ? oLime.withValues(alpha: 0.15) : oCard,
-              borderRadius: AppRadius.roundXL,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
               border: Border.all(
                   color: isSelected
                       ? oLime.withValues(alpha: 0.6)
-                      : oText.withValues(alpha: 0.08),
-                  width: isSelected ? 2.0 : 1.0),
+                      : oText.withValues(alpha: 0.05),
+                  width: isSelected ? 2.0 : 1.5),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
@@ -1109,7 +1107,7 @@ class _SingleStep extends StatelessWidget {
                           blurRadius: 24,
                           offset: const Offset(0, 10))
                     ]
-                  : (isPressed ? AppShadows.subtle : AppShadows.soft),
+                  : (isPressed ? AppShadows.subtle : context.L.shadowSoft),
             ),
             child: isGrid
                 ? Column(
@@ -1221,12 +1219,12 @@ class _MultiStep extends StatelessWidget {
                       decoration: BoxDecoration(
                         color:
                             isSelected ? oLime.withValues(alpha: 0.15) : oCard,
-                        borderRadius: BorderRadius.circular(99),
+                        borderRadius: BorderRadius.circular(AppRadius.max),
                         border: Border.all(
                             color: isSelected
                                 ? oLime.withValues(alpha: 0.6)
-                                : oText.withValues(alpha: 0.08),
-                            width: isSelected ? 2.0 : 1.0),
+                                : oText.withValues(alpha: 0.05),
+                            width: isSelected ? 2.0 : 1.5),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
@@ -1234,7 +1232,7 @@ class _MultiStep extends StatelessWidget {
                                     blurRadius: 15,
                                     offset: const Offset(0, 5))
                               ]
-                            : (isPressed ? AppShadows.subtle : AppShadows.soft),
+                            : (isPressed ? AppShadows.subtle : context.L.shadowSoft),
                       ),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
                         if (opt['e'] != null)
@@ -1376,9 +1374,10 @@ class _TimeStep extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
                 color: oCard,
-                borderRadius: AppRadius.roundM,
+                borderRadius: BorderRadius.circular(AppRadius.m),
                 border: Border.all(
-                    color: oText.withValues(alpha: 0.08), width: 1.5),
+                    color: oText.withValues(alpha: 0.05), width: 1.5),
+                boxShadow: context.L.shadowSoft,
               ),
               child: Text(h >= 12 ? 'PM' : 'AM',
                   style: AppTypography.labelLarge.copyWith(
@@ -1425,11 +1424,11 @@ class _TimeInput extends StatelessWidget {
           fillColor: oText.withValues(alpha: 0.03),
           contentPadding: const EdgeInsets.symmetric(vertical: 20),
           enabledBorder: OutlineInputBorder(
-              borderRadius: AppRadius.roundXL,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
               borderSide:
-                  BorderSide(color: oText.withValues(alpha: 0.08), width: 1.5)),
+                  BorderSide(color: oText.withValues(alpha: 0.05), width: 1.5)),
           focusedBorder: OutlineInputBorder(
-              borderRadius: AppRadius.roundXL,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
               borderSide: BorderSide(color: oLime, width: 2.5)),
         ),
       ),
@@ -1468,10 +1467,7 @@ class _NotifStep extends StatelessWidget {
             color: oLime.withValues(alpha: 0.1),
             shape: BoxShape.circle,
             boxShadow: [
-              BoxShadow(
-                  color: oLime.withValues(alpha: 0.1),
-                  blurRadius: 40,
-                  spreadRadius: 10)
+              ...AppShadows.glow(oLime, intensity: 0.2),
             ],
           ),
           child: Center(
@@ -1615,8 +1611,9 @@ class _PlanReadyStep extends StatelessWidget {
           padding: const EdgeInsets.all(28),
           decoration: BoxDecoration(
             color: oCard,
-            borderRadius: AppRadius.roundL,
-            border: Border.all(color: oLime.withValues(alpha: 0.3), width: 1.5),
+            borderRadius: BorderRadius.circular(AppRadius.l),
+            border: Border.all(color: oLime.withValues(alpha: 0.2), width: 1.5),
+            boxShadow: context.L.shadowSoft,
           ),
           child: Column(children: [
             Text('94%',
@@ -1799,9 +1796,10 @@ class _PaywallFeatures extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: oCard,
-              borderRadius: AppRadius.roundM,
+              borderRadius: BorderRadius.circular(AppRadius.m),
               border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                  color: Colors.white.withValues(alpha: 0.05), width: 1.5),
+              boxShadow: AppShadows.subtle,
             ),
             child: Row(children: [
               Icon(Icons.check_circle_rounded, color: oLime, size: 14),
@@ -1832,11 +1830,11 @@ class _PaywallFeatures extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: isSel ? oLime.withValues(alpha: 0.1) : oCard,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
                 border: Border.all(
-                    color: isSel ? oLime : Colors.white.withValues(alpha: 0.07),
+                    color: isSel ? oLime : Colors.white.withValues(alpha: 0.05),
                     width: isSel ? 2.5 : 1.5),
-                boxShadow: isSel ? AppShadows.glow(oLime) : AppShadows.soft,
+                boxShadow: isSel ? AppShadows.glow(oLime, intensity: 0.2) : context.L.shadowSoft,
               ),
               child: Stack(clipBehavior: Clip.none, children: [
                 if (p['badge'] != null && isSel)
@@ -2060,9 +2058,10 @@ class _PaywallTrust extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: oCard,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
               border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                  color: Colors.white.withValues(alpha: 0.05), width: 1.5),
+              boxShadow: context.L.shadowSoft,
             ),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(t['e']!,
@@ -2093,9 +2092,10 @@ class _PaywallTrust extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: oCard,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.xl),
             border:
-                Border.all(color: oText.withValues(alpha: 0.08), width: 1.5),
+                Border.all(color: oText.withValues(alpha: 0.05), width: 1.5),
+            boxShadow: context.L.shadowSoft,
           ),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -2246,13 +2246,11 @@ class _PaywallTimeline extends StatelessWidget {
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       color: oCard,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.1),
+                          color: Colors.white.withValues(alpha: 0.05),
                           width: 1.5),
-                      boxShadow: i == 0
-                          ? AppShadows.glow(oLime, intensity: 0.1)
-                          : null,
+                      boxShadow: context.L.shadowSoft,
                     ),
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2429,7 +2427,7 @@ class _CelebrationStep extends StatelessWidget {
               .scale(duration: 800.ms, curve: Curves.elasticOut),
           const SizedBox(height: 48),
           Text(
-            "MedTrack AI Activated!",
+            "Med AI Activated!",
             textAlign: TextAlign.center,
             style: AppTypography.displayLarge.copyWith(
               color: oText,
@@ -2487,6 +2485,338 @@ class _CelebrationStep extends StatelessWidget {
               .fadeIn(delay: 800.ms),
         ],
       ),
+    );
+  }
+}
+
+// ════════════════════════════════════════
+// LUNG HEALTH TEST STEP
+// ════════════════════════════════════════
+
+class _LungTestStep extends StatefulWidget {
+  final _OBStep step;
+  final Color oText, oSub, oCard, oLime;
+  final VoidCallback onComplete;
+
+  const _LungTestStep({
+    required this.step,
+    required this.oText,
+    required this.oSub,
+    required this.oCard,
+    required this.oLime,
+    required this.onComplete,
+  });
+
+  @override
+  State<_LungTestStep> createState() => _LungTestStepState();
+}
+
+class _LungTestStepState extends State<_LungTestStep>
+    with TickerProviderStateMixin {
+  double _holdDuration = 0.0;
+  Timer? _timer;
+  bool _isHolding = false;
+  bool _isComplete = false;
+  late ConfettiController _confettiController;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 2));
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  void _startTest() {
+    setState(() {
+      _holdDuration = 0.0;
+      _isHolding = true;
+      _isComplete = false;
+    });
+    _timer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (mounted) {
+        setState(() {
+          _holdDuration += 0.016; // Smoother 60fps timer
+        });
+        // Periodically pulse haptics for "heartbeat" feel
+        if ((_holdDuration * 1000).toInt() % 500 < 16) {
+          HapticEngine.selection();
+        }
+      }
+    });
+  }
+
+  void _stopTest() {
+    _timer?.cancel();
+    if (_holdDuration > 1.5) {
+      setState(() {
+        _isHolding = false;
+        _isComplete = true;
+      });
+      _confettiController.play();
+      HapticEngine.success();
+    } else {
+      setState(() {
+        _isHolding = false;
+        _holdDuration = 0.0;
+      });
+      HapticEngine.selection();
+    }
+  }
+
+  int get _score {
+    // 15 seconds = 100 points
+    return (_holdDuration * 6.6).clamp(0, 100).toInt();
+  }
+
+  String get _dynamicMessage {
+    if (_holdDuration < 3) return "Deep breath in...";
+    if (_holdDuration < 7) return "Expanding lungs... keep going";
+    if (_holdDuration < 12) return "Incredible control! Stronger...";
+    return "Elite lung capacity! UNSTOPPABLE!";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+
+    return Stack(
+      children: [
+        // Background Glow
+        if (_isHolding)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  colors: [
+                    L.primary.withValues(alpha: 0.1),
+                    L.bg.withValues(alpha: 0),
+                  ],
+                  radius: 1.2,
+                ),
+              ),
+            ).animate().fadeIn(duration: 800.ms),
+          ),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (!_isComplete) ...[
+                // Instruction Area
+                Text(
+                  _isHolding ? _dynamicMessage : widget.step.title,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.displayLarge.copyWith(
+                    fontSize: 28,
+                    color: widget.oText,
+                    letterSpacing: -1.0,
+                    fontWeight: FontWeight.w900,
+                  ),
+                )
+                    .animate(key: ValueKey(_isHolding))
+                    .fadeIn(duration: 400.ms)
+                    .scale(begin: const Offset(0.9, 0.9)),
+                const SizedBox(height: 12),
+                Text(
+                  _isHolding
+                      ? "Keep holding to maximize capacity"
+                      : widget.step.subtitle,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodyMedium.copyWith(color: widget.oSub),
+                ).animate().fadeIn(delay: 200.ms),
+                const SizedBox(height: 60),
+
+                // Timer Area
+                AnimatedContainer(
+                  duration: 200.ms,
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Text(
+                        _holdDuration.toStringAsFixed(1),
+                        style: AppTypography.displayLarge.copyWith(
+                          fontSize: 80 + (_holdDuration * 2).clamp(0, 40),
+                          color: widget.oLime,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      Text(
+                        "SECONDS",
+                        style: AppTypography.labelSmall.copyWith(
+                          color: widget.oLime.withValues(alpha: 0.6),
+                          letterSpacing: 4.0,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                    .animate(target: _isHolding ? 1 : 0)
+                    .shimmer(duration: 2.seconds),
+
+                const SizedBox(height: 60),
+
+                // Interaction Button
+                GestureDetector(
+                  onTapDown: (_) => _startTest(),
+                  onTapUp: (_) => _stopTest(),
+                  onTapCancel: () => _stopTest(),
+                  child: Container(
+                    width: 180,
+                    height: 180,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          blurRadius: 40,
+                          spreadRadius: _isHolding ? 20 : 5,
+                        )
+                      ],
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.fingerprint_rounded, size: 64, color: L.bg),
+                          const SizedBox(height: 8),
+                          Text(
+                            _isHolding ? "RELEASE" : "HOLD HERE",
+                            style: AppTypography.labelSmall.copyWith(
+                              color: L.bg.withValues(alpha: 0.6),
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scale(
+                        begin: const Offset(1, 1),
+                        end: Offset(_isHolding ? 1.1 : 1.05,
+                            _isHolding ? 1.1 : 1.05),
+                        duration: _isHolding ? 1.seconds : 2.seconds,
+                        curve: Curves.easeInOut,
+                      ),
+                ),
+              ] else ...[
+                // Result State
+                Text(
+                  "Lung Test Results",
+                  style: AppTypography.displayLarge
+                      .copyWith(fontSize: 32, color: widget.oText),
+                ).animate().fadeIn().scale(),
+                const SizedBox(height: 48),
+
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 200,
+                      height: 200,
+                      child: CircularProgressIndicator(
+                        value: _score / 100,
+                        strokeWidth: 12,
+                        backgroundColor: widget.oLime.withValues(alpha: 0.1),
+                        valueColor: AlwaysStoppedAnimation(widget.oLime),
+                        strokeCap: StrokeCap.round,
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "$_score",
+                          style: AppTypography.displayLarge.copyWith(
+                            fontSize: 64,
+                            color: widget.oText,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        Text(
+                          "HEALTH SCORE",
+                          style: AppTypography.labelSmall.copyWith(
+                            color: widget.oSub,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                )
+                    .animate()
+                    .fadeIn(delay: 400.ms)
+                    .scale(curve: Curves.elasticOut, duration: 800.ms),
+
+                const SizedBox(height: 48),
+                Text(
+                  _dynamicMessage,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: widget.oText,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ).animate().fadeIn(delay: 800.ms),
+                const SizedBox(height: 12),
+                Text(
+                  "Duration: ${_holdDuration.toStringAsFixed(1)} seconds",
+                  style: AppTypography.bodySmall.copyWith(color: widget.oSub),
+                ).animate().fadeIn(delay: 1.seconds),
+                const SizedBox(height: 60),
+
+                GestureDetector(
+                  onTap: widget.onComplete,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    decoration: BoxDecoration(
+                      color: widget.oLime,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: AppShadows.glow(widget.oLime),
+                    ),
+                    child: Text(
+                      "Save and Continue →",
+                      textAlign: TextAlign.center,
+                      style: AppTypography.titleLarge
+                          .copyWith(color: Colors.black),
+                    ),
+                  ),
+                )
+                    .animate()
+                    .fadeIn(delay: 1.2.seconds)
+                    .slideY(begin: 0.2, end: 0),
+
+                TextButton(
+                  onPressed: () => setState(() => _isComplete = false),
+                  child: Text(
+                    "Want to retest? click here",
+                    style: AppTypography.bodySmall.copyWith(color: widget.oSub),
+                  ),
+                ).animate().fadeIn(delay: 1.5.seconds),
+              ],
+            ],
+          ),
+        ),
+        Align(
+          alignment: Alignment.topCenter,
+          child: ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            shouldLoop: false,
+            colors: [widget.oLime, Colors.white, Colors.blue],
+          ),
+        ),
+      ],
     );
   }
 }

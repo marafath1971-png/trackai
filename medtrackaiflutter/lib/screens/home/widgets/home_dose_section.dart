@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../providers/app_state.dart';
 import '../../../theme/app_theme.dart';
@@ -53,11 +52,11 @@ class _DoseCardState extends State<DoseCard>
     super.dispose();
   }
 
-  void _handleTake() {
+  void _handleTake(BuildContext context) {
     if (widget.taken) return;
-    HapticFeedback.selectionClick();
+    HapticEngine.doseTaken();
     _checkController.forward();
-    widget.onTap();
+    widget.onTake();
   }
 
   @override
@@ -125,7 +124,8 @@ class _DoseCardState extends State<DoseCard>
         onTapDown: (_) => setState(() => _pressed = true),
         onTapUp: (_) => setState(() => _pressed = false),
         onTapCancel: () => setState(() => _pressed = false),
-        onTap: widget.taken ? null : _handleTake,
+        // Card body tap = navigate to medicine detail
+        onTap: widget.onTap,
         child: AnimatedScale(
           scale: _pressed ? 0.975 : 1.0,
           duration: const Duration(milliseconds: 100),
@@ -134,11 +134,13 @@ class _DoseCardState extends State<DoseCard>
             margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
               color: cardBg,
-              borderRadius: AppRadius.roundXL,
-              border: Border.all(color: borderColor, width: 1.0),
-              boxShadow: widget.isNext && !widget.taken
-                  ? AppShadows.glow(L.secondary, intensity: 0.08)
-                  : null,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: borderColor, width: 1.2),
+              boxShadow: [
+                if (widget.isNext && !widget.taken) 
+                  BoxShadow(color: L.secondary.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 4)),
+                BoxShadow(color: L.text.withValues(alpha: 0.02), blurRadius: 10),
+              ],
             ),
             child: ClipRRect(
               borderRadius: AppRadius.roundXL,
@@ -248,7 +250,11 @@ class _DoseCardState extends State<DoseCard>
                           ),
                           const SizedBox(width: 8),
                           // Right CTA area
-                          _buildCta(L),
+                          GestureDetector(
+                            onTap: widget.taken ? null : () => _handleTake(context),
+                            behavior: HitTestBehavior.opaque,
+                            child: _buildCta(L),
+                          ),
                         ]),
                       ),
                     ),
@@ -309,21 +315,22 @@ class _DoseCardState extends State<DoseCard>
     }
     // Default "TAKE" label
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: L.fill,
-        borderRadius: BorderRadius.circular(AppRadius.max),
+        color: L.fill.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         'TAKE',
         style: AppTypography.labelSmall.copyWith(
           fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: L.sub.withValues(alpha: 0.6),
-          letterSpacing: 0.5,
+          fontWeight: FontWeight.w900,
+          color: L.sub.withValues(alpha: 0.5),
+          letterSpacing: 1.0,
         ),
       ),
     );
+
   }
 }
 

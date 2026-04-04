@@ -28,6 +28,7 @@ import '../widgets/modals/daily_log_sheet.dart';
 import '../services/link_service.dart';
 import '../services/circle_service.dart';
 import 'package:in_app_review/in_app_review.dart';
+import '../core/utils/refill_helper.dart';
 
 enum AppPhase { loading, onboarding, auth, app }
 
@@ -46,12 +47,24 @@ enum DoseStatus { upcoming, taken, overdue, missed, skipped }
 // APP STATE PROVIDER
 // ══════════════════════════════════════════════
 
-class AppState extends ChangeNotifier {
+class AppState extends ChangeNotifier with WidgetsBindingObserver {
   final IMedicationRepository medRepo;
   final IUserRepository userRepo;
   final SymptomRepository symptomRepo;
 
   bool _isDisposed = false;
+  AppLifecycleState _lifecycleState = AppLifecycleState.resumed;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _lifecycleState = state;
+    if (_lifecycleState == AppLifecycleState.resumed) {
+      _syncPendingActions();
+    }
+  }
+
+  bool get isBackgrounded => _lifecycleState == AppLifecycleState.paused || 
+                            _lifecycleState == AppLifecycleState.inactive;
 
   void safeNotifyListeners() {
     if (!_isDisposed) {
@@ -72,15 +85,18 @@ class AppState extends ChangeNotifier {
   List<Map<String, dynamic>> monitoredPatients = [];
   List<MissedAlert> missedAlerts = [];
   bool darkMode = false;
+  bool lowStockBannerDismissed = false;
   String? toast;
   String? toastType;
   List<HealthInsight> healthInsights = [];
   List<Symptom> symptoms = [];
+  bool hasNewDataForAI = false;
   bool loadingInsight = false;
   bool isLocked = false;
   String language = 'en';
   SymptomAnalysis? symptomAnalysis;
   bool analyzingSymptom = false;
+  DateTime? lastInsightFetch;
   // Drug interaction warning (shown after adding a new medicine)
   String? interactionWarning;
   String? interactionWarningMedName;
@@ -109,7 +125,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _syncPendingActions() async {
-    if (_isSyncing || _pendingActions.isEmpty) return;
+    if (_isSyncing || _pendingActions.isEmpty || isBackgrounded) return;
     _isSyncing = true;
 
     FirebaseCrashlytics.instance
@@ -189,6 +205,7 @@ class AppState extends ChangeNotifier {
     required this.symptomRepo,
     AudioPlayer? audioPlayer,
   }) : _audioPlayer = audioPlayer ?? AudioPlayer() {
+    WidgetsBinding.instance.addObserver(this);
     _notifSub = NotificationService.actionStream.stream
         .listen(_handleNotificationAction);
 
@@ -347,6 +364,7 @@ class AppState extends ChangeNotifier {
   @override
   void dispose() {
     _isDisposed = true;
+    WidgetsBinding.instance.removeObserver(this);
     _cgSub?.cancel();
     _notifSub?.cancel();
     _monitoringSub?.cancel();
@@ -754,6 +772,7 @@ class AppState extends ChangeNotifier {
       } else {
         symptoms.add(symptom);
       }
+      hasNewDataForAI = true;
 
       // Automatic AI Analysis
       analyzingSymptom = true;
@@ -838,6 +857,26 @@ class AppState extends ChangeNotifier {
       toast = null;
       safeNotifyListeners();
     });
+  }
+
+  // ── Low Stock Banner Dismissal ────────────────────────────────────
+  void dismissLowStockBanner() {
+    lowStockBannerDismissed = true;
+    safeNotifyListeners();
+  }
+
+  // ── Snooze Dose (30 min, schedules real notification) ─────────────
+  void snoozeDose(DoseItem dose, int minutes) {
+    final snoozeTime = DateTime.now().add(Duration(minutes: minutes));
+    final payload = 'take|${dose.med.id}|${dose.sched.h}|${dose.sched.m}|${dose.sched.label}';
+    NotificationService.scheduleOneOffReminder(
+      id: dose.med.id + 600000 + minutes,
+      title: '⏰ Snoozed: ${dose.med.name}',
+      body: 'Time to take your ${dose.sched.label} dose (snoozed)',
+      scheduledDate: snoozeTime,
+      payload: payload,
+    );
+    showToast('⏱ Snoozed ${dose.med.name} for $minutes min', type: 'info');
   }
 
   // ── Computed values ────────────────────────────────────────────────
@@ -1069,6 +1108,22 @@ class AppState extends ChangeNotifier {
   // ── Toggle dose taken ──────────────────────────────────────────────
   final Map<String, bool> _processingDoses = {};
 
+  
+  /// Specifically record a scheduled dose as taken.
+  Future<void> takeDose(int medId, int index) async {
+    final med = meds.firstWhere((m) => m.id == medId);
+    final sched = med.schedule[index];
+    final doseItem = DoseItem(
+      med: med,
+      sched: sched,
+      key: '${med.id}-${sched.label}',
+    );
+
+    if (!(takenToday[doseItem.key] ?? false)) {
+      await toggleDose(doseItem);
+    }
+  }
+
   Future<void> toggleDose(DoseItem dose) async {
     final key = dose.key;
     if (_processingDoses[key] == true) return; // Prevent double-tap
@@ -1127,6 +1182,7 @@ class AppState extends ChangeNotifier {
           ],
         };
 
+        hasNewDataForAI = true;
         triggerReviewIfEligible();
 
         // 3. Queue for Cloud Sync (WAL)
@@ -1325,6 +1381,7 @@ class AppState extends ChangeNotifier {
     }
 
     await _persistAll(dateKey: todayKey);
+    hasNewDataForAI = true;
     _invalidateCache();
     safeNotifyListeners();
     HapticEngine.heavyImpact();
@@ -1459,8 +1516,16 @@ class AppState extends ChangeNotifier {
 
   // ── Dashboard Data & Insights ──────────────────────────────────────
 
-  Future<void> fetchHealthInsights() async {
-    if (meds.isEmpty) return;
+  Future<void> fetchHealthInsights({bool force = false}) async {
+    if (meds.isEmpty || isBackgrounded) return;
+
+    // Cache check: Skip if fetched in the last 15 minutes unless forced
+    if (!force &&
+        lastInsightFetch != null &&
+        DateTime.now().difference(lastInsightFetch!).inMinutes < 15) {
+      return;
+    }
+
     loadingInsight = true;
     safeNotifyListeners();
 
@@ -1481,6 +1546,8 @@ class AppState extends ChangeNotifier {
       result.fold(
         (val) {
           healthInsights = val;
+          hasNewDataForAI = false;
+          lastInsightFetch = DateTime.now();
         },
         (failure) {
           // Failure handled by service's fallback to static tips,
@@ -1785,7 +1852,7 @@ class AppState extends ChangeNotifier {
   // ── Data Export ─────────────────────────────────────────────────────
   String exportDataCSV() {
     final sb = StringBuffer();
-    sb.writeln('Type,ID,Name,Label,Details,Taken,Timestamp');
+    sb.writeln('Type,ID,Name,Label,Details,Taken/Severity,Timestamp/Notes');
 
     // Meds
     for (final m in meds) {
@@ -1803,7 +1870,84 @@ class AppState extends ChangeNotifier {
       }
     });
 
+    // Symptoms (Phase 13: Live Integration)
+    for (final s in symptoms) {
+      sb.writeln(
+          'Symptom,${s.id},"${s.name}","Severity: ${s.severity}",,"${s.severity}","${s.timestamp} - ${s.notes ?? ''}"');
+    }
+
     return sb.toString();
+  }
+
+  // ── Health Data Helpers (Phase 13: Live Integration) ──────────────
+  
+  /// Returns a normalized list of severity scores (0.0 to 1.0) for the last 7 logs.
+  List<double> getRecentSymptomStats() {
+    if (symptoms.isEmpty) return [0.5, 0.4, 0.6, 0.3, 0.5, 0.4, 0.5];
+    
+    // Get last 7 symptoms, sorted by date
+    final sorted = List<Symptom>.from(symptoms)
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    
+    final last7 = sorted.length > 7 ? sorted.sublist(sorted.length - 7) : sorted;
+    
+    // Map severity (1-10) to 0.0-1.0
+    final data = last7.map((s) => s.severity / 10.0).toList();
+    
+    // Pad if less than 7
+    while (data.length < 7) {
+      data.insert(0, 0.0);
+    }
+    return data;
+  }
+
+  /// Returns a summary of the most recent health state.
+  Map<String, String> getMoodSummary({
+    required String good,
+    required String stable,
+    required String severe,
+    required String empty,
+  }) {
+    if (symptoms.isEmpty) {
+      return {
+        'value': empty,
+        'unit': '',
+        'sublabel': 'No recent logs',
+      };
+    }
+
+    final latest = List<Symptom>.from(symptoms)
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    final s = latest.last;
+
+    String val = stable;
+    if (s.severity <= 3) val = good;
+    if (s.severity >= 8) val = severe;
+
+    return {
+      'value': val,
+      'unit': '(${s.severity}/10)',
+      'sublabel': 'Last: ${s.name}',
+    };
+  }
+
+  // ── Inventory Helpers (Phase 14: Stock Integration) ──────────────
+
+  /// Returns the number of medications that are critically low.
+  int getLowStockCount() {
+    return meds.where((m) => RefillHelper.isCriticallyLow(m)).length;
+  }
+
+  /// Returns a list of medications sorted by their estimated exhaustion date.
+  /// Only includes medications with an active schedule.
+  List<Medicine> getRefillForecast() {
+    final list = meds.where((m) => m.schedule.isNotEmpty).toList();
+    list.sort((a, b) {
+      final dateA = RefillHelper.calculateExhaustionDate(a) ?? DateTime(2100);
+      final dateB = RefillHelper.calculateExhaustionDate(b) ?? DateTime(2100);
+      return dateA.compareTo(dateB);
+    });
+    return list;
   }
 
   void _invalidateCache() {
@@ -1840,5 +1984,27 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       appLogger.e('[AppState] Failed to request review: $e');
     }
+  }
+
+  /// Reset medication stock to its original total quantity.
+  Future<void> refillMedication(int medId) async {
+    final idx = meds.indexWhere((m) => m.id == medId);
+    if (idx == -1) return;
+
+    final m = meds[idx];
+    final updatedMed = m.copyWith(
+      count: m.totalCount,
+      refillInfo: m.refillInfo?.copyWith(
+        currentInventory: m.refillInfo!.totalQuantity,
+      ),
+    );
+
+    meds[idx] = updatedMed;
+    await medRepo.updateMedicine(updatedMed);
+    
+    _invalidateCache();
+    safeNotifyListeners();
+    HapticEngine.success();
+    showToast('✓ ${m.name} refilled');
   }
 }

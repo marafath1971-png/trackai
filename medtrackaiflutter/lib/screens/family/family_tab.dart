@@ -6,6 +6,7 @@ import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/common/mesh_gradient.dart';
 import '../../core/utils/haptic_engine.dart';
 
 // Modular Widgets
@@ -15,14 +16,9 @@ import 'widgets/add_cg_flow.dart';
 import 'widgets/join_as_cg_view.dart';
 import 'widgets/alert_log_widgets.dart';
 import 'widgets/demo_widgets.dart';
-import '../../widgets/common/unified_header.dart';
 import '../../widgets/common/premium_empty_state.dart';
 import '../../widgets/common/paywall_sheet.dart';
 import '../../widgets/common/bouncing_button.dart';
-
-// ══════════════════════════════════════════════
-// FAMILY HUB TAB
-// ══════════════════════════════════════════════
 
 enum FamilyView {
   hub,
@@ -48,12 +44,11 @@ class _FamilyTabState extends State<FamilyTab> {
   Caregiver? _dashboardCg;
   MissedAlert? _alertDetail;
 
-  // Add form controllers and state
   final _nameCtrl = TextEditingController();
   final _contactCtrl = TextEditingController();
   String _relation = 'Spouse';
   String _avatar = '👩';
-  int _pivot = 0; // 0: Account Security, 1: Family Circle
+  int _pivot = 1; // Default to Family Circle as per reference style
   int _alertDelay = 30;
   bool _isScrolled = false;
   final ScrollController _scrollController = ScrollController();
@@ -107,8 +102,6 @@ class _FamilyTabState extends State<FamilyTab> {
           onBack: () => setState(() => _view = FamilyView.hub),
           onJoined: (cg) {
             setState(() => _view = FamilyView.hub);
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Joined as caregiver for ${cg.name}!')));
           });
     } else {
       switch (_view) {
@@ -272,324 +265,480 @@ class HubView extends StatelessWidget {
   Widget build(BuildContext context) {
     final activeCount =
         state.caregivers.where((c) => c.status == "active").length;
-    final pendingCount =
-        state.caregivers.where((c) => c.status == "pending").length;
     final unseenCount = state.missedAlerts.where((a) => !a.seen).length;
 
     return Scaffold(
       backgroundColor: L.bg,
       body: Stack(
         children: [
-          Scrollbar(
-            controller: scrollController,
-            child: SingleChildScrollView(
-              controller: scrollController,
-              physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics()),
-              child: Column(
-                children: [
-                  SizedBox(height: 110 + MediaQuery.of(context).padding.top),
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.screenPadding),
-                    child: Column(
-                      children: [
-                        if (unseenCount > 0)
-                          BouncingButton(
-                            onTap: onMarkSeen,
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 24),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: L.error.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                    color: L.error.withValues(alpha: 0.5),
-                                    width: 1.5),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                      width: 10,
-                                      height: 10,
-                                      decoration: BoxDecoration(
-                                          color: L.error,
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: L.error
-                                                  .withValues(alpha: 0.5),
-                                              blurRadius: 8,
-                                              spreadRadius: 2,
-                                            )
-                                          ])),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                        '$unseenCount new missed-dose alert${unseenCount > 1 ? "s" : ""}',
-                                        style: AppTypography.labelLarge
-                                            .copyWith(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w900,
-                                                color: L.error,
-                                                letterSpacing: 0.2)),
-                                  ),
-                                  Icon(Icons.chevron_right_rounded,
-                                      color: L.error, size: 22),
-                                ],
-                              ),
-                            ),
-                          )
-                              .animate(onPlay: (c) => c.repeat(reverse: true))
-                              .shimmer(
-                                  duration: 2.seconds,
-                                  color: L.error.withValues(alpha: 0.1)),
-
-                        // PIVOT SELECTOR
-                        Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: L.card,
-                            borderRadius: BorderRadius.circular(AppRadius.l),
-                            border: Border.all(color: L.border, width: 1.5),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: PivotTab(
-                                  label: 'Account Security',
-                                  active: pivot == 0,
-                                  onTap: () {
-                                    HapticEngine.selection();
-                                    onPivotChanged(0);
-                                  },
-                                  L: L,
-                                ),
-                              ),
-                              Expanded(
-                                child: PivotTab(
-                                  label: 'Family Circle',
-                                  active: pivot == 1,
-                                  onTap: () {
-                                    HapticEngine.selection();
-                                    onPivotChanged(1);
-                                  },
-                                  L: L,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                            .animate()
-                            .fade(delay: 100.ms)
-                            .slideY(begin: 0.1, end: 0),
-
-                        const SizedBox(height: AppSpacing.l),
-
-                        if (pivot == 0) ...[
-                          if (state.caregivers.isEmpty)
-                            _buildEmptyState(L, onAddCg)
-                          else ...[
-                            Row(
-                              children: [
-                                Expanded(
-                                    child: FamStatJSX(
-                                            emoji: '👥',
-                                            label: 'Active',
-                                            value: activeCount,
-                                            color: L.secondary)
-                                        .animate()
-                                        .fade(delay: 300.ms)
-                                        .slideY(begin: 0.2, end: 0)),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                    child: FamStatJSX(
-                                            emoji: '⏳',
-                                            label: 'Pending',
-                                            value: pendingCount,
-                                            color: L.warning)
-                                        .animate()
-                                        .fade(delay: 400.ms)
-                                        .slideY(begin: 0.2, end: 0)),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                    child: FamStatJSX(
-                                            emoji: '⚠️',
-                                            label: 'Alerts',
-                                            value: state.missedAlerts.length,
-                                            color: L.error)
-                                        .animate()
-                                        .fade(delay: 500.ms)
-                                        .slideY(begin: 0.2, end: 0)),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('MY CAREGIVERS',
-                                      style: AppTypography.labelLarge.copyWith(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w900,
-                                          color: L.sub,
-                                          letterSpacing: 1.5)),
-                                  const SizedBox(height: 16),
-                                  ListView.builder(
-                                    padding: EdgeInsets.zero,
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: state.caregivers.length,
-                                    itemBuilder: (context, index) =>
-                                        CaregiverCard(
-                                      cg: state.caregivers[index],
-                                      state: state,
-                                      L: L,
-                                      onDashboard: () =>
-                                          onDashboard(state.caregivers[index]),
-                                    )
-                                            .animate()
-                                            .fade(delay: (600 + index * 50).ms)
-                                            .slideY(begin: 0.1, end: 0),
-                                  ),
-                                ]),
-                          ],
-                        ] else ...[
-                          if (state.monitoredPatients.isEmpty)
-                            _buildEmptyMonitoringState(L, onJoin)
-                          else ...[
-                            Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                      'PROTECTING (${state.monitoredPatients.length})',
-                                      style: AppTypography.labelLarge.copyWith(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w900,
-                                          color: L.sub,
-                                          letterSpacing: 1.5)),
-                                  const SizedBox(height: 16),
-                                  ListView.builder(
-                                    padding: EdgeInsets.zero,
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: state.monitoredPatients.length,
-                                    itemBuilder: (context, index) {
-                                      final p = state.monitoredPatients[index];
-                                      return PatientCard(
-                                        patient: p,
-                                        state: state,
-                                        L: L,
-                                        onTap: () {
-                                          onDashboard(Caregiver(
-                                            id: 0,
-                                            name: p['name'] ?? 'Patient',
-                                            relation: p['relation'] ?? 'Family',
-                                            patientUid: p['uid'],
-                                            addedAt: p['addedAt'] ?? 'just now',
-                                            avatar: p['avatar'] ?? '👤',
-                                          ));
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ]),
-                          ],
-                        ],
-                        const SizedBox(height: 32),
-
-                        // ALERT LOG
-                        if (state.missedAlerts.isNotEmpty) ...[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('ALERT LOG',
-                                  style: AppTypography.labelLarge.copyWith(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w900,
-                                      color: L.sub,
-                                      letterSpacing: 1.5)),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          ListView.builder(
-                            padding: EdgeInsets.zero,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: state.missedAlerts.length,
-                            itemBuilder: (context, index) => AlertLogCard(
-                              alert: state.missedAlerts[index],
-                              L: L,
-                              onTap: () =>
-                                  onAlertDetail(state.missedAlerts[index]),
-                            )
-                                .animate()
-                                .fade(delay: (400 + index * 50).ms)
-                                .slideY(begin: 0.1, end: 0),
-                          ),
-                        ],
-                        const SizedBox(height: 24),
-                        SimulateMissCard(L: L, onSimulate: onEscalationDemo),
-                        const SizedBox(height: 120),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // ── PREMIUM HEADER BACKGROUND ──
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: UnifiedHeader(
-              isScrolled: isScrolled,
-              showProBadge: !state.isPremium,
-              title: 'Family Circle',
-              subtitle: activeCount > 0
-                  ? '$activeCount caregivers monitoring you'
-                  : 'Protect your health together',
-              actions: [
-                HeaderActionBtn(
-                  onTap: onJoin,
-                  child: Icon(Icons.qr_code_scanner_rounded,
-                      color: L.text, size: 18),
-                ),
-                HeaderActionBtn(
-                  onTap: onAddCg,
-                  backgroundColor: L.text,
-                  child: Icon(Icons.add_rounded, color: L.bg, size: 20),
+            height: 120,
+            child: Container(
+              decoration: BoxDecoration(
+                color: L.bg,
+                border: Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.5))),
+              ),
+            ),
+          ),
+
+          // ── SCROLLABLE CONTENT ──
+          SingleChildScrollView(
+            controller: scrollController,
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 150 + MediaQuery.of(context).padding.top),
+
+                // ── HEADER CONTENT ──
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'FAMILY',
+                            style: AppTypography.labelSmall.copyWith(
+                                color: L.sub.withValues(alpha: 0.5),
+                                letterSpacing: 1.5,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 10),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text('/', style: TextStyle(color: L.sub.withValues(alpha: 0.3), fontSize: 10)),
+                          ),
+                          Text(
+                            'CARE CIRCLE',
+                            style: AppTypography.labelSmall.copyWith(
+                                color: L.primary,
+                                letterSpacing: 1.5,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 10),
+                          ),
+                        ],
+                      ).animate().fadeIn(duration: 400.ms),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Protectors Hub',
+                        style: AppTypography.displayLarge.copyWith(
+                          color: L.text,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.8,
+                        ),
+                      ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Circle Snapshot Bento (Cal AI Stats)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _CircleStatBento(
+                              label: 'Protectors',
+                              value: '$activeCount',
+                              icon: Icons.shield_rounded,
+                              L: L,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _CircleStatBento(
+                              label: 'Monitoring',
+                              value: unseenCount > 0 ? 'Urgent' : 'Secure',
+                              icon: Icons.check_circle_rounded,
+                              iconColor: unseenCount > 0 ? L.error : L.success,
+                              L: L,
+                            ),
+                          ),
+                        ],
+                      ).animate(delay: 200.ms).fadeIn(),
+
+                      const SizedBox(height: 24),
+                      
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: L.card,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                  color: L.border.withValues(alpha: 0.5)),
+                            ),
+                            child: Row(
+                              children: [
+                                _CompactPivotPill(
+                                  label: 'Family',
+                                  active: pivot == 1,
+                                  onTap: () => onPivotChanged(1),
+                                  L: L,
+                                ),
+                                const SizedBox(width: 4),
+                                _CompactPivotPill(
+                                  label: 'Care',
+                                  active: pivot == 0,
+                                  onTap: () => onPivotChanged(0),
+                                  L: L,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ).animate().fadeIn(duration: 500.ms).slideX(begin: -0.05, end: 0),
+                      const SizedBox(height: 18),
+
+                      if (unseenCount > 0)
+                        BouncingButton(
+                          onTap: onMarkSeen,
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 20),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: L.error.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: L.error.withValues(alpha: 0.3),
+                                  width: 1.0),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.warning_amber_rounded,
+                                    color: L.error, size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                      '$unseenCount urgent monitoring alerts',
+                                      style: AppTypography.labelLarge.copyWith(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: L.error)),
+                                ),
+                                Icon(Icons.arrow_forward_ios_rounded,
+                                    color: L.error, size: 14),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      // CONTENT BASED ON PIVOT
+                      if (pivot == 1) ...[
+                        // FAMILY CIRCLE (Monitoring others)
+                        if (state.monitoredPatients.isEmpty)
+                          _buildEmptyMonitoringState(L, onJoin)
+                              .animate()
+                              .fadeIn(duration: 600.ms)
+                        else ...[
+                          ListView.builder(
+                            padding: EdgeInsets.zero,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: state.monitoredPatients.length,
+                            itemBuilder: (context, index) {
+                              final p = state.monitoredPatients[index];
+                              return PatientCard(
+                                patient: p,
+                                state: state,
+                                L: L,
+                                onTap: () {
+                                  onDashboard(Caregiver(
+                                    id: 0,
+                                    name: p['name'] ?? 'Patient',
+                                    relation: p['relation'] ?? 'Family',
+                                    patientUid: p['uid'],
+                                    addedAt: p['addedAt'] ?? 'just now',
+                                    avatar: p['avatar'] ?? '👤',
+                                  ));
+                                },
+                              ).animate().fadeIn(
+                                  delay: (100 + index * 50).ms, duration: 500.ms);
+                            },
+                          ),
+                        ],
+                      ] else ...[
+                        // ACCOUNT SECURITY / MY CAREGIVERS
+                        if (state.caregivers.isEmpty)
+                          _buildEmptyState(L, onAddCg)
+                              .animate()
+                              .fadeIn(duration: 600.ms)
+                        else ...[
+                          ListView.builder(
+                            padding: EdgeInsets.zero,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: state.caregivers.length,
+                            itemBuilder: (context, index) => CaregiverCard(
+                              cg: state.caregivers[index],
+                              state: state,
+                              L: L,
+                              onDashboard: () =>
+                                  onDashboard(state.caregivers[index]),
+                            ).animate().fadeIn(
+                                delay: (100 + index * 50).ms, duration: 500.ms),
+                          ),
+                        ],
+                      ],
+
+                      const SizedBox(height: 32),
+
+                      // ALERT LOG
+                      if (state.missedAlerts.isNotEmpty) ...[
+                        Text('Recent Activity',
+                            style: AppTypography.titleLarge.copyWith(
+                              color: L.primary,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                              letterSpacing: -0.3,
+                            )),
+                        const SizedBox(height: 14),
+                        ListView.builder(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: state.missedAlerts.length,
+                          itemBuilder: (context, index) => AlertLogCard(
+                            alert: state.missedAlerts[index],
+                            L: L,
+                            onTap: () =>
+                                onAlertDetail(state.missedAlerts[index]),
+                          ).animate().fadeIn(
+                              delay: (300 + index * 50).ms, duration: 500.ms),
+                        ),
+                      ],
+
+                      const SizedBox(height: 24),
+                      SimulateMissCard(L: L, onSimulate: onEscalationDemo),
+                      const SizedBox(height: 140),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
+
+          // ── PREMIUM HEADER ──
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: _FamilyHeader(
+              scrollOffset: scrollController.hasClients ? scrollController.offset : 0,
+              L: L,
+              onAdd: onAddCg,
+              onJoin: onJoin,
+            ),
+          ),
         ],
       ),
+      floatingActionButton: pivot == 1
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(bottom: 90),
+              child: FloatingActionButton.extended(
+                onPressed: onAddCg,
+                backgroundColor: L.text,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                icon: const Icon(Icons.add_rounded, color: Colors.white),
+                label: const Text('Add Guardian',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5)),
+              ),
+            ).animate().scale(delay: 400.ms, curve: Curves.easeOutBack),
     );
   }
 
   Widget _buildEmptyState(AppThemeColors L, VoidCallback onAddCg) {
     return PremiumEmptyState(
-      title: 'No caregivers yet',
+      title: 'No guardians found',
       subtitle:
-          'Add your first caregiver to start monitoring your medication adherence and get emergency alerts.',
-      emoji: '👥',
-      actionLabel: 'Add Caregiver',
+          'Invite family or medical professionals to monitor your medication safety.',
+      emoji: '🛡️',
+      actionLabel: 'Invite Guardian',
       onAction: onAddCg,
     );
   }
 
   Widget _buildEmptyMonitoringState(AppThemeColors L, VoidCallback onJoin) {
     return PremiumEmptyState(
-      title: 'No Protected People',
+      title: 'Protect your family',
       subtitle:
-          'Join as a caregiver to monitor your family members\' health in real-time.',
-      icon: Icons.shield_outlined,
-      actionLabel: 'Join as Caregiver',
+          'Join as a caregiver to see real-time health updates for your loved ones.',
+      emoji: '❤️',
+      actionLabel: 'Join Circle',
       onAction: onJoin,
     );
   }
+}
+
+class _CompactPivotPill extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+  final AppThemeColors L;
+
+  const _CompactPivotPill({
+    required this.label,
+    required this.active,
+    required this.onTap,
+    required this.L,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticEngine.selection();
+        onTap();
+      },
+      child: AnimatedContainer(
+        duration: 200.ms,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? L.card : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.labelLarge.copyWith(
+            color: active ? L.text : L.sub,
+            fontSize: 12,
+            fontWeight: active ? FontWeight.w900 : FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FamilyHeader extends StatelessWidget {
+  final double scrollOffset;
+  final AppThemeColors L;
+  final VoidCallback onAdd, onJoin;
+
+  const _FamilyHeader({
+    required this.scrollOffset,
+    required this.L,
+    required this.onAdd,
+    required this.onJoin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final double opacity = (scrollOffset / 60).clamp(0.0, 1.0);
+
+    return AnimatedContainer(
+      duration: 200.ms,
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+      decoration: BoxDecoration(
+        color: L.bg.withValues(alpha: opacity * 0.95),
+        border: Border(
+            bottom: BorderSide(
+                color: L.border.withValues(alpha: opacity * 0.4),
+                width: 1)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Family Circle',
+                    style: AppTypography.headlineLarge.copyWith(
+                      color: L.text,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 26,
+                      letterSpacing: -1.0,
+                    ),
+                  ),
+                  Text(
+                    'Health is better shared',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: L.sub,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: onJoin,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: L.fill.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: L.border.withValues(alpha: 0.3)),
+                ),
+                child: Center(
+                    child: Icon(Icons.qr_code_scanner_rounded,
+                        size: 20, color: L.text)),
+              ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: onAdd,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: L.primary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                    child: Icon(Icons.add_rounded, color: Colors.white, size: 22)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CircleStatBento extends StatelessWidget {
+  final String label, value;
+  final IconData icon;
+  final Color? iconColor;
+  final AppThemeColors L;
+  const _CircleStatBento({required this.label, required this.value, required this.icon, this.iconColor, required this.L});
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: L.card,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: L.border.withValues(alpha: 0.5)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 14, color: iconColor ?? L.sub.withValues(alpha: 0.5)),
+            const SizedBox(width: 8),
+            Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub, fontWeight: FontWeight.w600, fontSize: 10, letterSpacing: 0.5)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(value, style: AppTypography.titleLarge.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: -0.5)),
+      ],
+    ),
+  );
 }

@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/app_state.dart';
-import '../../widgets/smoothing_text.dart';
 import '../../domain/entities/medicine.dart';
 import '../../domain/entities/scan_result.dart';
 import '../../theme/app_theme.dart';
@@ -24,6 +23,7 @@ import '../../core/utils/haptic_engine.dart';
 import '../../widgets/common/app_loading_indicator.dart';
 import '../../core/utils/result.dart';
 import '../../widgets/common/bouncing_button.dart';
+import '../../widgets/common/mesh_gradient.dart';
 
 class ScanTab extends StatefulWidget {
   final void Function(Medicine)? onSave;
@@ -62,7 +62,6 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     'Checking interactions...',
     'Finalising results...',
   ];
-  final List<String> _scanStepIcons = ['🔍', '💊', '⚡', '✅'];
 
   final List<Map<String, dynamic>> _categories = [
     {'name': 'Tablet', 'icon': Icons.medication_rounded},
@@ -213,9 +212,9 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
       _scanStep = 0;
     });
 
-    // Cycle through scan steps for animation
+    // Cycle through scan steps for animation (Accelerated to feel like Cal AI)
     Future.doWhile(() async {
-      await Future.delayed(const Duration(milliseconds: 1400));
+      await Future.delayed(const Duration(milliseconds: 800));
       if (!mounted || !_isScanning) return false;
       HapticEngine.light();
       setState(() => _scanStep = (_scanStep + 1) % _scanSteps.length);
@@ -363,7 +362,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadius.m),
                 ),
                 child: Center(
                   child: Text(
@@ -421,23 +420,23 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
           else
             const Center(child: AppLoadingIndicator(size: 40)),
 
-          // 2. Scan Frame Brackets
+          // 2. Scan Frame Brackets (Pro Minimalist)
           Center(
             child: Container(
-              margin: const EdgeInsets.only(bottom: 100), // Offset slightly up
+              margin: const EdgeInsets.only(bottom: 80),
               width: size.width * 0.8,
               height: size.width * 0.8,
               child: RepaintBoundary(
                 child: CustomPaint(
-                  painter: ScanFramePainter(
+                  painter: _ProScanFramePainter(
                     category: _selectedCategory,
-                    primaryColor: context.L.primary,
                   ),
                   child: _buildScanningLine(),
                 ),
               ),
             ),
-          ).animate().scale(begin: const Offset(0.9, 0.9), delay: 200.ms),
+          ).animate().scale(begin: const Offset(0.95, 0.95), duration: 600.ms),
+
 
           Positioned(
             top: MediaQuery.of(context).padding.top + 16,
@@ -491,212 +490,228 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
   }
 
   Widget _buildAnalyzingState() {
+    final L = context.L;
     return Scaffold(
-      backgroundColor: AppColors.black,
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          const Positioned.fill(
+            child: ColoredBox(color: Colors.black),
+          ),
+
+          SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // ── Hero Scanner Visual (Pro B&W) ──────────────────
+                    if (_imageFile != null)
+                      _buildPulsingThumbnail(L)
+                    else
+                      const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 64),
+
+                    const SizedBox(height: 64),
+
+                    // ── Progress & Steps ──
+                    _buildStepIndicator(L),
+                    
+                    const SizedBox(height: 48),
+
+                    AnimatedSwitcher(
+                      duration: 300.ms,
+                      child: Text(
+                        _scanSteps[_scanStep].toUpperCase(),
+                        key: ValueKey(_scanStep),
+                        textAlign: TextAlign.center,
+                        style: AppTypography.labelMedium.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 3.0,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'PRECISION SCANNING • VER v3.0',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            bottom: 64,
+            left: 0,
+            right: 0,
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // ── Image thumbnail with pulsing glow ──────────────────
-                if (_imageFile != null)
-                  AnimatedBuilder(
-                    animation: _pulseController,
-                    builder: (context, _) {
-                      final glow = 0.15 + _pulseController.value * 0.2;
-                      return Container(
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(32),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primaryBlue.withValues(alpha: glow),
-                              blurRadius: 40,
-                              spreadRadius: 8,
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(30),
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Image.file(_imageFile!,
-                                  fit: BoxFit.cover, width: 140, height: 140),
-                              Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColors.primaryBlue
-                                        .withValues(alpha: 0.4 + _pulseController.value * 0.3),
-                                    width: 2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  )
-                else
-                  Container(
-                    width: 140,
-                    height: 140,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(32),
-                      border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.3)),
-                    ),
-                    child: const Center(
-                      child: Icon(Icons.document_scanner_rounded,
-                          color: AppColors.primaryBlue, size: 48),
-                    ),
-                  ),
-
-                const SizedBox(height: 36),
-
-                // ── Animated step label ────────────────────────────────
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 450),
-                  transitionBuilder: (child, anim) => FadeTransition(
-                    opacity: anim,
-                    child: SlideTransition(
-                      position:
-                          Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero)
-                              .animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
-                      child: child,
-                    ),
-                  ),
-                  child: SmoothingText(
-                    key: ValueKey(_scanStep),
-                    text: '${_scanStepIcons[_scanStep]}  ${_scanSteps[_scanStep]}',
-                    style: AppTypography.titleLarge.copyWith(
-                      color: Colors.white,
-                      letterSpacing: -0.2,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 20,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // ── Step progress pills ───────────────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(_scanSteps.length, (i) {
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeOutCubic,
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: i == _scanStep ? 28 : 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: i <= _scanStep
-                            ? AppColors.primaryBlue
-                            : Colors.white12,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    );
-                  }),
-                ),
-
-                const SizedBox(height: 40),
-
-                // ── Step list ─────────────────────────────────────────
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.04),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                  ),
-                  child: Column(
-                    children: List.generate(_scanSteps.length, (i) {
-                      final done = i < _scanStep;
-                      final active = i == _scanStep;
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: i < _scanSteps.length - 1 ? 16 : 0),
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 500),
-                          opacity: done || active ? 1.0 : 0.3,
-                          child: Row(
-                            children: [
-                              // Step circle
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 400),
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: done
-                                      ? AppColors.primaryBlue
-                                      : active
-                                          ? AppColors.primaryBlue.withValues(alpha: 0.15)
-                                          : Colors.white.withValues(alpha: 0.05),
-                                  border: Border.all(
-                                    color: done || active
-                                        ? AppColors.primaryBlue
-                                        : Colors.white12,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                child: Center(
-                                  child: done
-                                      ? const Icon(Icons.check_rounded,
-                                          size: 16, color: Colors.white)
-                                      : active
-                                          ? const AppLoadingIndicator(size: 14)
-                                          : Text(
-                                              '${i + 1}',
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.w900,
-                                                  fontSize: 11,
-                                                  color: Colors.white38),
-                                            ),
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Text(
-                                  '${_scanStepIcons[i]}  ${_scanSteps[i]}',
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    color: done || active
-                                        ? Colors.white
-                                        : Colors.white38,
-                                    fontWeight: active
-                                        ? FontWeight.w800
-                                        : FontWeight.w500,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-                const SizedBox(height: 20),
+                Container(width: 4, height: 4, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+                const SizedBox(width: 12),
                 Text(
-                  'AI-powered analysis in progress...',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: Colors.white38,
-                    fontWeight: FontWeight.w500,
+                  'ENCRYPTED ANALYSIS',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2.0,
                   ),
                 ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
+
+
+  Widget _buildPulsingThumbnail(AppThemeColors L) {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, _) {
+        final glow = 0.05 + _pulseController.value * 0.1;
+        return Container(
+          width: 180,
+          height: 180,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.white.withValues(alpha: glow),
+                blurRadius: 40,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.file(_imageFile!, fit: BoxFit.cover),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        L.primary.withValues(alpha: 0.2),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                  ),
+                ),
+
+                _buildScanningEffect(),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildScanningEffect() {
+    return AnimatedBuilder(
+      animation: _scanLineController,
+      builder: (context, _) {
+        return Positioned(
+          top: _scanLineController.value * 180,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 2,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(color: Colors.white.withValues(alpha: 0.8), blurRadius: 10, spreadRadius: 2)
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStepIndicator(AppThemeColors L) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(_scanSteps.length, (i) {
+        final isActive = i == _scanStep;
+        final isDone = i < _scanStep;
+        return Expanded(
+          child: Row(
+            children: [
+              AnimatedContainer(
+                duration: 400.ms,
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDone ? Colors.white : Colors.transparent,
+                  border: Border.all(
+                    color: isActive || isDone ? Colors.white : Colors.white12,
+                    width: 1.5,
+                  ),
+                ),
+
+                child: Center(
+                  child: isDone
+                      ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
+                      : isActive
+                          ? const AppLoadingIndicator(size: 14)
+                          : Text('${i + 1}',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: Colors.white38,
+                                fontWeight: FontWeight.w900,
+                              )),
+                ),
+              ),
+              if (i < _scanSteps.length - 1)
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    color: isDone ? Colors.white : Colors.white12,
+
+                  ),
+                ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildFallBackScanner(AppThemeColors L) {
+    return Container(
+      width: 140,
+      height: 140,
+      decoration: BoxDecoration(
+        color: L.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: L.primary.withValues(alpha: 0.3)),
+      ),
+      child: Center(
+        child: Icon(Icons.document_scanner_rounded, color: L.primary, size: 48),
+      ),
+    );
+  }
+
 
   Widget _buildScanningLine() {
     return AnimatedBuilder(
@@ -710,28 +725,28 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
           case 'Beauty':
             return _buildBeautyAnimation();
           default:
-            return _buildTabletAnimation();
+            return _buildProTabletAnimation();
         }
       },
     );
   }
 
-  Widget _buildTabletAnimation() {
+  Widget _buildProTabletAnimation() {
     return Stack(
       children: [
         Positioned(
-          top: _scanLineController.value *
-              (MediaQuery.of(context).size.width * 0.75),
+          top: _scanLineController.value * (MediaQuery.of(context).size.width * 0.7),
           left: 0,
           right: 0,
           child: Center(
             child: Container(
-              height: 4,
-              width: MediaQuery.of(context).size.width * 0.6,
-              decoration: BoxDecoration(
-                color: context.L.primary,
-                borderRadius: BorderRadius.circular(2),
-                boxShadow: AppShadows.glow(context.L.primary, intensity: 0.2),
+              height: 1.5,
+              width: MediaQuery.of(context).size.width * 0.7,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(color: Colors.white, blurRadius: 10, spreadRadius: 1)
+                ],
               ),
             ),
           ),
@@ -739,6 +754,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
       ],
     );
   }
+
 
   Widget _buildLiquidAnimation() {
     return Center(
@@ -1149,71 +1165,46 @@ class _ResultModalState extends State<_ResultModal> {
       isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
-        decoration: BoxDecoration(
-          color: context.L.bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
-          border: Border.all(
-              color: context.L.border.withValues(alpha: 0.5), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.black.withValues(alpha: 0.5),
-              blurRadius: 40,
-              offset: const Offset(0, -10),
-            )
-          ],
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle
             Container(
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: context.L.border.withValues(alpha: 0.3),
+                color: Colors.black.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 32),
-            Container(
-              width: 84,
-              height: 84,
-              decoration: BoxDecoration(
-                color: context.L.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-                border: Border.all(
-                    color: context.L.primary.withValues(alpha: 0.2), width: 2),
-              ),
-              child: Center(
-                  child: Text('🛡️',
-                      style:
-                          AppTypography.displayMedium.copyWith(fontSize: 44))),
-            ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
-                begin: const Offset(1, 1),
-                end: const Offset(1.05, 1.05),
-                duration: 2.seconds),
+            const Text('🛡️', style: TextStyle(fontSize: 44)),
             const SizedBox(height: 28),
             Text(
-              "Secure Your Health Data",
+              "Secure Your Data",
               textAlign: TextAlign.center,
               style: AppTypography.displayLarge.copyWith(
-                color: context.L.text,
-                fontSize: 28,
+                color: Colors.black,
+                fontSize: 26,
                 fontWeight: FontWeight.w900,
-                letterSpacing: -1.0,
+                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              "Sign in now to sync your medicines and never lose your streak. It only takes a second.",
+              "Sign in to sync your medicines and maintain your medical history safely.",
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(
-                color: context.L.sub,
-                fontSize: 16,
+                color: Colors.black.withValues(alpha: 0.6),
+                fontSize: 15,
                 height: 1.5,
                 fontWeight: FontWeight.w500,
               ),
             ),
+
             const SizedBox(height: 40),
             BouncingButton(
               onTap: () async {
@@ -1241,12 +1232,12 @@ class _ResultModalState extends State<_ResultModal> {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: const BoxDecoration(
-                          color: AppColors.white, shape: BoxShape.circle),
+                          color: Colors.white, shape: BoxShape.circle),
                       child: const Text("G",
                           style: TextStyle(
                               fontWeight: FontWeight.w900,
-                              fontSize: 14,
-                              color: AppColors.black)),
+                              color: Colors.black,
+                              fontSize: 12)),
                     ),
                     const SizedBox(width: 14),
                     Text("Continue with Google",
@@ -1283,27 +1274,27 @@ class _ResultModalState extends State<_ResultModal> {
   }
 
   void _showReviewHelp() {
-    final L = context.L;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.edit_note_rounded, color: L.text),
+            const Icon(Icons.edit_note_rounded, color: Colors.white, size: 20),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
                 child: Text(
-                    "Everything is editable! Tap any text field to correct or add details.")),
+              "Everything is editable. Tap to correct details.",
+              style: AppTypography.labelMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+            )),
           ],
         ),
-        backgroundColor: L.card,
-        elevation: 10,
+        backgroundColor: Colors.black,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(20),
-        duration: const Duration(seconds: 4),
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -1312,191 +1303,130 @@ class _ResultModalState extends State<_ResultModal> {
     return Container(
       margin: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        top: 12,
+        top: 24,
+        left: 12,
+        right: 12,
       ),
       decoration: BoxDecoration(
-        color: context.L.card,
+        color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border.all(color: context.L.border, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.5),
-            blurRadius: 30,
-            offset: const Offset(0, -10),
-          ),
-        ],
+        border: Border.all(color: Colors.black.withValues(alpha: 0.1), width: 1),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 12),
           Container(
-            width: 48,
-            height: 6,
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
-              color: L.border.withValues(alpha: 0.4),
+              color: Colors.black.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (widget.result.systemBusy)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 24),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: L.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                            color: L.primary.withValues(alpha: 0.2),
-                            width: 1.5),
-                        boxShadow: [
-                          BoxShadow(
-                              color: L.primary.withValues(alpha: 0.05),
-                              blurRadius: 20,
-                              spreadRadius: 2),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                                color: L.primary.withValues(alpha: 0.1),
-                                shape: BoxShape.circle),
-                            child: const Center(
-                                child:
-                                    Text("✨", style: TextStyle(fontSize: 20))),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+
+                const SizedBox(height: 24),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (widget.result.systemBusy)
+                          _buildSmartAssistBanner(L)
+                              .animate()
+                              .fadeIn(duration: 600.ms)
+                              .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuart),
+
+                        // Verification Badge
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildStatusBadge(
+                                widget.result.identified, widget.result.systemBusy),
+                            Row(
                               children: [
-                                Text(
-                                  "SMART ASSIST ACTIVE",
-                                  style: AppTypography.labelSmall.copyWith(
-                                    color: L.primary,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "Our AI is offline but your photo is ready. Please confirm the details below.",
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: L.text.withValues(alpha: 0.8),
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.4,
-                                  ),
-                                ),
+                                _buildHeaderAction(Icons.share_rounded, () {
+                                   HapticEngine.selection();
+                                   ShareService.shareAchievement(title: 'AI Scan Result', subtitle: 'Checking ${_nameController.text}');
+                                }, L),
+                                const SizedBox(width: 8),
+                                _buildHeaderAction(Icons.help_outline_rounded, _showReviewHelp, L),
                               ],
                             ),
-                          ),
-                        ],
-                      ),
-                    )
-                        .animate()
-                        .fadeIn(duration: 600.ms)
-                        .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuart),
-
-                  // Verification Badge
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildStatusBadge(
-                          widget.result.identified, widget.result.systemBusy),
-                      BouncingButton(
-                        onTap: () {
-                          HapticEngine.light();
-                          _showReviewHelp();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: L.fill,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color: L.border.withValues(alpha: 0.4)),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                "Review Details",
-                                style: AppTypography.labelMedium.copyWith(
-                                  color: L.text.withValues(alpha: 0.7),
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.2,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Icon(Icons.help_outline_rounded,
-                                  size: 14,
-                                  color: L.text.withValues(alpha: 0.4)),
-                            ],
-                          ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
+
                   const SizedBox(height: 20),
 
                   // Main Title & Category (Now Editable)
-                  _buildEditableField(
-                    controller: _nameController,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    hint: widget.result.category == 'Beauty'
-                        ? "Product Name"
-                        : "Medicine Name",
-                    L: L,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
+                  // ── Hero Analysis Bento Grid ──────────────────
+                  _StaggeredBentoGrid(
                     children: [
-                      Expanded(
-                          child: _buildEditableChip(
-                              controller: _brandController,
-                              icon: "🏢",
-                              hint: "Brand",
-                              L: L)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          child: _buildEditableChip(
-                              controller: _doseController,
-                              icon: "⚡",
-                              hint: "Dose",
-                              L: L)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          child: _buildEditableChip(
-                              controller: _formController,
-                              icon: "📦",
-                              hint: "Form",
-                              L: L)),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildEditableChip(
+                      _BentoMetricTile(
+                        flex: 2,
+                        title: "ID_NAME",
+                        icon: "N",
+                        child: _buildEditableField(
+                          controller: _nameController,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          hint: "Medicine Name",
+                          L: L,
+                        ),
+                      ),
+                      _BentoMetricTile(
+                        flex: 1,
+                        title: "ID_BRAND",
+                        icon: "B",
+                        child: _buildEditableField(
+                          controller: _brandController,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          hint: "Brand",
+                          L: L,
+                        ),
+                      ),
+                      _BentoMetricTile(
+                        flex: 1,
+                        title: "ID_REQD_DOSE",
+                        icon: "D",
+                        child: _buildEditableField(
+                          controller: _doseController,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          hint: "Dose",
+                          L: L,
+                        ),
+                      ),
+                      _BentoMetricTile(
+                        flex: 1,
+                        title: "ID_FORM",
+                        icon: "F",
+                        child: _buildEditableField(
+                          controller: _formController,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          hint: "Form",
+                          L: L,
+                        ),
+                      ),
+                      _BentoMetricTile(
+                        flex: 1,
+                        title: "ID_UNIT",
+                        icon: "U",
+                        child: _buildEditableField(
                           controller: _unitController,
-                          icon: "📐",
-                          hint: "Unit (ml, mg, tablets)",
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          hint: "Unit",
                           L: L,
                         ),
                       ),
                     ],
                   ),
+
 
                   const SizedBox(height: 32),
 
@@ -1667,44 +1597,36 @@ class _ResultModalState extends State<_ResultModal> {
                       );
                       widget.onSave(med);
 
-                      // If NOT logged in, show auth prompt
                       if (!AuthService.isLoggedIn) {
                         _showAuthPrompt(context);
                       }
                     },
                     child: Container(
                       width: double.infinity,
-                      height: 70,
+                      height: 64,
                       decoration: BoxDecoration(
-                        color: context.L.text,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: context.L.text.withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          )
-                        ],
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.check_circle_rounded, color: context.L.bg),
-                          const SizedBox(width: 12),
-                          Text(
-                            "Confirm & Save Medicine",
-                            style: AppTypography.titleLarge.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: context.L.bg,
-                                letterSpacing: -0.5),
-                          ),
-                        ],
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 20),
+                            const SizedBox(width: 16),
+                            Text(
+                              "FINALIZE REPORT",
+                              style: AppTypography.labelLarge.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: 2.0),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(
-                      delay: 3.seconds,
-                      duration: 2.seconds,
-                      color: L.bg.withValues(alpha: 0.3)),
+                  ),
+
                   const SizedBox(height: 16),
                 ],
               ),
@@ -1715,46 +1637,96 @@ class _ResultModalState extends State<_ResultModal> {
     );
   }
 
-  Widget _buildStatusBadge(bool identified, bool systemBusy) {
-    final L = context.L;
 
-    String label = identified ? "AI VERIFIED" : "MANUAL REVIEW";
-    IconData icon =
-        identified ? Icons.verified_rounded : Icons.help_center_rounded;
-    Color color = identified ? L.text : L.sub;
-    Color bg = identified ? L.fill : L.fill.withValues(alpha: 0.5);
 
-    if (systemBusy) {
-      label = "SMART ASSIST";
-      icon = Icons.auto_awesome_rounded;
-      color = L.primary;
-      bg = L.primary.withValues(alpha: 0.1);
-    }
 
+
+
+  Widget _buildSmartAssistBanner(AppThemeColors L) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
+        color: L.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: L.primary.withValues(alpha: 0.1), width: 1.5),
+        boxShadow: L.shadowSoft,
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: AppTypography.labelSmall.copyWith(
-              color: color,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: L.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Text("✨", style: AppTypography.bodyLarge),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("SMART ASSIST ACTIVE",
+                  style: AppTypography.labelSmall.copyWith(color: L.primary, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                const SizedBox(height: 4),
+                Text("Verify detected details below.",
+                  style: AppTypography.bodySmall.copyWith(color: L.text.withValues(alpha: 0.8), fontWeight: FontWeight.w600)),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildHeaderAction(IconData icon, VoidCallback onTap, AppThemeColors L) {
+    return BouncingButton(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: L.card,
+          shape: BoxShape.circle,
+          border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.5),
+          boxShadow: L.shadowSoft,
+        ),
+        child: Icon(icon, size: 18, color: L.text.withValues(alpha: 0.7)),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(bool identified, bool systemBusy) {
+    String label = identified ? "VERIFIED" : "MANUAL";
+    IconData icon = identified ? Icons.verified_rounded : Icons.info_rounded;
+    Color color = Colors.black;
+    Color bg = Colors.black.withValues(alpha: 0.05);
+
+    if (systemBusy) {
+      label = "SMART_ASSIST";
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.1), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 6),
+          Text(label,
+              style: AppTypography.labelSmall.copyWith(
+                color: color,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              )),
+        ],
+      ),
+    );
+  }
+
+
 
   Widget _buildEditableField({
     required TextEditingController controller,
@@ -1770,12 +1742,10 @@ class _ResultModalState extends State<_ResultModal> {
         fontWeight: fontWeight,
         color: L.text,
         letterSpacing: -1.0,
-        height: 1.1,
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: AppTypography.bodyMedium
-            .copyWith(color: L.text.withValues(alpha: 0.3)),
+        hintStyle: AppTypography.bodyLarge.copyWith(color: L.text.withValues(alpha: 0.2)),
         border: InputBorder.none,
         isDense: true,
         contentPadding: EdgeInsets.zero,
@@ -1783,44 +1753,6 @@ class _ResultModalState extends State<_ResultModal> {
     );
   }
 
-  Widget _buildEditableChip({
-    required TextEditingController controller,
-    required String icon,
-    required String hint,
-    required AppThemeColors L,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: L.fill,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: L.border),
-      ),
-      child: Row(
-        children: [
-          Text(icon, style: AppTypography.bodySmall.copyWith(fontSize: 12)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              style: AppTypography.labelMedium.copyWith(
-                color: L.text,
-                fontWeight: FontWeight.w700,
-              ),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: AppTypography.labelMedium
-                    .copyWith(color: L.text.withValues(alpha: 0.3)),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSectionHeader(String title, AppThemeColors L) {
     return Text(
@@ -1846,45 +1778,43 @@ class _ResultModalState extends State<_ResultModal> {
       return const SizedBox();
     }
     return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: L.fill,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border, width: 1.5),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.1), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon,
-                  color: accentColor ?? L.text.withValues(alpha: 0.5),
-                  size: 20),
-              const SizedBox(width: 12),
+              Icon(icon, color: Colors.black, size: 16),
+              const SizedBox(width: 8),
               Text(
-                title,
-                style: AppTypography.titleMedium.copyWith(
-                  color: L.text.withValues(alpha: 0.9),
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
+                title.toUpperCase(),
+                style: AppTypography.labelSmall.copyWith(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  letterSpacing: 1.0,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           TextField(
             controller: controller,
             maxLines: null,
             style: AppTypography.bodyMedium.copyWith(
-              color: L.text.withValues(alpha: 0.6),
-              height: 1.4,
+              color: Colors.black,
+              height: 1.5,
               fontWeight: FontWeight.w500,
             ),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: AppTypography.bodyMedium
-                  .copyWith(color: L.text.withValues(alpha: 0.3)),
+              hintStyle: AppTypography.bodySmall.copyWith(color: Colors.black.withValues(alpha: 0.2)),
               border: InputBorder.none,
               isDense: true,
               contentPadding: EdgeInsets.zero,
@@ -1895,13 +1825,15 @@ class _ResultModalState extends State<_ResultModal> {
     );
   }
 
+
   Widget _buildInventorySelector(AppThemeColors L) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: L.fill,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border, width: 1.5),
+        color: L.fill.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
+        boxShadow: L.shadowSoft,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1987,9 +1919,10 @@ class _ResultModalState extends State<_ResultModal> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: context.L.fill,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: context.L.border, width: 1.5),
+        color: context.L.fill.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        border: Border.all(color: context.L.border.withValues(alpha: 0.05), width: 1.5),
+        boxShadow: L.shadowSoft,
       ),
       child: Column(
         children: [
@@ -2041,11 +1974,12 @@ class _ResultModalState extends State<_ResultModal> {
           },
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 18),
-            decoration: BoxDecoration(
-              color: L.fill,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: L.border, width: 1.5),
-            ),
+          decoration: BoxDecoration(
+            color: L.fill.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(AppRadius.l),
+            border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
+            boxShadow: L.shadowSoft,
+          ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -2112,9 +2046,10 @@ class _ResultModalState extends State<_ResultModal> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: L.fill,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border, width: 1.5),
+        color: L.fill.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
+        boxShadow: L.shadowSoft,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2235,8 +2170,9 @@ class _ResultModalState extends State<_ResultModal> {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: context.L.card,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          border: Border.all(color: context.L.border, width: 1.5),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+          border: Border.all(color: context.L.border.withValues(alpha: 0.1), width: 1.5),
+          boxShadow: context.L.shadowSoft,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -2277,6 +2213,89 @@ class _ResultModalState extends State<_ResultModal> {
   }
 }
 
+class _BentoMetricTile extends StatelessWidget {
+  final String title;
+  final String icon;
+  final Widget child;
+  final int flex;
+
+  const _BentoMetricTile({
+    required this.title,
+    required this.icon,
+    required this.child,
+    this.flex = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+    return Flexible(
+      flex: flex,
+      child: Container(
+        margin: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.1), width: 1),
+        ),
+
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Text(icon, style: const TextStyle(fontSize: 14)),
+                const SizedBox(width: 8),
+                Text(
+                  title.toUpperCase(),
+                  style: AppTypography.labelSmall.copyWith(
+                    color: L.text.withValues(alpha: 0.4),
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.0,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StaggeredBentoGrid extends StatelessWidget {
+  final List<Widget> children;
+  const _StaggeredBentoGrid({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(children: [children[0]]), // Large title tile
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            children[1], // Brand
+            children[2], // Dose
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            children[3], // Form
+            children[4], // Unit
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class _ModalQtyBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -2300,6 +2319,46 @@ class _ModalQtyBtn extends StatelessWidget {
   }
 }
 
+class _ProScanFramePainter extends CustomPainter {
+  final String category;
+  _ProScanFramePainter({required this.category});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    final double len = 20.0;
+    
+    // Top Left
+    canvas.drawLine(const Offset(0, 0), Offset(0, len), paint);
+    canvas.drawLine(const Offset(0, 0), Offset(len, 0), paint);
+    
+    // Top Right
+    canvas.drawLine(Offset(size.width, 0), Offset(size.width - len, 0), paint);
+    canvas.drawLine(Offset(size.width, 0), Offset(size.width, len), paint);
+    
+    // Bottom Left
+    canvas.drawLine(Offset(0, size.height), Offset(0, size.height - len), paint);
+    canvas.drawLine(Offset(0, size.height), Offset(len, size.height), paint);
+    
+    // Bottom Right
+    canvas.drawLine(Offset(size.width, size.height), Offset(size.width - len, size.height), paint);
+    canvas.drawLine(Offset(size.width, size.height), Offset(size.width, size.height - len), paint);
+
+    // Center Crosshair
+    final double crossLen = 6.0;
+    final center = Offset(size.width / 2, size.height / 2);
+    canvas.drawLine(Offset(center.dx - crossLen, center.dy), Offset(center.dx + crossLen, center.dy), paint);
+    canvas.drawLine(Offset(center.dx, center.dy - crossLen), Offset(center.dx, center.dy + crossLen), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class ScanFramePainter extends CustomPainter {
   final String category;
   final Color primaryColor;
@@ -2309,16 +2368,25 @@ class ScanFramePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = primaryColor
-      ..strokeWidth = 4.0
+      ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final glowPaint = Paint()
-      ..color = primaryColor.withValues(alpha: 0.4)
-      ..strokeWidth = 12.0
+      ..color = primaryColor.withValues(alpha: 0.3)
+      ..strokeWidth = 8.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+
+    // Focus Overlay (Glass Look)
+    final rectPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.1)
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height), const Radius.circular(32)), 
+        rectPaint);
 
     switch (category) {
       case 'Liquid':
@@ -2335,47 +2403,46 @@ class ScanFramePainter extends CustomPainter {
     }
   }
 
-  void _paintTabletFrame(
-      Canvas canvas, Size size, Paint paint, Paint glowPaint) {
-    const cornerSize = 48.0;
+  void _paintTabletFrame(Canvas canvas, Size size, Paint paint, Paint glowPaint) {
+    const cornerSize = 40.0;
+    const padding = 20.0;
     final path = Path();
+    
     // Top Left
-    path.moveTo(0, cornerSize);
-    path.lineTo(0, 0);
-    path.lineTo(cornerSize, 0);
+    path.moveTo(padding, padding + cornerSize);
+    path.lineTo(padding, padding);
+    path.lineTo(padding + cornerSize, padding);
+    
     // Top Right
-    path.moveTo(size.width - cornerSize, 0);
-    path.lineTo(size.width, 0);
-    path.lineTo(size.width, cornerSize);
+    path.moveTo(size.width - padding - cornerSize, padding);
+    path.lineTo(size.width - padding, padding);
+    path.lineTo(size.width - padding, padding + cornerSize);
+    
     // Bottom Left
-    path.moveTo(0, size.height - cornerSize);
-    path.lineTo(0, size.height);
-    path.lineTo(cornerSize, size.height);
+    path.moveTo(padding, size.height - padding - cornerSize);
+    path.lineTo(padding, size.height - padding);
+    path.lineTo(padding + cornerSize, size.height - padding);
+    
     // Bottom Right
-    path.moveTo(size.width - cornerSize, size.height);
-    path.lineTo(size.width, size.height);
-    path.lineTo(size.width, size.height - cornerSize);
+    path.moveTo(size.width - padding - cornerSize, size.height - padding);
+    path.lineTo(size.width - padding, size.height - padding);
+    path.lineTo(size.width - padding, size.height - padding - cornerSize);
 
     canvas.drawPath(path, glowPaint);
     canvas.drawPath(path, paint);
   }
 
-  void _paintLiquidFrame(
-      Canvas canvas, Size size, Paint paint, Paint glowPaint) {
-    canvas.drawCircle(
-        Offset(size.width / 2, size.height / 2), size.width / 2.2, glowPaint);
-    canvas.drawCircle(
-        Offset(size.width / 2, size.height / 2), size.width / 2.2, paint);
+  void _paintLiquidFrame(Canvas canvas, Size size, Paint paint, Paint glowPaint) {
+    canvas.drawCircle(Offset(size.width / 2, size.height / 2), size.width / 2.5, glowPaint);
+    canvas.drawCircle(Offset(size.width / 2, size.height / 2), size.width / 2.5, paint);
   }
 
-  void _paintSprayFrame(
-      Canvas canvas, Size size, Paint paint, Paint glowPaint) {
+  void _paintSprayFrame(Canvas canvas, Size size, Paint paint, Paint glowPaint) {
     final center = Offset(size.width / 2, size.height / 2);
-    const armSize = 40.0;
-    const gap = 20.0;
-
+    const armSize = 30.0;
+    const gap = 30.0;
     final path = Path();
-    // Crosshair arms
+
     path.moveTo(center.dx, gap);
     path.lineTo(center.dx, gap + armSize);
     path.moveTo(center.dx, size.height - gap);
@@ -2389,15 +2456,12 @@ class ScanFramePainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _paintBeautyFrame(
-      Canvas canvas, Size size, Paint paint, Paint glowPaint) {
+  void _paintBeautyFrame(Canvas canvas, Size size, Paint paint, Paint glowPaint) {
     final path = Path();
-    const inset = 30.0;
+    const inset = 40.0;
     path.moveTo(size.width / 2, inset);
-    path.quadraticBezierTo(
-        size.width - inset, inset, size.width - inset, size.height / 2);
-    path.quadraticBezierTo(size.width - inset, size.height - inset,
-        size.width / 2, size.height - inset);
+    path.quadraticBezierTo(size.width - inset, inset, size.width - inset, size.height / 2);
+    path.quadraticBezierTo(size.width - inset, size.height - inset, size.width / 2, size.height - inset);
     path.quadraticBezierTo(inset, size.height - inset, inset, size.height / 2);
     path.quadraticBezierTo(inset, inset, size.width / 2, inset);
 
@@ -2406,6 +2470,34 @@ class ScanFramePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant ScanFramePainter oldDelegate) =>
-      oldDelegate.category != category;
+  bool shouldRepaint(covariant ScanFramePainter oldDelegate) => oldDelegate.category != category;
 }
+
+class _MeshGradientPainter extends CustomPainter {
+  final Color baseColor;
+  final Color accentColor;
+
+  _MeshGradientPainter({required this.baseColor, required this.accentColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = baseColor
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(Offset.zero & size, paint);
+
+    final accentPaint = Paint()
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 100.0);
+
+    accentPaint.color = accentColor;
+    canvas.drawCircle(Offset(size.width * 0.1, size.height * 0.2), 250, accentPaint);
+    canvas.drawCircle(Offset(size.width * 0.9, size.height * 0.8), 300, accentPaint);
+    
+    accentPaint.color = accentColor.withValues(alpha: 0.1);
+    canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.5), 180, accentPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+

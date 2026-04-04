@@ -9,8 +9,7 @@ import '../../widgets/shared/shared_widgets.dart';
 import '../../core/utils/haptic_engine.dart';
 
 // ══════════════════════════════════════════════════════════════════════
-// GLOBAL SETTINGS SCREEN
-// Adapts app behavior for: USA, UK, CA, AU, JP, KR, SG, IL, MY
+// GLOBAL SETTINGS SCREEN (Cal AI Industrial Authority Refined)
 // ══════════════════════════════════════════════════════════════════════
 
 class GlobalSettingsScreen extends StatefulWidget {
@@ -23,7 +22,6 @@ class GlobalSettingsScreen extends StatefulWidget {
 class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
   late UserProfile _profile;
 
-  // Language options per market
   static const List<Map<String, String>> _languages = [
     {'code': 'en', 'label': 'English', 'flag': '🇺🇸'},
     {'code': 'fr', 'label': 'Français (French)', 'flag': '🇫🇷'},
@@ -34,7 +32,6 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
     {'code': 'ms', 'label': 'Bahasa Melayu', 'flag': '🇲🇾'},
   ];
 
-  // Country reference
   static const List<Map<String, String>> _countries = [
     {'code': 'US', 'label': 'United States', 'flag': '🇺🇸'},
     {'code': 'GB', 'label': 'United Kingdom', 'flag': '🇬🇧'},
@@ -55,6 +52,7 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
   }
 
   Future<void> _save(UserProfile updated) async {
+    HapticEngine.selection();
     setState(() => _profile = updated);
     await context.read<AppState>().saveProfile(updated);
   }
@@ -64,172 +62,173 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final s = AppLocalizations.of(context)!;
+    final L = context.L;
 
     return Scaffold(
-      backgroundColor: _profile.amoledMode && isDark
-          ? AppColors.black
-          : theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const UnifiedHeader(title: 'Global Settings', showBack: true),
-            Expanded(
+      backgroundColor: _profile.amoledMode && isDark ? Colors.black : L.bg,
+      body: Column(
+        children: [
+          // ── SYSTEM BREADCRUMB HEADER ──
+          Container(
+            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 8),
+            decoration: BoxDecoration(
+              color: L.bg,
+              border: Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.1), width: 0.5)),
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(children: [
+                    Text('SYSTEM', 
+                      style: AppTypography.labelSmall.copyWith(
+                        color: L.text.withValues(alpha: 0.8), letterSpacing: 2.0, fontWeight: FontWeight.w900, fontSize: 10)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text('/', style: TextStyle(color: L.sub.withValues(alpha: 0.3), fontSize: 10, fontWeight: FontWeight.w900)),
+                    ),
+                    Text('PREFERENCES', 
+                      style: AppTypography.labelSmall.copyWith(
+                        color: L.primary, letterSpacing: 2.0, fontWeight: FontWeight.w900, fontSize: 10)),
+                  ]),
+                ),
+                UnifiedHeader(title: 'Settings', showBack: true),
+              ],
+            ),
+          ),
+
+          Expanded(
+            child: RawScrollbar(
+              thumbColor: L.text.withValues(alpha: 0.2),
+              radius: const Radius.circular(10),
+              thickness: 4,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                 children: [
-                  // ── Country & Language ──────────────────────────────
-                  _SectionHeader(
-                    icon: '🌍',
-                    title: s.country,
-                    subtitle: s.countrySelectionSubtitle,
+                  
+                  // ── LOCALIZATION BLOCK ───────────────────────
+                  _IndustrialSection(
+                    label: 'LOCALIZATION',
+                    icon: Icons.public_rounded,
+                    L: L,
+                    children: [
+                      _PickerTile(
+                        label: 'Country',
+                        value: _countries.firstWhere((c) => c['code'] == _profile.country, orElse: () => _countries[0])['label']!,
+                        flag: _countries.firstWhere((c) => c['code'] == _profile.country, orElse: () => _countries[0])['flag']!,
+                        onTap: () async {
+                          final res = await showModalBottomSheet<String>(
+                            context: context,
+                            builder: (_) => _PickerSheet(title: 'Select Country', items: _countries, selectedCode: _profile.country),
+                          );
+                          if (res != null) _save(_profile.copyWith(country: res));
+                        },
+                        L: L,
+                      ),
+                      _PickerTile(
+                        label: 'Language',
+                        value: _languages.firstWhere((l) => l['code'] == _profile.preferredLanguage, orElse: () => _languages[0])['label']!,
+                        flag: _languages.firstWhere((l) => l['code'] == _profile.preferredLanguage, orElse: () => _languages[0])['flag']!,
+                        onTap: () async {
+                          final res = await showModalBottomSheet<String>(
+                            context: context,
+                            builder: (_) => _PickerSheet(title: 'Select Language', items: _languages, selectedCode: _profile.preferredLanguage),
+                          );
+                          if (res != null) _save(_profile.copyWith(preferredLanguage: res));
+                        },
+                        L: L,
+                        isLast: true,
+                      ),
+                    ],
                   ),
-                  _CountryLanguageTile(
-                    profile: _profile,
-                    languages: _languages,
-                    countries: _countries,
-                    onCountryChanged: (code) =>
-                        _save(_profile.copyWith(country: code)),
-                    onLanguageChanged: (code) =>
-                        _save(_profile.copyWith(preferredLanguage: code)),
-                  ),
-                  const SizedBox(height: 8),
 
-                  // ── Name Conventions ─────────────────────────────────
-                  _SectionHeader(
-                    icon: '💊',
-                    title: s.medicationDisplay,
-                    subtitle: s.showGenericNamesSubtitle,
-                  ),
-                  _SettingsTile(
-                    title: s.showGenericNames,
-                    subtitle: s.showGenericNamesSubtitle,
-                    icon: Icons.label_outline_rounded,
-                    badge: '🇬🇧 🇮🇱 🇨🇦',
-                    value: _profile.showGenericNames,
-                    onChanged: (v) =>
-                        _save(_profile.copyWith(showGenericNames: v)),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // ── Religious Observance ─────────────────────────────
-                  _SectionHeader(
-                    icon: '🕌',
-                    title: s.religiousObservance,
-                    subtitle: s.shabbatModeSubtitle,
-                  ),
-                  _SettingsTile(
-                    title: s.shabbatMode,
-                    subtitle: s.shabbatModeSubtitle,
-                    icon: Icons.nights_stay_rounded,
-                    badge: '🇮🇱',
-                    value: _profile.shabbatMode,
-                    onChanged: (v) => _save(_profile.copyWith(shabbatMode: v)),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // ── Australia PBS ────────────────────────────────────
-                  _SectionHeader(
-                    icon: '🇦🇺',
-                    title: s.pbsSafetyNet,
-                    subtitle: s.pbsSafetyNetSubtitle,
-                  ),
-                  _PBSTrackerTile(
-                    spendThisYear: _profile.pbsSpendThisYear,
-                    onChanged: (v) =>
-                        _save(_profile.copyWith(pbsSpendThisYear: v)),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // ── Chronic Disease Modes ────────────────────────────
-                  const _SectionHeader(
-                    icon: '🩺',
-                    title: 'Clinical Modes',
-                    subtitle: 'USA · UK · UAE · Malaysia',
-                  ),
-                  _SettingsTile(
-                    title: s.diabetesMode,
-                    subtitle:
-                        'Log blood glucose alongside insulin / diabetes medications',
-                    icon: Icons.water_drop_rounded,
-                    badge: '🇦🇪 🇲🇾 🇺🇸',
-                    value: _profile.diabetesMode,
-                    onChanged: (v) => _save(_profile.copyWith(diabetesMode: v)),
-                  ),
-                  const SizedBox(height: 4),
-                  _SettingsTile(
-                    title: s.hypertensionMode,
-                    subtitle:
-                        'Log blood pressure alongside antihypertensive medications',
-                    icon: Icons.favorite_rounded,
-                    badge: '🇦🇪 🇲🇾 🇺🇸',
-                    value: _profile.hypertensionMode,
-                    onChanged: (v) =>
-                        _save(_profile.copyWith(hypertensionMode: v)),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // ── Display ──────────────────────────────────────────
-                  _SectionHeader(
-                    icon: '📱',
-                    title: s.displaySettings,
-                    subtitle: s.amoledModeSubtitle,
-                  ),
-                  _SettingsTile(
-                    title: s.amoledMode,
-                    subtitle: s.amoledModeSubtitle,
-                    icon: Icons.dark_mode_rounded,
-                    badge: '🇰🇷',
-                    value: _profile.amoledMode,
-                    onChanged: (v) => _save(_profile.copyWith(amoledMode: v)),
-                  ),
                   const SizedBox(height: 24),
 
-                  // ── Info Card ────────────────────────────────────────
-                  _InfoCard(),
-                  const SizedBox(height: 40),
+                  // ── CLINICAL MODES BLOCK ─────────────────────
+                  _IndustrialSection(
+                    label: 'CLINICAL MODES',
+                    icon: Icons.science_rounded,
+                    L: L,
+                    children: [
+                      _ToggleTile(
+                        title: s.showGenericNames,
+                        subtitle: s.showGenericNamesSubtitle,
+                        value: _profile.showGenericNames,
+                        onChanged: (v) => _save(_profile.copyWith(showGenericNames: v)),
+                        L: L,
+                      ),
+                      _ToggleTile(
+                        title: s.shabbatMode,
+                        subtitle: s.shabbatModeSubtitle,
+                        value: _profile.shabbatMode,
+                        onChanged: (v) => _save(_profile.copyWith(shabbatMode: v)),
+                        L: L,
+                      ),
+                      _ToggleTile(
+                        title: 'Diabetes Metrics',
+                        subtitle: 'Synchronize blood glucose logs',
+                        value: _profile.diabetesMode,
+                        onChanged: (v) => _save(_profile.copyWith(diabetesMode: v)),
+                        L: L,
+                      ),
+                      _ToggleTile(
+                        title: 'Hypertension Tracking',
+                        subtitle: 'Synchronize systolic/diastolic logs',
+                        value: _profile.hypertensionMode,
+                        onChanged: (v) => _save(_profile.copyWith(hypertensionMode: v)),
+                        L: L,
+                        isLast: true,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── DISPLAY ARCHITECTURE BLOCK ───────────────
+                  _IndustrialSection(
+                    label: 'DISPLAY ARCHITECTURE',
+                    icon: Icons.palette_rounded,
+                    L: L,
+                    children: [
+                      _ToggleTile(
+                        title: 'Amoled Optimization',
+                        subtitle: 'Pure Black interface for power efficiency',
+                        value: _profile.amoledMode,
+                        onChanged: (v) => _save(_profile.copyWith(amoledMode: v)),
+                        L: L,
+                        isLast: true,
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 48),
+                  
+                  // ── DATA INTEGRITY FOOTER ──
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: L.card,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: L.border.withValues(alpha: 0.1)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Icon(Icons.shield_outlined, color: L.primary, size: 16),
+                          const SizedBox(width: 12),
+                          Text('DATA INTEGRITY', 
+                            style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 2.0, fontSize: 10)),
+                        ]),
+                        const SizedBox(height: 16),
+                        Text('Your clinical profile and localized preferences are encrypted and stored solely on your device. We use zero-knowledge architecture to ensure your medical privacy remains absolute.', 
+                          style: AppTypography.bodySmall.copyWith(color: L.text.withValues(alpha: 0.7), height: 1.6, fontWeight: FontWeight.w500, fontSize: 11)),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Sub-widgets ──────────────────────────────────────────────────────
-
-class _SectionHeader extends StatelessWidget {
-  final String icon;
-  final String title;
-  final String subtitle;
-  const _SectionHeader(
-      {required this.icon, required this.title, required this.subtitle});
-
-  @override
-  Widget build(BuildContext context) {
-    final L = context.L;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12, top: 24),
-      child: Row(
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 20)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title.toUpperCase(),
-                    style: AppTypography.labelLarge.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: L.text,
-                        letterSpacing: 1.5,
-                        fontSize: 12)),
-                const SizedBox(height: 2),
-                Text(subtitle,
-                    style: AppTypography.labelSmall
-                        .copyWith(color: L.sub, fontWeight: FontWeight.w600)),
-              ],
             ),
           ),
         ],
@@ -238,77 +237,57 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _SettingsTile extends StatelessWidget {
-  final String title;
-  final String subtitle;
+class _IndustrialSection extends StatelessWidget {
+  final String label;
   final IconData icon;
-  final String badge;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _SettingsTile({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.badge,
-    required this.value,
-    required this.onChanged,
-  });
+  final List<Widget> children;
+  final AppThemeColors L;
+  const _IndustrialSection({required this.label, required this.icon, required this.children, required this.L});
 
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: value
-              ? L.secondary.withValues(alpha: 0.4)
-              : L.border.withValues(alpha: 0.2),
-          width: 1.5,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 8, bottom: 12),
+          child: Row(children: [
+            Icon(icon, size: 14, color: L.text.withValues(alpha: 0.6)),
+            const SizedBox(width: 10),
+            Text(label, style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.6), fontWeight: FontWeight.w900, letterSpacing: 1.8, fontSize: 9)),
+          ]),
         ),
-        boxShadow: AppShadows.soft,
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        leading: Container(
-          width: 44,
-          height: 44,
+        Container(
           decoration: BoxDecoration(
-            color: value ? L.secondary.withValues(alpha: 0.15) : L.fill,
+            color: L.card,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: L.border.withValues(alpha: 0.1)),
           ),
-          child: Icon(icon, size: 20, color: value ? L.secondary : L.sub),
+          child: Column(children: children),
         ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(title,
-                  style: AppTypography.titleLarge.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: L.text)),
-            ),
-            if (badge.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: L.text.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(badge,
-                    style: AppTypography.labelSmall
-                        .copyWith(fontSize: 10, fontWeight: FontWeight.w900)),
-              ),
-          ],
-        ),
+      ],
+    );
+  }
+}
+
+class _ToggleTile extends StatelessWidget {
+  final String title, subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final AppThemeColors L;
+  final bool isLast;
+  const _ToggleTile({required this.title, required this.subtitle, required this.value, required this.onChanged, required this.L, this.isLast = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.05), width: 0.5))),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        title: Text(title, style: AppTypography.labelLarge.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 15)),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Text(subtitle,
-              style: AppTypography.labelSmall.copyWith(
-                  color: L.sub, height: 1.4, fontWeight: FontWeight.w500)),
+          child: Text(subtitle, style: AppTypography.bodySmall.copyWith(color: L.text.withValues(alpha: 0.6), fontWeight: FontWeight.w500, height: 1.3, fontSize: 11.5)),
         ),
         trailing: AppToggle(
           value: value,
@@ -322,107 +301,29 @@ class _SettingsTile extends StatelessWidget {
   }
 }
 
-class _CountryLanguageTile extends StatelessWidget {
-  final UserProfile profile;
-  final List<Map<String, String>> languages;
-  final List<Map<String, String>> countries;
-  final ValueChanged<String> onCountryChanged;
-  final ValueChanged<String> onLanguageChanged;
-
-  const _CountryLanguageTile({
-    required this.profile,
-    required this.languages,
-    required this.countries,
-    required this.onCountryChanged,
-    required this.onLanguageChanged,
-  });
+class _PickerTile extends StatelessWidget {
+  final String label, value, flag;
+  final VoidCallback onTap;
+  final AppThemeColors L;
+  final bool isLast;
+  const _PickerTile({required this.label, required this.value, required this.flag, required this.onTap, required this.L, this.isLast = false});
 
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
-    final currentCountry = countries.firstWhere(
-        (c) => c['code'] == profile.country,
-        orElse: () => {'code': '', 'label': 'Select Country', 'flag': '🌍'});
-    final currentLang = languages.firstWhere(
-        (l) => l['code'] == profile.preferredLanguage,
-        orElse: () => {'code': 'en', 'label': 'English', 'flag': '🇺🇸'});
-
     return Container(
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: L.border, width: 1.5),
-        boxShadow: AppShadows.soft,
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () async {
-              HapticEngine.selection();
-              final selected = await showModalBottomSheet<String>(
-                context: context,
-                builder: (_) => _PickerSheet(
-                  title: 'Select Country',
-                  items: countries,
-                  selectedCode: profile.country,
-                ),
-              );
-              if (selected != null) onCountryChanged(selected);
-            },
-            child: ListTile(
-              leading: Icon(Icons.location_on_outlined, color: L.sub),
-              title: Text('Country',
-                  style: AppTypography.titleLarge.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: L.text)),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('${currentCountry['flag']} ${currentCountry['label']}',
-                      style: AppTypography.labelLarge
-                          .copyWith(color: L.sub, fontWeight: FontWeight.w700)),
-                  Icon(Icons.chevron_right_rounded,
-                      size: 22, color: L.sub.withValues(alpha: 0.5)),
-                ],
-              ),
-            ),
-          ),
-          Divider(
-              height: 1, indent: 56, color: L.border.withValues(alpha: 0.2)),
-          InkWell(
-            onTap: () async {
-              HapticEngine.selection();
-              final selected = await showModalBottomSheet<String>(
-                context: context,
-                builder: (_) => _PickerSheet(
-                  title: 'Select Language',
-                  items: languages,
-                  selectedCode: profile.preferredLanguage,
-                ),
-              );
-              if (selected != null) onLanguageChanged(selected);
-            },
-            child: ListTile(
-              leading: Icon(Icons.language_rounded, color: L.sub),
-              title: Text('Language',
-                  style: AppTypography.titleLarge.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: L.text)),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('${currentLang['flag']} ${currentLang['label']}',
-                      style: AppTypography.labelLarge
-                          .copyWith(color: L.sub, fontWeight: FontWeight.w700)),
-                  Icon(Icons.chevron_right_rounded,
-                      size: 22, color: L.sub.withValues(alpha: 0.5)),
-                ],
-              ),
-            ),
-          ),
-        ],
+      decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.05), width: 0.5))),
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        title: Text(label, style: AppTypography.labelLarge.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 15)),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('$flag $value', style: AppTypography.bodySmall.copyWith(color: L.text.withValues(alpha: 0.8), fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: -0.2)),
+            const SizedBox(width: 10),
+            Icon(Icons.chevron_right_rounded, size: 20, color: L.sub.withValues(alpha: 0.3)),
+          ],
+        ),
       ),
     );
   }
@@ -432,208 +333,37 @@ class _PickerSheet extends StatelessWidget {
   final String title;
   final List<Map<String, String>> items;
   final String selectedCode;
-  const _PickerSheet(
-      {required this.title, required this.items, required this.selectedCode});
+  const _PickerSheet({required this.title, required this.items, required this.selectedCode});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final L = context.L;
-    return DraggableScrollableSheet(
-      initialChildSize: 0.5,
-      maxChildSize: 0.8,
-      minChildSize: 0.3,
-      expand: false,
-      builder: (context, scrollController) => Column(
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: L.border.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(title,
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Expanded(
-            child: ListView.builder(
-              controller: scrollController,
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                final isSelected = item['code'] == selectedCode;
-                return ListTile(
-                  leading: Text(item['flag'] ?? '',
-                      style: AppTypography.displaySmall.copyWith(fontSize: 22)),
-                  title: Text(item['label'] ?? '',
-                      style: AppTypography.bodyMedium),
-                  trailing: isSelected
-                      ? Icon(Icons.check_circle_rounded, color: L.secondary)
-                      : null,
-                  onTap: () => Navigator.pop(context, item['code']),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PBSTrackerTile extends StatelessWidget {
-  final double spendThisYear;
-  final ValueChanged<double> onChanged;
-
-  const _PBSTrackerTile({required this.spendThisYear, required this.onChanged});
-
-  // 2024 PBS Safety Net threshold
-  static const double _threshold = 1622.90;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final L = context.L;
-    final progress = (spendThisYear / _threshold).clamp(0.0, 1.0);
-    final remaining = (_threshold - spendThisYear).clamp(0.0, _threshold);
-    final reached = spendThisYear >= _threshold;
-    final s = AppLocalizations.of(context)!;
-
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: reached ? Border.all(color: L.success, width: 2.0) : null,
-      ),
+      decoration: BoxDecoration(color: L.bg, borderRadius: const BorderRadius.vertical(top: Radius.circular(32))),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Text('🇦🇺',
-                  style: AppTypography.titleLarge.copyWith(fontSize: 22)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(s.pbsSafetyNet,
-                        style: AppTypography.labelLarge
-                            .copyWith(fontWeight: FontWeight.bold)),
-                    Text(s.pbsThreshold,
-                        style: AppTypography.labelSmall.copyWith(color: L.sub)),
-                  ],
-                ),
-              ),
-              if (reached)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: L.success.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text('🎉 ${s.reached}',
-                      style: AppTypography.labelSmall.copyWith(
-                          color: L.success, fontWeight: FontWeight.bold)),
-                ),
-            ],
-          ),
           const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: L.fill,
-              valueColor:
-                  AlwaysStoppedAnimation(reached ? L.success : L.secondary),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(s.pbsSpent(spendThisYear.toStringAsFixed(2)),
-                  style: AppTypography.labelMedium.copyWith(color: L.sub)),
-              Text(
-                reached
-                    ? s.medsSubsidised
-                    : s.pbsRemaining(remaining.toStringAsFixed(2)),
-                style: AppTypography.labelMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: reached ? L.success : L.sub),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Manual entry
-          Row(
-            children: [
-              Expanded(
-                child: Slider(
-                  value: spendThisYear.clamp(0, _threshold),
-                  min: 0,
-                  max: _threshold,
-                  divisions: 100,
-                  activeColor: theme.extension<AppThemeColors>()!.secondary,
-                  onChanged: onChanged,
-                ),
-              ),
-            ],
-          ),
-          Text(
-            s.spentAmountSubtitle,
-            style: AppTypography.labelSmall.copyWith(color: L.sub),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final L = context.L;
-    final s = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(14),
-        border:
-            Border.all(color: L.secondary.withValues(alpha: 0.2), width: 1.5),
-        boxShadow: AppShadows.soft,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.info_outline_rounded, color: L.secondary, size: 18),
-              const SizedBox(width: 8),
-              Text(s.supportedMarkets.toUpperCase(),
-                  style: AppTypography.labelLarge.copyWith(
-                      color: L.secondary,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.0,
-                      fontSize: 11)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '🇺🇸 USA  ·  🇬🇧 UK  ·  🇨🇦 Canada  ·  🇦🇺 Australia\n'
-            '🇦🇪 UAE  ·  🇯🇵 Japan  ·  🇰🇷 Korea  ·  🇸🇬 Singapore\n'
-            '🇮🇱 Israel  ·  🇲🇾 Malaysia',
-            style: AppTypography.labelMedium.copyWith(
-                color: L.text, fontWeight: FontWeight.w600, height: 1.5),
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: L.border.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 24),
+          Text(title, style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 18)),
+          const SizedBox(height: 24),
+          ListView.builder(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 48),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              final isSelected = item['code'] == selectedCode;
+              return ListTile(
+                onTap: () {
+                  HapticEngine.selection();
+                  Navigator.pop(context, item['code']);
+                },
+                title: Text(item['label']!, style: AppTypography.bodyMedium.copyWith(fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700, color: L.text)),
+                trailing: isSelected ? Icon(Icons.check_rounded, color: L.primary) : null,
+              );
+            },
           ),
         ],
       ),

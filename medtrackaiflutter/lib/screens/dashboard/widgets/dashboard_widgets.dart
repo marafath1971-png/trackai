@@ -20,20 +20,26 @@ class LatencyHeatmap extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('TIMING CONSISTENCY (7D)',
-            style: AppTypography.labelLarge
-                .copyWith(fontSize: 11, color: L.sub, letterSpacing: 1.2)),
-        const SizedBox(height: 16),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(32),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: L.card,
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: L.border, width: 1.5),
-            ),
-            child: Row(
+        Text(
+          'TIMING CONSISTENCY (7D)',
+          style: AppTypography.labelSmall.copyWith(
+            fontSize: 10,
+            color: L.sub.withValues(alpha: 0.6),
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.p16),
+        Container(
+          height: 160,
+          padding: const EdgeInsets.all(AppSpacing.p24),
+          decoration: BoxDecoration(
+            color: L.card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: L.border, width: 1.0),
+            // Shadow removed for Cal style
+          ),
+          child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List.generate(7, (i) {
@@ -64,8 +70,20 @@ class LatencyHeatmap extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            // TARGET LINE (0 MS)
+                            Positioned(
+                              bottom: (60 / 120 * 100), // 50% height = 0 mins
+                              left: 0,
+                              right: 0,
+                              child: Container(
+                                height: 1.0,
+                                decoration: BoxDecoration(
+                                  color: L.success.withValues(alpha: 0.08),
+                                ),
+                              ),
+                            ),
                             ...dayLatency.map((d) {
-                              final latency = (d['latency'] as int);
+                              final latency = (d['latency'] as int?) ?? 0;
                               final color = latency.abs() < 15
                                   ? L.green
                                   : (latency.abs() < 60 ? L.amber : L.red);
@@ -131,9 +149,8 @@ class LatencyHeatmap extends StatelessWidget {
               }),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
   }
 
   Widget _buildEmptyState(AppThemeColors L) {
@@ -153,7 +170,7 @@ class LatencyHeatmap extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: [L.fill, L.card.withValues(alpha: 0.5)],
             ),
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: L.border, width: 1.5),
           ),
           child: Column(
@@ -207,9 +224,15 @@ class HealthCoachCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-              child: Text('AI HEALTH COACH',
-                  style: AppTypography.labelLarge.copyWith(
-                      fontSize: 11, color: L.sub, letterSpacing: 1.2)),
+              child: Row(
+                children: [
+                  Icon(Icons.auto_awesome_rounded, color: L.purple, size: 14),
+                  const SizedBox(width: 8),
+                  Text('AI MEDICAL BRIEFING',
+                      style: AppTypography.labelLarge.copyWith(
+                          fontSize: 10, color: L.purple, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
+                ],
+              ),
             ),
             GestureDetector(
               onTap: onRetry,
@@ -238,20 +261,14 @@ class HealthCoachCard extends StatelessWidget {
                   : L.purple;
 
           return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.only(bottom: AppSpacing.p16),
             child: Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(AppSpacing.p24),
               decoration: BoxDecoration(
                 color: L.card,
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: L.border, width: 1.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.5),
+                // Shadow removed for Cal style
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,9 +373,15 @@ class HealthCoachCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-              child: Text('AI HEALTH COACH',
-                  style: AppTypography.labelLarge.copyWith(
-                      fontSize: 11, color: L.sub, letterSpacing: 1.2)),
+              child: Row(
+                children: [
+                  Icon(Icons.auto_awesome_rounded, color: L.purple, size: 14),
+                  const SizedBox(width: 8),
+                  Text('AI MEDICAL BRIEFING',
+                      style: AppTypography.labelLarge.copyWith(
+                          fontSize: 10, color: L.purple, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
+                ],
+              ),
             ),
           ],
         ),
@@ -372,7 +395,7 @@ class HealthCoachCard extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: [L.purple.withValues(alpha: 0.05), L.fill],
             ),
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(12),
             border:
                 Border.all(color: L.purple.withValues(alpha: 0.1), width: 1.5),
           ),
@@ -449,14 +472,15 @@ class AdherenceTrendChart extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.p16),
         Container(
-          height: 180,
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+          height: 200,
+          padding: const EdgeInsets.fromLTRB(AppSpacing.p20, AppSpacing.p24, AppSpacing.p20, AppSpacing.p20),
           decoration: BoxDecoration(
             color: L.card,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: L.border, width: 1.5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: L.border, width: 1.0),
+            // Shadow removed for Cal style
           ),
           child: Column(
             children: [
@@ -466,7 +490,7 @@ class AdherenceTrendChart extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: trendData.map((day) {
                     final val = day['value'] as double;
-                    final scheduled = day['scheduled'] as int;
+                    final scheduled = (day['scheduled'] as int?) ?? 0;
 
                     final isEmptyDay = scheduled == 0;
                     final color = isEmptyDay
@@ -536,7 +560,7 @@ class AdherenceTrendChart extends StatelessWidget {
               end: Alignment.bottomCenter,
               colors: [L.fill, L.card.withValues(alpha: 0.3)],
             ),
-            borderRadius: BorderRadius.circular(32),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: L.border, width: 1.5),
           ),
           child: Column(
@@ -553,6 +577,81 @@ class AdherenceTrendChart extends StatelessWidget {
             ],
           ),
         ).animate().fadeIn(duration: 600.ms),
+      ],
+    );
+  }
+}
+
+
+class InventoryStatusCard extends StatelessWidget {
+  final List<Medicine> meds;
+  final AppThemeColors L;
+  const InventoryStatusCard({super.key, required this.meds, required this.L});
+
+  @override
+  Widget build(BuildContext context) {
+    // Show only meds with supply tracking
+    final trackedMeds = meds.where((m) => m.count > 0).toList();
+    if (trackedMeds.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'SUPPLY STATUS',
+          style: AppTypography.labelSmall.copyWith(
+            fontSize: 10,
+            color: L.sub.withValues(alpha: 0.6),
+            letterSpacing: 1.5,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.p20),
+          decoration: BoxDecoration(
+            color: L.card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: L.border),
+          ),
+          child: Column(
+            children: trackedMeds.map((med) {
+              final isLow = med.count <= 5;
+              final color = isLow ? L.red : L.success;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Text(med.name, style: AppTypography.labelMedium.copyWith(color: L.text, fontWeight: FontWeight.w600)),
+                    ),
+                    Expanded(
+                      flex: 4,
+                      child: Stack(
+                        children: [
+                          Container(
+                            height: 6,
+                            decoration: BoxDecoration(color: L.fill, borderRadius: BorderRadius.circular(3)),
+                          ),
+                          FractionallySizedBox(
+                            widthFactor: (med.count / 30).clamp(0.0, 1.0),
+                            child: Container(
+                              height: 6,
+                              decoration: BoxDecoration(color: color.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(3)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text('${med.count} left', style: AppTypography.labelSmall.copyWith(color: color, fontWeight: FontWeight.w900, fontSize: 9)),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
       ],
     );
   }

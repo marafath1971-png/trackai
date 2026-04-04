@@ -2,21 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppSpacing {
-  static const double xxs = 2;
-  static const double xs = 4;
-  static const double s = 8;
-  static const double m = 16;
-  static const double l = 24;
-  static const double xl = 32;
-  static const double xxl = 48;
-  static const double xxxl = 64;
+  static const double zero = 0;
+  static const double p4 = 4;
+  static const double p8 = 8;
+  static const double p12 = 12;
+  static const double p16 = 16;
+  static const double p20 = 20;
+  static const double p24 = 24;
+  static const double p32 = 32;
+  static const double p40 = 40;
+  static const double p48 = 48;
+  static const double p64 = 64;
+  static const double p80 = 80;
+
+  // Legacy compatibility / Aliases
+  static const double xxs = p4;
+  static const double xs = p4;
+  static const double s = p8;
+  static const double m = p16;
+  static const double l = p24;
+  static const double xl = p32;
+  static const double xxl = p48;
+  static const double xxxl = p64;
 
   // Semantic spacing
-  static const double screenPadding = 24;
-  static const double fieldPadding = 16;
-  static const double cardPadding = 16;
-  static const double sectionGap = 32;
+  static const double screenPadding = p24;
+  static const double fieldPadding = p16;
+  static const double cardPadding = p16;
+  static const double sectionGap = p32;
   static const double bottomBuffer = 120; // For floating nav
+  static const double cardGap = p12; // Card-to-card gap in bento grids
 }
 
 class AppDurations {
@@ -44,137 +59,153 @@ class AppRadius {
 }
 
 class AppTypography {
-  static TextStyle get displayLarge => GoogleFonts.inter(
-        fontSize: 48,
+  static TextStyle get displayLarge => GoogleFonts.outfit(
+        fontSize: 56,
         fontWeight: FontWeight.w900,
-        letterSpacing: -2,
+        letterSpacing: -2.5,
+        height: 1.1,
       );
-  static TextStyle get displayMedium => GoogleFonts.inter(
+  static TextStyle get displayMedium => GoogleFonts.outfit(
+        fontSize: 40,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -1.5,
+        height: 1.15,
+      );
+  static TextStyle get displaySmall => GoogleFonts.outfit(
         fontSize: 32,
         fontWeight: FontWeight.w800,
         letterSpacing: -1,
+        height: 1.2,
       );
-  static TextStyle get headlineLarge => GoogleFonts.inter(
+  static TextStyle get headlineLarge => GoogleFonts.outfit(
         fontSize: 24,
         fontWeight: FontWeight.w800,
         letterSpacing: -0.5,
       );
-  static TextStyle get headlineMedium => GoogleFonts.inter(
+  static TextStyle get headlineMedium => GoogleFonts.outfit(
         fontSize: 20,
-        fontWeight: FontWeight.w700,
-      );
-  // ⬇️ Previously undefined — now properly defined
-  static TextStyle get headlineSmall => GoogleFonts.inter(
-        fontSize: 18,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.3,
       );
-  static TextStyle get titleLarge => GoogleFonts.inter(
+  static TextStyle get headlineSmall => GoogleFonts.outfit(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+      );
+  static TextStyle get titleLarge => GoogleFonts.outfit(
         fontSize: 18,
         fontWeight: FontWeight.w700,
       );
   static TextStyle get titleMedium => GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w600,
+        letterSpacing: -0.1,
       );
   static TextStyle get bodyLarge => GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w400,
+        letterSpacing: -0.1,
       );
   static TextStyle get bodyMedium => GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w400,
+        height: 1.5,
       );
   static TextStyle get labelLarge => GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w700,
+        letterSpacing: 0.1,
       );
   static TextStyle get labelMedium => GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w600,
+        letterSpacing: 0.2,
       );
   static TextStyle get labelSmall => GoogleFonts.inter(
         fontSize: 11,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.5,
       );
   static TextStyle get bodySmall => GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w400,
-      );
-  static TextStyle get displaySmall => GoogleFonts.inter(
-        fontSize: 24,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -0.5,
+        height: 1.4,
       );
 }
 
 class AppShadows {
-  /// Soft lift shadow — for cards in light mode
+  /// Ultra-soft, multi-layered depth for primary light mode cards
   static List<BoxShadow> get soft => [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.06),
-          blurRadius: 24,
-          offset: const Offset(0, 8),
+          color: Colors.black.withValues(alpha: 0.04),
+          blurRadius: 32,
+          offset: const Offset(0, 16),
           spreadRadius: -4,
         ),
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.03),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
+          color: Colors.black.withValues(alpha: 0.02),
+          blurRadius: 8,
+          offset: const Offset(0, 4),
         ),
       ];
 
-  /// Very subtle shadow — for dark mode cards
+  /// Subtle inner-glow shadow for dark mode surfaces
   static List<BoxShadow> get subtle => [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.12),
-          blurRadius: 16,
-          offset: const Offset(0, 6),
-          spreadRadius: -4,
+          color: Colors.black.withValues(alpha: 0.15),
+          blurRadius: 20,
+          offset: const Offset(0, 10),
+          spreadRadius: -5,
+        ),
+        BoxShadow(
+          color: Colors.white.withValues(alpha: 0.03),
+          blurRadius: 1,
+          offset: const Offset(0, 0.5),
+          spreadRadius: 0.5,
         ),
       ];
 
-  /// Elevated card — modal-level depth
+  /// Deep floating elevation for modals and popups
   static List<BoxShadow> get card => [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.12),
-          blurRadius: 40,
-          offset: const Offset(0, 16),
+          color: Colors.black.withValues(alpha: 0.10),
+          blurRadius: 64,
+          offset: const Offset(0, 32),
+          spreadRadius: -12,
+        ),
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 16,
+          offset: const Offset(0, 8),
+        ),
+      ];
+
+  /// Atmospheric colored glow for primary actions
+  static List<BoxShadow> glow(Color color, {double intensity = 0.2}) => [
+        BoxShadow(
+          color: color.withValues(alpha: intensity),
+          blurRadius: 24,
+          offset: const Offset(0, 12),
+          spreadRadius: -4,
+        ),
+        BoxShadow(
+          color: color.withValues(alpha: intensity * 0.4),
+          blurRadius: 8,
+          offset: const Offset(0, 4),
+        ),
+      ];
+
+  /// Nav bar shadow — floating pill effect with occlusion
+  static List<BoxShadow> get navBar => [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.20),
+          blurRadius: 48,
+          offset: const Offset(0, 24),
           spreadRadius: -8,
         ),
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.06),
-          blurRadius: 10,
-          offset: const Offset(0, 4),
-        ),
-      ];
-
-  /// Colored glow — for accented CTAs
-  static List<BoxShadow> glow(Color color, {double intensity = 0.15}) => [
-        BoxShadow(
-          color: color.withValues(alpha: intensity),
+          color: Colors.black.withValues(alpha: 0.10),
           blurRadius: 16,
-          offset: const Offset(0, 4),
-          spreadRadius: 0,
-        ),
-        BoxShadow(
-          color: color.withValues(alpha: intensity * 0.5),
-          blurRadius: 4,
-          offset: const Offset(0, 2),
-        ),
-      ];
-
-  /// Nav bar shadow — floating pill effect
-  static List<BoxShadow> get navBar => [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.18),
-          blurRadius: 40,
-          offset: const Offset(0, 16),
-          spreadRadius: -6,
-        ),
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.08),
-          blurRadius: 12,
           offset: const Offset(0, 4),
         ),
       ];

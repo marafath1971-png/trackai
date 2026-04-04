@@ -71,7 +71,7 @@ class _PaywallSheetState extends State<PaywallSheet> {
           const SizedBox(height: 24),
 
           Text(
-            'MedTrack AI Pro',
+            'Med AI Pro',
             style: AppTypography.displayLarge.copyWith(
               fontSize: 28,
               fontWeight: FontWeight.w900,

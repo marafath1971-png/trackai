@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../domain/entities/health_insight.dart';
+import '../../domain/entities/medicine.dart';
 import '../../widgets/common/unified_header.dart';
 import '../../widgets/modals/trend_drilldown_sheet.dart';
 import '../../core/utils/haptic_engine.dart';
@@ -63,12 +64,25 @@ class _DashboardTabState extends State<DashboardTab> {
     final streak = context.select<AppState, int>((s) => s.getStreak());
     final loadingInsight =
         context.select<AppState, bool>((s) => s.loadingInsight);
+    final meds = context.select<AppState, List<Medicine>>((s) => s.meds);
     final healthInsights =
         context.select<AppState, List<HealthInsight>>((s) => s.healthInsights);
 
     return Scaffold(
       backgroundColor: L.bg,
       body: Stack(children: [
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 120,
+          child: Container(
+            decoration: BoxDecoration(
+              color: L.bg,
+              border: Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.5))),
+            ),
+          ),
+        ),
         RefreshIndicator(
           onRefresh: () async {
             HapticEngine.selection();
@@ -123,10 +137,16 @@ class _DashboardTabState extends State<DashboardTab> {
                   Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.screenPadding),
-                    child: AdherenceTrendChart(trendData: trendData, L: L)
-                        .animate()
-                        .fadeIn(duration: 600.ms)
-                        .slideY(begin: 0.1, end: 0),
+                    child: Column(
+                      children: [
+                        AdherenceTrendChart(trendData: trendData, L: L),
+                        const SizedBox(height: 24),
+                        InventoryStatusCard(meds: meds, L: L)
+                            .animate()
+                            .fadeIn(duration: 600.ms)
+                            .slideY(begin: 0.1, end: 0),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: AppSpacing.xl),

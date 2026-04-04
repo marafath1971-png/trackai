@@ -1,4 +1,4 @@
-name: medtrackaiflutter
+name: medai
 description: Med AI - Your intelligent medicine tracker
 publish_to: 'none'
 version: 1.0.0+1
@@ -86,6 +86,7 @@ dependencies:
   in_app_review: ^2.0.9
   url_launcher: ^6.3.2
   app_links: ^6.1.1
+  confetti: ^0.7.0
 
 dev_dependencies:
   flutter_test:

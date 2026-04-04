@@ -9,14 +9,16 @@ class BouncingButton extends StatefulWidget {
   final double scaleFactor;
   final Duration duration;
   final bool hapticEnabled;
+  final bool opaque;
 
   const BouncingButton({
     super.key,
     required this.child,
     this.onTap,
-    this.scaleFactor = 0.95,
-    this.duration = const Duration(milliseconds: 150),
+    this.scaleFactor = 0.96, // Slightly subtler, high-end feel
+    this.duration = const Duration(milliseconds: 120),
     this.hapticEnabled = true,
+    this.opaque = true,
   });
 
   @override
@@ -34,7 +36,7 @@ class _BouncingButtonState extends State<BouncingButton>
     _controller = AnimationController(vsync: this, duration: widget.duration);
     _scaleAnimation =
         Tween<double>(begin: 1.0, end: widget.scaleFactor).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack), // Snappier
     );
   }
 
@@ -64,16 +66,12 @@ class _BouncingButtonState extends State<BouncingButton>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+      behavior: widget.opaque ? HitTestBehavior.opaque : HitTestBehavior.translucent,
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) => Transform.scale(
-          scale: _scaleAnimation.value,
-          child: child,
-        ),
+      child: ScaleTransition(
+        scale: _scaleAnimation,
         child: widget.child,
       ),
     );

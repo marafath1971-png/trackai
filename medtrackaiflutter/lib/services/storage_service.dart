@@ -15,13 +15,22 @@ class StorageService {
           .child('medicines')
           .child(fileName);
 
-      // 1. Wait for upload to COMPLETE before proceding
+      // 1. Wait for upload to COMPLETE before proceding, with a 15-second timeout
       final task = ref.putFile(
         imageFile,
         SettableMetadata(contentType: 'image/jpeg'),
       );
 
-      final snapshot = await task;
+      final snapshot = await task.timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw FirebaseException(
+            plugin: 'firebase_storage',
+            code: 'deadline-exceeded',
+            message: 'Image upload timed out after 15 seconds. Please check your network connection.',
+          );
+        },
+      );
 
       if (snapshot.state == TaskState.success) {
         // 2. Wrap getDownloadURL in a small micro-delay or verification

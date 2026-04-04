@@ -25,13 +25,14 @@ class HomeMissedAlertsBanner extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: L.text,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
           boxShadow: [
+            ...L.shadowSoft,
             BoxShadow(
-              color: L.onBg.withValues(alpha: 0.25),
-              blurRadius: 30,
-              offset: const Offset(0, 15),
-              spreadRadius: -5,
+              color: L.onBg.withValues(alpha: 0.1),
+              blurRadius: 40,
+              offset: const Offset(0, 20),
+              spreadRadius: -10,
             ),
           ],
         ),
@@ -108,15 +109,9 @@ class HomeLowStockBanner extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: L.red.withValues(alpha: 0.2), width: 1.0),
-          boxShadow: [
-            BoxShadow(
-              color: L.onBg.withValues(alpha: 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          border: Border.all(color: L.red.withValues(alpha: 0.05), width: 1.5),
+          boxShadow: L.shadowSoft,
         ),
         child: Row(
           children: [

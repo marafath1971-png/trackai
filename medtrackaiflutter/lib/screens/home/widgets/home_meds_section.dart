@@ -29,7 +29,8 @@ class HomeMedsHeader extends StatelessWidget {
           backgroundColor: L.text,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.max)),
+          elevation: 0,
         ),
       ),
     ]);

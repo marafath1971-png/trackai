@@ -1,0 +1,21 @@
+Analyzing medtrackaiflutter...                                  
+
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/alarms/alarms_tab.dart:435:23 • deprecated_member_use
+  error • The named parameter 'curve' isn't defined • lib/screens/app_shell.dart:81:21 • undefined_named_parameter
+  error • Undefined name 'ImageFilter' • lib/screens/app_shell.dart:193:25 • undefined_identifier
+  error • Undefined name 'HapticEngine' • lib/screens/app_shell.dart:216:17 • undefined_identifier
+  error • Undefined name 'HapticEngine' • lib/screens/app_shell.dart:254:13 • undefined_identifier
+  error • The getter 'titleSmall' isn't defined for the type 'AppTypography' • lib/screens/app_shell.dart:366:40 • undefined_getter
+  error • Undefined name 'HapticEngine' • lib/screens/app_shell.dart:378:15 • undefined_identifier
+  error • Arguments of a constant creation must be constant expressions • lib/screens/app_shell.dart:382:45 • const_with_non_constant_argument
+  error • The getter 'p6' isn't defined for the type 'AppSpacing' • lib/screens/app_shell.dart:382:56 • undefined_getter
+  error • Expected an identifier • lib/screens/dashboard/widgets/dashboard_widgets.dart:140:9 • missing_identifier
+  error • Expected to find ']' • lib/screens/dashboard/widgets/dashboard_widgets.dart:140:9 • expected_token
+warning • The value of the local variable 'cardRadius' isn't used • lib/screens/family/widgets/caregiver_widgets.dart:32:18 • unused_local_variable
+  error • The getter 'shadowSubtle' isn't defined for the type 'AppThemeColors' • lib/screens/home/widgets/home_dose_section.dart:319:22 • undefined_getter
+warning • The value of the local variable 'dateRangeStr' isn't used • lib/screens/home/widgets/home_header.dart:48:11 • unused_local_variable
+   info • Statements in an if should be enclosed in a block • lib/screens/home/widgets/home_header.dart:234:30 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/home/widgets/home_header.dart:235:31 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/home/widgets/home_header.dart:236:28 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/home/widgets/home_header.dart:237:14 • curly_braces_in_flow_control_structures
+

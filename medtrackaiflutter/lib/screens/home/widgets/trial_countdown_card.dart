@@ -19,7 +19,6 @@ class TrialCountdownCard extends StatelessWidget {
 
     final scansUsed = profile.scansUsed;
     final remaining = (3 - scansUsed).clamp(0, 3);
-    final progress = (scansUsed / 3.0).clamp(0.0, 1.0);
     final isExhausted = scansUsed >= 3;
     final L = context.L;
 

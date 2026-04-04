@@ -92,13 +92,17 @@ class NotificationService {
     }
 
     final androidDetails = AndroidNotificationDetails(
-      'med_reminders',
-      'Medicine Reminders',
-      channelDescription: 'Scheduled reminders for taking your medication',
-      importance: useSound ? Importance.high : Importance.low,
-      priority: useSound ? Priority.high : Priority.low,
+      'med_reminders_v2', // New channel for elevated priority
+      'Medication Alarms',
+      channelDescription: 'High-priority persistent reminders for medication adherence',
+      importance: useSound ? Importance.max : Importance.low,
+      priority: useSound ? Priority.max : Priority.low,
+      fullScreenIntent: true,
+      category: AndroidNotificationCategory.alarm,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
       enableVibration: useVibration,
       playSound: useSound,
+      visibility: NotificationVisibility.public,
       actions: <AndroidNotificationAction>[
         const AndroidNotificationAction('take', 'Take Now',
             showsUserInterface: true),
@@ -108,12 +112,15 @@ class NotificationService {
             showsUserInterface: true, cancelNotification: true),
       ],
     );
+
     final iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: useSound,
+      interruptionLevel: InterruptionLevel.timeSensitive,
       categoryIdentifier: 'med_action',
     );
+
     final details =
         NotificationDetails(android: androidDetails, iOS: iosDetails);
 
@@ -272,16 +279,19 @@ class NotificationService {
     String? payload,
     bool enableSound = true,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'one_off_reminders',
       'One-off Reminders',
-      importance: Importance.high,
-      priority: Priority.high,
+      importance: Importance.max,
+      priority: Priority.max,
+      fullScreenIntent: true,
+      category: AndroidNotificationCategory.alarm,
       actions: <AndroidNotificationAction>[
-        AndroidNotificationAction('take', 'Take Now', showsUserInterface: true),
-        AndroidNotificationAction('skip', 'Skip', showsUserInterface: true),
+        const AndroidNotificationAction('take', 'Take Now', showsUserInterface: true),
+        const AndroidNotificationAction('skip', 'Skip', showsUserInterface: true),
       ],
     );
+
     final iosDetails = DarwinNotificationDetails(
         presentAlert: true,
         presentSound: enableSound,

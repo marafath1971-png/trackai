@@ -29,11 +29,11 @@ class _SettingsModalState extends State<SettingsModal> {
     final size = MediaQuery.of(context).size;
 
     final tabs = [
-      {'id': 'profile', 'label': s.settingsProfile, 'icon': '👤'},
-      {'id': 'stats', 'label': s.settingsStats, 'icon': '📊'},
-      {'id': 'app', 'label': s.settingsApp, 'icon': '⚙️'},
-      {'id': 'data', 'label': s.settingsData, 'icon': '🗂️'},
-      {'id': 'global', 'label': s.settingsGlobal, 'icon': '🌍'},
+      {'id': 'profile', 'label': s.settingsProfile, 'icon': Icons.person_rounded},
+      {'id': 'stats', 'label': s.settingsStats, 'icon': Icons.bar_chart_rounded},
+      {'id': 'app', 'label': s.settingsApp, 'icon': Icons.settings_rounded},
+      {'id': 'data', 'label': s.settingsData, 'icon': Icons.storage_rounded},
+      {'id': 'global', 'label': s.settingsGlobal, 'icon': Icons.public_rounded},
     ];
 
     return GestureDetector(
@@ -52,7 +52,7 @@ class _SettingsModalState extends State<SettingsModal> {
                   color: L.bg,
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(32)),
-                  border: Border.all(color: L.border, width: 1.5)),
+                  border: Border.all(color: L.border.withValues(alpha: 0.2), width: 1.5)),
               child: Column(children: [
                 const SizedBox(height: 10),
                 Center(
@@ -60,7 +60,7 @@ class _SettingsModalState extends State<SettingsModal> {
                         width: 36,
                         height: 4,
                         decoration: BoxDecoration(
-                            color: L.border,
+                            color: L.border.withValues(alpha: 0.4),
                             borderRadius: BorderRadius.circular(99)))),
                 // Header
                 Padding(
@@ -79,7 +79,7 @@ class _SettingsModalState extends State<SettingsModal> {
                             width: 36,
                             height: 36,
                             decoration: BoxDecoration(
-                                color: L.fill, shape: BoxShape.circle),
+                                color: L.fill.withValues(alpha: 0.3), shape: BoxShape.circle),
                             child: Center(
                                 child: Icon(Icons.close_rounded,
                                     color: L.sub, size: 22)),
@@ -104,8 +104,10 @@ class _SettingsModalState extends State<SettingsModal> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: GestureDetector(
-                        onTap: () =>
-                            setState(() => _activeTab = t['id'] as String),
+                        onTap: () {
+                          HapticEngine.selection();
+                          setState(() => _activeTab = t['id'] as String);
+                        },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(
@@ -113,20 +115,23 @@ class _SettingsModalState extends State<SettingsModal> {
                           decoration: BoxDecoration(
                               color: isAct
                                   ? L.card
-                                  : L.fill.withValues(alpha: 0.1),
+                                  : L.bg,
                               borderRadius: BorderRadius.circular(99),
                               border: Border.all(
                                   color: isAct
-                                      ? L.primary.withValues(alpha: 0.5)
-                                      : L.border.withValues(alpha: 0.3),
-                                  width: 1.5)),
+                                      ? L.text
+                                      : Colors.black12,
+                                  width: 1.0)),
                           child: Row(children: [
-                            Text(t['icon']!, style: AppTypography.labelLarge),
+                            Icon(t['icon'] as IconData, 
+                              size: 16, 
+                              color: isAct ? L.bg : Colors.black54),
                             const SizedBox(width: 8),
-                            Text(t['label']!,
+                            Text(t['label'] as String,
                                 style: AppTypography.labelLarge.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: isAct ? Colors.white : L.text)),
+                                    fontWeight: isAct ? FontWeight.w900 : FontWeight.w500,
+                                    color: isAct ? L.bg : Colors.black54,
+                                    fontSize: 13)),
                           ]),
                         ),
                       )

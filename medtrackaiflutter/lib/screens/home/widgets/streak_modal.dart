@@ -6,8 +6,9 @@ import '../../../services/share_service.dart';
 import '../../../core/utils/haptic_engine.dart';
 
 // ══════════════════════════════════════════════
-// STREAK MODAL (bottom sheet)
+// CONSISTENCY HUB (Cal AI Industrial Refined)
 // ══════════════════════════════════════════════
+import '../../../domain/entities/streak_data.dart';
 
 class StreakModal extends StatelessWidget {
   final int streak;
@@ -42,12 +43,10 @@ class StreakModal extends StatelessWidget {
     String? prev;
     for (final k in allKeys) {
       final ds = history[k] ?? [];
-      final rate =
-          ds.isEmpty ? 0.0 : ds.where((x) => x.taken).length / ds.length;
+      final rate = ds.isEmpty ? 0.0 : ds.where((x) => x.taken).length / ds.length;
       if (rate >= 0.8) {
         if (prev != null) {
-          final diff =
-              DateTime.parse(k).difference(DateTime.parse(prev)).inDays;
+          final diff = DateTime.parse(k).difference(DateTime.parse(prev)).inDays;
           cur = diff <= 1 ? cur + 1 : 1;
         } else {
           cur = 1;
@@ -68,14 +67,11 @@ class StreakModal extends StatelessWidget {
       {'d': 100, 'e': '👑', 'l': '100 Days'},
       {'d': 365, 'e': '🌟', 'l': '1 Year'},
     ];
-    final nextM = milestones.firstWhere((m) => streak < (m['d'] as int),
-        orElse: () => milestones.last);
-    final prevM = milestones.reversed
-        .firstWhere((m) => streak >= (m['d'] as int), orElse: () => {'d': 0});
+    final nextM = milestones.firstWhere((m) => streak < (m['d'] as int), orElse: () => milestones.last);
+    final prevM = milestones.reversed.firstWhere((m) => streak >= (m['d'] as int), orElse: () => {'d': 0});
     final nextDays = (nextM['d'] as int) - streak;
     final progressToNext = (nextM['d'] as int) > (prevM['d'] as int)
-        ? (streak - (prevM['d'] as int)) /
-            ((nextM['d'] as int) - (prevM['d'] as int))
+        ? (streak - (prevM['d'] as int)) / ((nextM['d'] as int) - (prevM['d'] as int))
         : 1.0;
 
     return GestureDetector(
@@ -88,431 +84,165 @@ class StreakModal extends StatelessWidget {
             onTap: () {},
             child: Container(
               width: size.width,
-              constraints:
-                  BoxConstraints(maxHeight: size.height * 0.9, maxWidth: 430),
+              constraints: BoxConstraints(maxHeight: size.height * 0.9, maxWidth: 430),
               decoration: BoxDecoration(
                   color: L.bg,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(32)),
-                  border: Border.all(color: L.border, width: 1.0)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.0)),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 const SizedBox(height: 12),
-                Center(
-                    child: Container(
-                        width: 36,
-                        height: 4,
-                        decoration: BoxDecoration(
-                            color: L.border,
-                            borderRadius: BorderRadius.circular(99)))),
+                Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: L.border.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(99)))),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Streak 🔥',
-                            style: AppTypography.headlineMedium.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: L.text,
-                                letterSpacing: -0.8)),
-                        GestureDetector(
-                          onTap: onClose,
-                          child: Container(
-                            width: 36,
-                            height: 36,
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    Text('CONSISTENCY HUB',
+                        style: AppTypography.headlineMedium.copyWith(
+                            fontWeight: FontWeight.w900, fontSize: 22, color: L.text, letterSpacing: -0.5)),
+                    IconButton(onPressed: onClose, icon: Icon(Icons.close_rounded, color: L.text, size: 24)),
+                  ]),
+                ),
+                Flexible(
+                  child: RawScrollbar(
+                    thumbColor: L.text.withValues(alpha: 0.1),
+                    radius: const Radius.circular(10),
+                    thickness: 4,
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        // Main Metric Card B&W Refined
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                              color: L.card,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: L.text.withValues(alpha: 0.1), width: 1.0),
+                              boxShadow: L.shadowSoft),
+                          child: Row(children: [
+                            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text('$streak',
+                                  style: AppTypography.displayLarge.copyWith(
+                                      fontWeight: FontWeight.w900, color: L.text, letterSpacing: -3, height: 1.0)),
+                              const SizedBox(height: 4),
+                              Text('ADHERENCE CHAIN',
+                                  style: AppTypography.labelSmall.copyWith(
+                                      fontWeight: FontWeight.w900, color: L.sub, letterSpacing: 1.0, fontSize: 10)),
+                            ]),
+                            const Spacer(),
+                            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                              _MiniStat(label: 'PEAK', val: '$best'),
+                              const SizedBox(height: 12),
+                              _MiniStat(label: 'ACCURACY', val: '$overallAdh%'),
+                            ]),
+                          ]),
+                        ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // B&W Stats Grid
+                        Row(children: [
+                          Expanded(child: _StatBox(label: 'Tracked', val: '$totalDaysTracked', icon: Icons.calendar_today_rounded, L: L)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _StatBox(label: 'Taken', val: '$totalTaken', icon: Icons.done_all_rounded, L: L)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _StatBox(label: 'Logged', val: '$totalDoses', icon: Icons.analytics_rounded, L: L)),
+                        ]),
+                        
+                        const SizedBox(height: 24),
+                        
+                        // Progress
+                        if (streak < (milestones.last['d'] as int))
+                          Container(
+                            padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                                color: L.fill, shape: BoxShape.circle),
-                            child: Center(
-                                child: Icon(Icons.close_rounded,
-                                    color: L.sub, size: 22)),
+                                color: L.card,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: L.border.withValues(alpha: 0.5))),
+                            child: Column(children: [
+                              Row(children: [
+                                Text(nextM['e'] as String, style: const TextStyle(fontSize: 22)),
+                                const SizedBox(width: 12),
+                                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Text(nextM['l'] as String,
+                                      style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 14)),
+                                  Text('$nextDays days remaining',
+                                      style: AppTypography.labelSmall.copyWith(color: L.sub, fontWeight: FontWeight.w700, fontSize: 11)),
+                                ]),
+                                const Spacer(),
+                                Text('$streak/${nextM['d']}',
+                                    style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.w900, fontSize: 11, color: L.primary)),
+                              ]),
+                              const SizedBox(height: 16),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(2),
+                                child: LinearProgressIndicator(
+                                    value: progressToNext.clamp(0.0, 1.0), minHeight: 4, backgroundColor: L.fill, color: L.primary),
+                              ),
+                            ]),
+                          ),
+                        
+                        const SizedBox(height: 24),
+                        Text('30-DAY STABILITY MATRIX',
+                            style: AppTypography.labelSmall.copyWith(
+                                fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 10, color: L.sub)),
+                        const SizedBox(height: 14),
+                        _Heatmap(history: history, L: L),
+                        const SizedBox(height: 32),
+                        
+                        // Ascension Steps
+                        Text('MILESTONES / ASCENSION',
+                            style: AppTypography.labelSmall.copyWith(
+                                fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: L.sub)),
+                        const SizedBox(height: 12),
+                        ...milestones.map((m) {
+                          final n = m['d'] as int;
+                          final achieved = streak >= n;
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                                color: achieved ? L.primary.withValues(alpha: 0.05) : L.card,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: achieved ? L.primary.withValues(alpha: 0.2) : L.border.withValues(alpha: 0.5))),
+                            child: Row(children: [
+                              Opacity(opacity: achieved ? 1.0 : 0.4, child: Text(m['e'] as String, style: const TextStyle(fontSize: 20))),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Text(m['l'] as String,
+                                    style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w900, fontSize: 14, color: L.text)),
+                                Text(achieved ? 'STABILITY UNLOCKED' : '${n - streak} days remaining',
+                                    style: AppTypography.bodySmall.copyWith(
+                                        fontWeight: FontWeight.w700, fontSize: 11, color: achieved ? L.primary : L.sub)),
+                              ])),
+                              if (achieved) Icon(Icons.check_circle_rounded, color: L.primary, size: 20),
+                            ]),
+                          );
+                        }),
+                        
+                        const SizedBox(height: 32),
+                        
+                        // High Contrast Share
+                        GestureDetector(
+                          onTap: () {
+                            HapticEngine.selection();
+                            ShareService.shareStreak(streak);
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            decoration: BoxDecoration(color: L.text, borderRadius: BorderRadius.circular(12)),
+                            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                              Icon(Icons.share_rounded, color: L.bg, size: 18),
+                              const SizedBox(width: 10),
+                              Text('EXPORT DATA',
+                                  style: AppTypography.displaySmall.copyWith(
+                                      color: L.bg, letterSpacing: 1.2, fontSize: 13, fontWeight: FontWeight.w900)),
+                            ]),
                           ),
                         ),
                       ]),
-                ),
-                Flexible(
-                  child: Scrollbar(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(
-                          parent: AlwaysScrollableScrollPhysics()),
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Big streak number card
-                            Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                  color: L.card2,
-                                  borderRadius: BorderRadius.circular(32),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: L.green.withValues(alpha: 0.2),
-                                      blurRadius: 40,
-                                      offset: const Offset(0, 20),
-                                      spreadRadius: -10,
-                                    ),
-                                  ]),
-                              child: Row(children: [
-                                Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text('$streak',
-                                          style: AppTypography.displayLarge
-                                              .copyWith(
-                                                  fontWeight: FontWeight.w900,
-                                                  color: L.onCard2,
-                                                  letterSpacing: -3,
-                                                  height: 1.0)),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                          'day${streak != 1 ? "s" : ""} in a row',
-                                          style: AppTypography.bodySmall
-                                              .copyWith(
-                                                  fontWeight: FontWeight.w600,
-                                                  color: L.onCard2.withValues(
-                                                      alpha: 0.55))),
-                                    ]),
-                                const Spacer(),
-                                Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      _MiniStat(label: 'BEST', val: '$best'),
-                                      const SizedBox(height: 12),
-                                      _MiniStat(
-                                          label: 'ADHERENCE',
-                                          val: '$overallAdh%'),
-                                    ]),
-                              ]),
-                            )
-                                .animate()
-                                .fade(duration: 400.ms)
-                                .slideY(begin: 0.1, end: 0)
-                                .scale(begin: const Offset(0.95, 0.95)),
-                            const SizedBox(height: 16),
-                            // Stats grid
-                            Row(children: [
-                              Expanded(
-                                  child: _StatBox(
-                                          label: 'Days Tracked',
-                                          val: '$totalDaysTracked',
-                                          emoji: '📅',
-                                          L: L)
-                                      .animate()
-                                      .fade(delay: 100.ms)
-                                      .slideY(begin: 0.2, end: 0)),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                  child: _StatBox(
-                                          label: 'Doses Taken',
-                                          val: '$totalTaken',
-                                          emoji: '✅',
-                                          L: L)
-                                      .animate()
-                                      .fade(delay: 200.ms)
-                                      .slideY(begin: 0.2, end: 0)),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                  child: _StatBox(
-                                          label: 'Total Logged',
-                                          val: '$totalDoses',
-                                          emoji: '💊',
-                                          L: L)
-                                      .animate()
-                                      .fade(delay: 300.ms)
-                                      .slideY(begin: 0.2, end: 0)),
-                            ]),
-                            const SizedBox(height: 16),
-                            // Milestone progress
-                            if (streak < (milestones.last['d'] as int))
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                    color: L.fill,
-                                    borderRadius: BorderRadius.circular(24)),
-                                child: Column(children: [
-                                  Row(children: [
-                                    Text(nextM['e'] as String,
-                                        style: AppTypography.titleLarge
-                                            .copyWith(fontSize: 22)),
-                                    const SizedBox(width: 12),
-                                    Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(nextM['l'] as String,
-                                              style: AppTypography.labelLarge
-                                                  .copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color: L.text)),
-                                          Text(
-                                              '$nextDays day${nextDays != 1 ? "s" : ""} to go',
-                                              style: AppTypography.labelSmall
-                                                  .copyWith(color: L.sub)),
-                                        ]),
-                                    const Spacer(),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                          color: L.greenLight,
-                                          borderRadius:
-                                              BorderRadius.circular(99)),
-                                      child: Text('$streak/${nextM['d']}',
-                                          style: AppTypography.labelLarge
-                                              .copyWith(
-                                                  fontWeight: FontWeight.w800,
-                                                  color: L.green)),
-                                    ),
-                                  ]),
-                                  const SizedBox(height: 12),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(99),
-                                    child: LinearProgressIndicator(
-                                        value: progressToNext.clamp(0.0, 1.0),
-                                        minHeight: 6,
-                                        backgroundColor: L.border,
-                                        color: L.green),
-                                  ),
-                                ]),
-                              ),
-                            const SizedBox(height: 24),
-                            Text('LAST 30 DAYS',
-                                style: AppTypography.labelSmall.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.8,
-                                    color: L.sub)),
-                            const SizedBox(height: 10),
-                            _Heatmap(history: history, L: L),
-                            const SizedBox(height: 24),
-                            if (!streakData.freezeUsedWeek && streak > 0)
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                    color: L.green.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(
-                                        color: L.green.withValues(alpha: 0.3))),
-                                child: Row(children: [
-                                  Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                        color: L.green,
-                                        borderRadius:
-                                            BorderRadius.circular(16)),
-                                    child: const Center(
-                                        child: Text('🧊',
-                                            style: TextStyle(fontSize: 20))),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                      child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                        Text('Streak Freeze',
-                                            style: AppTypography.titleMedium
-                                                .copyWith(
-                                                    fontWeight: FontWeight.w700,
-                                                    color: L.onBg)),
-                                        Text(
-                                            'Protect your streak for 1 missed day',
-                                            style: AppTypography.bodySmall
-                                                .copyWith(
-                                                    color: L.onBg.withValues(
-                                                        alpha: 0.8))),
-                                      ])),
-                                  GestureDetector(
-                                    onTap: onFreeze,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 14, vertical: 9),
-                                      decoration: BoxDecoration(
-                                          color: const Color(0xFF111111),
-                                          borderRadius:
-                                              BorderRadius.circular(24)),
-                                      child: Text('Use Freeze',
-                                          style: AppTypography.labelSmall
-                                              .copyWith(
-                                                  fontWeight: FontWeight.w800,
-                                                  color: L.onBg)),
-                                    ),
-                                  ),
-                                ]),
-                              )
-                            else if (streakData.freezeUsedWeek)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                    color: L.fill,
-                                    borderRadius: BorderRadius.circular(24)),
-                                child: Row(children: [
-                                  const Text('🧊',
-                                      style: TextStyle(fontSize: 18)),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                      'Freeze used this week · Resets next Monday',
-                                      style: AppTypography.bodySmall.copyWith(
-                                          color: L.sub,
-                                          fontWeight: FontWeight.w500)),
-                                ]),
-                              ),
-                            const SizedBox(height: 24),
-                            Text('MILESTONES',
-                                style: AppTypography.labelSmall.copyWith(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.8,
-                                    color: L.sub)),
-                            const SizedBox(height: 10),
-                            ...milestones.map((m) {
-                              final n = m['d'] as int;
-                              final achieved = streak >= n;
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 10),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 14),
-                                decoration: BoxDecoration(
-                                    color: achieved
-                                        ? L.green.withValues(alpha: 0.15)
-                                        : L.fill,
-                                    borderRadius: BorderRadius.circular(24),
-                                    border: achieved
-                                        ? null
-                                        : Border.all(
-                                            color: L.border
-                                                .withValues(alpha: 0.5))),
-                                child: Row(children: [
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: achieved
-                                          ? Colors.white.withValues(alpha: 0.1)
-                                          : L.bg,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Center(
-                                      child: Text(m['e'] as String,
-                                          style: AppTypography.titleLarge
-                                              .copyWith(
-                                                  fontSize: 22,
-                                                  color: achieved
-                                                      ? null
-                                                      : L.sub.withValues(
-                                                          alpha: 0.3))),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                      child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                        Text(m['l'] as String,
-                                            style: AppTypography.titleMedium
-                                                .copyWith(
-                                                    fontWeight: FontWeight.w800,
-                                                    color: achieved
-                                                        ? L.text
-                                                        : L.text)),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                            achieved
-                                                ? 'Unleashed \u2713'
-                                                : '${n - streak} days remaining',
-                                            style: AppTypography.bodySmall
-                                                .copyWith(
-                                                    color: achieved
-                                                        ? Colors.white
-                                                            .withValues(
-                                                                alpha: 0.6)
-                                                        : L.sub)),
-                                      ])),
-                                  if (achieved)
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        GestureDetector(
-                                          onTap: () {
-                                            HapticEngine.selection();
-                                            ShareService.shareStreak(streak);
-                                          },
-                                          child: Container(
-                                            width: 32,
-                                            height: 32,
-                                            decoration: BoxDecoration(
-                                              color: L.green
-                                                  .withValues(alpha: 0.2),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: const Center(
-                                              child: Icon(Icons.share_rounded,
-                                                  color: Colors.white,
-                                                  size: 14),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Icon(Icons.check_circle_rounded,
-                                            color: L.green, size: 20),
-                                      ],
-                                    ),
-                                ]),
-                              )
-                                  .animate()
-                                  .fade(
-                                      delay:
-                                          (400 + milestones.indexOf(m) * 50).ms)
-                                  .slideX(begin: 0.1, end: 0);
-                            }),
-                            const SizedBox(height: 24),
-                            if (streak > 0)
-                              GestureDetector(
-                                onTap: () {
-                                  HapticEngine.selection();
-                                  ShareService.shareStreak(streak);
-                                },
-                                child: Container(
-                                  width: double.infinity,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  decoration: BoxDecoration(
-                                    color: L.text,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: L.text.withValues(alpha: 0.15),
-                                        blurRadius: 12,
-                                        offset: const Offset(0, 6),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.share_rounded,
-                                          color: L.bg, size: 18),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        'Share Your Streak \uD83D\uDD25',
-                                        style:
-                                            AppTypography.displaySmall.copyWith(
-                                          color: L.bg,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                                  .animate()
-                                  .fadeIn(delay: 600.ms)
-                                  .slideY(begin: 0.2, end: 0),
-                          ]),
                     ),
                   ),
                 ),
@@ -533,45 +263,36 @@ class _MiniStat extends StatelessWidget {
     final L = context.L;
     return Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
       Text(val,
-          style: AppTypography.titleLarge.copyWith(
-              fontWeight: FontWeight.w800,
-              color: L.onCard2,
-              letterSpacing: -0.5)),
+          style: AppTypography.titleLarge
+              .copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 18, letterSpacing: -0.5)),
       Text(label,
-          style: AppTypography.labelSmall.copyWith(
-              fontWeight: FontWeight.w700,
-              color: L.onCard2.withValues(alpha: 0.45),
-              letterSpacing: 0.6)),
+          style: AppTypography.labelSmall
+              .copyWith(fontWeight: FontWeight.w900, color: L.sub, fontSize: 9, letterSpacing: 1.0)),
     ]);
   }
 }
 
 class _StatBox extends StatelessWidget {
-  final String label, val, emoji;
+  final String label, val;
+  final IconData icon;
   final AppThemeColors L;
-  const _StatBox(
-      {required this.label,
-      required this.val,
-      required this.emoji,
-      required this.L});
+  const _StatBox({required this.label, required this.val, required this.icon, required this.L});
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-      decoration:
-          BoxDecoration(color: L.fill, borderRadius: BorderRadius.circular(24)),
-      child: Column(children: [
-        Text(emoji, style: AppTypography.titleLarge.copyWith(fontSize: 18)),
-        const SizedBox(height: 4),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: L.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: L.border.withValues(alpha: 0.5))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(icon, size: 16, color: L.sub),
+        const SizedBox(height: 12),
         Text(val,
-            style: AppTypography.titleLarge.copyWith(
-                fontWeight: FontWeight.w800,
-                color: L.text,
-                letterSpacing: -0.5)),
+            style: AppTypography.titleLarge
+                .copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 20, letterSpacing: -0.5)),
         const SizedBox(height: 2),
-        Text(label,
+        Text(label.toUpperCase(),
             style: AppTypography.labelSmall
-                .copyWith(color: L.sub, fontWeight: FontWeight.w600)),
+                .copyWith(color: L.sub, fontWeight: FontWeight.w900, fontSize: 8, letterSpacing: 1.0)),
       ]),
     );
   }
@@ -585,48 +306,31 @@ class _Heatmap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
-    final todayKey = today.toIso8601String().substring(0, 10);
-
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 10, crossAxisSpacing: 4, mainAxisSpacing: 4),
-      itemCount: 30,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7, crossAxisSpacing: 6, mainAxisSpacing: 6),
+      itemCount: 28,
       itemBuilder: (c, i) {
-        final d = today.subtract(Duration(days: 29 - i));
+        final d = today.subtract(Duration(days: 27 - i));
         final k = d.toIso8601String().substring(0, 10);
         final ds = history[k] ?? [];
-        final rate =
-            ds.isEmpty ? -1.0 : ds.where((e) => e.taken).length / ds.length;
-        final isT = k == todayKey;
-
+        final rate = ds.isEmpty ? -1.0 : ds.where((e) => e.taken).length / ds.length;
+        
         Color bg;
-        if (isT) {
-          bg = L.card2;
-        } else if (rate < 0) {
-          bg = L.fill;
-        } else if (rate >= 0.8) {
-          bg = L.green;
-        } else if (rate > 0) {
-          bg = L.amber;
-        } else {
-          bg = L.error
-              .withValues(alpha: 0.6); // Slightly softer red for data points
-        }
+        if (rate < 0) bg = L.fill.withValues(alpha: 0.3);
+        else if (rate >= 0.8) bg = L.primary;
+        else if (rate > 0) bg = L.primary.withValues(alpha: 0.4);
+        else bg = L.error.withValues(alpha: 0.2);
 
         return Container(
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(16),
-            border: isT ? Border.all(color: L.border, width: 2) : null,
-          ),
+          decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
           child: Center(
             child: Text('${d.day}',
                 style: AppTypography.labelSmall.copyWith(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w700,
-                    color: (isT || rate > 0) ? L.onBg : L.sub)),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: rate >= 0.8 ? Colors.white : L.text.withValues(alpha: 0.5))),
           ),
         );
       },

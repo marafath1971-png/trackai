@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../smoothing_text.dart';
+
 import '../../core/utils/haptic_engine.dart';
 import '../../theme/app_theme.dart';
 import '../../services/share_service.dart';
@@ -107,7 +107,7 @@ class DoseCelebrationModal extends StatelessWidget {
                         width: 1.5),
                   ),
                   child: Center(
-                    child: Icon(
+                    child: const Icon(
                       Icons.check_circle_rounded,
                       color: AppColors.success,
                       size: 52,
@@ -160,8 +160,8 @@ class DoseCelebrationModal extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // ── Message ───────────────────────────────────────────
-                SmoothingText(
-                  text: message,
+                Text(
+                  message,
                   textAlign: TextAlign.center,
                   style: AppTypography.bodyLarge.copyWith(
                     color: L.sub,

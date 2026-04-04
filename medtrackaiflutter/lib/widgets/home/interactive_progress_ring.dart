@@ -31,8 +31,8 @@ class InteractiveProgressRing extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: L.border, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
           boxShadow: L.shadowSoft,
         ),
         child: Row(
@@ -118,8 +118,9 @@ class InteractiveProgressRing extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: L.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: L.primary.withValues(alpha: 0.2)),
+          borderRadius: BorderRadius.circular(AppRadius.max),
+          border: Border.all(color: L.primary.withValues(alpha: 0.1), width: 1.5),
+          boxShadow: AppShadows.subtle,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -157,7 +158,7 @@ class _RingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = min(size.width, size.height) / 2;
-    const strokeWidth = 10.0;
+    const strokeWidth = 12.0;
 
     final bgPaint = Paint()
       ..color = backgroundColor

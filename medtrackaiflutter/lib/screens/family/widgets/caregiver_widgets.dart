@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../providers/app_state.dart';
 import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
@@ -27,154 +28,159 @@ class _CaregiverCardState extends State<CaregiverCard> {
     final L = widget.L;
     final isActive = cg.status == 'active';
     final medColor = hexToColor(cg.color);
+    
     return BouncingButton(
       onTap: widget.onDashboard,
       child: Container(
-        padding: const EdgeInsets.all(16),
-        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(AppSpacing.p16),
         decoration: BoxDecoration(
           color: L.card,
-          borderRadius: AppRadius.roundL,
-          border: Border.all(color: L.border, width: 1.5),
-          boxShadow: AppShadows.soft,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: L.border.withValues(alpha: 0.5), width: 1.0),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
-              children: [
-                Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: medColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: medColor.withValues(alpha: 0.2),
-                      width: 2,
-                    ),
-                  ),
-                  child: Center(
-                    child:
-                        Text(cg.avatar, style: const TextStyle(fontSize: 26)),
-                  ),
+            // Avatar with Subthe Glow
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: medColor.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+                border: Border.all(color: medColor.withValues(alpha: 0.1)),
+              ),
+              child: Center(
+                child: Text(
+                  cg.avatar,
+                  style: const TextStyle(fontSize: 22),
                 ),
-                if (isActive)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: L.green,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: L.bg, width: 2),
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(cg.name,
-                      style: AppTypography.titleLarge.copyWith(
-                          color: L.text,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5)),
-                  const SizedBox(height: 2),
-                  Row(
+            const Spacer(),
+            
+            // Name & Relation
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(cg.relation,
-                          style: AppTypography.bodySmall.copyWith(
-                              color: L.sub, fontWeight: FontWeight.w600)),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? L.green.withValues(alpha: 0.1)
-                              : L.warning.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
+                      Text(
+                        cg.name,
+                        style: AppTypography.titleLarge.copyWith(
+                          color: L.text,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.5,
                         ),
-                        child: Text(
-                          isActive ? 'ACTIVE' : 'PENDING',
-                          style: AppTypography.labelLarge.copyWith(
-                              fontSize: 9,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            cg.relation.toUpperCase(),
+                            style: AppTypography.labelSmall.copyWith(
+                              color: L.sub.withValues(alpha: 0.5),
                               fontWeight: FontWeight.w900,
-                              color: isActive ? L.green : L.warning,
-                              letterSpacing: 0.5),
-                        ),
+                              fontSize: 9,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                          if (isActive) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: L.success.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: L.success.withValues(alpha: 0.2)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.inventory_2_rounded, size: 8, color: L.success),
+                                  const SizedBox(width: 4),
+                                  Text('REFILL COORDINATOR', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.success, fontWeight: FontWeight.w900)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
+                  ),
+                ),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: L.fill.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.arrow_forward_ios_rounded,
+                      size: 14, color: L.text),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 14),
+            
+            // Latest Activity Snippet (Cal AI Ticker)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: L.fill.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.radar_rounded, size: 12, color: isActive ? L.success : L.warning),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Latest Activity: ${isActive ? 'Active Monitoring • Stable' : 'Invite Sent • Waiting'}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: L.text.withValues(alpha: 0.7),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                color: Colors.white24, size: 24),
+            
+            const SizedBox(height: 12),
+            
+            // Industrial Status Bar
+            Container(
+              height: 2,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: L.border.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(1),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: isActive ? 100 : 40,
+                    height: 2,
+                    decoration: BoxDecoration(
+                      color: isActive ? L.success : L.warning,
+                      borderRadius: BorderRadius.circular(1),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
-}
-
-class CardBtn extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-  final Color bg, textColor;
-  const CardBtn(
-      {super.key,
-      required this.label,
-      required this.icon,
-      required this.onTap,
-      required this.bg,
-      required this.textColor});
-  @override
-  Widget build(BuildContext context) => BouncingButton(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 11),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-              color: bg, borderRadius: BorderRadius.circular(AppRadius.m)),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(icon, size: 14, color: textColor),
-            const SizedBox(width: 6),
-            Text(label,
-                style: AppTypography.labelLarge
-                    .copyWith(fontWeight: FontWeight.w600, color: textColor)),
-          ]),
-        ),
-      );
-}
-
-class IconButtonJSX extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final Color bg, textColor;
-  const IconButtonJSX(
-      {super.key,
-      required this.icon,
-      required this.onTap,
-      required this.bg,
-      required this.textColor});
-  @override
-  Widget build(BuildContext context) => BouncingButton(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(11),
-          decoration: BoxDecoration(
-              color: bg, borderRadius: BorderRadius.circular(AppRadius.m)),
-          child: Icon(icon, size: 18, color: textColor),
-        ),
-      );
 }
 
 class FamStatJSX extends StatelessWidget {
@@ -187,31 +193,46 @@ class FamStatJSX extends StatelessWidget {
       required this.label,
       required this.value,
       required this.color});
+
   @override
   Widget build(BuildContext context) {
     final L = context.L;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+      padding: const EdgeInsets.all(AppSpacing.p16),
       decoration: BoxDecoration(
         color: L.card,
-        borderRadius: AppRadius.roundL,
-        border: Border.all(color: L.border, width: 1.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: L.border.withValues(alpha: 0.5), width: 1.0),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 24)),
-          const SizedBox(height: 12),
-          Text(value.toString(),
-              style: AppTypography.displayLarge.copyWith(height: 1.0)),
-          const SizedBox(height: 6),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(label.toUpperCase(),
-                style: AppTypography.labelSmall.copyWith(
-                    color: L.sub,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5)),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(emoji, style: const TextStyle(fontSize: 16)),
+            ),
           ),
+          const SizedBox(height: 14),
+          Text(value.toString(),
+              style: AppTypography.displayLarge.copyWith(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: L.text,
+                height: 1.0,
+              )),
+          const SizedBox(height: 2),
+          Text(label.toUpperCase(),
+              style: AppTypography.labelSmall.copyWith(
+                  color: L.sub,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3)),
         ],
       ),
     );
@@ -235,29 +256,19 @@ class PivotTab extends StatelessWidget {
     return BouncingButton(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        duration: 250.ms,
+        padding: const EdgeInsets.symmetric(vertical: 11),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: active ? L.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.m),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4))
-                ]
-              : [],
+          color: active ? L.text : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           label,
           style: AppTypography.labelLarge.copyWith(
             fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-            color: active ? L.onPrimary : L.sub,
+            color: active ? L.bg : L.sub,
           ),
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
         ),
       ),
     );
@@ -280,15 +291,15 @@ class HeaderBtn extends StatelessWidget {
   Widget build(BuildContext context) => BouncingButton(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration:
-              BoxDecoration(color: bg, borderRadius: BorderRadius.circular(24)),
+              BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
           child: Row(children: [
             Icon(icon, size: 14, color: color),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Text(label,
                 style: AppTypography.labelLarge.copyWith(
-                    fontSize: 15, fontWeight: FontWeight.w600, color: color)),
+                    fontSize: 14, fontWeight: FontWeight.w700, color: color)),
           ]),
         ),
       );

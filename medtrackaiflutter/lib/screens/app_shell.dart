@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +6,7 @@ import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared/shared_widgets.dart';
 import '../domain/entities/entities.dart';
+import '../core/utils/haptic_engine.dart';
 import 'home/home_tab.dart';
 import 'scan/scan_tab.dart';
 import 'alarms/alarms_tab.dart';
@@ -24,9 +26,8 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  int _tab = 0; // 0=home, 1=alarms, 2=family
+  int _tab = 0; // 0=home, 1=alarms, 2=dashboard, 3=family
   bool _showScan = false;
-  bool _hideBanner = false;
   @override
   void initState() {
     super.initState();
@@ -66,137 +67,184 @@ class _AppShellState extends State<AppShell>
     final isLocked = context.select<AppState, bool>((s) => s.isLocked);
     final toast = context.select<AppState, String?>((s) => s.toast);
     final toastType = context.select<AppState, String?>((s) => s.toastType);
+    final bannerDismissed = context.select<AppState, bool>((s) => s.lowStockBannerDismissed);
+    final allSchedules = context.select<AppState, int>((s) => s.getAllSchedules().length);
+    final medsCount = context.select<AppState, int>((s) => s.meds.length);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: isLocked
           ? const LockScreen()
           : Scaffold(
               backgroundColor: L.bg,
+              resizeToAvoidBottomInset: false,
               body: Stack(children: [
-                // ── Main content (Animated Transitions)
-                Stack(
-                  children: [
-                    IndexedStack(
-                      index: _tab,
-                      children: [
-                        HomeTab(onScan: () => setState(() => _showScan = true)),
-                        const AlarmsTab(),
-                        const DashboardTab(),
-                        const FamilyTab(),
-                      ],
-                    ),
-                    // ── Scan Overlay (Modal-like)
-                    if (_showScan)
-                      ScanTab(
-                        key: const ValueKey('scan_tab'),
-                        onSave: (med) {
-                          final s = context.read<AppState>();
-                          s.addMedicine(med);
-                          setState(() {
-                            _showScan = false;
-                            _tab = 0;
-                          });
-                          s.showToast('💊 ${med.name} added!');
-                        },
-                        onClose: () => setState(() {
-                          _showScan = false;
-                        }),
-                        onManualAdd: null,
-                      )
-                          .animate()
-                          .fadeIn(duration: 300.ms)
-                          .scale(begin: const Offset(0.95, 0.95)),
-                  ],
-                ),
-                // ── Low stock banner
-                if (lowMeds.isNotEmpty && !_showScan && !_hideBanner)
-                  Positioned(
-                    top: MediaQuery.of(context).padding.top + 8,
-                    left: 16,
-                    right: 16,
-                    child: LowStockBanner(
-                      meds: lowMeds,
-                      onDismiss: () => setState(() => _hideBanner = true),
+                // ── Main content (Animated Transitions) ──
+                Positioned.fill(
+                  child: AnimatedSwitcher(
+                    duration: 350.ms,
+                    switchInCurve: Curves.easeInOutCubic,
+                    switchOutCurve: Curves.easeInOutCubic,
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.01),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: KeyedSubtree(
+                      key: ValueKey(_tab),
+                      child: _buildCurrentTab(),
                     ),
                   ),
-                // ── Toast
+                ),
+
+                // ── Scan Overlay (Modal-like) ──
+                if (_showScan)
+                  ScanTab(
+                    key: const ValueKey('scan_tab'),
+                    onSave: (med) {
+                      final s = context.read<AppState>();
+                      s.addMedicine(med);
+                      setState(() {
+                        _showScan = false;
+                        _tab = 0;
+                      });
+                      s.showToast('💊 ${med.name} added!');
+                    },
+                    onClose: () => setState(() => _showScan = false),
+                  )
+                      .animate()
+                      .fadeIn(duration: 400.ms, curve: Curves.easeOut)
+                      .scale(
+                        begin: const Offset(0.92, 0.92),
+                        curve: Curves.easeOutBack,
+                      ),
+
+                // ── Low stock banner (Floating Pill) ──
+                if (lowMeds.isNotEmpty && !_showScan && !bannerDismissed)
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + AppSpacing.p12,
+                    left: AppSpacing.p16,
+                    right: AppSpacing.p16,
+                    child: LowStockBanner(
+                      meds: lowMeds,
+                      onDismiss: () => context.read<AppState>().dismissLowStockBanner(),
+                    )
+                        .animate()
+                        .fadeIn(duration: 500.ms)
+                        .slideY(begin: -0.2, end: 0, curve: Curves.easeOutBack),
+                  ),
+
+                // ── Toast (Status Pill) ──
                 if (toast != null)
                   AppToast(message: toast, type: toastType ?? 'success'),
-                // ── Bottom nav
+
+                // ── Bottom nav ──
                 Positioned(
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: _buildBottomNav(L, unseenAlerts),
+                  child: _buildBottomNav(L, unseenAlerts, medsCount, allSchedules),
                 ),
               ]),
             ),
     );
   }
 
-  Widget _buildBottomNav(AppThemeColors L, int unseenAlerts) {
+  Widget _buildCurrentTab() {
+    switch (_tab) {
+      case 0: return HomeTab(onScan: () => setState(() => _showScan = true), onSwitchTab: (i) => setState(() => _tab = i));
+      case 1: return const AlarmsTab();
+      case 2: return const DashboardTab();
+      case 3: return const FamilyTab();
+      default: return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildBottomNav(AppThemeColors L, int unseenAlerts, int medsCount, int allSchedules) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    
     return Container(
       margin: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        bottom: 20 + MediaQuery.of(context).padding.bottom,
+        left: AppSpacing.p20,
+        right: AppSpacing.p20,
+        bottom: AppSpacing.p16 + bottomPadding,
       ),
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.centerRight,
         children: [
-          // ── Solid Nav Bar
+          // ── Glassmorphic Nav Bar ──
           Container(
-            height: 68,
-            margin: const EdgeInsets.only(right: 36),
+            height: 76,
+            margin: const EdgeInsets.only(right: 38),
             decoration: BoxDecoration(
-              color: L.card,
-              borderRadius: BorderRadius.circular(AppRadius.l),
+              color: L.card.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(AppRadius.xl),
               border: Border.all(
-                color: L.border.withValues(alpha: 0.5),
-                width: 1.0,
+                color: L.border.withValues(alpha: 0.1),
+                width: 1.5,
               ),
-              boxShadow: AppShadows.navBar,
+              boxShadow: L.shadowSoft,
             ),
-            padding: const EdgeInsets.fromLTRB(12, 0, 32, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildNavItem(
-                    0, 'Home', Icons.grid_view_rounded, L, unseenAlerts),
-                _buildNavItem(
-                    1, 'Alarms', Icons.alarm_rounded, L, unseenAlerts),
-                _buildNavItem(
-                    2, 'Insights', Icons.analytics_rounded, L, unseenAlerts),
-                _buildNavItem(
-                    3, 'Family', Icons.people_alt_rounded, L, unseenAlerts),
-              ],
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.p8, 0, AppSpacing.p32, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildNavItem(0, 'Home', Icons.grid_view_rounded, L, unseenAlerts),
+                      _buildNavItem(1, 'Alarms', Icons.alarm_rounded, L, unseenAlerts),
+                      _buildNavItem(2, 'Analytics', Icons.analytics_rounded, L, unseenAlerts),
+                      _buildNavItem(3, 'Family', Icons.people_alt_rounded, L, unseenAlerts),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-          // ── Premium FAB
+          
+          // ── Premium FAB ──
           Positioned(
             right: 0,
-            top: -18,
+            top: -16,
             child: GestureDetector(
               onTap: () {
-                HapticFeedback.mediumImpact();
+                HapticEngine.medium();
                 setState(() => _showScan = true);
               },
               child: Container(
-                width: 66,
-                height: 66,
+                width: 68,
+                height: 68,
                 decoration: BoxDecoration(
                   gradient: AppGradients.main,
                   shape: BoxShape.circle,
-                  boxShadow: AppShadows.glow(L.secondary, intensity: 0.4),
+                  boxShadow: AppShadows.glow(L.primary, intensity: 0.3),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 2),
                 ),
                 child: const Center(
-                  child: Icon(Icons.add_rounded, color: Colors.black, size: 32),
+                  child: Icon(Icons.add_rounded, color: Colors.white, size: 34),
                 ),
-              ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+              )
+                  // Only pulse when user has meds but NO alarms configured
+                  .animate(
+                    onPlay: medsCount > 0 && allSchedules == 0
+                        ? (c) => c.repeat(reverse: true)
+                        : null,
+                  )
+                  .scale(
                     begin: const Offset(1, 1),
-                    end: const Offset(1.06, 1.06),
-                    duration: 2200.ms,
+                    end: const Offset(1.04, 1.04),
+                    duration: 3000.ms,
                     curve: Curves.easeInOut,
                   ),
             ),
@@ -206,15 +254,17 @@ class _AppShellState extends State<AppShell>
     );
   }
 
-  Widget _buildNavItem(int index, String label, IconData icon, AppThemeColors L,
-      int unseenAlerts) {
+  Widget _buildNavItem(int index, String label, IconData icon, AppThemeColors L, int unseenAlerts) {
     final selected = _tab == index;
     final cnt = index == 3 ? unseenAlerts : 0;
+    
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          HapticFeedback.selectionClick();
-          setState(() => _tab = index);
+          if (_tab != index) {
+            HapticEngine.selection();
+            setState(() => _tab = index);
+          }
         },
         behavior: HitTestBehavior.opaque,
         child: Column(
@@ -225,72 +275,52 @@ class _AppShellState extends State<AppShell>
               clipBehavior: Clip.none,
               alignment: Alignment.center,
               children: [
-                // Icon with spring scale
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
+                  duration: 300.ms,
                   curve: Curves.easeOutCubic,
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                  ),
+                  padding: const EdgeInsets.all(AppSpacing.p8),
                   child: Icon(
                     icon,
-                    size: 22,
-                    color:
-                        selected ? L.secondary : L.text.withValues(alpha: 0.5),
+                    size: 24,
+                    color: selected ? L.primary : L.sub.withValues(alpha: 0.4),
                   )
                       .animate(target: selected ? 1 : 0)
                       .scale(
-                          duration: 280.ms,
-                          curve: Curves.easeOutBack,
-                          begin: const Offset(1, 1),
-                          end: const Offset(1.2, 1.2))
-                      .tint(color: L.secondary, duration: 220.ms),
+                        duration: 400.ms,
+                        curve: Curves.easeOutBack,
+                        begin: const Offset(1, 1),
+                        end: const Offset(1.15, 1.15)
+                      ),
                 ),
-                // Badge
                 if (cnt > 0)
                   Positioned(
-                    top: 0,
-                    right: 2,
+                    top: 4,
+                    right: 4,
                     child: Container(
-                      width: 8,
-                      height: 8,
+                      width: 10,
+                      height: 10,
                       decoration: BoxDecoration(
                         color: L.error,
                         shape: BoxShape.circle,
-                        border: Border.all(color: L.bg, width: 1.5),
+                        border: Border.all(color: L.card, width: 2),
+                        boxShadow: AppShadows.glow(L.error, intensity: 0.2),
                       ),
                     )
                         .animate(onPlay: (c) => c.repeat(reverse: true))
-                        .scaleXY(begin: 1, end: 1.3, duration: 800.ms),
+                        .scale(begin: const Offset(1, 1), end: const Offset(1.3, 1.3), duration: 1000.ms),
                   ),
               ],
             ),
-            const SizedBox(height: 1),
+            const SizedBox(height: 2),
             AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
+              duration: 250.ms,
               style: AppTypography.labelSmall.copyWith(
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
-                color: selected ? L.secondary : L.sub.withValues(alpha: 0.7),
-                fontSize: 10,
-                letterSpacing: -0.1,
+                fontWeight: selected ? FontWeight.w900 : FontWeight.w500,
+                color: selected ? L.primary : L.sub.withValues(alpha: 0.4),
+                fontSize: 11,
+                letterSpacing: 0.2,
               ),
-              child: Text(label),
-            )
-                .animate(target: selected ? 1 : 0)
-                .moveY(begin: 0, end: -1, duration: 200.ms),
-            const SizedBox(height: 3),
-            // Lime pill indicator under selected item
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutCubic,
-              width: selected ? 20 : 0,
-              height: 3,
-              decoration: BoxDecoration(
-                gradient: selected ? AppGradients.main : null,
-                borderRadius: BorderRadius.circular(AppRadius.max),
-              ),
+              child: Text(label.toUpperCase()),
             ),
           ],
         ),
@@ -299,77 +329,77 @@ class _AppShellState extends State<AppShell>
   }
 }
 
-// ══════════════════════════════════════════════
-// LOW STOCK BANNER
-// ══════════════════════════════════════════════
+// ── UPGRADED LOW STOCK BANNER (Floating Pill) ──
 class LowStockBanner extends StatelessWidget {
-  final List<dynamic> meds;
+  final List<Medicine> meds;
   final VoidCallback onDismiss;
-  const LowStockBanner(
-      {super.key, required this.meds, required this.onDismiss});
+  const LowStockBanner({super.key, required this.meds, required this.onDismiss});
+
   @override
   Widget build(BuildContext context) {
     final L = context.L;
     final firstName = meds.isNotEmpty ? meds.first.name : '';
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.p16, vertical: AppSpacing.p12),
       decoration: BoxDecoration(
-        color: L.card.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(AppRadius.l),
-        border: Border.all(color: L.error.withValues(alpha: 0.2), width: 1.0),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 25,
-              offset: const Offset(0, 12),
-              spreadRadius: -5),
-        ],
+        color: L.card,
+        borderRadius: BorderRadius.circular(AppRadius.max),
+        border: Border.all(color: L.error.withValues(alpha: 0.1), width: 1.5),
+        boxShadow: L.shadowSoft,
       ),
-      child: Row(children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: L.error.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.inventory_2_rounded, size: 18, color: L.error),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-            child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Stock Alert',
-              style: AppTypography.labelLarge.copyWith(
-                fontWeight: FontWeight.w900,
-                color: L.error,
-                letterSpacing: 0.5,
-              ),
-            ),
-            Text(
-              '${meds.length > 1 ? "${meds.length} medicines" : firstName} running low',
-              style: AppTypography.titleMedium.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: L.text,
-                  letterSpacing: -0.3),
-            ),
-          ],
-        )),
-        const SizedBox(width: 12),
-        GestureDetector(
-          onTap: onDismiss,
-          child: Container(
-            padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.p8),
             decoration: BoxDecoration(
-              color: L.fill,
+              color: L.error.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.close_rounded, size: 14, color: L.sub),
+            child: Icon(Icons.inventory_2_rounded, size: 18, color: L.error),
           ),
-        ),
-      ]),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2, end: 0);
+          const SizedBox(width: AppSpacing.p12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Low Stock Alert',
+                  style: AppTypography.labelSmall.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: L.warning,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                Text(
+                  '${meds.length > 1 ? "${meds.length} items" : firstName} need refill',
+                  style: AppTypography.labelMedium.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: L.text,
+                    height: 1.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.p12),
+          GestureDetector(
+            onTap: () {
+              HapticEngine.light();
+              onDismiss();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.p8),
+              decoration: BoxDecoration(
+                color: L.fill,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.close_rounded, size: 16, color: L.sub),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

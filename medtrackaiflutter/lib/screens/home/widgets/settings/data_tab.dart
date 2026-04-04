@@ -62,6 +62,7 @@ class _DataTabState extends State<DataTab> {
         history.values.expand((e) => e).where((e) => e.taken).length;
     final totalDoses = history.values.expand((e) => e).length;
     final daysTracked = history.keys.length;
+    final symptomsCount = context.select<AppState, int>((s) => s.symptoms.length);
 
     return SingleChildScrollView(
       physics:
@@ -92,7 +93,7 @@ class _DataTabState extends State<DataTab> {
               childAspectRatio: 2.2,
               children: [
                 _SummaryBox(l: s.dataMedicinesLabel, v: '$medsCount', L: L),
-                _SummaryBox(l: s.dataAlarmsLabel, v: '$medsCount', L: L),
+                _SummaryBox(l: 'Symptoms', v: '$symptomsCount', L: L),
                 _SummaryBox(l: s.dataDaysTrackedLabel, v: '$daysTracked', L: L),
                 _SummaryBox(l: s.dataDosesLoggedLabel, v: '$totalDoses', L: L),
               ],
@@ -200,7 +201,7 @@ class _DataTabState extends State<DataTab> {
                   label: s.privacyPolicy,
                   sub: s.privacyPolicySubtitle,
                   onClick: () =>
-                      _launchUrl('https://medtrackaiflutter.app/privacy'),
+                      _launchUrl('https://medai.app/privacy'),
                   border: true),
               SettingsModalRow(
                   icon: Icons.gavel_rounded,
@@ -208,7 +209,7 @@ class _DataTabState extends State<DataTab> {
                   label: s.termsOfService,
                   sub: s.termsOfServiceSubtitle,
                   onClick: () =>
-                      _launchUrl('https://medtrackaiflutter.app/terms'),
+                      _launchUrl('https://medai.app/terms'),
                   border: false),
             ])),
 

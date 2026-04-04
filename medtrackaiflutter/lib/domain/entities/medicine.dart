@@ -1,4 +1,4 @@
-import 'package:medtrackaiflutter/domain/entities/ai_safety_profile.dart';
+import 'package:medai/domain/entities/ai_safety_profile.dart';
 
 enum Ritual {
   none,
@@ -231,31 +231,32 @@ class RefillInfo {
 
 class Medicine {
   final int id;
-  String name;
-  String brand;
-  String genericName; // INN name for UK/Israel/Canada
-  String din; // Drug Identification Number for Canada
-  String dose;
-  String form;
-  String category;
-  int count;
-  int totalCount;
-  String color;
-  int refillAt;
-  String? imageUrl;
-  String notes;
-  String intakeInstructions;
-  List<ScheduleEntry> schedule;
-  String courseStartDate;
-  String unit;
-  RefillInfo? refillInfo;
-  double? price;
-  String? currency;
-  bool isHalalSafe; // true = confirmed halal, false = contains gelatin/pork
-  bool? isHalalCertified; // null = unknown, true/false = verified
-  bool isSachet; // Japan/Korea sachet/envelope pack style
-  String? repeatPrescriptionDueDate; // UK/Canada repeat Rx renewal date
-  AISafetyProfile? aiSafetyProfile; // AI generated insights
+  final String name;
+  final String brand;
+  final String genericName;
+  final String din;
+  final String dose;
+  final String form;
+  final String category;
+  final int count;
+  final int totalCount;
+  final String color;
+  final int refillAt;
+  final String? imageUrl;
+  final String notes;
+  final String intakeInstructions;
+  final List<ScheduleEntry> schedule;
+  final String courseStartDate;
+  final String unit;
+  final bool isPrescription;
+  final RefillInfo? refillInfo;
+  final double? price;
+  final String? currency;
+  final bool isHalalSafe;
+  final bool? isHalalCertified;
+  final bool isSachet;
+  final String? repeatPrescriptionDueDate;
+  final AISafetyProfile? aiSafetyProfile;
 
   Medicine({
     required this.id,
@@ -265,9 +266,9 @@ class Medicine {
     this.din = '',
     this.dose = '',
     this.form = 'tablet',
-    this.category = '',
-    required this.count,
-    required this.totalCount,
+    this.category = 'Tablet',
+    this.count = 30,
+    this.totalCount = 30,
     this.color = '#10B981',
     this.refillAt = 7,
     this.imageUrl,
@@ -276,6 +277,7 @@ class Medicine {
     this.schedule = const [],
     required this.courseStartDate,
     this.unit = 'units',
+    this.isPrescription = false,
     this.refillInfo,
     this.price,
     this.currency,
@@ -285,6 +287,13 @@ class Medicine {
     this.repeatPrescriptionDueDate,
     this.aiSafetyProfile,
   });
+
+  factory Medicine.empty() => Medicine(
+        id: -1,
+        name: 'Empty Medicine',
+        courseStartDate: '',
+        schedule: [],
+      );
 
   double get coursePct => 1.0;
 
@@ -328,6 +337,7 @@ class Medicine {
         'schedule': schedule.map((s) => s.toJson()).toList(),
         'courseStartDate': courseStartDate,
         'unit': unit,
+        'isPrescription': isPrescription,
         'refillInfo': refillInfo?.toJson(),
         'price': price,
         'currency': currency,
@@ -359,6 +369,7 @@ class Medicine {
             .toList(),
         courseStartDate: j['courseStartDate'] ?? '',
         unit: j['unit'] ?? 'units',
+        isPrescription: j['isPrescription'] ?? false,
         refillInfo: j['refillInfo'] != null
             ? RefillInfo.fromJson(j['refillInfo'])
             : null,
@@ -389,6 +400,7 @@ class Medicine {
     String? intakeInstructions,
     List<ScheduleEntry>? schedule,
     String? unit,
+    bool? isPrescription,
     RefillInfo? refillInfo,
     double? price,
     String? currency,
@@ -417,6 +429,7 @@ class Medicine {
         schedule: schedule ?? this.schedule,
         courseStartDate: courseStartDate,
         unit: unit ?? this.unit,
+        isPrescription: isPrescription ?? this.isPrescription,
         refillInfo: refillInfo ?? this.refillInfo,
         price: price ?? this.price,
         currency: currency ?? this.currency,

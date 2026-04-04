@@ -1,48 +1,10 @@
 Analyzing medtrackaiflutter...                                  
 
-   info • 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion • lib/core/utils/color_utils.dart:14:16 • deprecated_member_use
-   info • Use 'const' with the constructor to improve performance • lib/screens/alarms/alarms_tab.dart:756:19 • prefer_const_constructors
-   info • Statements in an if should be enclosed in a block • lib/screens/alarms/alarms_tab.dart:1136:55 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block • lib/screens/alarms/alarms_tab.dart:1137:61 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block • lib/screens/alarms/alarms_tab.dart:1138:61 • curly_braces_in_flow_control_structures
-   info • Statements in an if should be enclosed in a block • lib/screens/alarms/alarms_tab.dart:1139:36 • curly_braces_in_flow_control_structures
-   info • Use 'const' with the constructor to improve performance • lib/screens/alarms/alarms_tab.dart:1164:43 • prefer_const_constructors
-   info • Use 'const' with the constructor to improve performance • lib/screens/alarms/alarms_tab.dart:1312:36 • prefer_const_constructors
-   info • Use 'const' with the constructor to improve performance • lib/screens/alarms/alarms_tab.dart:1313:40 • prefer_const_constructors
-warning • The declaration '_TimeInput' isn't referenced • lib/screens/alarms/alarms_tab.dart:1386:7 • unused_element
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/dashboard/widgets/dashboard_widgets.dart:35:39 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/dashboard/widgets/dashboard_widgets.dart:59:63 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/dashboard/widgets/dashboard_widgets.dart:81:56 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/dashboard/widgets/dashboard_widgets.dart:206:39 • deprecated_member_use
-warning • Unused import: '../../widgets/shared/shared_widgets.dart' • lib/screens/family/family_tab.dart:12:8 • unused_import
-warning • The value of the local variable 'meds' isn't used • lib/screens/family/family_tab.dart:3203:15 • unused_local_variable
-warning • Duplicate import • lib/screens/home/widgets/home_dose_section.dart:7:8 • duplicate_import
-   info • Unnecessary use of string interpolation • lib/screens/home/widgets/home_dose_section.dart:182:29 • unnecessary_string_interpolations
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:44:52 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:46:41 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:52:41 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:107:52 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:109:41 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:115:41 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:149:41 • deprecated_member_use
-   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/screens/home/widgets/home_stats_grid.dart:158:38 • deprecated_member_use
-   info • Use 'const' with the constructor to improve performance • lib/screens/home/widgets/med_card.dart:85:29 • prefer_const_constructors
-warning • The value of the local variable 'doseIdx' isn't used • lib/screens/home/widgets/missed_dose_sheet.dart:39:11 • unused_local_variable
-   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/screens/home/widgets/settings_modal_new.dart:1181:32 • deprecated_member_use
-   info • 'share' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/screens/home/widgets/settings_modal_new.dart:1181:38 • deprecated_member_use
-   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/screens/home/widgets/settings_modal_new.dart:1255:13 • deprecated_member_use
-   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/screens/home/widgets/settings_modal_new.dart:1255:19 • deprecated_member_use
-   info • Unnecessary 'const' keyword • lib/screens/home/widgets/streak_modal.dart:297:52 • unnecessary_const
-   info • Use 'const' with the constructor to improve performance • lib/screens/medicine/medicine_detail_screen.dart:182:27 • prefer_const_constructors
-   info • Use 'const' with the constructor to improve performance • lib/screens/onboarding/onboarding_screen.dart:2007:33 • prefer_const_constructors
-   info • Use 'const' literals as arguments to constructors of '@immutable' classes • lib/screens/onboarding/onboarding_screen.dart:2010:35 • prefer_const_literals_to_create_immutables
-   info • Use 'const' with the constructor to improve performance • lib/screens/scan/scan_tab.dart:918:21 • prefer_const_constructors
-   info • Use 'const' with the constructor to improve performance • lib/screens/scan/scan_tab.dart:919:21 • prefer_const_constructors
-   info • Use 'const' with the constructor to improve performance • lib/screens/scan/scan_tab.dart:919:57 • prefer_const_constructors
-   info • Use 'const' with the constructor to improve performance • lib/screens/scan/scan_tab.dart:945:13 • prefer_const_constructors
-   info • Use 'const' with the constructor to improve performance • lib/screens/scan/scan_tab.dart:946:13 • prefer_const_constructors
-   info • Use 'const' with the constructor to improve performance • lib/screens/scan/scan_tab.dart:946:29 • prefer_const_constructors
-   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/services/export_service.dart:80:11 • deprecated_member_use
-   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/services/export_service.dart:80:17 • deprecated_member_use
+   info • 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead. This feature was deprecated after v3.31.0-2.0.pre • lib/screens/alarms/alarms_tab.dart:435:23 • deprecated_member_use
+warning • The value of the local variable 'cardRadius' isn't used • lib/screens/family/widgets/caregiver_widgets.dart:32:18 • unused_local_variable
+warning • The value of the local variable 'dateRangeStr' isn't used • lib/screens/home/widgets/home_header.dart:48:11 • unused_local_variable
+   info • Statements in an if should be enclosed in a block • lib/screens/home/widgets/home_header.dart:234:30 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/home/widgets/home_header.dart:235:31 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/home/widgets/home_header.dart:236:28 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/screens/home/widgets/home_header.dart:237:14 • curly_braces_in_flow_control_structures
 
-44 issues found. (ran in 5.6s)

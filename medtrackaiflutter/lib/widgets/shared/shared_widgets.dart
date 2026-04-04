@@ -224,80 +224,81 @@ class AppToast extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    final Color bg;
+    final Color accent;
     final IconData icon;
 
     switch (type) {
       case 'error':
-        bg = L.red;
-        icon = Icons.error_outline_rounded;
+        accent = L.error;
+        icon = Icons.error_rounded;
         break;
       case 'warning':
-        bg = L.amber;
-        icon = Icons.warning_amber_rounded;
+        accent = L.warning;
+        icon = Icons.warning_rounded;
         break;
       case 'info':
-        bg = L.text;
-        icon = Icons.info_outline_rounded;
+        accent = L.info;
+        icon = Icons.info_rounded;
         break;
       default:
-        bg = L.text;
-        icon = Icons.check_circle_outline_rounded;
+        accent = L.success;
+        icon = Icons.check_circle_rounded;
     }
 
     return Positioned(
-      bottom: 110,
+      bottom: 120, // Floating above the bottom nav
       left: 24,
       right: 24,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0, end: 1),
-        duration: const Duration(milliseconds: 450),
-        curve: Curves.easeOutBack,
-        builder: (ctx, v, child) => Transform.translate(
-          offset: Offset(0, 30 * (1 - v)),
-          child: Opacity(opacity: v.clamp(0.0, 1.0), child: child),
-        ),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: bg.withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(24),
-              border:
-                  Border.all(color: L.onBg.withValues(alpha: 0.1), width: 1.0),
-              boxShadow: [
-                BoxShadow(
-                  color: L.onBg.withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-                BoxShadow(
-                  color: bg.withValues(alpha: 0.2),
-                  blurRadius: 30,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: L.card,
+            borderRadius: BorderRadius.circular(AppRadius.max),
+            border: Border.all(
+              color: accent.withValues(alpha: 0.15),
+              width: 1.5,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, color: L.onPrimary, size: 18),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    message,
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: L.onPrimary,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.2,
-                    ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 32,
+                offset: const Offset(0, 16),
+                spreadRadius: -8,
+              ),
+              BoxShadow(
+                color: accent.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: accent, size: 16),
+              ),
+              const SizedBox(width: 12),
+              Flexible(
+                child: Text(
+                  message,
+                  style: AppTypography.labelLarge.copyWith(
+                    color: L.text,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 4),
+            ],
           ),
         ),
-      ),
+      ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.5, end: 0, curve: Curves.easeOutBack).scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), curve: Curves.easeOutBack),
     );
   }
 }

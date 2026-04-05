@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../theme/app_theme.dart';
-import 'bouncing_button.dart';
+import '../shared/shared_widgets.dart';
 
 class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
@@ -44,171 +45,92 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize =>
-      Size.fromHeight(122 + (bottomHeight ?? (bottom != null ? 60 : 0)));
+      Size.fromHeight(80 + (bottomHeight ?? (bottom != null ? 60 : 0)));
 
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    final bg = backgroundColor ?? L.bg;
-    Widget child = Container(
-      decoration: BoxDecoration(
-        color: bg,
-        border: showBorder
-            ? Border(
-                bottom: BorderSide(
-                  color: isScrolled ? L.border : Colors.transparent,
-                  width: 1.0,
-                ),
-              )
-            : null,
-      ),
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.screenPadding, 8, AppSpacing.screenPadding, 8),
-                child: Row(
-                  children: [
-                    if (showBack) ...[
-                      HeaderActionBtn(
-                        onTap: onBack ?? () => Navigator.maybePop(context),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 16),
-                      ),
-                      const SizedBox(width: 14),
-                    ] else if (leading != null) ...[
-                      leading!,
-                      const SizedBox(width: 14),
-                    ],
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (showBrand) ...[
-                            _buildBrandRow(L)
-                                .animate()
-                                .fadeIn(duration: 400.ms)
-                                .slideY(
-                                    begin: 0.1,
-                                    end: 0,
-                                    curve: Curves.easeOutCubic),
-                            const SizedBox(height: 8),
-                            if (title != null || titleWidget != null)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 2),
-                                child: titleWidget ??
-                                    Text(
-                                      title!,
-                                      style: AppTypography.labelLarge.copyWith(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        color: L.text.withValues(alpha: 0.6),
-                                        letterSpacing: -0.2,
-                                      ),
-                                    ),
-                              )
-                                  .animate()
-                                  .fadeIn(duration: 400.ms, delay: 100.ms)
-                                  .slideY(
-                                      begin: 0.2,
-                                      end: 0,
-                                      curve: Curves.easeOutCubic),
-                          ] else ...[
-                            if (titleWidget != null || title != null)
-                              Row(
-                                children: [
-                                  titleWidget ??
-                                      Text(
-                                        title!,
-                                        style: AppTypography.headlineLarge
-                                            .copyWith(
-                                          fontSize: 26,
-                                          fontWeight: FontWeight.w800,
-                                          color: L.text,
-                                          letterSpacing: -0.8,
-                                          height: 1.1,
-                                        ),
-                                      ),
-                                  if (showProBadge) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 4),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: L.text.withValues(alpha: 0.15),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        "PRO",
-                                        style:
-                                            AppTypography.labelLarge.copyWith(
-                                          color: L.text,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w900,
-                                          letterSpacing: 0.8,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              )
-                                  .animate()
-                                  .fadeIn(duration: 400.ms)
-                                  .slideX(begin: -0.05),
-                          ],
-                          if (subtitle != null)
-                            Padding(
-                              padding: EdgeInsets.only(left: showBrand ? 2 : 0),
-                              child: Text(
-                                subtitle!,
-                                style: AppTypography.bodySmall.copyWith(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w400,
-                                  color: L.sub,
-                                  height: 1.2,
-                                ),
-                              ),
-                            )
-                                .animate()
-                                .fadeIn(duration: 400.ms, delay: 200.ms)
-                                .slideY(
-                                    begin: 0.3,
-                                    end: 0,
-                                    curve: Curves.easeOutCubic),
-                        ],
-                      ),
-                    ),
-                    if (actions != null)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: actions!
-                            .map((a) => Padding(
-                                  padding: const EdgeInsets.only(left: 8),
-                                  child: a,
-                                ))
-                            .toList(),
-                      )
-                          .animate()
-                          .fadeIn(duration: 400.ms, delay: 200.ms)
-                          .slideX(begin: 0.05),
-                  ],
-                ),
+    final topPad = MediaQuery.of(context).padding.top;
+    
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: AnimatedContainer(
+          duration: 250.ms,
+          padding: EdgeInsets.fromLTRB(20, topPad + 12, 20, 16),
+          decoration: BoxDecoration(
+            color: (backgroundColor ?? L.bg).withValues(alpha: isScrolled || blurred ? 0.8 : 0.0),
+            border: Border(
+              bottom: BorderSide(
+                color: (isScrolled || blurred) ? L.border.withValues(alpha: 0.08) : Colors.transparent,
+                width: 0.5,
               ),
-              if (bottom != null) bottom!,
-            ],
+            ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (showBack) ...[
+                  BouncingButton(
+                    onTap: onBack ?? () => Navigator.maybePop(context),
+                    child: Icon(Icons.arrow_back_ios_new_rounded, color: L.text, size: 20),
+                  ),
+                  const SizedBox(width: 20),
+                ] else if (leading != null) ...[
+                  leading!,
+                  const SizedBox(width: 20),
+                ],
+                
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (showBrand) ...[
+                        _buildBrandRow(L),
+                      ] else ...[
+                        if (subtitle != null)
+                          Text(
+                            subtitle!.toUpperCase(),
+                            style: AppTypography.labelSmall.copyWith(
+                              color: L.sub.withValues(alpha: 0.4),
+                              letterSpacing: 2.0,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 10,
+                            ),
+                          ),
+                        if (title != null || titleWidget != null)
+                          titleWidget ?? Text(
+                            title!,
+                            style: AppTypography.headlineMedium.copyWith(
+                              color: L.text,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 26,
+                              height: 1.1,
+                              letterSpacing: -1.0,
+                            ),
+                          ),
+                      ],
+                    ],
+                  ),
+                ),
+
+                if (actions != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: actions!.map((a) => Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: a,
+                    )).toList(),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
     );
-
-    return child;
   }
 
   Widget _buildBrandRow(AppThemeColors L) {

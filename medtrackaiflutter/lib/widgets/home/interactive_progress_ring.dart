@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/app_theme.dart';
 import '../../core/utils/haptic_engine.dart';
-import '../common/bouncing_button.dart';
+import '../shared/shared_widgets.dart';
 
 class InteractiveProgressRing extends StatelessWidget {
   final double progress; // 0.0 to 1.0

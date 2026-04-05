@@ -18,6 +18,7 @@ void main() {
       color: '#FF0000',
       schedule: [
         ScheduleEntry(
+          id: 'test_id_1',
           h: 8,
           m: 0,
           label: 'Morning',
@@ -59,7 +60,7 @@ void main() {
 
     test('calculateExhaustionDate returns null if all schedules are disabled (PRN)', () {
       final prnMed = testMed.copyWith(schedule: [
-        ScheduleEntry(h: 8, m: 0, label: 'Morning', days: [1, 2, 3, 4, 5, 6, 0], enabled: false),
+        ScheduleEntry(id: 'prn_test', h: 8, m: 0, label: 'Morning', days: [1, 2, 3, 4, 5, 6, 0], enabled: false),
       ]);
       expect(RefillHelper.calculateExhaustionDate(prnMed), isNull);
     });
@@ -73,8 +74,8 @@ void main() {
       final multiDoseMed = testMed.copyWith(
         count: 10,
         schedule: [
-          ScheduleEntry(h: 8, m: 0, label: 'Morning', days: [1, 2, 3, 4, 5, 6, 0], enabled: true),
-          ScheduleEntry(h: 20, m: 0, label: 'Evening', days: [1, 2, 3, 4, 5, 6, 0], enabled: true),
+          ScheduleEntry(id: '1', h: 8, m: 0, label: 'Morning', days: [1, 2, 3, 4, 5, 6, 0], enabled: true),
+          ScheduleEntry(id: '2', h: 20, m: 0, label: 'Evening', days: [1, 2, 3, 4, 5, 6, 0], enabled: true),
         ],
       );
       final date = RefillHelper.calculateExhaustionDate(multiDoseMed);

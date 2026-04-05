@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 import '../../../providers/app_state.dart';
 import '../../../domain/entities/medicine.dart';
 import '../../../theme/app_theme.dart';
-import '../../../widgets/common/bouncing_button.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/utils/haptic_engine.dart';
 import '../../../core/utils/refill_helper.dart';
+import '../../../widgets/shared/shared_widgets.dart';
 
 class MedCard extends StatefulWidget {
   final Medicine med;
@@ -42,51 +42,38 @@ class _MedCardState extends State<MedCard> {
         ? widget.med.genericName
         : widget.med.name;
 
-    return BouncingButton(
-      onTap: widget.onView,
-      scaleFactor: 0.98,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.p20),
-        decoration: BoxDecoration(
-          color: L.card,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isLow ? L.error : L.border, 
-            width: 1.5,
-          ), // Industrial border (Red if low)
-          // No shadows for clean Cal AI look
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: BouncingButton(
+        onTap: widget.onView,
+        scaleFactor: 0.98,
+        child: SquircleCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // ── Top Section: Brand & Adherence
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.p20),
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  // Industrial Med Icon
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: L.text.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: L.border),
-                        ),
-                        child: Center(
-                          child: Text(
-                            _getCategoryEmoji(widget.med.category),
-                            style: const TextStyle(fontSize: 22),
-                          ),
-                        ),
+                  // Squircle Med Icon
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: L.fill,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: L.border.withValues(alpha: 0.5)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _getCategoryEmoji(widget.med.category),
+                        style: const TextStyle(fontSize: 22),
                       ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(width: AppSpacing.p16),
+                  const SizedBox(width: 16),
                   
                   // Text Info
                   Expanded(
@@ -102,6 +89,7 @@ class _MedCardState extends State<MedCard> {
                             fontWeight: FontWeight.w900,
                             letterSpacing: -1.0,
                             fontSize: 18,
+                            height: 1.1,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -110,27 +98,28 @@ class _MedCardState extends State<MedCard> {
                             Text(
                               widget.med.dose.toUpperCase(),
                               style: AppTypography.labelSmall.copyWith(
-                                color: L.sub.withValues(alpha: 0.6),
-                                fontWeight: FontWeight.w800,
+                                color: L.sub,
+                                fontWeight: FontWeight.w900,
                                 letterSpacing: 0.5,
+                                fontSize: 9,
                               ),
                             ),
                             Container(
-                              margin: const EdgeInsets.symmetric(horizontal: AppSpacing.p8),
+                              margin: const EdgeInsets.symmetric(horizontal: 8),
                               width: 3,
                               height: 3,
                               decoration: BoxDecoration(
-                                color: L.sub.withValues(alpha: 0.2),
+                                color: L.border,
                                 shape: BoxShape.circle,
                               ),
                             ),
                             Text(
                               widget.med.form.toUpperCase(),
                               style: AppTypography.labelSmall.copyWith(
-                                color: L.sub.withValues(alpha: 0.4),
+                                color: L.sub.withValues(alpha: 0.5),
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 1.0,
-                                fontSize: 9,
+                                fontSize: 8,
                               ),
                             ),
                           ],
@@ -139,20 +128,21 @@ class _MedCardState extends State<MedCard> {
                     ),
                   ),
                   
-                  // Adherence "Pill" (Monochrome)
+                  // Adherence "Pill" (High Fidelity)
                   if (adh != -1)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: L.text.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: L.border.withValues(alpha: 0.1)),
+                        color: L.text.withValues(alpha: 0.03),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: L.border.withValues(alpha: 0.3)),
                       ),
                       child: Text(
                         '$adh% ADH',
                         style: AppTypography.labelSmall.copyWith(
                           color: L.text,
                           fontWeight: FontWeight.w900,
+                          fontSize: 8,
                         ),
                       ),
                     ),
@@ -160,30 +150,40 @@ class _MedCardState extends State<MedCard> {
               ),
             ),
 
-            // ── Technical Segmented Inventory Bar (Industrial)
+            // ── Technical Segmented Inventory Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _SegmentedStockBar(pct: pct, isLow: isLow, L: L),
             ),
             
-            const SizedBox(height: AppSpacing.p12),
+            const SizedBox(height: 16),
 
             // ── Bottom Action Strip
-            Padding(
-              padding: const EdgeInsets.only(left: 20, right: 8, bottom: 8),
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
+              decoration: BoxDecoration(
+                color: L.fill.withValues(alpha: 0.3),
+                border: Border(top: BorderSide(color: L.border.withValues(alpha: 0.3))),
+              ),
               child: Row(
                 children: [
+                  Icon(
+                    isLow ? Icons.error_outline_rounded : Icons.inventory_2_outlined,
+                    size: 14,
+                    color: isLow ? L.error : L.sub.withValues(alpha: 0.4),
+                  ),
+                  const SizedBox(width: 8),
                   Text(
-                    '${widget.med.count} UNITS LEFT',
+                    '${widget.med.count} UNITS_STABLE',
                     style: AppTypography.labelSmall.copyWith(
                       color: isLow ? L.error : L.sub.withValues(alpha: 0.4),
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.0,
+                      fontSize: 8,
                     ),
                   ),
                   const Spacer(),
-                  // Premium Inventory Controls (Industrial)
-                   Row(
+                  Row(
                     children: [
                       _StepBtn(
                         icon: Icons.remove_rounded,
@@ -213,7 +213,9 @@ class _MedCardState extends State<MedCard> {
     )
         .animate()
         .fadeIn(duration: 400.ms)
-        .slideY(begin: 0.05, end: 0, curve: Curves.easeOutQuart);
+        .slideX(begin: 0.05, end: 0, curve: Curves.easeOutQuart)
+        .scale(begin: const Offset(0.98, 0.98), curve: Curves.easeOutQuart),
+    );
   }
 
 

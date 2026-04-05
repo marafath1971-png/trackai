@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../theme/app_theme.dart';
 import '../../../providers/app_state.dart';
 import '../../../core/utils/haptic_engine.dart';
-import '../../../widgets/common/bouncing_button.dart';
+import '../../../widgets/shared/shared_widgets.dart';
 import 'package:provider/provider.dart';
 
 class TrialCountdownCard extends StatelessWidget {

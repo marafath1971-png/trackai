@@ -71,6 +71,7 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
           return DoseItem(
             med: med,
             sched: ScheduleEntry(
+                id: 'prn_${e.medId}_${e.time}',
                 h: int.parse(e.time.split(':')[0]),
                 m: int.parse(e.time.split(':')[1]),
                 label: 'PRN',

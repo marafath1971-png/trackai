@@ -1149,6 +1149,14 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
+  Future<void> recordDose(int medId, String scheduleId, DateTime takenAt) async {
+    final med = meds.firstWhere((m) => m.id == medId);
+    final index = med.schedule.indexWhere((s) => s.id == scheduleId);
+    if (index != -1) {
+      await takeDose(medId, index);
+    }
+  }
+
   Future<void> toggleDose(DoseItem dose) async {
     final key = dose.key;
     if (_isMutating || _processingDoses[key] == true) return; 

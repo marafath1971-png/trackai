@@ -23,7 +23,7 @@ import 'package:flutter/services.dart';
 import '../../core/utils/haptic_engine.dart';
 import '../../widgets/common/app_loading_indicator.dart';
 import '../../core/utils/result.dart';
-import '../../widgets/common/bouncing_button.dart';
+import '../../widgets/shared/shared_widgets.dart';
 
 class ScanTab extends StatefulWidget {
   final void Function(Medicine)? onSave;
@@ -1071,6 +1071,7 @@ class _ResultModalState extends State<_ResultModal> {
         );
 
         return ScheduleEntry(
+          id: 'scan_${DateTime.now().millisecondsSinceEpoch}_${_manualSchedule.length}',
           h: s['h'] ?? 8,
           m: s['m'] ?? 0,
           label: s['label'] ?? 'Reminder',
@@ -1081,6 +1082,7 @@ class _ResultModalState extends State<_ResultModal> {
     } else {
       _manualSchedule = [
         ScheduleEntry(
+            id: 'init_${DateTime.now().millisecondsSinceEpoch}',
             h: 8,
             m: 0,
             label: 'Morning',
@@ -2117,6 +2119,7 @@ class _ResultModalState extends State<_ResultModal> {
             HapticEngine.light();
             setState(() {
               _manualSchedule.add(ScheduleEntry(
+                  id: 'man_${DateTime.now().millisecondsSinceEpoch}',
                   h: 12,
                   m: 0,
                   label: _getAutoLabel(12),

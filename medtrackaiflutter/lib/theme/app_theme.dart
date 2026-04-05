@@ -10,7 +10,6 @@ export 'app_tokens.dart';
 
 class AppColors {
   // ── Brand ─────────────────────────────────────────────
-  // Cal AI Premium Industrial Black
   static const Color primaryBlue = Color(0xFF000000);
   static const Color primaryBlueDark = Color(0xFF000000);
   static const Color primaryBlueLight = Color(0xFF1A1A1A);
@@ -18,28 +17,25 @@ class AppColors {
   // ── Monochrome Base ────────────────────────────────────
   static const Color black = Color(0xFF000000);
   static const Color white = Color(0xFFFFFFFF);
-  static const Color meshBg = Color(0xFFF9F9F9); // User-updated near-white background
+  static const Color meshBg = Color(0xFFF9F9F9); 
 
-  // Light mode surfaces (clean white)
-  static const Color grey50 = Color(0xFFFFFFFF);  // Pure white background
+  static const Color grey50 = Color(0xFFFFFFFF);
   static const Color grey100 = Color(0xFFF5F5F5);
   static const Color grey200 = Color(0xFFE5E5E5);
   static const Color grey300 = Color(0xFFD4D4D4);
   static const Color grey400 = Color(0xFFA3A3A3);
   static const Color grey500 = Color(0xFF737373);
   static const Color grey600 = Color(0xFF525252);
-
-  // Dark mode surfaces (pure neutrals)
   static const Color grey700 = Color(0xFF404040);
   static const Color grey800 = Color(0xFF262626);
   static const Color grey900 = Color(0xFF171717);
-  static const Color grey950 = Color(0xFF000000); // Pure Black
+  static const Color grey950 = Color(0xFF000000);
 
   // ── Semantics ──────────────────────────────────────────
   static const Color error = Color(0xFFEF4444);
-  static const Color success = Color(0xFF10B981);  // Emerald
-  static const Color warning = Color(0xFFF59E0B);  // Warm amber
-  static const Color info = Color(0xFF4B5563); // Charcoal Grey for info
+  static const Color success = Color(0xFF10B981);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color info = Color(0xFF4B5563);
 
   // ── Compatibility Aliases ─────────────────────────────
   static const Color lRed = error;
@@ -48,8 +44,25 @@ class AppColors {
   static const Color oText = white;
   static const Color oBorder = grey800;
   static const Color oFill = grey900;
-  static const Color oLime = primaryBlue;     // Legacy alias
-  static const Color oLimeDark = primaryBlueDark; // Legacy alias
+  static const Color oLime = primaryBlue;
+  static const Color oLimeDark = primaryBlueDark;
+}
+
+class AppGradients {
+  static LinearGradient get main => const LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [AppColors.black, AppColors.grey800],
+  );
+
+  static LinearGradient glass([Color? color]) => LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      (color ?? Colors.white).withValues(alpha: 0.1),
+      (color ?? Colors.white).withValues(alpha: 0.02),
+    ],
+  );
 }
 
 class AppTheme {
@@ -59,9 +72,9 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: AppColors.grey50,
+      scaffoldBackgroundColor: AppColors.white,
       colorScheme: ColorScheme.light(
-        primary: AppColors.primaryBlue,
+        primary: AppColors.black,
         onPrimary: AppColors.white,
         secondary: accent,
         onSecondary: AppColors.white,
@@ -72,10 +85,18 @@ class AppTheme {
         surfaceContainer: AppColors.grey100,
       ),
       textTheme: _buildTextTheme(AppColors.black),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) => 
+          states.contains(WidgetState.selected) ? AppColors.white : AppColors.grey400),
+        trackColor: WidgetStateProperty.resolveWith((states) => 
+          states.contains(WidgetState.selected) ? AppColors.black : AppColors.grey200),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+        splashRadius: 0,
+      ),
       cardTheme: CardThemeData(
         color: AppColors.white,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.roundM),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.roundXL),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -83,72 +104,73 @@ class AppTheme {
           foregroundColor: AppColors.white,
           textStyle: AppTypography.labelLarge,
           minimumSize: const Size(double.infinity, 64),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.roundM),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.roundXL),
           elevation: 0,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.white,
-        labelStyle: AppTypography.bodyMedium.copyWith(color: AppColors.grey500),
+        labelStyle: AppTypography.bodyMedium.copyWith(color: AppColors.grey600),
         hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.grey400),
         border: OutlineInputBorder(
-          borderRadius: AppRadius.roundM,
+          borderRadius: AppRadius.roundXL,
           borderSide: const BorderSide(color: AppColors.grey200),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.roundM,
+          borderRadius: AppRadius.roundXL,
           borderSide: const BorderSide(color: AppColors.grey200),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadius.roundM,
+          borderRadius: AppRadius.roundXL,
           borderSide: const BorderSide(color: AppColors.black, width: 2),
         ),
         contentPadding: const EdgeInsets.all(AppSpacing.fieldPadding),
       ),
-      chipTheme: ChipThemeData(
-        backgroundColor: AppColors.grey100,
-        labelStyle: AppTypography.labelMedium.copyWith(color: AppColors.black),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.roundM),
-        side: BorderSide.none,
-      ),
     ).copyWith(
       extensions: [
         AppThemeColors.fromColorScheme(
-          ColorScheme.light(primary: AppColors.primaryBlue, secondary: accent),
+          ColorScheme.light(primary: AppColors.black, secondary: accent),
           Brightness.light,
         ),
       ],
     );
   }
 
-  static ThemeData dark({String? accentHex, bool isAmoled = false}) {
+  static ThemeData dark({bool isAmoled = false, String? accentHex}) {
     final accent = accentHex != null ? hexToColor(accentHex) : AppColors.primaryBlueLight;
-    const bg = AppColors.black;
-    const surface = AppColors.black;
-    const surfaceContainer = Color(0xFF0A0A0A);
+    final bg = isAmoled ? AppColors.black : AppColors.grey950;
+    final surface = isAmoled ? AppColors.black : AppColors.grey900;
+    final surfaceContainer = isAmoled ? AppColors.grey950 : AppColors.grey800;
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: bg,
       colorScheme: ColorScheme.dark(
-        primary: AppColors.primaryBlueLight,
-        onPrimary: AppColors.white,
+        primary: AppColors.white,
+        onPrimary: AppColors.black,
         secondary: accent,
-        onSecondary: AppColors.white,
+        onSecondary: AppColors.black,
         surface: surface,
         onSurface: AppColors.white,
         error: AppColors.error,
-        outline: AppColors.grey900,
+        outline: AppColors.grey800,
         surfaceContainer: surfaceContainer,
       ),
       textTheme: _buildTextTheme(AppColors.white),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) => 
+          states.contains(WidgetState.selected) ? AppColors.black : AppColors.grey600),
+        trackColor: WidgetStateProperty.resolveWith((states) => 
+          states.contains(WidgetState.selected) ? AppColors.white : AppColors.grey900),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+        splashRadius: 0,
+      ),
       cardTheme: CardThemeData(
         color: AppColors.grey900,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.roundM),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.roundXL),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -156,35 +178,9 @@ class AppTheme {
           foregroundColor: AppColors.black,
           textStyle: AppTypography.labelLarge,
           minimumSize: const Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.roundM),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.roundXL),
           elevation: 0,
         ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.grey900,
-        labelStyle: AppTypography.bodyMedium.copyWith(color: AppColors.grey400),
-        hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.grey500),
-        border: OutlineInputBorder(
-          borderRadius: AppRadius.roundM,
-          borderSide: const BorderSide(color: AppColors.grey800),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.roundM,
-          borderSide: const BorderSide(color: AppColors.grey800),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadius.roundM,
-          borderSide: const BorderSide(color: AppColors.white, width: 2),
-        ),
-        contentPadding: const EdgeInsets.all(AppSpacing.fieldPadding),
-      ),
-      chipTheme: ChipThemeData(
-        backgroundColor: AppColors.grey900,
-        labelStyle: AppTypography.labelMedium.copyWith(color: AppColors.white),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.roundM),
-        side: BorderSide.none,
       ),
     ).copyWith(
       extensions: [
@@ -208,6 +204,7 @@ class AppTheme {
       bodyLarge: AppTypography.bodyLarge.copyWith(color: textColor),
       bodyMedium: AppTypography.bodyMedium.copyWith(color: textColor),
       labelLarge: AppTypography.labelLarge.copyWith(color: textColor),
+      labelMedium: AppTypography.labelMedium.copyWith(color: textColor),
       labelSmall: AppTypography.labelMedium.copyWith(color: textColor),
     );
   }
@@ -215,25 +212,32 @@ class AppTheme {
 
 class AppThemeColors extends ThemeExtension<AppThemeColors> {
   final Color bg;
-  final Color onBg; // NEW: High contrast for background
+  final Color onBg;
   final Color card;
-  final Color onCard; // NEW: High contrast for card
+  final Color onCard;
   final Color card2;
-  final Color onCard2; // NEW: High contrast for card2
+  final Color onCard2;
   final Color border;
   final Color text;
   final Color sub;
   final Color fill;
-  final Color onFill; // NEW: High contrast for filled areas
+  final Color onFill;
   final Color primary;
   final Color onPrimary;
   final Color secondary;
   final Color error;
+  final Color red;
+  final Color redLight;
   final Color success;
+  final Color green;
+  final Color greenLight;
   final Color warning;
+  final Color amber;
   final Color info;
   final Color purple;
-  final Color meshBg; // NEW: Cal AI soft background
+  final Color meshBg;
+  final Color glass;
+  final Color glassBorder;
   final List<BoxShadow> shadowSoft;
   final LinearGradient mainGradient;
 
@@ -253,61 +257,60 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     required this.onPrimary,
     required this.secondary,
     required this.error,
+    required this.red,
+    required this.redLight,
     required this.success,
+    required this.green,
+    required this.greenLight,
     required this.warning,
+    required this.amber,
     required this.info,
     required this.purple,
     required this.meshBg,
+    required this.glass,
+    required this.glassBorder,
     required this.shadowSoft,
     required this.mainGradient,
   });
 
-  // Semantic aliases for compatibility
-  Color get red => error;
-  Color get green => success;
-  Color get amber => warning;
-  Color get blue => info;
-
-  Color get redLight => red.withValues(alpha: 0.1);
-  Color get greenLight => green.withValues(alpha: 0.1);
-  Color get amberLight => amber.withValues(alpha: 0.1);
-
-  static AppThemeColors fromColorScheme(
-      ColorScheme scheme, Brightness brightness,
-      {bool isAmoled = false}) {
+  factory AppThemeColors.fromColorScheme(ColorScheme colorScheme, Brightness brightness, {bool isAmoled = false}) {
     final isDark = brightness == Brightness.dark;
-    
-    // PURE MONOCHROME BASE
-    final bg = isDark ? AppColors.black : AppColors.white;
-    final card = isDark ? AppColors.grey900 : AppColors.white;
-    final card2 = isDark ? const Color(0xFF0A0A0A) : AppColors.grey100;
-    
-    final fill = isDark
-        ? AppColors.white.withValues(alpha: 0.08)
-        : AppColors.black.withValues(alpha: 0.04);
 
     return AppThemeColors(
-      bg: bg,
+      bg: isDark ? (isAmoled ? Colors.black : AppColors.grey950) : AppColors.white,
       onBg: isDark ? AppColors.white : AppColors.black,
-      card: card,
+      card: isDark ? AppColors.grey900 : AppColors.white,
       onCard: isDark ? AppColors.white : AppColors.black,
-      card2: card2,
+      card2: isDark ? AppColors.grey800 : AppColors.grey50,
       onCard2: isDark ? AppColors.white : AppColors.black,
       border: isDark ? AppColors.grey800 : AppColors.grey200,
       text: isDark ? AppColors.white : AppColors.black,
-      sub: isDark ? AppColors.grey500 : AppColors.grey600,
-      fill: fill,
+      sub: isDark ? AppColors.grey400 : AppColors.grey500,
+      fill: isDark ? AppColors.grey900 : AppColors.grey100,
       onFill: isDark ? AppColors.white : AppColors.black,
-      primary: isDark ? AppColors.white : AppColors.black,
-      onPrimary: isDark ? AppColors.black : AppColors.white,
-      secondary: scheme.secondary,
+      primary: colorScheme.primary,
+      onPrimary: colorScheme.onPrimary,
+      secondary: colorScheme.secondary,
       error: AppColors.error,
+      red: AppColors.error,
+      redLight: AppColors.error.withValues(alpha: 0.1),
       success: AppColors.success,
+      green: AppColors.success,
+      greenLight: AppColors.success.withValues(alpha: 0.1),
       warning: AppColors.warning,
+      amber: AppColors.warning,
       info: AppColors.info,
       purple: const Color(0xFF8B5CF6),
       meshBg: isDark ? AppColors.black : AppColors.meshBg,
-      shadowSoft: isDark ? AppShadows.subtle : AppShadows.soft,
+      glass: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.7),
+      glassBorder: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+      shadowSoft: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+          blurRadius: 20,
+          offset: const Offset(0, 10),
+        )
+      ],
       mainGradient: AppGradients.main,
     );
   }
@@ -329,11 +332,18 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     Color? onPrimary,
     Color? secondary,
     Color? error,
+    Color? red,
+    Color? redLight,
     Color? success,
+    Color? green,
+    Color? greenLight,
     Color? warning,
+    Color? amber,
     Color? info,
     Color? purple,
     Color? meshBg,
+    Color? glass,
+    Color? glassBorder,
     List<BoxShadow>? shadowSoft,
     LinearGradient? mainGradient,
   }) =>
@@ -353,11 +363,18 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
         onPrimary: onPrimary ?? this.onPrimary,
         secondary: secondary ?? this.secondary,
         error: error ?? this.error,
+        red: red ?? this.red,
+        redLight: redLight ?? this.redLight,
         success: success ?? this.success,
+        green: green ?? this.green,
+        greenLight: greenLight ?? this.greenLight,
         warning: warning ?? this.warning,
+        amber: amber ?? this.amber,
         info: info ?? this.info,
         purple: purple ?? this.purple,
         meshBg: meshBg ?? this.meshBg,
+        glass: glass ?? this.glass,
+        glassBorder: glassBorder ?? this.glassBorder,
         shadowSoft: shadowSoft ?? this.shadowSoft,
         mainGradient: mainGradient ?? this.mainGradient,
       );
@@ -381,11 +398,18 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       onPrimary: Color.lerp(onPrimary, other.onPrimary, t)!,
       secondary: Color.lerp(secondary, other.secondary, t)!,
       error: Color.lerp(error, other.error, t)!,
+      red: Color.lerp(red, other.red, t)!,
+      redLight: Color.lerp(redLight, other.redLight, t)!,
       success: Color.lerp(success, other.success, t)!,
+      green: Color.lerp(green, other.green, t)!,
+      greenLight: Color.lerp(greenLight, other.greenLight, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
+      amber: Color.lerp(amber, other.amber, t)!,
       info: Color.lerp(info, other.info, t)!,
       purple: Color.lerp(purple, other.purple, t)!,
       meshBg: Color.lerp(meshBg, other.meshBg, t)!,
+      glass: Color.lerp(glass, other.glass, t)!,
+      glassBorder: Color.lerp(glassBorder, other.glassBorder, t)!,
       shadowSoft: BoxShadow.lerpList(shadowSoft, other.shadowSoft, t)!,
       mainGradient: LinearGradient.lerp(mainGradient, other.mainGradient, t)!,
     );

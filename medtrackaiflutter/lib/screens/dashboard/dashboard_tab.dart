@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/app_state.dart';
+import '../../widgets/shared/shared_widgets.dart';
 import '../../theme/app_theme.dart';
 import '../../domain/entities/health_insight.dart';
 import '../../domain/entities/medicine.dart';
@@ -11,7 +12,7 @@ import '../../core/utils/haptic_engine.dart';
 import '../../services/report_service.dart';
 import '../../widgets/common/paywall_sheet.dart';
 import '../../l10n/app_localizations.dart';
-import '../../widgets/common/bouncing_button.dart';
+import '../../widgets/shared/shared_widgets.dart';
 import '../../widgets/common/shimmer_loader.dart';
 import '../../widgets/modals/daily_log_sheet.dart';
 import '../home/widgets/streak_modal.dart';
@@ -107,41 +108,32 @@ class _DashboardTabState extends State<DashboardTab> {
                   SizedBox(height: 110 + MediaQuery.of(context).padding.top),
                   const SizedBox(height: AppSpacing.l),
 
-                  // --- SUMMARY STATS ---
+                  // --- SUMMARY STATS (Bento) ---
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.screenPadding),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       children: [
-                        _buildStatCard(
+                        _buildSummaryCard(
                           context,
-                          s.adherenceLabel,
+                          s.adherenceLabel.toUpperCase(),
                           '${(adherence * 100).round()}%',
                           Icons.insights_rounded,
                           L.secondary,
-                          onTap: () => showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) => TrendDrilldownSheet(state: context.read<AppState>(), L: L),
-                          ),
+                          onTap: () => _showTrendDrilldown(context, state, L),
                         ),
-                        const SizedBox(width: AppSpacing.m),
-                        _buildStatCard(
+                        const SizedBox(width: 12),
+                        _buildSummaryCard(
                           context,
-                          s.streakLabel,
-                          s.streakDays(streak),
+                          s.streakLabel.toUpperCase(),
+                          '${streak}D',
                           Icons.local_fire_department_rounded,
                           L.warning,
                           onTap: () => StreakModal.show(context, state),
                         ),
                       ],
                     ),
-                  )
-                      .animate()
-                      .fadeIn(duration: 600.ms)
-                      .slideY(begin: 0.1, end: 0),
-                  const SizedBox(height: AppSpacing.l),
+                  ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuart),
+                  const SizedBox(height: 24),
 
                   // --- QUICK ACTIONS ---
                   _DashboardQuickActionRow(
@@ -163,8 +155,8 @@ class _DashboardTabState extends State<DashboardTab> {
                         history: state.history,
                       );
                     },
-                  ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0),
-                  const SizedBox(height: AppSpacing.xl),
+                  ).animate(delay: 100.ms).fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuart),
+                  const SizedBox(height: 32),
 
                   // --- 30-DAY ADHERENCE TREND ---
                   Padding(
@@ -324,61 +316,51 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String label, String value,
+  void _showTrendDrilldown(BuildContext context, AppState state, AppThemeColors L) {
+    HapticEngine.selection();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => TrendDrilldownSheet(state: state, L: L),
+    );
+  }
+
+  Widget _buildSummaryCard(BuildContext context, String label, String value,
       IconData icon, Color color, {VoidCallback? onTap}) {
     final L = context.L;
     return Expanded(
       child: BouncingButton(
-        onTap: onTap ?? () {
-          HapticEngine.selection();
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (context) =>
-                TrendDrilldownSheet(state: context.read<AppState>(), L: L),
-          );
-        },
-        scaleFactor: 0.97,
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          decoration: BoxDecoration(
-            color: L.card,
-            borderRadius: AppRadius.roundL,
-            border: Border.all(color: L.border, width: 1.5),
-          ),
+        onTap: onTap,
+        scaleFactor: 0.95,
+        child: SquircleCard(
+          padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
+                      color: L.text.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                          color: color.withValues(alpha: 0.2), width: 1),
                     ),
-                    child: Icon(icon, color: color, size: 18),
+                    child: Icon(icon, color: L.text, size: 18),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.labelLarge.copyWith(
-                            fontSize: 11,
-                            color: L.sub,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.2)),
-                  ),
+                  Text(label,
+                      style: AppTypography.labelSmall.copyWith(
+                          fontSize: 9,
+                          color: L.sub,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5)),
                 ],
               ),
               const SizedBox(height: 24),
               Text(value,
                   style: AppTypography.displayLarge.copyWith(
-                      fontSize: 32,
+                      fontSize: 34,
                       color: L.text,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -1.0)),

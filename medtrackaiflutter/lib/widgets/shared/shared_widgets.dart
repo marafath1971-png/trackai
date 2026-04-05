@@ -1,8 +1,12 @@
+import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/app_theme.dart';
+import '../../core/utils/haptic_engine.dart';
+import '../../core/utils/date_formatter.dart';
+import '../../core/utils/color_utils.dart';
+import '../../domain/entities/medicine.dart';
 
 // ══════════════════════════════════════════════
 // RING CHART (CustomPainter — matches JSX Ring component)
@@ -109,10 +113,6 @@ class _RingPainter extends CustomPainter {
       o.percent != percent || o.color != color;
 }
 
-// ══════════════════════════════════════════════
-// iOS TOGGLE (matches JSX Cal AI toggle)
-// ══════════════════════════════════════════════
-
 class AppToggle extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
@@ -124,59 +124,179 @@ class AppToggle extends StatelessWidget {
     final L = context.L;
     return GestureDetector(
       onTap: () {
-        HapticFeedback.mediumImpact();
+        HapticEngine.selection();
         onChanged(!value);
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-        width: 48,
-        height: 28,
+        duration: 400.ms,
+        curve: Curves.easeOutQuart,
+        width: 52,
+        height: 30,
         decoration: BoxDecoration(
           color: value ? L.text : L.fill,
           borderRadius: BorderRadius.circular(100),
           border: Border.all(
-            color: value ? L.text : L.border.withValues(alpha: 0.5),
+            color: value ? L.text : L.border.withValues(alpha: 0.1),
             width: 1.0,
           ),
-          boxShadow: [
-            if (value)
-              BoxShadow(
-                color: L.text.withValues(alpha: 0.2),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-          ],
+          boxShadow: value ? AppShadows.glow(L.text, intensity: 0.15) : null,
         ),
         child: Stack(children: [
           AnimatedAlign(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.elasticOut,
+            duration: 400.ms,
+            curve: Curves.easeOutQuart,
             alignment: value ? Alignment.centerRight : Alignment.centerLeft,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 20,
-                height: 20,
+              padding: const EdgeInsets.all(3),
+              child: Container(
+                width: 24,
+                height: 24,
                 decoration: BoxDecoration(
-                  color: value ? L.bg : L.onBg,
+                  color: value ? L.bg : L.text.withValues(alpha: 0.8),
                   shape: BoxShape.circle,
                   boxShadow: [
-                    BoxShadow(
-                        color: L.onBg.withValues(alpha: 0.15),
+                    if (!value)
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 4,
-                        offset: const Offset(0, 2))
+                        offset: const Offset(0, 2),
+                      )
                   ],
                 ),
               ),
             ),
-          ).animate(target: value ? 1 : 0).then().scale(
-              begin: const Offset(1.1, 1.1),
-              end: const Offset(1, 1),
-              duration: 150.ms),
+          ),
         ]),
       ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════
+// GLASS CARD (iOS 26 Frosted Glass)
+// ══════════════════════════════════════════════
+
+class GlassCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final double? width;
+  final double? height;
+  final BorderRadius? borderRadius;
+  final bool showBorder;
+
+  const GlassCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.width,
+    this.height,
+    this.borderRadius,
+    this.showBorder = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+    return ClipRRect(
+      borderRadius: borderRadius ?? AppRadius.roundSquircle,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          width: width,
+          height: height,
+          padding: padding ?? const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: L.glass,
+            borderRadius: borderRadius ?? AppRadius.roundSquircle,
+            border: showBorder 
+              ? Border.all(color: L.glassBorder, width: 1.5)
+              : null,
+            boxShadow: AppShadows.glass,
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════
+// BOUNCING BUTTON (iOS 26 Spring Interaction)
+// ══════════════════════════════════════════════
+
+class BouncingButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  final double scaleFactor;
+  final bool hapticEnabled;
+  final Duration duration;
+
+  const BouncingButton({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.scaleFactor = 0.95,
+    this.hapticEnabled = true,
+    this.duration = const Duration(milliseconds: 100),
+  });
+
+  @override
+  State<BouncingButton> createState() => _BouncingButtonState();
+}
+
+class _BouncingButtonState extends State<BouncingButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) {
+        setState(() => _isPressed = true);
+        if (widget.hapticEnabled) HapticEngine.light();
+      },
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _isPressed ? widget.scaleFactor : 1.0,
+        duration: widget.duration,
+        curve: Curves.easeOutCubic,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════
+// SQUIRCLE CARD (iOS 26 High-Fidelity)
+// ══════════════════════════════════════════════
+
+class SquircleCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final Color? color;
+  final List<BoxShadow>? shadow;
+
+  const SquircleCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.color,
+    this.shadow,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+    return Container(
+      padding: padding ?? const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: color ?? L.card,
+        borderRadius: AppRadius.roundSquircle,
+        boxShadow: shadow ?? AppShadows.soft,
+        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+      ),
+      child: child,
     );
   }
 }
@@ -243,24 +363,17 @@ class AppToast extends StatelessWidget {
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
     
     return Positioned(
-      bottom: bottomPadding + 110, // Floating above navigation
+      bottom: bottomPadding + 120,
       left: 24,
       right: 24,
       child: Center(
-        child: Container(
+        child: GlassCard(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: L.bg,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: L.text,
-              width: 1.5,
-            ),
-          ),
+          borderRadius: BorderRadius.circular(24),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: L.text, size: 16),
+              Icon(icon, color: L.text, size: 18),
               const SizedBox(width: 12),
               Flexible(
                 child: Text(
@@ -268,7 +381,7 @@ class AppToast extends StatelessWidget {
                   style: AppTypography.labelSmall.copyWith(
                     color: L.text,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
+                    letterSpacing: 1.0,
                     fontSize: 10,
                   ),
                 ),
@@ -276,7 +389,9 @@ class AppToast extends StatelessWidget {
             ],
           ),
         ),
-      ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.5, end: 0, curve: Curves.easeOutBack),
+      ).animate().fadeIn(duration: 400.ms)
+       .slideY(begin: 0.5, end: 0, curve: Curves.easeOutQuart)
+       .shimmer(delay: 600.ms, duration: 1200.ms, color: Colors.white.withValues(alpha: 0.1)),
     );
   }
 }
@@ -573,7 +688,7 @@ class MedImage extends StatelessWidget {
   final double? width;
   final double? height;
   final BoxFit fit;
-  final double borderRadius;
+  final double? borderRadius;
   final Widget? placeholder;
 
   const MedImage({
@@ -582,7 +697,7 @@ class MedImage extends StatelessWidget {
     this.width,
     this.height,
     this.fit = BoxFit.cover,
-    this.borderRadius = 0,
+    this.borderRadius,
     this.placeholder,
   });
 
@@ -612,27 +727,282 @@ class MedImage extends StatelessWidget {
             ),
       );
     } else {
-      // Assume local file path
-      image = Image.file(
-        File(imageUrl!),
-        width: width,
-        height: height,
-        fit: fit,
-        errorBuilder: (context, error, stackTrace) =>
-            placeholder ??
-            Container(
-              color: L.fill,
-              child: Icon(Icons.broken_image_rounded, color: L.sub),
-            ),
-      );
+      // Assume local file path or package asset
+      if (imageUrl!.startsWith('assets/')) {
+        image = Image.asset(
+          imageUrl!,
+          width: width,
+          height: height,
+          fit: fit,
+          errorBuilder: (context, error, stackTrace) =>
+              placeholder ??
+              Container(
+                color: L.fill,
+                child: Icon(Icons.broken_image_rounded, color: L.sub),
+              ),
+        );
+      } else {
+        image = Image.file(
+          File(imageUrl!),
+          width: width,
+          height: height,
+          fit: fit,
+          errorBuilder: (context, error, stackTrace) =>
+              placeholder ??
+              Container(
+                color: L.fill,
+                child: Icon(Icons.broken_image_rounded, color: L.sub),
+              ),
+        );
+      }
     }
 
-    if (borderRadius > 0) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: image,
+    final radius = borderRadius ?? AppRadius.squircle;
+    
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: image,
+    );
+  }
+}
+
+// ══════════════════════════════════════════════
+// DOSE CARD (iOS 26 High-Fidelity)
+// ══════════════════════════════════════════════
+
+class DoseCard extends StatefulWidget {
+  final Medicine med;
+  final ScheduleEntry sched;
+  final bool taken;
+  final bool overdue;
+  final bool isNext;
+  final VoidCallback onTake;
+  final VoidCallback onSnooze;
+  final VoidCallback onTap;
+
+  const DoseCard({
+    super.key,
+    required this.med,
+    required this.sched,
+    required this.taken,
+    required this.overdue,
+    required this.isNext,
+    required this.onTake,
+    required this.onSnooze,
+    required this.onTap,
+  });
+
+  @override
+  State<DoseCard> createState() => _DoseCardState();
+}
+
+class _DoseCardState extends State<DoseCard> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+    final medColor = hexToColor(widget.med.color);
+
+    return Dismissible(
+      key: ValueKey('dose_${widget.sched.id}_${widget.taken}'),
+      direction: widget.taken ? DismissDirection.none : DismissDirection.startToEnd,
+      confirmDismiss: (dir) async {
+        if (dir == DismissDirection.startToEnd) {
+          HapticEngine.doseTaken();
+          Future.delayed(const Duration(milliseconds: 200), () {
+            widget.onTake();
+          });
+        }
+        return false;
+      },
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        alignment: Alignment.centerLeft,
+        decoration: BoxDecoration(
+            gradient: AppGradients.main, borderRadius: BorderRadius.circular(24)),
+        child: const Icon(Icons.check_rounded, color: Colors.white, size: 24),
+      ),
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
+        onTap: widget.onTap,
+        child: AnimatedScale(
+          scale: _pressed ? 0.98 : 1.0,
+          duration: 100.ms,
+          child: SquircleCard(
+            padding: EdgeInsets.zero,
+            child: Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: widget.taken ? medColor.withValues(alpha: 0.2) : medColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      bottomLeft: Radius.circular(32),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    child: Row(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              fmtTime(widget.sched.h, widget.sched.m, context),
+                              style: AppTypography.titleMedium.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: widget.taken ? L.sub.withValues(alpha: 0.3) : L.text,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            Text(
+                              widget.sched.label.toUpperCase(),
+                              style: AppTypography.labelSmall.copyWith(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                color: L.sub.withValues(alpha: 0.4),
+                                decoration: widget.taken ? TextDecoration.lineThrough : null,
+                                letterSpacing: 0.2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 14),
+                        Container(width: 1, height: 24, color: L.border.withValues(alpha: 0.08)),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                widget.med.name,
+                                style: AppTypography.labelLarge.copyWith(
+                                  color: widget.taken ? L.text.withValues(alpha: 0.4) : L.text,
+                                  fontWeight: FontWeight.w900,
+                                  decoration: widget.taken ? TextDecoration.lineThrough : null,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${widget.med.name} · ${widget.med.dose}',
+                                style: AppTypography.labelSmall.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  color: L.sub.withValues(alpha: 0.4),
+                                  decoration: widget.taken ? TextDecoration.lineThrough : null,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        GestureDetector(
+                          onTap: widget.taken ? null : () => widget.onTake(),
+                          child: _buildCta(L),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCta(AppThemeColors L) {
+    if (widget.taken) {
+      return Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: L.text.withValues(alpha: 0.05),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.check_rounded, color: L.text.withValues(alpha: 0.3), size: 16),
       );
     }
-    return image;
+    if (widget.overdue) {
+      return StatusBadge(label: 'LATE', color: L.error);
+    }
+    if (widget.isNext) {
+      return StatusBadge(label: 'NOW', color: L.primary, glow: true);
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: L.fill,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        'TAKE',
+        style: AppTypography.labelSmall.copyWith(
+          color: L.text.withValues(alpha: 0.6),
+          fontWeight: FontWeight.w900,
+          fontSize: 10,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+class StatusBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool glow;
+
+  const StatusBadge({
+    super.key,
+    required this.label,
+    required this.color,
+    this.glow = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(100),
+        boxShadow: glow ? [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ] : null,
+      ),
+      child: Text(
+        label,
+        style: AppTypography.labelSmall.copyWith(
+          color: L.bg,
+          fontWeight: FontWeight.w900,
+          fontSize: 10,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
   }
 }

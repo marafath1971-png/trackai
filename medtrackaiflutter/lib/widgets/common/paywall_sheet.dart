@@ -4,7 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../core/utils/haptic_engine.dart';
-import '../common/bouncing_button.dart';
+import '../shared/shared_widgets.dart';
 import '../common/app_loading_indicator.dart';
 
 class PaywallSheet extends StatefulWidget {

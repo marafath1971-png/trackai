@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../theme/app_theme.dart';
-import '../../../../widgets/common/bouncing_button.dart';
+import '../../../../widgets/shared/shared_widgets.dart';
 import '../../../../core/utils/haptic_engine.dart';
 
 class SettingsSection extends StatelessWidget {

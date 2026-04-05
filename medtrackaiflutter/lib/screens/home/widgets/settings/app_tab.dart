@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/app_state.dart';
-import '../../../../widgets/common/bouncing_button.dart';
+import '../../../../widgets/shared/shared_widgets.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../services/share_service.dart';
 import '../../../../widgets/shared/shared_widgets.dart';

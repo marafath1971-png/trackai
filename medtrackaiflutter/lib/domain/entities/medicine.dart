@@ -75,6 +75,7 @@ extension RitualExtension on Ritual {
 }
 
 class ScheduleEntry {
+  final String id;
   int h;
   int m;
   String label;
@@ -83,6 +84,7 @@ class ScheduleEntry {
   Ritual ritual;
 
   ScheduleEntry({
+    required this.id,
     required this.h,
     required this.m,
     required this.label,
@@ -94,6 +96,7 @@ class ScheduleEntry {
   String get key => '${label}_${h}_$m';
 
   Map<String, dynamic> toJson() => {
+        'id': id,
         'h': h,
         'm': m,
         'label': label,
@@ -103,6 +106,7 @@ class ScheduleEntry {
       };
 
   factory ScheduleEntry.fromJson(Map<String, dynamic> j) => ScheduleEntry(
+        id: j['id'] ?? (j['label'] ?? 'Morning') + (j['h'] ?? 8).toString() + (j['m'] ?? 0).toString(),
         h: j['h'] ?? 8,
         m: j['m'] ?? 0,
         label: j['label'] ?? 'Morning',
@@ -115,6 +119,7 @@ class ScheduleEntry {
       );
 
   ScheduleEntry copyWith({
+    String? id,
     int? h,
     int? m,
     String? label,
@@ -123,6 +128,7 @@ class ScheduleEntry {
     Ritual? ritual,
   }) {
     return ScheduleEntry(
+      id: id ?? this.id,
       h: h ?? this.h,
       m: m ?? this.m,
       label: label ?? this.label,
@@ -133,8 +139,11 @@ class ScheduleEntry {
   }
 }
 
+typedef DoseHistoryEntry = DoseEntry;
+
 class DoseEntry {
   final int medId;
+  final String? scheduleId;
   final String label;
   final String time;
   final bool taken;
@@ -143,6 +152,7 @@ class DoseEntry {
 
   DoseEntry({
     required this.medId,
+    this.scheduleId,
     required this.label,
     required this.time,
     required this.taken,
@@ -152,6 +162,7 @@ class DoseEntry {
 
   Map<String, dynamic> toJson() => {
         'medId': medId,
+        'scheduleId': scheduleId,
         'label': label,
         'time': time,
         'taken': taken,
@@ -161,6 +172,7 @@ class DoseEntry {
 
   factory DoseEntry.fromJson(Map<String, dynamic> j) => DoseEntry(
         medId: j['medId'] ?? 0,
+        scheduleId: j['scheduleId'],
         label: j['label'] ?? '',
         time: j['time'] ?? '',
         taken: j['taken'] ?? false,
@@ -168,9 +180,10 @@ class DoseEntry {
         takenAt: j['takenAt'],
       );
 
-  DoseEntry copyWith({bool? taken, bool? skipped, String? takenAt}) =>
+  DoseEntry copyWith({String? scheduleId, bool? taken, bool? skipped, String? takenAt}) =>
       DoseEntry(
         medId: medId,
+        scheduleId: scheduleId ?? this.scheduleId,
         label: label,
         time: time,
         taken: taken ?? this.taken,

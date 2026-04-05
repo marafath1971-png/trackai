@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +8,7 @@ import '../../theme/app_theme.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../services/auth_service.dart';
 import '../../core/utils/haptic_engine.dart';
+import '../../widgets/shared/shared_widgets.dart';
 
 // Modular Widgets
 import 'widgets/caregiver_widgets.dart';
@@ -17,7 +19,7 @@ import 'widgets/alert_log_widgets.dart';
 import 'widgets/demo_widgets.dart';
 import '../../widgets/common/premium_empty_state.dart';
 import '../../widgets/common/paywall_sheet.dart';
-import '../../widgets/common/bouncing_button.dart';
+import '../../widgets/shared/shared_widgets.dart';
 
 enum FamilyView {
   hub,
@@ -292,57 +294,32 @@ class HubView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 150 + MediaQuery.of(context).padding.top),
+                SizedBox(height: 140 + MediaQuery.of(context).padding.top),
 
-                // ── HEADER CONTENT ──
+                // ── HUB CONTENT ──
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            'FAMILY',
-                            style: AppTypography.labelSmall.copyWith(
-                                color: L.sub.withValues(alpha: 0.5),
-                                letterSpacing: 1.5,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 10),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: Text('/', style: TextStyle(color: L.sub.withValues(alpha: 0.3), fontSize: 10)),
-                          ),
-                          Text(
-                            'CARE CIRCLE',
-                            style: AppTypography.labelSmall.copyWith(
-                                color: L.primary,
-                                letterSpacing: 1.5,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 10),
-                          ),
-                        ],
-                      ).animate().fadeIn(duration: 400.ms),
-                      const SizedBox(height: 8),
                       Text(
                         'Protectors Hub',
-                        style: AppTypography.displayLarge.copyWith(
+                        style: AppTypography.headlineLarge.copyWith(
                           color: L.text,
                           fontSize: 28,
                           fontWeight: FontWeight.w900,
-                          letterSpacing: -0.8,
+                          letterSpacing: -1.0,
                         ),
                       ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
                       
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       
-                      // Circle Snapshot Bento (Cal AI Stats)
+                      // Circle Snapshot Bento (High-Fidelity)
                       Row(
                         children: [
                           Expanded(
                             child: _CircleStatBento(
-                              label: 'Protectors',
+                              label: 'PROTECTORS',
                               value: '$activeCount',
                               icon: Icons.shield_rounded,
                               L: L,
@@ -351,11 +328,12 @@ class HubView extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _CircleStatBento(
-                              label: 'Monitoring',
-                              value: unseenCount > 0 ? 'Urgent' : 'Secure',
-                              icon: Icons.check_circle_rounded,
+                              label: 'MONITORING',
+                              value: unseenCount > 0 ? 'URGENT' : 'SECURE',
+                              icon: Icons.verified_user_rounded,
                               iconColor: unseenCount > 0 ? L.error : L.success,
                               L: L,
+                              glow: unseenCount > 0,
                             ),
                           ),
                         ],
@@ -369,9 +347,7 @@ class HubView extends StatelessWidget {
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
                               color: L.fill.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                  color: L.border.withValues(alpha: 0.1), width: 1.0),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
                               children: [
@@ -392,38 +368,50 @@ class HubView extends StatelessWidget {
                             ),
                           ),
                         ],
-                      ).animate().fadeIn(duration: 500.ms).slideX(begin: -0.05, end: 0),
-                      const SizedBox(height: 18),
+                      ),
+                      const SizedBox(height: 24),
 
                       if (unseenCount > 0)
                         BouncingButton(
                           onTap: onMarkSeen,
                           child: Container(
-                            margin: const EdgeInsets.only(bottom: 20),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
+                            margin: const EdgeInsets.only(bottom: 24),
+                            padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: L.error.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                  color: L.error.withValues(alpha: 0.3),
-                                  width: 1.0),
+                              color: L.error,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(color: L.error.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))
+                              ],
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.warning_amber_rounded,
-                                    color: L.error, size: 20),
-                                const SizedBox(width: 12),
+                                const Icon(Icons.warning_rounded, color: Colors.white, size: 24),
+                                const SizedBox(width: 16),
                                 Expanded(
-                                  child: Text(
-                                      '$unseenCount urgent monitoring alerts',
-                                      style: AppTypography.labelLarge.copyWith(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
-                                          color: L.error)),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'URGENT MONITORING',
+                                        style: AppTypography.labelSmall.copyWith(
+                                          color: Colors.white.withValues(alpha: 0.7),
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 1.5,
+                                        ),
+                                      ),
+                                      Text(
+                                        '$unseenCount missed medication alerts',
+                                        style: AppTypography.titleMedium.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                Icon(Icons.arrow_forward_ios_rounded,
-                                    color: L.error, size: 14),
+                                const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 20),
                               ],
                             ),
                           ),
@@ -603,20 +591,17 @@ class _CompactPivotPill extends StatelessWidget {
       child: AnimatedContainer(
         duration: 250.ms,
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
           color: active ? L.text : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
-          boxShadow: active
-              ? [BoxShadow(color: L.text.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2))]
-              : null,
         ),
         child: Text(
           label,
-          style: AppTypography.labelLarge.copyWith(
-            color: active ? L.card : L.sub.withValues(alpha: 0.8),
-            fontSize: 13,
-            fontWeight: active ? FontWeight.w900 : FontWeight.w600,
+          style: AppTypography.labelSmall.copyWith(
+            color: active ? L.bg : L.sub.withValues(alpha: 0.6),
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
             letterSpacing: 0.5,
           ),
         ),
@@ -640,76 +625,83 @@ class _FamilyHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double opacity = (scrollOffset / 60).clamp(0.0, 1.0);
+    final topPad = MediaQuery.of(context).padding.top;
 
-    return AnimatedContainer(
-      duration: 200.ms,
-      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-      decoration: BoxDecoration(
-        color: L.bg.withValues(alpha: opacity * 0.95),
-        border: Border(
-            bottom: BorderSide(
-                color: L.border.withValues(alpha: opacity * 0.4),
-                width: 1)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Family Circle',
-                    style: AppTypography.headlineLarge.copyWith(
-                      color: L.text,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 26,
-                      letterSpacing: -1.0,
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: AnimatedContainer(
+          duration: 200.ms,
+          padding: EdgeInsets.fromLTRB(20, topPad + 12, 20, 16),
+          decoration: BoxDecoration(
+            color: L.bg.withValues(alpha: opacity * 0.8),
+            border: Border(
+                bottom: BorderSide(
+                    color: L.border.withValues(alpha: opacity * 0.08),
+                    width: 0.5)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'FAMILY',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: L.sub.withValues(alpha: 0.4),
+                        letterSpacing: 2.0,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 10,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Health is better shared',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: L.sub,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                    Text(
+                      'Circle',
+                      style: AppTypography.headlineMedium.copyWith(
+                        color: L.text,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 26,
+                        height: 1.1,
+                        letterSpacing: -1.0,
+                      ),
                     ),
+                  ],
+                ),
+              ),
+              BouncingButton(
+                onTap: onJoin,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: L.fill,
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                ],
-              ),
-            ),
-            GestureDetector(
-              onTap: onJoin,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: L.fill.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: L.border.withValues(alpha: 0.3)),
+                  child: Center(
+                      child: Icon(Icons.qr_code_scanner_rounded,
+                          size: 20, color: L.text)),
                 ),
-                child: Center(
-                    child: Icon(Icons.qr_code_scanner_rounded,
-                        size: 20, color: L.text)),
               ),
-            ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: onAdd,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: L.primary,
-                  borderRadius: BorderRadius.circular(12),
+              const SizedBox(width: 10),
+              BouncingButton(
+                onTap: onAdd,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: L.text,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(color: L.text.withValues(alpha: 0.15), blurRadius: 16, offset: const Offset(0, 4))
+                    ],
+                  ),
+                  child: Center(
+                      child: Icon(Icons.add_rounded, color: L.bg, size: 24)),
                 ),
-                child: const Center(
-                    child: Icon(Icons.add_rounded, color: Colors.white, size: 22)),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -721,27 +713,40 @@ class _CircleStatBento extends StatelessWidget {
   final IconData icon;
   final Color? iconColor;
   final AppThemeColors L;
-  const _CircleStatBento({required this.label, required this.value, required this.icon, this.iconColor, required this.L});
+  final bool glow;
+  const _CircleStatBento({required this.label, required this.value, required this.icon, this.iconColor, required this.L, this.glow = false});
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: L.card,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: L.border.withValues(alpha: 0.5)),
-    ),
+  Widget build(BuildContext context) => SquircleCard(
+    padding: const EdgeInsets.all(20),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, size: 14, color: iconColor ?? L.sub.withValues(alpha: 0.5)),
-            const SizedBox(width: 8),
-            Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub, fontWeight: FontWeight.w600, fontSize: 10, letterSpacing: 0.5)),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: (iconColor ?? L.primary).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 14, color: iconColor ?? L.primary),
+            ),
+            const SizedBox(width: 10),
+            Text(label, style: AppTypography.labelSmall.copyWith(
+              color: L.sub.withValues(alpha: 0.4), 
+              fontWeight: FontWeight.w900, 
+              fontSize: 9, 
+              letterSpacing: 1.0)),
           ],
         ),
-        const SizedBox(height: 12),
-        Text(value, style: AppTypography.titleLarge.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: -0.5)),
+        const SizedBox(height: 16),
+        Text(value, style: AppTypography.displaySmall.copyWith(
+          color: L.text, 
+          fontWeight: FontWeight.w900, 
+          fontSize: 22, 
+          letterSpacing: -0.5,
+          height: 1.0,
+        )),
       ],
     ),
   );

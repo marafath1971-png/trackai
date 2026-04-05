@@ -106,7 +106,7 @@ void main() {
         courseStartDate: '2024-01-01',
         schedule: [
           ScheduleEntry(
-              h: 8, m: 0, label: 'Morning', days: [0, 1, 2, 3, 4, 5, 6])
+              id: '1', h: 8, m: 0, label: 'Morning', days: [0, 1, 2, 3, 4, 5, 6])
         ],
       );
       appState.meds = [med];
@@ -151,7 +151,7 @@ void main() {
         courseStartDate: '2024-01-01',
         schedule: [
           ScheduleEntry(
-              h: 8, m: 0, label: 'Morning', days: [0, 1, 2, 3, 4, 5, 6])
+              id: '1', h: 8, m: 0, label: 'Morning', days: [0, 1, 2, 3, 4, 5, 6])
         ],
       );
       appState.meds = [med];

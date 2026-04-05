@@ -9,8 +9,9 @@ import '../../widgets/common/modern_time_picker.dart';
 import '../../core/utils/date_formatter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/common/refined_sheet_wrapper.dart';
-import '../../widgets/common/bouncing_button.dart';
+import '../../widgets/shared/shared_widgets.dart';
 import '../../core/utils/haptic_engine.dart';
+import '../../widgets/shared/shared_widgets.dart';
 
 // ══════════════════════════════════════════════════════════════════════
 // ALARMS TAB — Cal AI Industrial Authority
@@ -353,7 +354,7 @@ class _AlarmsHeader extends StatelessWidget {
           duration: 250.ms,
           padding: EdgeInsets.fromLTRB(24, topPad + 12, 20, 16),
           decoration: BoxDecoration(
-            color: isScrolled ? L.bg.withValues(alpha: 0.92) : Colors.transparent,
+            color: isScrolled ? L.bg.withValues(alpha: 0.8) : Colors.transparent,
             border: Border(
               bottom: BorderSide(
                 color: isScrolled ? L.border.withValues(alpha: 0.08) : Colors.transparent,
@@ -362,7 +363,7 @@ class _AlarmsHeader extends StatelessWidget {
             ),
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Column(
@@ -378,14 +379,14 @@ class _AlarmsHeader extends StatelessWidget {
                         fontSize: 10,
                       ),
                     ),
-                    const SizedBox(height: 2),
                     Text(
                       'Reminders',
                       style: AppTypography.headlineMedium.copyWith(
                         color: L.text,
                         fontWeight: FontWeight.w900,
+                        fontSize: 26,
+                        height: 1.1,
                         letterSpacing: -1.0,
-                        height: 1.0,
                       ),
                     ),
                   ],
@@ -398,10 +399,13 @@ class _AlarmsHeader extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: context.read<AppState>().meds.isEmpty ? L.text.withValues(alpha: 0.15) : L.text,
-                      shape: BoxShape.circle,
+                      color: L.text,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(color: L.text.withValues(alpha: 0.15), blurRadius: 16, offset: const Offset(0, 4))
+                      ],
                     ),
-                    child: Icon(Icons.add_rounded, color: L.bg, size: 26),
+                    child: Icon(Icons.add_rounded, color: L.bg, size: 24),
                   ),
                 ),
             ],
@@ -460,7 +464,6 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
   void initState() {
     super.initState();
     _update();
-    // update every minute
     Stream.periodic(const Duration(minutes: 1)).listen((_) {
       if (mounted) setState(_update);
     });
@@ -486,40 +489,42 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: L.text,
-        borderRadius: BorderRadius.circular(28),
+        gradient: AppGradients.glass(L.text),
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(color: L.text.withValues(alpha: 0.25), blurRadius: 24, offset: const Offset(0, 8))
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Top row: badge + time ──
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: L.bg.withValues(alpha: 0.12),
+                    color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 5,
-                        height: 5,
-                        decoration: BoxDecoration(color: L.bg, shape: BoxShape.circle),
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
                       ).animate(onPlay: (c) => c.repeat(reverse: true))
-                          .scale(duration: 1500.ms, begin: const Offset(0.8, 0.8), end: const Offset(1.3, 1.3)),
-                      const SizedBox(width: 6),
+                          .scale(duration: 1500.ms, begin: const Offset(0.8, 0.8), end: const Offset(1.4, 1.4)),
+                      const SizedBox(width: 8),
                       Text(
-                        'NEXT DOSE',
+                        'UPCOMING DOSE',
                         style: AppTypography.labelSmall.copyWith(
-                          color: L.bg,
+                          color: Colors.white,
                           fontWeight: FontWeight.w900,
-                          fontSize: 10,
+                          fontSize: 9,
                           letterSpacing: 1.5,
                         ),
                       ),
@@ -528,47 +533,46 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                 ),
                 Text(
                   fmtTime(s.h, s.m, context).toUpperCase(),
-                  style: AppTypography.labelMedium.copyWith(
-                    color: L.bg.withValues(alpha: 0.55),
+                  style: AppTypography.labelSmall.copyWith(
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w900,
-                    fontSize: 13,
+                    letterSpacing: 1.0,
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 28),
 
-            // ── Main content: name + countdown ──
             if (_recorded)
               Container(
                 height: 140,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: L.bg.withValues(alpha: 0.08),
+                  color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.check_circle_rounded, color: L.bg, size: 48)
+                    const Icon(Icons.verified_rounded, color: Colors.white, size: 48)
                         .animate()
-                        .scale(duration: 400.ms, curve: Curves.easeOutBack)
-                        .fadeIn(),
+                        .scale(duration: 400.ms, curve: Curves.easeOutBack),
                     const SizedBox(height: 12),
                     Text(
-                      'RECORDED',
-                      style: AppTypography.labelMedium.copyWith(
-                        color: L.bg,
+                      'LOGGED SUCCESSFULLY',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: Colors.white,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2.0,
                       ),
-                    ).animate().fadeIn(delay: 200.ms),
+                    ),
                   ],
                 ),
               )
             else
               Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: Column(
@@ -577,52 +581,51 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                         Text(
                           med.name,
                           style: AppTypography.headlineMedium.copyWith(
-                            color: L.bg,
+                            color: Colors.white,
                             fontWeight: FontWeight.w900,
-                            letterSpacing: -0.8,
-                            height: 1.1,
+                            fontSize: 32,
+                            letterSpacing: -1.0,
+                            height: 1.0,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                         Text(
-                          '${med.dose.toUpperCase()} · ${s.label.toUpperCase()}',
+                          '${med.dose} · ${s.label.toUpperCase()}',
                           style: AppTypography.labelSmall.copyWith(
-                            color: L.bg.withValues(alpha: 0.55),
+                            color: Colors.white.withValues(alpha: 0.5),
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.0,
-                            fontSize: 10,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
                         Text(
-                          _diffStr,
-                          style: AppTypography.titleMedium.copyWith(
-                            color: L.bg.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
+                          _diffStr.toUpperCase(),
+                          style: AppTypography.displaySmall.copyWith(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  // med icon circle
                   Container(
-                    width: 60,
-                    height: 60,
+                    width: 64,
+                    height: 64,
                     decoration: BoxDecoration(
-                      color: L.bg.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Center(
-                      child: Icon(Icons.medication_rounded, color: L.bg, size: 28),
+                    child: const Center(
+                      child: Icon(Icons.medication_rounded, color: Colors.white, size: 32),
                     ),
                   ),
                 ],
               ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
 
-            // ── Swipe to record dose ──
             if (!_recorded)
               _SwipeToConfirm(
                 onConfirmed: () {
@@ -636,6 +639,127 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                 L: L,
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ALARM CARD WIDGET
+// ══════════════════════════════════════════════════════════════════════
+class _AlarmCard extends StatelessWidget {
+  final ({Medicine med, ScheduleEntry sched, int idx}) sch;
+  final AppThemeColors L;
+  final bool isNext;
+  final VoidCallback onToggle;
+  final VoidCallback onRemove;
+  final VoidCallback onEdit;
+
+  const _AlarmCard({
+    required this.sch,
+    required this.L,
+    required this.isNext,
+    required this.onToggle,
+    required this.onRemove,
+    required this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final med = sch.med;
+    final s = sch.sched;
+    final isEnabled = s.enabled;
+
+    return Dismissible(
+      key: Key('alarm_${med.id}_${sch.idx}'),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) async {
+        HapticEngine.heavyImpact();
+        return true;
+      },
+      onDismissed: (_) => onRemove(),
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 24),
+        decoration: BoxDecoration(
+          color: L.error.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Icon(Icons.delete_outline_rounded, color: L.error, size: 24),
+      ),
+      child: GestureDetector(
+        onTap: onEdit,
+        child: SquircleCard(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isEnabled ? L.text : L.fill,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      fmtTime(s.h, s.m, context).split(' ')[0],
+                      style: AppTypography.titleMedium.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: isEnabled ? L.bg : L.sub.withValues(alpha: 0.5),
+                        height: 1.0,
+                        letterSpacing: -1.0,
+                      ),
+                    ),
+                    Text(
+                      fmtTime(s.h, s.m, context).split(' ').last.toUpperCase(),
+                      style: AppTypography.labelSmall.copyWith(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: isEnabled ? L.bg.withValues(alpha: 0.6) : L.sub.withValues(alpha: 0.3),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      med.name,
+                      style: AppTypography.titleMedium.copyWith(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: isEnabled ? L.text : L.sub.withValues(alpha: 0.5),
+                        letterSpacing: -0.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${med.dose} · ${s.label.toUpperCase()}',
+                      style: AppTypography.labelSmall.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: L.sub.withValues(alpha: 0.4),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AppToggle(
+                value: isEnabled,
+                onChanged: (_) => onToggle(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -675,7 +799,6 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
           ),
           child: Stack(
             children: [
-              // fill progress bar
               AnimatedContainer(
                 duration: 50.ms,
                 height: 60,
@@ -685,7 +808,6 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
                   borderRadius: BorderRadius.circular(100),
                 ),
               ),
-              // label
               Center(
                 child: AnimatedOpacity(
                   duration: 150.ms,
@@ -700,7 +822,6 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
                   ),
                 ),
               ),
-              // confirmed label
               if (_confirmed)
                 Center(
                   child: Text(
@@ -712,7 +833,6 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
                     ),
                   ).animate().fadeIn(duration: 300.ms).scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1)),
                 ),
-              // knob
               if (!_confirmed)
                 Positioned(
                   left: _trackPad + _offset,
@@ -734,8 +854,7 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
                         setState(() => _offset = 0);
                       }
                     },
-                    child: AnimatedContainer(
-                      duration: 150.ms,
+                    child: Container(
                       width: _knobSize,
                       height: _knobSize,
                       decoration: BoxDecoration(
@@ -743,14 +862,14 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 12,
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
                         ],
                       ),
                       child: Center(
-                        child: Icon(Icons.chevron_right_rounded, color: widget.L.text, size: 26),
+                        child: Icon(Icons.chevron_right_rounded, color: widget.L.text, size: 32),
                       ),
                     ),
                   ),
@@ -759,231 +878,6 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
           ),
         );
       },
-    );
-  }
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// ALARM CARD (with swipe-to-delete)
-// ══════════════════════════════════════════════════════════════════════
-class _AlarmCard extends StatelessWidget {
-  final dynamic sch;
-  final AppThemeColors L;
-  final bool isNext;
-  final VoidCallback onToggle;
-  final VoidCallback onRemove;
-  final VoidCallback onEdit;
-
-  const _AlarmCard({
-    required this.sch,
-    required this.L,
-    this.isNext = false,
-    required this.onToggle,
-    required this.onRemove,
-    required this.onEdit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final med = sch.med as Medicine;
-    final s = sch.sched as ScheduleEntry;
-    final isEnabled = s.enabled;
-    // ignore: unused_local_variable
-    final medColor = hexToColor(med.color);
-
-    return Dismissible(
-      key: Key('alarm_${med.id}_${sch.idx}'),
-      direction: DismissDirection.endToStart,
-      confirmDismiss: (_) async {
-        HapticEngine.heavyImpact();
-        return true;
-      },
-      onDismissed: (_) {
-        onRemove();
-        final messenger = ScaffoldMessenger.of(context);
-        messenger.clearSnackBars();
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('Reminder for ${med.name} deleted'),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'UNDO',
-              onPressed: () {
-                context.read<AppState>().addSchedule(
-                  med.id,
-                  s.copyWith(),
-                );
-              },
-            ),
-          ),
-        );
-      },
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        decoration: BoxDecoration(
-          color: L.error.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Icon(Icons.delete_outline_rounded, color: L.error, size: 24),
-      ),
-      child: BouncingButton(
-        onTap: onEdit,
-        child: AnimatedContainer(
-          duration: 300.ms,
-          decoration: BoxDecoration(
-            color: isEnabled
-                ? (isNext ? L.text.withValues(alpha: 0.04) : L.fill.withValues(alpha: 0.08))
-                : L.fill.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isNext ? L.text.withValues(alpha: 0.15) : L.border.withValues(alpha: 0.08),
-              width: 1.5,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-            child: Row(
-              children: [
-                // ── TIME BLOCK ──
-                AnimatedContainer(
-                  duration: 300.ms,
-                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: isEnabled ? L.text : L.text.withValues(alpha: 0.07),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        fmtTime(s.h, s.m, context).split(' ')[0],
-                        style: AppTypography.displaySmall.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: isEnabled ? L.bg : L.sub,
-                          fontSize: 20,
-                          height: 1.0,
-                          letterSpacing: -1.0,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        fmtTime(s.h, s.m, context).split(' ').length > 1
-                            ? fmtTime(s.h, s.m, context).split(' ').last.toUpperCase()
-                            : '',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: isEnabled ? L.bg.withValues(alpha: 0.55) : L.sub.withValues(alpha: 0.4),
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 16),
-
-                // ── MED INFO ──
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        med.name,
-                        style: AppTypography.titleMedium.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: isEnabled ? L.text : L.sub,
-                          fontSize: 16,
-                          letterSpacing: -0.3,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Text(
-                            '${med.dose} · ${s.label.toUpperCase()}',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: L.sub.withValues(alpha: isEnabled ? 0.6 : 0.4),
-                              fontWeight: FontWeight.w700,
-                              fontSize: 11,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (isNext && isEnabled) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: L.text,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: Text(
-                            'NEXT UP',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: L.bg,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 12),
-
-                // ── TOGGLE ──
-                GestureDetector(
-                  onTap: () {
-                    HapticEngine.selection();
-                    onToggle();
-                  },
-                  child: AnimatedContainer(
-                    duration: 300.ms,
-                    width: 50,
-                    height: 30,
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: isEnabled ? L.text : L.text.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: AnimatedAlign(
-                      duration: 300.ms,
-                      curve: Curves.easeOutBack,
-                      alignment: isEnabled ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: L.bg,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -1367,6 +1261,7 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                   widget.med.id,
                   widget.scheduleIndex!,
                   ScheduleEntry(
+                    id: widget.med.schedule[widget.scheduleIndex!].id,
                     h: _time.hour,
                     m: _time.minute,
                     label: _label,
@@ -1378,6 +1273,7 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                 context.read<AppState>().addSchedule(
                   widget.med.id,
                   ScheduleEntry(
+                    id: 'alarm_${DateTime.now().millisecondsSinceEpoch}',
                     h: _time.hour,
                     m: _time.minute,
                     label: _label,

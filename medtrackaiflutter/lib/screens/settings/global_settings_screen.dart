@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
@@ -63,49 +64,16 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final s = AppLocalizations.of(context)!;
     final L = context.L;
+    final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
       backgroundColor: _profile.amoledMode && isDark ? Colors.black : L.bg,
-      body: Column(
+      body: Stack(
         children: [
-          // ── SYSTEM BREADCRUMB HEADER ──
-          Container(
-            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 8),
-            decoration: BoxDecoration(
-              color: L.bg,
-              border: Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.1), width: 0.5)),
-            ),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(children: [
-                    Text('SYSTEM', 
-                      style: AppTypography.labelSmall.copyWith(
-                        color: L.text.withValues(alpha: 0.8), letterSpacing: 2.0, fontWeight: FontWeight.w900, fontSize: 10)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text('/', style: TextStyle(color: L.sub.withValues(alpha: 0.3), fontSize: 10, fontWeight: FontWeight.w900)),
-                    ),
-                    Text('PREFERENCES', 
-                      style: AppTypography.labelSmall.copyWith(
-                        color: L.text, letterSpacing: 2.0, fontWeight: FontWeight.w900, fontSize: 10)),
-                  ]),
-                ),
-                const UnifiedHeader(title: 'Settings', showBack: true),
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: RawScrollbar(
-              thumbColor: L.text.withValues(alpha: 0.2),
-              radius: const Radius.circular(10),
-              thickness: 4,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
-                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                children: [
+          ListView(
+            padding: EdgeInsets.fromLTRB(20, topPad + 110, 20, 120),
+            physics: const BouncingScrollPhysics(),
+            children: [
                   
                   // ── LOCALIZATION BLOCK ───────────────────────
                   _IndustrialSection(
@@ -201,33 +169,59 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
                       ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 48),
-                  
-                  // ── DATA INTEGRITY FOOTER ──
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: L.fill.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(children: [
-                          Icon(Icons.shield_outlined, color: L.text, size: 16),
-                          const SizedBox(width: 12),
-                          Text('DATA INTEGRITY', 
-                            style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 2.0, fontSize: 10)),
-                        ]),
-                        const SizedBox(height: 16),
-                        Text('Your clinical profile and localized preferences are encrypted and stored solely on your device. We use zero-knowledge architecture to ensure your medical privacy remains absolute.', 
-                          style: AppTypography.bodySmall.copyWith(color: L.text.withValues(alpha: 0.7), height: 1.6, fontWeight: FontWeight.w500, fontSize: 11)),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: 120),
                 ],
+              ),
+
+          // ── PREMIUM GLASS HEADER ──
+          Positioned(
+            top: 0, left: 0, right: 0,
+            child: ClipRRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(24, topPad + 12, 20, 16),
+                  decoration: BoxDecoration(
+                    color: L.bg.withValues(alpha: 0.8),
+                    border: Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.08), width: 0.5)),
+                  ),
+                  child: Row(
+                    children: [
+                      BouncingButton(
+                        onTap: () => Navigator.pop(context),
+                        child: Icon(Icons.arrow_back_ios_new_rounded, color: L.text, size: 22),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'PREFERENCES',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: L.sub.withValues(alpha: 0.4),
+                                letterSpacing: 2.0,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 10,
+                              ),
+                            ),
+                            Text(
+                              'Settings',
+                              style: AppTypography.headlineMedium.copyWith(
+                                color: L.text,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 26,
+                                height: 1.1,
+                                letterSpacing: -1.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -250,23 +244,20 @@ class _IndustrialSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 8, bottom: 12),
+          padding: const EdgeInsets.only(left: 12, bottom: 12),
           child: Row(children: [
-            Icon(icon, size: 14, color: L.text.withValues(alpha: 0.6)),
+            Icon(icon, size: 14, color: L.text.withValues(alpha: 0.4)),
             const SizedBox(width: 10),
-            Text(label, style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.6), fontWeight: FontWeight.w900, letterSpacing: 1.8, fontSize: 9)),
+            Text(label, style: AppTypography.labelSmall.copyWith(
+              color: L.text.withValues(alpha: 0.4), 
+              fontWeight: FontWeight.w900, 
+              letterSpacing: 2.0, 
+              fontSize: 9)),
           ]),
         ),
-        Container(
-          decoration: BoxDecoration(
-            color: L.fill.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Column(children: children),
-          ),
+        SquircleCard(
+          padding: EdgeInsets.zero,
+          child: Column(children: children),
         ),
       ],
     );
@@ -286,11 +277,20 @@ class _ToggleTile extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.05), width: 0.5))),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        title: Text(title, style: AppTypography.labelLarge.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 15)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        title: Text(title, style: AppTypography.labelLarge.copyWith(
+          color: L.text, 
+          fontWeight: FontWeight.w900, 
+          fontSize: 16,
+          letterSpacing: -0.3,
+        )),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Text(subtitle, style: AppTypography.bodySmall.copyWith(color: L.text.withValues(alpha: 0.6), fontWeight: FontWeight.w500, height: 1.3, fontSize: 11.5)),
+          child: Text(subtitle, style: AppTypography.bodySmall.copyWith(
+            color: L.text.withValues(alpha: 0.5), 
+            fontWeight: FontWeight.w500, 
+            height: 1.4, 
+            fontSize: 12)),
         ),
         trailing: AppToggle(
           value: value,

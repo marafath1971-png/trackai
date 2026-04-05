@@ -7,7 +7,7 @@ import '../../../widgets/modals/ask_ai_sheet.dart';
 import '../../../widgets/common/paywall_sheet.dart';
 import '../../../core/utils/haptic_engine.dart';
 import '../../../services/review_service.dart';
-import '../../../widgets/common/bouncing_button.dart';
+import '../../../widgets/shared/shared_widgets.dart';
 
 class HomeInsightCard extends StatefulWidget {
   final AppState state;

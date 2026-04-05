@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../theme/app_theme.dart';
-import 'bouncing_button.dart';
+import '../shared/shared_widgets.dart';
 
 class PremiumEmptyState extends StatelessWidget {
   final String title;

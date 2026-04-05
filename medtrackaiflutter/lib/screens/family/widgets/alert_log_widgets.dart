@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
-import '../../../widgets/common/bouncing_button.dart';
+import '../../../widgets/shared/shared_widgets.dart';
 
 class AlertLogCard extends StatelessWidget {
   final MissedAlert alert;

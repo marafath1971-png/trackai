@@ -5,7 +5,7 @@ import '../../../../theme/app_theme.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../domain/entities/entities.dart';
 import '../../../../widgets/common/paywall_sheet.dart';
-import '../../../../widgets/common/bouncing_button.dart';
+import '../../../../widgets/shared/shared_widgets.dart';
 import 'settings_shared.dart';
 import '../../../../models/constants.dart';
 import '../../../settings/global_settings_screen.dart';

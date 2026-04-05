@@ -5,12 +5,12 @@ import '../../providers/app_state.dart';
 import '../../domain/entities/entities.dart';
 import '../../theme/app_theme.dart';
 import '../../core/utils/color_utils.dart';
+import '../../core/utils/haptic_engine.dart';
+import '../../core/utils/date_formatter.dart';
 import '../../widgets/shared/shared_widgets.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/common/unified_header.dart';
-import '../../core/utils/haptic_engine.dart';
 import 'widgets/medicine_safety_card.dart';
-import '../../widgets/common/bouncing_button.dart';
 import '../../widgets/common/modern_time_picker.dart';
 import '../../widgets/common/mesh_gradient.dart';
 
@@ -125,13 +125,8 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                     const SizedBox(height: 12),
                     _buildHalalBadge(med.halalStatus!, med.halalNote, L),
                   ],
-                  const SizedBox(height: 32),
-                  const SizedBox(height: 12),
-                  _buildSafetyPanel(med, L),
                   const SizedBox(height: 24),
                   _buildBentoMetrics(med, adherence, L),
-                  const SizedBox(height: 24),
-                  MedicineSafetyCard(med: med).animate().fadeIn(delay: 200.ms),
                   const SizedBox(height: 24),
                   _buildScheduleSection(med, context.read<AppState>(), L),
                   const SizedBox(height: 24),
@@ -244,22 +239,121 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   }
 
   Widget _buildSliverHeader(Medicine med, Color medColor, AppThemeColors L) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    
     return SliverAppBar(
-      expandedHeight: 320,
+      expandedHeight: 380,
       backgroundColor: L.bg,
       elevation: 0,
       pinned: true,
       stretch: true,
-      leading: Padding(
-        padding: const EdgeInsets.all(8.0),
+      automaticallyImplyLeading: false,
+      title: _scrollController.hasClients && _scrollController.offset > 240
+          ? Text(med.name.toUpperCase(), 
+              style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w900, letterSpacing: 1.0))
+          : null,
+      centerTitle: true,
+      flexibleSpace: FlexibleSpaceBar(
+        stretchModes: const [StretchMode.zoomBackground, StretchMode.blurBackground],
+        background: Stack(
+          children: [
+            // Atmospheric Background
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      medColor.withValues(alpha: 0.15),
+                      L.bg,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            
+            // Mesh Layer
+            Positioned.fill(child: MeshGradient(colors: [L.meshBg, medColor.withValues(alpha: 0.05)])),
+
+            // Hero Content
+            Align(
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 40),
+                  Hero(
+                    tag: 'med_${med.id}',
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: L.bg,
+                        borderRadius: AppRadius.roundSquircle,
+                        boxShadow: AppShadows.card,
+                      ),
+                      child: MedImage(
+                        imageUrl: med.imageUrl,
+                        width: 140,
+                        height: 140,
+                        borderRadius: 28,
+                        placeholder: Center(
+                          child: Text(
+                            _getCategoryEmoji(med.category),
+                            style: const TextStyle(fontSize: 56),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: L.text,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      med.brand.isNotEmpty ? med.brand.toUpperCase() : 'GENERIC_SPEC',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: L.bg,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2.0,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Text(
+                      med.name.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      style: AppTypography.displayMedium.copyWith(
+                        color: L.text,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      leading: Container(
+        margin: const EdgeInsets.only(left: 16),
+        alignment: Alignment.centerLeft,
         child: HeaderActionBtn(
           onTap: widget.onBack,
           child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: L.text),
         ),
       ),
       actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
+        Container(
+          margin: const EdgeInsets.only(right: 16),
+          alignment: Alignment.centerRight,
           child: HeaderActionBtn(
             onTap: () {
               HapticEngine.selection();
@@ -268,91 +362,10 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                 _editMode = true;
               });
             },
-            child: Icon(Icons.edit_note_rounded, size: 22, color: L.text),
+            child: Icon(Icons.edit_note_rounded, size: 24, color: L.text),
           ),
         ),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: Stack(
-          children: [
-            // Mesh Background (Premium)
-            Positioned.fill(
-              child: MeshGradient(
-                colors: [
-                  L.meshBg,
-                  L.primary.withValues(alpha: 0.1),
-                ],
-              ),
-            ),
-            
-            // Hero Content
-            Align(
-              alignment: Alignment.center,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 60, left: 24, right: 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Hero(
-                      tag: 'med_${med.id}',
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: L.bg,
-                          borderRadius: BorderRadius.circular(32),
-                          border: Border.all(color: L.border, width: 1.5),
-                        ),
-                        child: MedImage(
-                          imageUrl: med.imageUrl,
-                          width: 110,
-                          height: 110,
-                          borderRadius: 26,
-                          placeholder: Center(
-                            child: Text(
-                              _getCategoryEmoji(med.category),
-                              style: const TextStyle(fontSize: 44),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: L.text,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        med.brand.isNotEmpty ? med.brand.toUpperCase() : 'BATCH UNKNOWN',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: L.bg,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2.0,
-                          fontSize: 8,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      med.name.toUpperCase(),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.displaySmall.copyWith(
-                        color: L.text,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -1.0,
-                        fontSize: 32,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -474,71 +487,77 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
           ),
         ],
       ),
-    ).animate().slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuart).fadeIn();
+    );
   }
 
   Widget _buildBentoMetrics(Medicine med, int adherence, AppThemeColors L) {
     final pct = med.totalCount > 0 ? (med.count / med.totalCount).clamp(0.0, 1.0) : 0.0;
+    final nextDose = _getNextDoseTime(med.schedule);
     
     return Column(
       children: [
         Row(
           children: [
             Expanded(
-              flex: 1,
-              child: _IndustrialMetricCard(
+              child: _DiagnosticCard(
+                label: 'ADHERENCE',
+                value: adherence == -1 ? '••' : '$adherence%',
+                icon: Icons.auto_graph_rounded,
+                color: L.text,
                 L: L,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('ADHERENCE', style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.6), fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 9)),
-                        Icon(Icons.query_stats_rounded, size: 12, color: L.text.withValues(alpha: 0.4)),
-                      ],
-                    ),
-                    const Spacer(),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(adherence == -1 ? '••' : '$adherence', 
-                          style: AppTypography.displayLarge.copyWith(fontSize: 28, color: L.text, fontWeight: FontWeight.w900, letterSpacing: -1.0)),
-                        const SizedBox(width: 2),
-                        Text('%', style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 10, fontWeight: FontWeight.w900)),
-                      ],
-                    ),
-                  ],
-                ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              flex: 2,
-              child: _IndustrialMetricCard(
+              child: _DiagnosticCard(
+                label: 'NEXT_DOSE',
+                value: nextDose,
+                icon: Icons.timer_outlined,
+                color: L.text,
                 L: L,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('INVENTORY STOCK', style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.6), fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 9)),
-                         Text('${med.count} LEFT', style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 9)),
-                      ],
-                    ),
-                    const Spacer(),
-                    _MiniStockBar(pct: pct, isLow: med.count <= med.refillAt, L: L),
-                  ],
-                ),
               ),
             ),
           ],
         ),
+        const SizedBox(height: 12),
+        _DiagnosticCard(
+          label: 'INVENTORY_RESERVE',
+          value: '${med.count} UNITS',
+          icon: Icons.inventory_2_outlined,
+          color: L.text,
+          L: L,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Spacer(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('STOCK_LEVEL', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.sub.withValues(alpha: 0.5), fontWeight: FontWeight.w900)),
+                  Text('${(pct * 100).toInt()}%', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.text, fontWeight: FontWeight.w900)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              _ModernStockBar(pct: pct, isLow: med.count <= med.refillAt, L: L),
+            ],
+          ),
+        ),
       ],
     );
+  }
+
+  String _getNextDoseTime(List<ScheduleEntry> schedule) {
+    if (schedule.isEmpty) return '--:--';
+    final now = TimeOfDay.now();
+    final nowMins = now.hour * 60 + now.minute;
+    
+    final sorted = List<ScheduleEntry>.from(schedule)
+      ..sort((a, b) => (a.h * 60 + a.m).compareTo(b.h * 60 + b.m));
+    
+    for (var s in sorted) {
+      if (s.h * 60 + s.m > nowMins) return '${s.h.toString().padLeft(2, '0')}:${s.m.toString().padLeft(2, '0')}';
+    }
+    return '${sorted.first.h.toString().padLeft(2, '0')}:${sorted.first.m.toString().padLeft(2, '0')}';
   }
 
   Widget _buildIntakeChip(String intake, AppThemeColors L) {
@@ -591,21 +610,21 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'REMINDERS', icon: Icons.notifications_active_rounded, L: L, 
-          trailing: _HeaderAction(icon: Icons.add_rounded, label: 'ADD SLOT', onTap: () async {
+        _SectionHeader(label: 'FREQUENCY_MATRIX', icon: Icons.notifications_active_rounded, L: L, 
+          trailing: _HeaderAction(icon: Icons.add_rounded, label: 'ADD_SLOT', onTap: () async {
             HapticEngine.selection();
             final result = await ModernTimePicker.show(context, initialTime: TimeOfDay.now(), title: "Add Reminder");
             if (result != null) {
-              final newEntry = ScheduleEntry(h: result.hour, m: result.minute, label: _getAutoLabel(result.hour), days: [1, 2, 3, 4, 5, 6, 0]);
+              final newEntry = ScheduleEntry(id: 'manual_${result.hour}_${result.minute}', h: result.hour, m: result.minute, label: _getAutoLabel(result.hour), days: const [1,2,3,4,5,6,0]);
               _showRitualPicker(med.id, -1, newEntry, isNew: true);
             }
           }, L: L)),
         const SizedBox(height: 12),
         if (med.schedule.isEmpty)
-          _buildEmptyCard('No active reminders', Icons.notifications_off_rounded, L)
+          _buildEmptyCard('NO_ACTIVE_REMINDERS', Icons.notifications_off_rounded, L)
         else
-          Container(
-            decoration: BoxDecoration(color: L.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: L.border.withValues(alpha: 0.1))),
+          SquircleCard(
+            padding: EdgeInsets.zero,
             child: Column(children: med.schedule.asMap().entries.map((e) => _buildScheduleCard(med, e.value, e.key, L, e.key == med.schedule.length - 1)).toList()),
           ),
       ],
@@ -615,9 +634,9 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   Widget _buildScheduleCard(Medicine med, ScheduleEntry s, int idx, AppThemeColors L, bool isLast) {
     final medColor = hexToColor(med.color);
     return Container(
-      decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.05), width: 0.5))),
+      decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.03), width: 0.5))),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         onTap: () async {
           HapticEngine.selection();
           final result = await ModernTimePicker.show(context, 
@@ -631,27 +650,39 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
             _showRitualPicker(med.id, idx, updatedEntry, isNew: false);
           }
         },
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: s.enabled ? medColor.withValues(alpha: 0.1) : L.fill,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            s.h < 12 ? Icons.wb_sunny_rounded : Icons.nightlight_round,
+            size: 20,
+            color: s.enabled ? medColor : L.sub,
+          ),
+        ),
         title: Row(
           children: [
             Text('${s.h.toString().padLeft(2, '0')}:${s.m.toString().padLeft(2, '0')}',
-                style: AppTypography.displayLarge.copyWith(fontSize: 22, fontWeight: FontWeight.w900, color: s.enabled ? L.text : L.sub)),
+                style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w900, color: s.enabled ? L.text : L.sub)),
             const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(color: L.fill, borderRadius: BorderRadius.circular(6)),
-              child: Text((s.ritual != Ritual.none ? s.ritual.displayName : s.label).toUpperCase(),
-                  style: AppTypography.labelSmall.copyWith(fontSize: 9, fontWeight: FontWeight.w900, color: L.sub, letterSpacing: 0.5)),
-            ),
+            Text((s.ritual != Ritual.none ? s.ritual.displayName : s.label).toUpperCase(),
+                style: AppTypography.labelSmall.copyWith(fontSize: 8, fontWeight: FontWeight.w900, color: L.sub, letterSpacing: 1.0)),
           ],
         ),
         subtitle: Padding(
-          padding: const EdgeInsets.only(top: 8),
+          padding: const EdgeInsets.only(top: 4),
           child: Text(['S', 'M', 'T', 'W', 'T', 'F', 'S'].asMap().entries.map((day) => s.days.contains(day.key) ? day.value : '•').join('  '),
-            style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w900, color: s.enabled ? medColor : L.sub.withValues(alpha: 0.5), letterSpacing: 2)),
+            style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w900, color: s.enabled ? L.text.withValues(alpha: 0.6) : L.sub.withValues(alpha: 0.3), letterSpacing: 2)),
         ),
-        trailing: Switch.adaptive(
-          value: s.enabled, activeTrackColor: medColor,
-          onChanged: (v) { HapticEngine.selection(); context.read<AppState>().toggleSchedule(med.id, idx); },
+        trailing: AppToggle(
+          value: s.enabled,
+          onChanged: (v) { 
+            HapticEngine.selection(); 
+            context.read<AppState>().toggleSchedule(med.id, idx); 
+          },
         ),
       ),
     );
@@ -661,25 +692,24 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'STABILITY MATRIX', icon: Icons.grid_view_rounded, L: L),
+        _SectionHeader(label: 'STABILITY_MATRIX', icon: Icons.grid_view_rounded, L: L),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: L.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: L.border.withValues(alpha: 0.1))),
+        SquircleCard(
+          padding: const EdgeInsets.all(24),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _Metric(label: 'TAKEN', value: '$taken', color: L.success, L: L),
+                  _Metric(label: 'TAKEN', value: '$taken', color: L.text, L: L),
                   _Metric(label: 'MISSED', value: '${total - taken}', color: L.error, L: L),
-                  _Metric(label: 'SCORE', value: '$adh%', color: L.primary, L: L),
+                  _Metric(label: 'SCORE', value: '$adh%', color: L.text, L: L),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               Divider(color: L.border.withValues(alpha: 0.05)),
-              const SizedBox(height: 20),
-              _HistoryMatrix(L: L),
+              const SizedBox(height: 24),
+              const _HistoryMatrix(),
             ],
           ),
         ),
@@ -691,11 +721,10 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'TECHNICAL SPECS', icon: Icons.terminal_rounded, L: L),
+        _SectionHeader(label: 'TECHNICAL_SPECS', icon: Icons.terminal_rounded, L: L),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(color: L.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: L.border.withValues(alpha: 0.1))),
+        SquircleCard(
+          padding: EdgeInsets.zero,
           child: Wrap(
             children: [
               _SpecTile(label: 'FORM', value: med.form, icon: Icons.medication_rounded, L: L),
@@ -713,13 +742,13 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'MANAGEMENT', icon: Icons.tune_rounded, L: L),
+        _SectionHeader(label: 'DATA_MANAGEMENT', icon: Icons.tune_rounded, L: L),
         const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(color: L.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: L.border.withValues(alpha: 0.1))),
+        SquircleCard(
+          padding: EdgeInsets.zero,
           child: Column(
             children: [
-              _ManagementTile(icon: Icons.add_circle_outline_rounded, title: 'Quick Refill (+10)', color: L.success, onTap: () { HapticEngine.success(); state.updateMed(med.id, count: med.count + 10); }, L: L),
+              _ManagementTile(icon: Icons.add_circle_outline_rounded, title: 'Quick Refill (+10)', color: L.text, onTap: () { HapticEngine.success(); state.updateMed(med.id, count: med.count + 10); }, L: L),
               _ManagementTile(icon: Icons.delete_outline_rounded, title: 'Decommission Medicine', color: L.error, onTap: () { HapticEngine.alertWarning(); state.deleteMed(med.id); widget.onBack(); }, L: L, isLast: true),
             ],
           ),
@@ -731,29 +760,19 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   Widget _buildEditForm(Medicine med, AppState state, AppThemeColors L) {
     return Column(
       children: [
-        _IndustrialFormSection(label: 'CORE IDENTITY', icon: Icons.fingerprint_rounded, L: L, children: [
-          _IndustrialTextField(label: 'Medicine Name', field: 'name', value: _editFields['name'], onChanged: (v) => _editFields['name'] = v, L: L),
-          _IndustrialTextField(label: 'Brand Name', field: 'brand', value: _editFields['brand'], onChanged: (v) => _editFields['brand'] = v, L: L, isLast: true),
+        _FormSection(label: 'IDENTITY', icon: Icons.fingerprint_rounded, L: L, children: [
+          _ModernTextField(label: 'Medicine Name', value: _editFields['name'], onChanged: (v) => _editFields['name'] = v, L: L),
+          _ModernTextField(label: 'Brand Name', value: _editFields['brand'], onChanged: (v) => _editFields['brand'] = v, L: L, isLast: true),
         ]),
         const SizedBox(height: 20),
-        _IndustrialFormSection(label: 'DOSAGE & FORM', icon: Icons.medication_rounded, L: L, children: [
-          _IndustrialTextField(label: 'Dosage (e.g. 500mg)', field: 'dose', value: _editFields['dose'], onChanged: (v) => _editFields['dose'] = v, L: L),
-          _IndustrialTextField(label: 'Medicine Form', field: 'form', value: _editFields['form'], onChanged: (v) => _editFields['form'] = v, L: L, isLast: true),
+        _FormSection(label: 'CONFIGURATION', icon: Icons.medication_rounded, L: L, children: [
+          _ModernTextField(label: 'Dosage', value: _editFields['dose'], onChanged: (v) => _editFields['dose'] = v, L: L),
+          _ModernTextField(label: 'Form', value: _editFields['form'], onChanged: (v) => _editFields['form'] = v, L: L, isLast: true),
         ]),
         const SizedBox(height: 20),
-        _IndustrialFormSection(label: 'INVENTORY & REFILL', icon: Icons.inventory_2_rounded, L: L, children: [
-          _IndustrialTextField(label: 'Current Count', field: 'count', value: _editFields['count'], onChanged: (v) => _editFields['count'] = v, L: L, keyboard: TextInputType.number),
-          _IndustrialTextField(label: 'Refill Alert At', field: 'refillAt', value: _editFields['refillAt'], onChanged: (v) => _editFields['refillAt'] = v, L: L, keyboard: TextInputType.number, isLast: true),
-        ]),
-        const SizedBox(height: 20),
-        _IndustrialFormSection(label: 'PHARMACY CONTACT', icon: Icons.local_pharmacy_rounded, L: L, children: [
-          _IndustrialTextField(label: 'Pharmacy Name', field: 'pharmacyName', value: _editFields['pharmacyName'], onChanged: (v) => _editFields['pharmacyName'] = v, L: L),
-          _IndustrialTextField(label: 'Phone Number', field: 'pharmacyPhone', value: _editFields['pharmacyPhone'], onChanged: (v) => _editFields['pharmacyPhone'] = v, L: L, keyboard: TextInputType.phone),
-          _IndustrialTextField(label: 'RX Number', field: 'rxNumber', value: _editFields['rxNumber'], onChanged: (v) => _editFields['rxNumber'] = v, L: L, isLast: true),
-        ]),
-        const SizedBox(height: 20),
-        _IndustrialFormSection(label: 'ADDITIONAL NOTES', icon: Icons.notes_rounded, L: L, children: [
-          _IndustrialTextField(label: 'Instructions / Notes', field: 'notes', value: _editFields['notes'], onChanged: (v) => _editFields['notes'] = v, L: L, maxLines: 4, isLast: true),
+        _FormSection(label: 'LOGISTICS', icon: Icons.inventory_2_rounded, L: L, children: [
+          _ModernTextField(label: 'Current Count', value: _editFields['count'], onChanged: (v) => _editFields['count'] = v, L: L, keyboard: TextInputType.number),
+          _ModernTextField(label: 'Refill Alert', value: _editFields['refillAt'], onChanged: (v) => _editFields['refillAt'] = v, L: L, keyboard: TextInputType.number, isLast: true),
         ]),
       ],
     );
@@ -810,14 +829,15 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
         decoration: BoxDecoration(
           color: ctx.L.card,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-          border: Border.all(color: ctx.L.border.withValues(alpha: 0.1), width: 1.5),
           boxShadow: ctx.L.shadowSoft,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: ctx.L.border, borderRadius: BorderRadius.circular(10))),
+            const SizedBox(height: 24),
             Text("Select Meal Ritual",
-                style: AppTypography.titleLarge.copyWith(
+                style: AppTypography.headlineMedium.copyWith(
                     fontWeight: FontWeight.w900, color: ctx.L.text)),
             const SizedBox(height: 20),
             Flexible(
@@ -826,6 +846,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                 children: Ritual.values.map((r) {
                   final isSelected = s.ritual == r;
                   return ListTile(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     onTap: () {
                       final updated = s.copyWith(ritual: r);
                       if (isNew) {
@@ -838,7 +859,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                     title: Text(r.name.toUpperCase(),
                         style: AppTypography.bodyLarge.copyWith(
                             color: isSelected ? ctx.L.primary : ctx.L.text,
-                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500)),
+                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500)),
                     trailing: isSelected ? Icon(Icons.check_circle_rounded, color: ctx.L.primary) : null,
                   );
                 }).toList(),
@@ -850,61 +871,90 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     );
   }
 
-
   Widget _buildEmptyCard(String text, IconData icon, AppThemeColors L) {
     return Container(width: double.infinity, padding: const EdgeInsets.all(24), 
-      decoration: BoxDecoration(color: L.fill.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(12), border: Border.all(color: L.border.withValues(alpha: 0.1))),
+      decoration: BoxDecoration(color: L.fill.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(24), border: Border.all(color: L.border.withValues(alpha: 0.1))),
       child: Column(children: [Icon(icon, color: L.sub.withValues(alpha: 0.4), size: 24), const SizedBox(height: 12), 
         Text(text, style: AppTypography.bodySmall.copyWith(color: L.sub, fontWeight: FontWeight.w600, fontSize: 12))]));
   }
 }
 
-// ── INDUSTRIAL UI COMPONENTS ──────────────────────────────────────────
+// ── MODERN UI COMPONENTS ──────────────────────────────────────────
 
-class _IndustrialMetricCard extends StatelessWidget {
-  final Widget child;
+class _DiagnosticCard extends StatelessWidget {
+  final String label, value;
+  final IconData icon;
+  final Color color;
   final AppThemeColors L;
-  const _IndustrialMetricCard({required this.child, required this.L});
+  final Widget? child;
+
+  const _DiagnosticCard({
+    required this.label, 
+    required this.value, 
+    required this.icon, 
+    required this.color, 
+    required this.L,
+    this.child,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 100,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border, width: 1.5),
+    return SizedBox(
+      height: 110,
+      child: SquircleCard(
+        padding: const EdgeInsets.all(16),
+        child: child ?? Column(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.2, fontSize: 8)),
+                Icon(icon, size: 14, color: L.sub.withValues(alpha: 0.3)),
+              ],
+            ),
+            const Spacer(),
+            Text(value, 
+              style: AppTypography.displayLarge.copyWith(fontSize: 26, color: color, fontWeight: FontWeight.w900, letterSpacing: -1.0)),
+          ],
+        ),
       ),
-      child: child,
     );
   }
 }
 
-class _MiniStockBar extends StatelessWidget {
+class _ModernStockBar extends StatelessWidget {
   final double pct;
   final bool isLow;
   final AppThemeColors L;
-  const _MiniStockBar({required this.pct, required this.isLow, required this.L});
+  const _ModernStockBar({required this.pct, required this.isLow, required this.L});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(20, (index) {
-        final threshold = index / 20;
-        final isActive = pct > threshold;
-        return Expanded(
-          child: Container(
-            height: 8,
-            margin: const EdgeInsets.symmetric(horizontal: 1),
-            decoration: BoxDecoration(
-              color: isActive 
-                  ? (isLow ? L.error : L.text) 
-                  : L.border.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(2),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        height: 6,
+        width: double.infinity,
+        color: L.fill,
+        child: Stack(
+          children: [
+            AnimatedPositioned(
+              duration: 1000.ms,
+              curve: Curves.easeOutQuart,
+              left: 0, top: 0, bottom: 0,
+              width: (MediaQuery.of(context).size.width - 80) * pct,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isLow ? L.error : L.text,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
             ),
-          ),
-        );
-      }),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -918,11 +968,9 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 8, bottom: 8),
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Row(children: [
-        Icon(icon, size: 14, color: L.text.withValues(alpha: 0.6)),
-        const SizedBox(width: 10),
-        Text(label, style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.6), fontWeight: FontWeight.w900, letterSpacing: 1.8, fontSize: 9)),
+        Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 10)),
         const Spacer(),
         if (trailing != null) trailing!,
       ]),
@@ -938,11 +986,15 @@ class _HeaderAction extends StatelessWidget {
   const _HeaderAction({required this.icon, required this.label, required this.onTap, required this.L});
   @override
   Widget build(BuildContext context) {
-    return BouncingButton(onTap: onTap, child: Row(children: [
-      Icon(icon, size: 14, color: L.text),
-      const SizedBox(width: 4),
-      Text(label, style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 0.5, fontSize: 10)),
-    ]));
+    return BouncingButton(onTap: onTap, child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: L.text.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8)),
+      child: Row(children: [
+        Icon(icon, size: 14, color: L.text),
+        const SizedBox(width: 4),
+        Text(label, style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 0.5, fontSize: 9)),
+      ]),
+    ));
   }
 }
 
@@ -954,39 +1006,39 @@ class _Metric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      Text(value, style: AppTypography.displayLarge.copyWith(fontSize: 22, color: color, fontWeight: FontWeight.w900)),
-      Text(label, style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.sub.withValues(alpha: 0.4), fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+      Text(value, style: AppTypography.displayLarge.copyWith(fontSize: 32, color: color, fontWeight: FontWeight.w900, letterSpacing: -1.0)),
+      Text(label, style: AppTypography.labelSmall.copyWith(fontSize: 9, color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
     ]);
   }
 }
 
 class _HistoryMatrix extends StatelessWidget {
-  final AppThemeColors L;
-  const _HistoryMatrix({required this.L});
+  const _HistoryMatrix();
   @override
   Widget build(BuildContext context) {
+    final L = context.L;
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(30, (i) {
-            final isTaken = i % 3 != 0;
+          children: List.generate(24, (i) {
+            final isTaken = i % 4 != 0;
             return Container(
-              width: 6,
-              height: 12,
+              width: 8,
+              height: 24,
               decoration: BoxDecoration(
-                color: isTaken ? L.text.withValues(alpha: 0.8) : L.border.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(1),
+                color: isTaken ? L.text : L.fill,
+                borderRadius: BorderRadius.circular(2),
               ),
             );
           }),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('DATA_WINDOW 30D', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.sub.withValues(alpha: 0.4), fontWeight: FontWeight.w900)),
-            Text('STABILITY_INDEX_OPTIMAL', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.success, fontWeight: FontWeight.w900)),
+            Text('HISTORY_MATRIX_30D', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.sub, fontWeight: FontWeight.w900)),
+            Text('OPTIMAL_STABILITY', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.text, fontWeight: FontWeight.w900)),
           ],
         ),
       ],
@@ -1002,23 +1054,18 @@ class _SpecTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: (MediaQuery.of(context).size.width - 64) / 2,
-      padding: const EdgeInsets.all(16),
+      width: (MediaQuery.of(context).size.width - 44) / 2,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         border: Border.all(color: L.border.withValues(alpha: 0.05), width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 10, color: L.sub.withValues(alpha: 0.5)),
-              const SizedBox(width: 6),
-              Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub.withValues(alpha: 0.6), fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(value.isEmpty ? 'NONE' : value.toUpperCase(), style: AppTypography.labelLarge.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5)),
+          Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+          const SizedBox(height: 8),
+          Text(value.isEmpty ? 'UNDEFINED' : value.toUpperCase(), 
+            style: AppTypography.titleMedium.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
         ],
       ),
     );
@@ -1030,47 +1077,48 @@ class _ManagementTile extends StatelessWidget {
   const _ManagementTile({required this.icon, required this.title, required this.color, required this.onTap, required this.L, this.isLast = false});
   @override
   Widget build(BuildContext context) {
-    return Container(decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.05), width: 0.5))),
-      child: ListTile(onTap: onTap, leading: Icon(icon, color: color, size: 20),
-        title: Text(title.toUpperCase(), style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w900, color: color, fontSize: 11, letterSpacing: 0.5)),
+    return Container(decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.03), width: 0.5))),
+      child: ListTile(onTap: onTap, 
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        leading: Icon(icon, color: color, size: 22),
+        title: Text(title.toUpperCase(), style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w900, color: color, fontSize: 11, letterSpacing: 1.0)),
         trailing: Icon(Icons.chevron_right_rounded, color: L.sub.withValues(alpha: 0.3), size: 20)));
   }
 }
 
-class _IndustrialFormSection extends StatelessWidget {
+class _FormSection extends StatelessWidget {
   final String label; final IconData icon; final List<Widget> children; final AppThemeColors L;
-  const _IndustrialFormSection({required this.label, required this.icon, required this.children, required this.L});
+  const _FormSection({required this.label, required this.icon, required this.children, required this.L});
   @override
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(padding: const EdgeInsets.only(left: 8, bottom: 10), 
-          child: Row(children: [Icon(icon, size: 14, color: L.text.withValues(alpha: 0.4)), const SizedBox(width: 10),
-            Text(label.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.4), fontWeight: FontWeight.w900, letterSpacing: 1.8, fontSize: 9))])),
-        Container(decoration: BoxDecoration(color: L.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: L.border.withValues(alpha: 0.1))),
-          child: Column(children: children)),
+          child: Text(label.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.8, fontSize: 10))),
+        SquircleCard(padding: EdgeInsets.zero, child: Column(children: children)),
     ]);
   }
 }
 
-class _IndustrialTextField extends StatelessWidget {
-  final String label, field, value; final ValueChanged<String> onChanged; final AppThemeColors L; final TextInputType keyboard; final int maxLines; final bool isLast;
-  const _IndustrialTextField({required this.label, required this.field, required this.value, required this.onChanged, required this.L, this.keyboard = TextInputType.text, this.maxLines = 1, this.isLast = false});
+class _ModernTextField extends StatelessWidget {
+  final String label, value; final ValueChanged<String> onChanged; final AppThemeColors L; final TextInputType keyboard; final int maxLines; final bool isLast;
+  const _ModernTextField({required this.label, required this.value, required this.onChanged, required this.L, this.keyboard = TextInputType.text, this.maxLines = 1, this.isLast = false});
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.05), width: 0.5))),
+      decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.03), width: 0.5))),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.4), fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 9)),
+          Text(label.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 9)),
           const SizedBox(height: 6),
           TextFormField(
             initialValue: value, onChanged: onChanged, keyboardType: keyboard, maxLines: maxLines,
-            style: AppTypography.bodyMedium.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 15),
-            decoration: const InputDecoration(isDense: true, border: InputBorder.none, contentPadding: EdgeInsets.zero),
+            style: AppTypography.titleMedium.copyWith(color: L.text, fontWeight: FontWeight.w900),
+            decoration: const InputDecoration(isDense: true, border: InputBorder.none, contentPadding: EdgeInsets.zero, fillColor: Colors.transparent),
           ),
         ]),
       ),
     );
   }
 }
+

@@ -6,7 +6,7 @@ import '../../../../theme/app_theme.dart';
 import '../../../../domain/entities/entities.dart';
 import '../../../../core/utils/refill_helper.dart';
 import 'settings_shared.dart';
-import '../../../../widgets/common/bouncing_button.dart';
+import '../../../../widgets/shared/shared_widgets.dart';
 
 class StatsTab extends StatelessWidget {
   final AppState state;

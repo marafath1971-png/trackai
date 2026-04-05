@@ -46,6 +46,7 @@ class JahisParser {
           unit: unit,
           schedule: [
             ScheduleEntry(
+              id: 'jahis_${idCounter++}',
               h: _getHourForRitual(ritual),
               m: 0,
               label: _getLabelForRitual(ritual),

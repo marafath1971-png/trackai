@@ -4,7 +4,7 @@ import '../../../providers/app_state.dart';
 import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
 import '../../../core/utils/color_utils.dart';
-import '../../../widgets/common/bouncing_button.dart';
+import '../../../widgets/shared/shared_widgets.dart';
 
 class CaregiverCard extends StatefulWidget {
   final Caregiver cg;

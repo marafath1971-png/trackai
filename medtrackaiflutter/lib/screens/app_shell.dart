@@ -15,6 +15,7 @@ import 'dashboard/dashboard_tab.dart';
 import 'security/lock_screen.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/common/medical_disclaimer_modal.dart';
+import '../widgets/shared/shared_widgets.dart';
 
 // APP SHELL — Bottom nav + FAB + overlays
 // ══════════════════════════════════════════════
@@ -191,41 +192,37 @@ class _AppShellState extends State<AppShell>
     
     return Container(
       margin: EdgeInsets.only(
-        left: AppSpacing.p20,
-        right: AppSpacing.p20,
-        bottom: AppSpacing.p16 + bottomPadding,
+        left: 24,
+        right: 24,
+        bottom: 24 + bottomPadding,
       ),
       child: Stack(
         clipBehavior: Clip.none,
-        alignment: Alignment.centerRight,
+        alignment: Alignment.bottomCenter,
         children: [
-          // ── Glassmorphic Nav Bar ──
-          Container(
-            height: 76,
-            margin: const EdgeInsets.only(right: 38),
-            decoration: BoxDecoration(
-              color: L.card.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(AppRadius.xl),
-              border: Border.all(
-                color: L.border.withValues(alpha: 0.1),
-                width: 1.5,
-              ),
-              boxShadow: L.shadowSoft,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.xl),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          // --- FLOATING GLASS BAR ---
+          ClipRRect(
+            borderRadius: BorderRadius.circular(32),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Container(
+                height: 72,
+                decoration: BoxDecoration(
+                  color: L.card.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.5),
+                  boxShadow: L.shadowSoft,
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(AppSpacing.p8, 0, AppSpacing.p32, 0),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildNavItem(0, 'Home', Icons.grid_view_rounded, L, unseenAlerts),
-                      _buildNavItem(1, 'Alarms', Icons.alarm_rounded, L, unseenAlerts),
-                      _buildNavItem(2, 'Analytics', Icons.analytics_rounded, L, unseenAlerts),
-                      _buildNavItem(3, 'Family', Icons.people_alt_rounded, L, unseenAlerts),
+                      _buildNavItem(0, 'HOME', Icons.grid_view_rounded, L, 0),
+                      _buildNavItem(1, 'ALARMS', Icons.alarm_rounded, L, unseenAlerts),
+                      const SizedBox(width: 60), // Space for FAB
+                      _buildNavItem(2, 'DATA', Icons.analytics_rounded, L, 0),
+                      _buildNavItem(3, 'PEOPLE', Icons.people_alt_rounded, L, unseenAlerts),
                     ],
                   ),
                 ),
@@ -233,40 +230,30 @@ class _AppShellState extends State<AppShell>
             ),
           ),
           
-          // ── Premium FAB ──
+          // --- CENTERED FAB ---
           Positioned(
-            right: 0,
-            top: -16,
-            child: GestureDetector(
+            bottom: 12,
+            child: BouncingButton(
               onTap: () {
                 HapticEngine.medium();
                 setState(() => _showScan = true);
               },
               child: Container(
-                width: 68,
-                height: 68,
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
                   gradient: AppGradients.main,
                   shape: BoxShape.circle,
-                  boxShadow: AppShadows.glow(L.primary, intensity: 0.3),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 2),
+                  boxShadow: [
+                    BoxShadow(color: L.primary.withValues(alpha: 0.3), blurRadius: 20, spreadRadius: 2),
+                    BoxShadow(color: Colors.white.withValues(alpha: 0.2), blurRadius: 10, spreadRadius: -5),
+                  ],
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
                 ),
                 child: const Center(
-                  child: Icon(Icons.add_rounded, color: Colors.white, size: 34),
+                  child: Icon(Icons.add_rounded, color: Colors.white, size: 32),
                 ),
-              )
-                  // Only pulse when user has meds but NO alarms configured
-                  .animate(
-                    onPlay: medsCount > 0 && allSchedules == 0
-                        ? (c) => c.repeat(reverse: true)
-                        : null,
-                  )
-                  .scale(
-                    begin: const Offset(1, 1),
-                    end: const Offset(1.04, 1.04),
-                    duration: 3000.ms,
-                    curve: Curves.easeInOut,
-                  ),
+              ),
             ),
           ),
         ],
@@ -274,10 +261,8 @@ class _AppShellState extends State<AppShell>
     );
   }
 
-  Widget _buildNavItem(int index, String label, IconData icon, AppThemeColors L, int unseenAlerts) {
+  Widget _buildNavItem(int index, String label, IconData icon, AppThemeColors L, int cnt) {
     final selected = _tab == index;
-    // Show badge on Family (unseen alerts) and Alarms (missed doses)
-    final cnt = (index == 3 || index == 1) ? unseenAlerts : 0;
     
     return Expanded(
       child: GestureDetector(
@@ -289,65 +274,54 @@ class _AppShellState extends State<AppShell>
         },
         behavior: HitTestBehavior.opaque,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,
               children: [
-                AnimatedContainer(
-                  duration: 300.ms,
-                  curve: Curves.easeOutCubic,
-                  padding: const EdgeInsets.all(AppSpacing.p8),
-                  child: Icon(
-                    icon,
-                    size: 24,
-                    color: selected ? L.primary : L.sub.withValues(alpha: 0.4),
-                  )
-                      .animate(target: selected ? 1 : 0)
-                      .scale(
-                        duration: 400.ms,
-                        curve: Curves.easeOutBack,
-                        begin: const Offset(1, 1),
-                        end: const Offset(1.15, 1.15)
-                      ),
-                ),
+                Icon(
+                  icon,
+                  size: 26,
+                  color: selected ? L.text : L.sub.withValues(alpha: 0.35),
+                ).animate(target: selected ? 1 : 0).scale(
+                      duration: 400.ms,
+                      begin: const Offset(1, 1),
+                      end: const Offset(1.1, 1.1),
+                    ).shake(duration: 400.ms, hz: 4),
                 if (cnt > 0)
                   Positioned(
-                    top: 4,
-                    right: 4,
+                    top: -2,
+                    right: -2,
                     child: Container(
-                      width: 10,
-                      height: 10,
+                      width: 8,
+                      height: 8,
                       decoration: BoxDecoration(
                         color: L.error,
                         shape: BoxShape.circle,
-                        border: Border.all(color: L.card, width: 2),
-                        boxShadow: AppShadows.glow(L.error, intensity: 0.2),
+                        border: Border.all(color: L.card, width: 1.5),
+                        boxShadow: [BoxShadow(color: L.error.withValues(alpha: 0.3), blurRadius: 4)],
                       ),
-                    )
-                        .animate(onPlay: (c) => c.repeat(reverse: true))
-                        .scale(begin: const Offset(1, 1), end: const Offset(1.3, 1.3), duration: 1000.ms),
+                    ),
                   ),
               ],
             ),
-            const SizedBox(height: 2),
-            AnimatedDefaultTextStyle(
-              duration: 250.ms,
+            const SizedBox(height: 4),
+            Text(
+              label,
               style: AppTypography.labelSmall.copyWith(
-                fontWeight: selected ? FontWeight.w900 : FontWeight.w500,
-                color: selected ? L.primary : L.sub.withValues(alpha: 0.4),
-                fontSize: 11,
-                letterSpacing: 0.2,
+                fontSize: 8,
+                fontWeight: FontWeight.w900,
+                color: selected ? L.text : L.sub.withValues(alpha: 0.35),
+                letterSpacing: 1.2,
               ),
-              child: Text(label.toUpperCase()),
             ),
           ],
         ),
       ),
     );
   }
+
 }
 
 // ── UPGRADED LOW STOCK BANNER (Floating Pill) ──
@@ -361,42 +335,30 @@ class LowStockBanner extends StatelessWidget {
     final L = context.L;
     final firstName = meds.isNotEmpty ? meds.first.name : '';
     
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.p16, vertical: AppSpacing.p12),
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(AppRadius.max),
-        border: Border.all(color: L.error.withValues(alpha: 0.1), width: 1.5),
-        boxShadow: L.shadowSoft,
-      ),
+    return SquircleCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.p8),
-            decoration: BoxDecoration(
-              color: L.error.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.inventory_2_rounded, size: 18, color: L.error),
-          ),
-          const SizedBox(width: AppSpacing.p12),
+          Icon(Icons.inventory_2_rounded, size: 18, color: L.error),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Low Stock Alert',
+                  'LOW_STOCK_ALERT',
                   style: AppTypography.labelSmall.copyWith(
                     fontWeight: FontWeight.w900,
-                    color: L.warning,
-                    letterSpacing: 0.5,
+                    color: L.error,
+                    fontSize: 8,
+                    letterSpacing: 1.0,
                   ),
                 ),
                 Text(
-                  '${meds.length > 1 ? "${meds.length} items" : firstName} need refill',
+                  '${meds.length > 1 ? "${meds.length} meds" : firstName} need refill',
                   style: AppTypography.labelMedium.copyWith(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w900,
                     color: L.text,
                     height: 1.1,
                   ),
@@ -404,20 +366,9 @@ class LowStockBanner extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.p12),
-          GestureDetector(
-            onTap: () {
-              HapticEngine.light();
-              onDismiss();
-            },
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.p8),
-              decoration: BoxDecoration(
-                color: L.fill,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.close_rounded, size: 16, color: L.sub),
-            ),
+          BouncingButton(
+            onTap: onDismiss,
+            child: Icon(Icons.close_rounded, size: 16, color: L.sub),
           ),
         ],
       ),

@@ -5,7 +5,7 @@ import '../../services/auth_service.dart';
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/app_loading_indicator.dart';
-import '../../widgets/common/bouncing_button.dart';
+import '../../widgets/shared/shared_widgets.dart';
 
 // ══════════════════════════════════════════════
 // AUTH SCREEN — Sign In / Sign Up

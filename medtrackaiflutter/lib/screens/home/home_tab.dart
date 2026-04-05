@@ -4,21 +4,20 @@ import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
 import '../../domain/entities/entities.dart';
 import '../../theme/app_theme.dart';
-import '../medicine/medicine_detail_screen.dart';
-import 'widgets/streak_modal.dart';
-import 'widgets/settings_modal_new.dart';
-import 'widgets/home_header.dart';
-
+import '../../widgets/shared/shared_widgets.dart';
 import '../../core/utils/haptic_engine.dart';
-
-import 'package:flutter_animate/flutter_animate.dart';
+import '../../core/utils/date_formatter.dart';
 import 'widgets/home_meds_section.dart';
 import 'widgets/med_card.dart';
 import 'widgets/home_dose_section.dart';
 
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/common/premium_empty_state.dart';
 import '../../widgets/common/mesh_gradient.dart';
-import '../../widgets/common/bouncing_button.dart';
+import 'widgets/home_header.dart';
+import 'widgets/streak_modal.dart';
+import 'widgets/settings_modal_new.dart';
+import '../medicine/medicine_detail_screen.dart';
 
 
 class HomeTab extends StatefulWidget {
@@ -142,9 +141,9 @@ class _HomeTabState extends State<HomeTab> {
                   child: SizedBox(height: MediaQuery.of(context).padding.top + 150),
                 ),
 
-                // --- 1. MINIMALIST BENTO HEADER ---
+                // --- 1. PREMIUM BENTO HEADER ---
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, 8, AppSpacing.screenPadding, 12),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
                   sliver: SliverToBoxAdapter(
                     child: _HomeBentoHeader(
                       state: context.read<AppState>(),
@@ -157,7 +156,7 @@ class _HomeTabState extends State<HomeTab> {
                     )
                         .animate()
                         .fadeIn(duration: 800.ms)
-                        .slideY(begin: 0.05, end: 0, curve: Curves.easeOutQuart),
+                        .scale(begin: const Offset(0.98, 0.98), curve: Curves.easeOutQuart),
                   ),
                 ),
 
@@ -440,154 +439,111 @@ class _HomeBentoHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final streak = state.getStreak();
-    final meds = state.meds;
-    final medsCount = meds.length;
+    final medsCount = state.meds.length;
     
     return Column(
       children: [
         IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ── MAIN PROGRESS CARD ──
-                  Expanded(
-                    flex: 3,
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: L.text,
-                        borderRadius: BorderRadius.circular(32),
-                        border: Border.all(color: L.text, width: 1.5),
-                        // No shadows for pure industrial look
-                      ),
-                      child: Column(
+            children: [
+              // ── MAIN PROGRESS CARD (Glassmorphic) ──
+              Expanded(
+                flex: 3,
+                child: GlassCard(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'TREATMENT PROGRESS',
-                                style: AppTypography.labelSmall.copyWith(color: L.bg.withValues(alpha: 0.4), letterSpacing: 1.5, fontWeight: FontWeight.w900, fontSize: 9),
-                              ),
-                              const SizedBox(height: 12),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  doses.isEmpty
-                                    ? 'NO DOSES\nSCHEDULED'
-                                    : dosePct == 1.0
-                                      ? 'ALL DONE! ✓'
-                                      : '${(dosePct * 100).toInt()}%\nCOMPLETE',
-                                  style: AppTypography.displaySmall.copyWith(color: L.bg, fontWeight: FontWeight.w900, fontSize: doses.isEmpty ? 22 : 32, letterSpacing: -1.0, height: 1.05),
-                                ),
-                              ),
-                            ],
+                          Text(
+                            'TREATMENT_METRIC',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: L.text.withValues(alpha: 0.4),
+                              letterSpacing: 2.0,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 9,
+                            ),
                           ),
-                          const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              Expanded(child: _SmallDoseIndicator(count: takenCount, label: 'COMPLETED', color: L.bg, L: L)),
-                              Container(width: 1, height: 24, color: L.bg.withValues(alpha: 0.1), margin: const EdgeInsets.symmetric(horizontal: 16)),
-                              Expanded(child: _SmallDoseIndicator(count: remaining, label: 'PENDING', color: L.bg.withValues(alpha: 0.4), L: L)),
-                            ],
+                          const SizedBox(height: 12),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              doses.isEmpty
+                                  ? 'NO_DATA'
+                                  : dosePct == 1.0
+                                      ? 'OPTIMIZED'
+                                      : '${(dosePct * 100).toInt()}%_STABLE',
+                              style: AppTypography.displaySmall.copyWith(
+                                color: L.text,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 28,
+                                letterSpacing: -1.5,
+                                height: 1.0,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          _MetricBit(count: takenCount, label: 'COMPLETED', color: L.text, L: L),
+                          const Spacer(),
+                          _MetricBit(count: remaining, label: 'PENDING', color: L.sub, L: L),
+                        ],
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  // ── STREAK & STATS COLUMN ──
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: _BentoMiniCard(
-                            title: 'STREAK',
-                            value: '$streak',
-                            icon: '🔥',
-                            color: L.text.withValues(alpha: 0.05),
-                            textColor: L.text,
-                            L: L,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Expanded(
-                          child: _BentoMiniCard(
-                            title: 'IN STOCK',
-                            value: '$medsCount',
-                            icon: '📦',
-                            color: L.text.withValues(alpha: 0.05),
-                            textColor: L.text,
-                            L: L,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: 12),
+              // ── SIDE BENTO GRID ──
+              Expanded(
+                flex: 2,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: _BentoMiniCard(
+                        title: 'STREAK',
+                        value: '$streak',
+                        icon: Icons.local_fire_department_rounded,
+                        color: L.primary,
+                        L: L,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: _BentoMiniCard(
+                        title: 'STOCK',
+                        value: '$medsCount',
+                        icon: Icons.inventory_2_rounded,
+                        color: L.text,
+                        L: L,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 }
 
-class _BentoMiniCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final String icon;
-  final Color color;
-  final Color textColor;
-  final AppThemeColors L;
-
-  const _BentoMiniCard({required this.title, required this.value, required this.icon, required this.color, required this.textColor, required this.L});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 84),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              Text(icon, style: const TextStyle(fontSize: 12)),
-              const SizedBox(width: 6),
-              Text(title, style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
-            ],
-          ),
-          const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(value, style: AppTypography.titleLarge.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 20)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SmallDoseIndicator extends StatelessWidget {
+class _MetricBit extends StatelessWidget {
   final int count;
   final String label;
   final Color color;
   final AppThemeColors L;
 
-  const _SmallDoseIndicator({required this.count, required this.label, required this.color, required this.L});
+  const _MetricBit({required this.count, required this.label, required this.color, required this.L});
 
   @override
   Widget build(BuildContext context) {
@@ -600,9 +556,57 @@ class _SmallDoseIndicator extends StatelessWidget {
         ),
         Text(
           label,
-          style: AppTypography.labelSmall.copyWith(color: color.withValues(alpha: 0.6), fontSize: 10, fontWeight: FontWeight.w600),
+          style: AppTypography.labelSmall.copyWith(
+            color: color.withValues(alpha: 0.5),
+            fontSize: 8,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.0,
+          ),
         ),
       ],
+    );
+  }
+}
+
+class _BentoMiniCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final AppThemeColors L;
+
+  const _BentoMiniCard({required this.title, required this.value, required this.icon, required this.color, required this.L});
+
+  @override
+  Widget build(BuildContext context) {
+    return SquircleCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 14, color: color.withValues(alpha: 0.5)),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: AppTypography.titleLarge.copyWith(
+              color: L.text,
+              fontWeight: FontWeight.w900,
+              fontSize: 20,
+              letterSpacing: -1.0,
+            ),
+          ),
+          Text(
+            title,
+            style: AppTypography.labelSmall.copyWith(
+              color: L.sub.withValues(alpha: 0.5),
+              fontSize: 8,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -682,27 +686,15 @@ class _ProfessionalAlertTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BouncingButton(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: SquircleCard(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          color: L.card,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: color, width: 1.5), // Pure color border (Cal AI)
-          // No shadows for pure industrial look
-        ),
+        child: InkWell(
+          onTap: onTap,
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 20, color: color),
-            ),
+            Icon(icon, size: 20, color: color),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -713,25 +705,28 @@ class _ProfessionalAlertTile extends StatelessWidget {
                     style: AppTypography.labelSmall.copyWith(
                       color: color,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: 1.0,
+                      letterSpacing: 2.0,
+                      fontSize: 8,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
                     content,
                     style: AppTypography.labelMedium.copyWith(
-                      color: L.text.withValues(alpha: 0.7),
-                      fontWeight: FontWeight.w600,
+                      color: L.text,
+                      fontWeight: FontWeight.w900,
+                      height: 1.2,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: L.border, size: 20),
+            Icon(Icons.chevron_right_rounded, color: L.sub.withValues(alpha: 0.3), size: 20),
           ],
         ),
       ),
-    );
+    ),
+   );
   }
 }
 class HomeDoseGroup extends StatefulWidget {
@@ -793,11 +788,11 @@ class _HomeDoseGroupState extends State<HomeDoseGroup> {
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: DoseCard(
-              dose: d,
+              med: d.med,
+              sched: d.sched,
               taken: isTaken,
               overdue: isOverdue,
               isNext: isActualNext && !isTaken,
-              L: L,
               onTake: () {
                 widget.state.toggleDose(d);
                 _showUndoSnackbar(context, d);

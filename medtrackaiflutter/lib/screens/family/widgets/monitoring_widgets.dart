@@ -6,7 +6,7 @@ import '../../../theme/app_theme.dart';
 import '../../../services/auth_service.dart';
 import '../../../core/utils/haptic_engine.dart';
 import '../../../widgets/common/paywall_sheet.dart';
-import '../../../widgets/common/bouncing_button.dart';
+import '../../../widgets/shared/shared_widgets.dart';
 import 'ai_protector_card.dart';
 
 int _calculateStreak(

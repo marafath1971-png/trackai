@@ -5,7 +5,7 @@ import '../../../core/utils/date_formatter.dart';
 import '../../../providers/app_state.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../widgets/common/bouncing_button.dart';
+import '../../../../widgets/shared/shared_widgets.dart';
 
 // ══════════════════════════════════════════════
 // HOME HEADER — "My Health" dashboard style

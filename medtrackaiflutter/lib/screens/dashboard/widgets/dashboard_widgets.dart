@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../../providers/app_state.dart';
 import '../../../core/utils/haptic_engine.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../widgets/shared/shared_widgets.dart';
+import '../../../widgets/shared/shared_widgets.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/smoothing_text.dart';
 import '../../../domain/entities/entities.dart';
@@ -21,32 +23,26 @@ class LatencyHeatmap extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'TIMING CONSISTENCY (7D)',
+          'TIMING_CONSISTENCY (7D)',
           style: AppTypography.labelSmall.copyWith(
             fontSize: 10,
-            color: L.sub.withValues(alpha: 0.6),
+            color: L.sub,
             letterSpacing: 1.5,
             fontWeight: FontWeight.w900,
           ),
         ),
-        const SizedBox(height: AppSpacing.p16),
-        Container(
-          height: 160,
-          padding: const EdgeInsets.all(AppSpacing.p24),
-          decoration: BoxDecoration(
-            color: L.card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: L.border, width: 1.0),
-            // Shadow removed for Cal style
-          ),
-          child: Row(
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 180,
+          child: SquircleCard(
+            padding: const EdgeInsets.all(24),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List.generate(7, (i) {
                 final date = DateTime.now().subtract(Duration(days: 6 - i));
                 final dateStr = date.toIso8601String().substring(0, 10);
-                final dayLatency =
-                    latencyData.where((e) => e['date'] == dateStr).toList();
+                final dayLatency = latencyData.where((e) => e['date'] == dateStr).toList();
 
                 return Expanded(
                   child: Column(
@@ -60,143 +56,77 @@ class LatencyHeatmap extends StatelessWidget {
                               width: 1.0,
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [
-                                    Colors.transparent,
-                                    L.border.withValues(alpha: 0.2),
-                                    Colors.transparent
-                                  ],
+                                  colors: [Colors.transparent, L.border.withValues(alpha: 0.1), Colors.transparent],
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                 ),
                               ),
                             ),
-                            // TARGET LINE (0 MS)
-                            Positioned(
-                              bottom: (60 / 120 * 100), // 50% height = 0 mins
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                height: 1.0,
-                                decoration: BoxDecoration(
-                                  color: L.success.withValues(alpha: 0.08),
-                                ),
-                              ),
-                            ),
                             ...dayLatency.map((d) {
                               final latency = (d['latency'] as int?) ?? 0;
-                              final color = latency.abs() < 15
-                                  ? L.green
-                                  : (latency.abs() < 60 ? L.amber : L.red);
-                              final bottomPos = ((latency + 60) / 120 * 100)
-                                  .clamp(0.0, 100.0);
+                              final color = latency.abs() < 15 ? L.text : (latency.abs() < 60 ? L.sub : L.error);
+                              final bottomPos = ((latency + 60) / 120 * 100).clamp(0.0, 100.0);
 
                               return Positioned(
                                 bottom: bottomPos,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    HapticEngine.selection();
-                                  },
-                                  child: Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                        color: color,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                            color: Colors.white, width: 2.0),
-                                        boxShadow: [
-                                          BoxShadow(
-                                              color:
-                                                  color.withValues(alpha: 0.5),
-                                              blurRadius: 10,
-                                              spreadRadius: 2)
-                                        ]),
+                                child: Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8, spreadRadius: 1),
+                                    ],
                                   ),
-                                )
-                                    .animate(
-                                        onPlay: (c) => c.repeat(reverse: true))
-                                    .scale(
-                                        begin: const Offset(1, 1),
-                                        end: const Offset(1.15, 1.15),
-                                        duration: 1500.ms,
-                                        delay: (i * 150).ms,
-                                        curve: Curves.easeInOut)
-                                    .shimmer(
-                                        duration: 3.seconds,
-                                        color: Colors.white
-                                            .withValues(alpha: 0.3)),
+                                ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                                  begin: const Offset(1, 1),
+                                  end: const Offset(1.2, 1.2),
+                                  duration: 1500.ms,
+                                  delay: (i * 100).ms,
+                                ),
                               );
                             }),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 16),
                       Text(
-                          [
-                            'SUN',
-                            'MON',
-                            'TUE',
-                            'WED',
-                            'THU',
-                            'FRI',
-                            'SAT'
-                          ][date.weekday % 7],
-                          style: AppTypography.labelMedium.copyWith(
-                              fontSize: 9, color: L.sub, letterSpacing: 0.8)),
+                        ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][date.weekday % 7],
+                        style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.sub, fontWeight: FontWeight.w900),
+                      ),
                     ],
                   ),
                 );
               }),
             ),
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 
   Widget _buildEmptyState(AppThemeColors L) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('TIMING CONSISTENCY',
-            style: AppTypography.labelLarge
-                .copyWith(fontSize: 11, color: L.sub, letterSpacing: 1.2)),
+        Text('TIMING_CONSISTENCY',
+            style: AppTypography.labelSmall.copyWith(fontSize: 10, color: L.sub, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
         const SizedBox(height: 16),
-        Container(
+        SizedBox(
           height: 140,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [L.fill, L.card.withValues(alpha: 0.5)],
+          child: SquircleCard(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.history_rounded, color: L.sub.withValues(alpha: 0.2), size: 28),
+                const SizedBox(height: 16),
+                Text('Log doses to see timing patterns',
+                    style: AppTypography.bodySmall.copyWith(color: L.sub, fontWeight: FontWeight.w700)),
+              ],
             ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: L.border, width: 1.5),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: L.border.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.history_rounded,
-                    color: L.sub.withValues(alpha: 0.4), size: 24),
-              ),
-              const SizedBox(height: 16),
-              Text('Log doses to see timing patterns',
-                  style: AppTypography.bodySmall.copyWith(
-                      color: L.sub.withValues(alpha: 0.7),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700)),
-            ],
-          ),
-        )
-            .animate()
-            .fadeIn(duration: 600.ms)
-            .scale(begin: const Offset(0.98, 0.98)),
+        ),
       ],
     );
   }
@@ -223,143 +153,67 @@ class HealthCoachCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Icon(Icons.auto_awesome_rounded, color: L.purple, size: 14),
-                  const SizedBox(width: 8),
-                  Text('AI MEDICAL BRIEFING',
-                      style: AppTypography.labelLarge.copyWith(
-                          fontSize: 10, color: L.purple, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
-                ],
-              ),
+            Row(
+              children: [
+                Icon(Icons.auto_awesome_rounded, color: L.purple, size: 14),
+                const SizedBox(width: 8),
+                Text('AI_MEDICAL_BRIEFING',
+                    style: AppTypography.labelSmall.copyWith(
+                        fontSize: 10, color: L.purple, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
+              ],
             ),
-            GestureDetector(
-              onTap: onRetry,
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: L.fill,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.refresh_rounded, size: 14, color: L.sub),
-              ),
-            ),
+            BouncingButton(onTap: onRetry, child: Icon(Icons.refresh_rounded, size: 16, color: L.sub)),
           ],
         ),
         const SizedBox(height: 16),
         ...insights.map((ins) {
           final cat = ins.category.toLowerCase();
-          final color = (cat.contains('safe') ||
-                  cat.contains('warn') ||
-                  cat.contains('caution'))
-              ? L.red
-              : (cat.contains('adh') ||
-                      cat.contains('hab') ||
-                      cat.contains('pro'))
-                  ? L.green
-                  : L.purple;
+          final color = (cat.contains('safe') || cat.contains('warn')) ? L.error : (cat.contains('adh') ? L.text : L.purple);
 
           return Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.p16),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.p24),
-              decoration: BoxDecoration(
-                color: L.card,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.5),
-                // Shadow removed for Cal style
-              ),
-              child: Row(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: SquircleCard(
+              padding: const EdgeInsets.all(24),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10)),
-                    child: Text(cat.toUpperCase(),
-                        style: AppTypography.labelMedium.copyWith(
-                            color: color, fontSize: 9, letterSpacing: 0.5)),
+                   Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
+                        child: Text(cat.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: color, fontSize: 8, fontWeight: FontWeight.w900)),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(ins.title, style: AppTypography.titleMedium.copyWith(color: L.text, fontWeight: FontWeight.w900)),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(ins.title,
-                            style: AppTypography.titleLarge.copyWith(
-                                fontSize: 15,
-                                color: L.text,
-                                letterSpacing: -0.3)),
-                        const SizedBox(height: 6),
-                        SmoothingText(
-                          text: ins.body,
-                          style: AppTypography.bodySmall.copyWith(
-                              color: L.sub,
-                              fontSize: 13,
-                              height: 1.5,
-                              fontWeight: FontWeight.w500),
+                  const SizedBox(height: 16),
+                  SmoothingText(
+                    text: ins.body,
+                    style: AppTypography.bodySmall.copyWith(color: L.sub, fontSize: 13, height: 1.5, fontWeight: FontWeight.w500),
+                  ),
+                  if (ins.steps.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: ins.steps.map((step) => BouncingButton(
+                        onTap: () => context.read<AppState>().executeStepAction(step, context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(color: L.text.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8)),
+                          child: Text(step, style: AppTypography.labelSmall.copyWith(color: L.text, fontSize: 10, fontWeight: FontWeight.w900)),
                         ),
-                        if (ins.steps.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: ins.steps
-                                .map((step) => GestureDetector(
-                                      onTap: () => context
-                                          .read<AppState>()
-                                          .executeStepAction(step, context),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: color.withValues(alpha: 0.05),
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                              color:
-                                                  color.withValues(alpha: 0.1)),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                                Icons
-                                                    .check_circle_outline_rounded,
-                                                color: color,
-                                                size: 10),
-                                            const SizedBox(width: 6),
-                                            Flexible(
-                                              child: Text(
-                                                step,
-                                                style: AppTypography.labelMedium
-                                                    .copyWith(
-                                                        color: L.text,
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w900,
-                                                        letterSpacing: 0.2),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ))
-                                .toList(),
-                          ),
-                        ],
-                      ],
+                      )).toList(),
                     ),
-                  ),
+                  ],
                 ],
               ),
-            ).animate().fadeIn(duration: 600.ms).slideX(begin: 0.05, end: 0),
-          );
+            ),
+          ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.05, end: 0);
         }),
       ],
     );
@@ -442,8 +296,7 @@ class AdherenceTrendChart extends StatelessWidget {
   final List<Map<String, dynamic>> trendData;
   final AppThemeColors L;
 
-  const AdherenceTrendChart(
-      {super.key, required this.trendData, required this.L});
+  const AdherenceTrendChart({super.key, required this.trendData, required this.L});
 
   @override
   Widget build(BuildContext context) {
@@ -452,91 +305,49 @@ class AdherenceTrendChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('30-DAY ADHERENCE TREND',
-                style: AppTypography.labelLarge
-                    .copyWith(fontSize: 11, color: L.sub, letterSpacing: 1.2)),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: L.green.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                'PRO',
-                style: AppTypography.labelMedium
-                    .copyWith(color: L.green, fontSize: 9, letterSpacing: 0.5),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.p16),
-        Container(
-          height: 200,
-          padding: const EdgeInsets.fromLTRB(AppSpacing.p20, AppSpacing.p24, AppSpacing.p20, AppSpacing.p20),
-          decoration: BoxDecoration(
-            color: L.card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: L.border, width: 1.0),
-            // Shadow removed for Cal style
-          ),
-          child: Column(
-            children: [
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: trendData.map((day) {
-                    final val = day['value'] as double;
-                    final scheduled = (day['scheduled'] as int?) ?? 0;
+        Text('ADHERENCE_TREND (30D)',
+            style: AppTypography.labelSmall.copyWith(fontSize: 10, color: L.sub, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 220,
+          child: SquircleCard(
+            padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: trendData.map((day) {
+                      final val = day['value'] as double;
+                      final scheduled = (day['scheduled'] as int?) ?? 0;
+                      final color = scheduled == 0 ? L.fill : (val >= 0.8 ? L.text : (val >= 0.4 ? L.sub : L.error));
 
-                    final isEmptyDay = scheduled == 0;
-                    final color = isEmptyDay
-                        ? L.border.withValues(alpha: 0.3)
-                        : (val >= 0.8
-                            ? L.green
-                            : (val >= 0.4 ? L.amber : L.red));
-
-                    final heightFactor = isEmptyDay ? 0.2 : val.clamp(0.1, 1.0);
-
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                        child: FractionallySizedBox(
-                          heightFactor: heightFactor,
-                          alignment: Alignment.bottomCenter,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ).animate(delay: 200.ms).scaleY(
-                                begin: 0.0,
-                                end: 1.0,
-                                duration: 800.ms,
-                                curve: Curves.easeOutBack,
-                              ),
+                      return Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                          child: FractionallySizedBox(
+                            heightFactor: scheduled == 0 ? 0.05 : val.clamp(0.1, 1.0),
+                            alignment: Alignment.bottomCenter,
+                            child: Container(
+                              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(100)),
+                            ).animate().scaleY(begin: 0.0, end: 1.0, duration: 800.ms, curve: Curves.easeOutQuart),
+                          ),
                         ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('30 days ago',
-                      style: AppTypography.labelMedium
-                          .copyWith(color: L.sub, fontSize: 10)),
-                  Text('Today',
-                      style: AppTypography.labelMedium
-                          .copyWith(color: L.sub, fontSize: 10)),
-                ],
-              ),
-            ],
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('30D_AGO', style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 8, fontWeight: FontWeight.w900)),
+                    Text('CURRENT', style: AppTypography.labelSmall.copyWith(color: L.text, fontSize: 8, fontWeight: FontWeight.w900)),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -547,36 +358,21 @@ class AdherenceTrendChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('30-DAY ADHERENCE TREND',
-            style: AppTypography.labelLarge
-                .copyWith(fontSize: 11, color: L.sub, letterSpacing: 1.2)),
+        Text('ADHERENCE_TREND', style: AppTypography.labelSmall.copyWith(fontSize: 10, color: L.sub, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
         const SizedBox(height: 16),
-        Container(
+        SizedBox(
           height: 180,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [L.fill, L.card.withValues(alpha: 0.3)],
+          child: SquircleCard(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.stacked_bar_chart_rounded, color: L.sub.withValues(alpha: 0.2), size: 32),
+                const SizedBox(height: 16),
+                Text('Trend data generating...', style: AppTypography.bodySmall.copyWith(color: L.sub, fontWeight: FontWeight.w700)),
+              ],
             ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: L.border, width: 1.5),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.stacked_bar_chart_rounded,
-                  color: L.sub.withValues(alpha: 0.2), size: 40),
-              const SizedBox(height: 16),
-              Text('Trend data will appear here',
-                  style: AppTypography.bodySmall.copyWith(
-                      color: L.sub.withValues(alpha: 0.6),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700)),
-            ],
-          ),
-        ).animate().fadeIn(duration: 600.ms),
+        ),
       ],
     );
   }
@@ -590,62 +386,34 @@ class InventoryStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Show only meds with supply tracking
     final trackedMeds = meds.where((m) => m.count > 0).toList();
     if (trackedMeds.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'SUPPLY STATUS',
-          style: AppTypography.labelSmall.copyWith(
-            fontSize: 10,
-            color: L.sub.withValues(alpha: 0.6),
-            letterSpacing: 1.5,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
+        Text('SUPPLY_STATUS', style: AppTypography.labelSmall.copyWith(fontSize: 10, color: L.sub, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.p20),
-          decoration: BoxDecoration(
-            color: L.card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: L.border),
-          ),
+        SquircleCard(
+          padding: const EdgeInsets.all(24),
           child: Column(
             children: trackedMeds.map((med) {
-              final isLow = med.count <= 5;
-              final color = isLow ? L.red : L.success;
+              final isLow = med.count <= med.refillAt;
+              final color = isLow ? L.error : L.text;
               return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: Row(
                   children: [
                     Expanded(
                       flex: 3,
-                      child: Text(med.name, style: AppTypography.labelMedium.copyWith(color: L.text, fontWeight: FontWeight.w600)),
+                      child: Text(med.name.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 10)),
                     ),
                     Expanded(
                       flex: 4,
-                      child: Stack(
-                        children: [
-                          Container(
-                            height: 6,
-                            decoration: BoxDecoration(color: L.fill, borderRadius: BorderRadius.circular(3)),
-                          ),
-                          FractionallySizedBox(
-                            widthFactor: (med.count / 30).clamp(0.0, 1.0),
-                            child: Container(
-                              height: 6,
-                              decoration: BoxDecoration(color: color.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(3)),
-                            ),
-                          ),
-                        ],
-                      ),
+                      child: _HighFidelityBar(pct: (med.count / 30).clamp(0.01, 1.0), color: color, L: L),
                     ),
-                    const SizedBox(width: 12),
-                    Text('${med.count} left', style: AppTypography.labelSmall.copyWith(color: color, fontWeight: FontWeight.w900, fontSize: 9)),
+                    const SizedBox(width: 16),
+                    Text('${med.count}', style: AppTypography.labelSmall.copyWith(color: color, fontWeight: FontWeight.w900, fontSize: 10)),
                   ],
                 ),
               );
@@ -653,6 +421,31 @@ class InventoryStatusCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _HighFidelityBar extends StatelessWidget {
+  final double pct;
+  final Color color;
+  final AppThemeColors L;
+  const _HighFidelityBar({required this.pct, required this.color, required this.L});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 6,
+      decoration: BoxDecoration(color: L.fill, borderRadius: BorderRadius.circular(100)),
+      child: Stack(
+        children: [
+          FractionallySizedBox(
+            widthFactor: pct,
+            child: Container(
+              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(100)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

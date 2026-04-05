@@ -24,7 +24,6 @@ import '../../core/utils/haptic_engine.dart';
 import '../../widgets/common/app_loading_indicator.dart';
 import '../../core/utils/result.dart';
 import '../../widgets/common/bouncing_button.dart';
-import '../../widgets/common/shimmer_loader.dart';
 
 class ScanTab extends StatefulWidget {
   final void Function(Medicine)? onSave;
@@ -72,7 +71,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
   ];
 
   FlashMode _flashMode = FlashMode.off;
-  bool _flashSupported = true;
+  final bool _flashSupported = true;
 
   @override
   void initState() {
@@ -704,20 +703,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildFallBackScanner(AppThemeColors L) {
-    return Container(
-      width: 140,
-      height: 140,
-      decoration: BoxDecoration(
-        color: L.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(color: L.primary.withValues(alpha: 0.3)),
-      ),
-      child: Center(
-        child: Icon(Icons.document_scanner_rounded, color: L.primary, size: 48),
-      ),
-    );
-  }
+
 
 
   Widget _buildScanningLine() {
@@ -1131,9 +1117,9 @@ class _ResultModalState extends State<_ResultModal> {
       isScrollControlled: true,
       builder: (context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        decoration: BoxDecoration(
+          color: context.L.bg,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1142,7 +1128,7 @@ class _ResultModalState extends State<_ResultModal> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: context.L.text.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1153,7 +1139,7 @@ class _ResultModalState extends State<_ResultModal> {
               "Secure Your Data",
               textAlign: TextAlign.center,
               style: AppTypography.displayLarge.copyWith(
-                color: Colors.black,
+                color: context.L.text,
                 fontSize: 26,
                 fontWeight: FontWeight.w900,
                 letterSpacing: -0.5,
@@ -1164,7 +1150,7 @@ class _ResultModalState extends State<_ResultModal> {
               "Sign in to sync your medicines and maintain your medical history safely.",
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(
-                color: Colors.black.withValues(alpha: 0.6),
+                color: context.L.sub,
                 fontSize: 15,
                 height: 1.5,
                 fontWeight: FontWeight.w500,
@@ -1197,12 +1183,12 @@ class _ResultModalState extends State<_ResultModal> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                          color: Colors.white, shape: BoxShape.circle),
-                      child: const Text("G",
+                      decoration: BoxDecoration(
+                          color: context.L.bg, shape: BoxShape.circle),
+                      child: Text("G",
                           style: TextStyle(
                               fontWeight: FontWeight.w900,
-                              color: Colors.black,
+                              color: context.L.text,
                               fontSize: 12)),
                     ),
                     const SizedBox(width: 14),
@@ -1244,16 +1230,16 @@ class _ResultModalState extends State<_ResultModal> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.edit_note_rounded, color: Colors.white, size: 20),
+            Icon(Icons.edit_note_rounded, color: context.L.bg, size: 20),
             const SizedBox(width: 12),
             Expanded(
                 child: Text(
               "Everything is editable. Tap to correct details.",
-              style: AppTypography.labelMedium.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+              style: AppTypography.labelMedium.copyWith(color: context.L.bg, fontWeight: FontWeight.w700),
             )),
           ],
         ),
-        backgroundColor: Colors.black,
+        backgroundColor: context.L.text,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(20),
@@ -1894,9 +1880,27 @@ class _ResultModalState extends State<_ResultModal> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(color: accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 14, color: Color  Widget _buildExpandableCard({
+                  Icon(Icons.info_outline, size: 14, color: accent),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "Completion is vital for effectiveness.",
+                      style: AppTypography.labelSmall.copyWith(
+                          color: accent, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandableCard({
     required String title,
     required IconData icon,
     required TextEditingController controller,
@@ -2488,8 +2492,8 @@ class _ProScanFramePainter extends CustomPainter {
     const double len = 20.0;
     
     // Top Left
-    canvas.drawLine(const Offset(0, 0), Offset(0, len), paint);
-    canvas.drawLine(const Offset(0, 0), Offset(len, 0), paint);
+    canvas.drawLine(const Offset(0, 0), const Offset(0, len), paint);
+    canvas.drawLine(const Offset(0, 0), const Offset(len, 0), paint);
     
     // Top Right
     canvas.drawLine(Offset(size.width, 0), Offset(size.width - len, 0), paint);

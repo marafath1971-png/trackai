@@ -75,79 +75,83 @@ class _ProfileTabState extends State<ProfileTab> {
       child: Column(children: [
         // Avatar + Name Hero
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: L.card,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: L.border, width: 1.5),
-            boxShadow: AppShadows.soft,
+            color: L.text, // Premium Industrial Black
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: L.text.withValues(alpha: 0.15),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              )
+            ],
           ),
           child: Row(children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
-                  color: L.fill,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: L.border.withValues(alpha: 0.1))),
+                  color: L.bg.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: L.bg.withValues(alpha: 0.2))),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(24),
                 child: Center(
                     child: p?.photoUrl != null
                         ? Image.network(
                             p!.photoUrl!,
                             fit: BoxFit.cover,
-                            width: 64,
-                            height: 64,
+                            width: 72,
+                            height: 72,
                             errorBuilder: (_, __, ___) => Text(p.avatar,
                                 style: AppTypography.displaySmall
-                                    .copyWith(fontSize: 32)),
+                                    .copyWith(fontSize: 36)),
                           )
                         : Text(p?.avatar ?? '😊',
                             style: AppTypography.displaySmall
-                                .copyWith(fontSize: 32))),
+                                .copyWith(fontSize: 36))),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
             Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Row(
                     children: [
-                      Text(p?.name ?? 'Your Name',
-                          style: AppTypography.titleLarge.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: L.text,
-                              fontSize: 20,
-                              letterSpacing: -0.5)),
+                      Flexible(
+                        child: Text(p?.name ?? 'Your Name',
+                            style: AppTypography.titleLarge.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: L.bg,
+                                fontSize: 22,
+                                letterSpacing: -0.5)),
+                      ),
                       if (widget.state.isPremium) ...[
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: L.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                                color: L.primary.withValues(alpha: 0.5),
-                                width: 1.0),
+                            color: Colors.amber,
+                            borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text('PRO',
                               style: AppTypography.labelSmall.copyWith(
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 9,
-                                  color: L.primary,
+                                  fontSize: 8,
+                                  color: Colors.black,
                                   letterSpacing: 0.5)),
                         ),
                       ],
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                       '${p?.age != null && p!.age.isNotEmpty ? "Age ${p.age}" : "Age not set"}${p?.gender != null && p!.gender.isNotEmpty ? " · ${p.gender}" : ""}',
                       style: AppTypography.bodySmall
-                          .copyWith(color: L.sub, fontWeight: FontWeight.w600)),
+                          .copyWith(color: L.bg.withValues(alpha: 0.5), fontWeight: FontWeight.w700)),
                 ])),
             if (!_editing)
               BouncingButton(
@@ -158,13 +162,16 @@ class _ProfileTabState extends State<ProfileTab> {
                 scaleFactor: 0.9,
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                      color: L.text, borderRadius: BorderRadius.circular(24)),
-                  child: Text(s.edit,
+                      color: L.bg.withValues(alpha: 0.1), 
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: L.bg.withValues(alpha: 0.15))),
+                  child: Text(s.edit.toUpperCase(),
                       style: AppTypography.labelLarge.copyWith(
                           fontWeight: FontWeight.w900,
-                          fontSize: 12,
+                          fontSize: 10,
+                          letterSpacing: 1.0,
                           color: L.bg)),
                 ),
               ),
@@ -284,15 +291,24 @@ class _ProfileTabState extends State<ProfileTab> {
                   },
                   scaleFactor: 0.95,
                   child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
-                          color: const Color(0xFF111111),
-                          borderRadius: BorderRadius.circular(24)),
+                          color: L.text,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: L.text.withValues(alpha: 0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            )
+                          ]),
                       child: Center(
                           child: Text('SAVE CHANGES',
                               style: AppTypography.titleMedium.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white)))),
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 14,
+                                  letterSpacing: 0.5,
+                                  color: L.bg)))),
                 )),
           ]),
         ] else ...[

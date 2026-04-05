@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:medtrackaiflutter/providers/app_state.dart';
-import 'package:medtrackaiflutter/domain/repositories/medication_repository.dart';
-import 'package:medtrackaiflutter/domain/repositories/user_repository.dart';
-import 'package:medtrackaiflutter/domain/repositories/symptom_repository.dart';
-import 'package:medtrackaiflutter/domain/entities/entities.dart';
+import 'package:medai/providers/app_state.dart';
+import 'package:medai/domain/repositories/medication_repository.dart';
+import 'package:medai/domain/repositories/user_repository.dart';
+import 'package:medai/domain/repositories/symptom_repository.dart';
+import 'package:medai/domain/entities/entities.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class MockMedicationRepository extends Mock implements IMedicationRepository {}

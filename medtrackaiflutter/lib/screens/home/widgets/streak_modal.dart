@@ -4,11 +4,11 @@ import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
 import '../../../services/share_service.dart';
 import '../../../core/utils/haptic_engine.dart';
+import '../../../providers/app_state.dart';
 
 // ══════════════════════════════════════════════
 // CONSISTENCY HUB (Cal AI Industrial Refined)
 // ══════════════════════════════════════════════
-import '../../../domain/entities/streak_data.dart';
 
 class StreakModal extends StatelessWidget {
   final int streak;
@@ -24,6 +24,33 @@ class StreakModal extends StatelessWidget {
       required this.streakData,
       required this.onClose,
       required this.onFreeze});
+
+  static void show(BuildContext context, AppState state) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'StreakModal',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (ctx, anim1, anim2) => StreakModal(
+        streak: state.getStreak(),
+        history: state.history,
+        streakData: state.streakData,
+        onClose: () => Navigator.of(ctx).pop(),
+        onFreeze: () => state.useStreakFreeze(),
+      ),
+      transitionBuilder: (ctx, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: anim1,
+          child: SlideTransition(
+            position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
+                .animate(CurvedAnimation(parent: anim1, curve: Curves.easeOutQuart)),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -318,10 +345,15 @@ class _Heatmap extends StatelessWidget {
         final rate = ds.isEmpty ? -1.0 : ds.where((e) => e.taken).length / ds.length;
         
         Color bg;
-        if (rate < 0) bg = L.fill.withValues(alpha: 0.3);
-        else if (rate >= 0.8) bg = L.primary;
-        else if (rate > 0) bg = L.primary.withValues(alpha: 0.4);
-        else bg = L.error.withValues(alpha: 0.2);
+        if (rate < 0) {
+          bg = L.fill.withValues(alpha: 0.3);
+        } else if (rate >= 0.8) {
+          bg = L.primary;
+        } else if (rate > 0) {
+          bg = L.primary.withValues(alpha: 0.4);
+        } else {
+          bg = L.error.withValues(alpha: 0.2);
+        }
 
         return Container(
           decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),

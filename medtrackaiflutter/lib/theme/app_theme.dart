@@ -102,7 +102,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.roundM,
-          borderSide: BorderSide(color: AppColors.black, width: 2),
+          borderSide: const BorderSide(color: AppColors.black, width: 2),
         ),
         contentPadding: const EdgeInsets.all(AppSpacing.fieldPadding),
       ),
@@ -125,9 +125,9 @@ class AppTheme {
 
   static ThemeData dark({String? accentHex, bool isAmoled = false}) {
     final accent = accentHex != null ? hexToColor(accentHex) : AppColors.primaryBlueLight;
-    final bg = AppColors.black;
-    final surface = AppColors.black;
-    final surfaceContainer = const Color(0xFF0A0A0A);
+    const bg = AppColors.black;
+    const surface = AppColors.black;
+    const surfaceContainer = Color(0xFF0A0A0A);
 
     return ThemeData(
       useMaterial3: true,
@@ -175,7 +175,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.roundM,
-          borderSide: BorderSide(color: AppColors.white, width: 2),
+          borderSide: const BorderSide(color: AppColors.white, width: 2),
         ),
         contentPadding: const EdgeInsets.all(AppSpacing.fieldPadding),
       ),

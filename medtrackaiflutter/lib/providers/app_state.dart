@@ -791,7 +791,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         symptomAnalysis = result.value;
       }
       analyzingSymptom = false;
-      HapticEngine.lightImpact();
+      HapticEngine.light();
       showToast('Symptom logged');
     } catch (e) {
       appLogger.e('[AppState] logSymptom failed', error: e);
@@ -874,7 +874,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (type == 'error' || type == 'warning') {
       HapticEngine.selection(); // Or a custom 'warning' haptic if available
     } else if (type == 'success') {
-      HapticEngine.lightImpact();
+      HapticEngine.light();
     }
 
     safeNotifyListeners();
@@ -1077,7 +1077,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         history.values.expand((e) => e).where((e) => e.medId == medId).toList();
     final takenCount = medHistory.where((e) => e.taken).length;
     final totalDoses = medHistory.length;
-    return totalDoses == 0 ? 0 : (takenCount * 100 / totalDoses).round();
+    return totalDoses == 0 ? -1 : (takenCount * 100 / totalDoses).round();
   }
 
   ({int taken, int total}) getHistoryCountForMed(int medId) {

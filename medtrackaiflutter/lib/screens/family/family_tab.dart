@@ -6,7 +6,6 @@ import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../services/auth_service.dart';
-import '../../widgets/common/mesh_gradient.dart';
 import '../../core/utils/haptic_engine.dart';
 
 // Modular Widgets

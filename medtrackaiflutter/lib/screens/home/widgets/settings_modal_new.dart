@@ -171,7 +171,6 @@ class _SettingsModalState extends State<SettingsModal> {
       ),
     );
   }
-  }
 
   Widget _buildContent(AppState state, AppThemeColors L) {
     switch (_activeTab) {

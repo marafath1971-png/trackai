@@ -279,7 +279,7 @@ class NotificationService {
     String? payload,
     bool enableSound = true,
   }) async {
-    final androidDetails = AndroidNotificationDetails(
+    const androidDetails = AndroidNotificationDetails(
       'one_off_reminders',
       'One-off Reminders',
       importance: Importance.max,
@@ -287,8 +287,8 @@ class NotificationService {
       fullScreenIntent: true,
       category: AndroidNotificationCategory.alarm,
       actions: <AndroidNotificationAction>[
-        const AndroidNotificationAction('take', 'Take Now', showsUserInterface: true),
-        const AndroidNotificationAction('skip', 'Skip', showsUserInterface: true),
+        AndroidNotificationAction('take', 'Take Now', showsUserInterface: true),
+        AndroidNotificationAction('skip', 'Skip', showsUserInterface: true),
       ],
     );
 

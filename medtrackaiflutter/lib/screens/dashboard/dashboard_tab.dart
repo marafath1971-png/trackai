@@ -14,7 +14,7 @@ import '../../l10n/app_localizations.dart';
 import '../../widgets/common/bouncing_button.dart';
 import '../../widgets/common/shimmer_loader.dart';
 import '../../widgets/modals/daily_log_sheet.dart';
-import 'widgets/dashboard_widgets.dart';
+import '../home/widgets/streak_modal.dart';
 import 'widgets/dashboard_widgets.dart';
 
 class DashboardTab extends StatefulWidget {
@@ -56,6 +56,7 @@ class _DashboardTabState extends State<DashboardTab> {
   Widget build(BuildContext context) {
     final L = context.L;
     final s = AppLocalizations.of(context)!;
+    final state = context.read<AppState>();
     // Granular selection
     final latency = context.select<AppState, List<Map<String, dynamic>>>(
         (s) => s.getLatencyData());
@@ -93,7 +94,7 @@ class _DashboardTabState extends State<DashboardTab> {
             await state.fetchHealthInsights();
           },
           displacement: 100,
-          color: L.secondary,
+          color: L.text,
           backgroundColor: L.bg,
           child: Scrollbar(
             controller: _scrollController,
@@ -118,6 +119,12 @@ class _DashboardTabState extends State<DashboardTab> {
                           '${(adherence * 100).round()}%',
                           Icons.insights_rounded,
                           L.secondary,
+                          onTap: () => showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => TrendDrilldownSheet(state: context.read<AppState>(), L: L),
+                          ),
                         ),
                         const SizedBox(width: AppSpacing.m),
                         _buildStatCard(
@@ -126,6 +133,7 @@ class _DashboardTabState extends State<DashboardTab> {
                           s.streakDays(streak),
                           Icons.local_fire_department_rounded,
                           L.warning,
+                          onTap: () => StreakModal.show(context, state),
                         ),
                       ],
                     ),
@@ -138,7 +146,23 @@ class _DashboardTabState extends State<DashboardTab> {
                   // --- QUICK ACTIONS ---
                   _DashboardQuickActionRow(
                     onLogSymptom: () => DailyLogSheet.show(context),
-                    onAddDose: () => DailyLogSheet.show(context),
+                    onShareReport: () {
+                      HapticEngine.selection();
+                      final state = context.read<AppState>();
+                      final s = AppLocalizations.of(context)!;
+                      if (!state.isPremium) {
+                        PaywallSheet.show(context);
+                        return;
+                      }
+                      ReportService.generateAndShareReport(
+                        s: s,
+                        userName: state.profile?.name ?? s.greetingHero,
+                        adherence: adherence,
+                        meds: state.meds,
+                        symptoms: state.symptoms,
+                        history: state.history,
+                      );
+                    },
                   ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0),
                   const SizedBox(height: AppSpacing.xl),
 
@@ -301,11 +325,11 @@ class _DashboardTabState extends State<DashboardTab> {
   }
 
   Widget _buildStatCard(BuildContext context, String label, String value,
-      IconData icon, Color color) {
+      IconData icon, Color color, {VoidCallback? onTap}) {
     final L = context.L;
     return Expanded(
       child: BouncingButton(
-        onTap: () {
+        onTap: onTap ?? () {
           HapticEngine.selection();
           showModalBottomSheet(
             context: context,
@@ -425,11 +449,11 @@ class _DashboardTabState extends State<DashboardTab> {
 // ------------------------------------------------------------------
 class _DashboardQuickActionRow extends StatelessWidget {
   final VoidCallback onLogSymptom;
-  final VoidCallback onAddDose;
+  final VoidCallback onShareReport;
 
   const _DashboardQuickActionRow({
     required this.onLogSymptom,
-    required this.onAddDose,
+    required this.onShareReport,
   });
 
   @override
@@ -443,7 +467,7 @@ class _DashboardQuickActionRow extends StatelessWidget {
             child: _QuickActionButton(
               icon: Icons.edit_note_rounded,
               label: 'Log Symptom',
-              subtitle: 'Track your health logs',
+              subtitle: 'Track your wellbeing',
               onTap: onLogSymptom,
               L: L,
             ),
@@ -451,10 +475,10 @@ class _DashboardQuickActionRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: _QuickActionButton(
-              icon: Icons.medication_rounded,
-              label: 'Extra Dose',
-              subtitle: 'Log an unscheduled event',
-              onTap: onAddDose,
+              icon: Icons.picture_as_pdf_rounded,
+              label: 'Share Report',
+              subtitle: 'Export clinical PDF',
+              onTap: onShareReport,
               L: L,
             ),
           ),

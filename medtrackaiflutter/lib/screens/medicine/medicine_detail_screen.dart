@@ -487,6 +487,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
             Expanded(
               flex: 1,
               child: _IndustrialMetricCard(
+                L: L,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
@@ -511,13 +512,13 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                     ),
                   ],
                 ),
-                L: L,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               flex: 2,
               child: _IndustrialMetricCard(
+                L: L,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -532,7 +533,6 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                     _MiniStockBar(pct: pct, isLow: med.count <= med.refillAt, L: L),
                   ],
                 ),
-                L: L,
               ),
             ),
           ],
@@ -650,7 +650,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
             style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w900, color: s.enabled ? medColor : L.sub.withValues(alpha: 0.5), letterSpacing: 2)),
         ),
         trailing: Switch.adaptive(
-          value: s.enabled, activeColor: medColor,
+          value: s.enabled, activeTrackColor: medColor,
           onChanged: (v) { HapticEngine.selection(); context.read<AppState>().toggleSchedule(med.id, idx); },
         ),
       ),
@@ -828,8 +828,11 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                   return ListTile(
                     onTap: () {
                       final updated = s.copyWith(ritual: r);
-                      if (isNew) context.read<AppState>().addSchedule(medId, updated);
-                      else context.read<AppState>().updateSchedule(medId, scheduleIdx, updated);
+                      if (isNew) {
+                        context.read<AppState>().addSchedule(medId, updated);
+                      } else {
+                        context.read<AppState>().updateSchedule(medId, scheduleIdx, updated);
+                      }
                       Navigator.pop(ctx);
                     },
                     title: Text(r.name.toUpperCase(),
@@ -847,13 +850,6 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     );
   }
 
-  Widget _buildCircularProgress(double pct, AppThemeColors L) {
-    final color = pct >= 0.8 ? L.success : (pct >= 0.5 ? L.warning : L.error);
-    return SizedBox(width: 54, height: 54, child: Stack(alignment: Alignment.center, children: [
-      CircularProgressIndicator(value: pct.isFinite ? pct.clamp(0.0, 1.0) : 0, backgroundColor: L.fill, color: color, strokeWidth: 7, strokeCap: StrokeCap.round),
-      Icon(Icons.auto_graph_rounded, size: 16, color: color),
-    ]));
-  }
 
   Widget _buildEmptyCard(String text, IconData icon, AppThemeColors L) {
     return Container(width: double.infinity, padding: const EdgeInsets.all(24), 

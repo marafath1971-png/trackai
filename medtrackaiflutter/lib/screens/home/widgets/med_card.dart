@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../providers/app_state.dart';
 import '../../../domain/entities/medicine.dart';
 import '../../../theme/app_theme.dart';
-import '../../../core/utils/color_utils.dart';
 import '../../../widgets/common/bouncing_button.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/utils/haptic_engine.dart';
@@ -37,7 +36,6 @@ class _MedCardState extends State<MedCard> {
         ? (widget.med.count / widget.med.totalCount).clamp(0.0, 1.0)
         : 0.0;
     final isLow = RefillHelper.isCriticallyLow(widget.med);
-    final medColor = hexToColor(widget.med.color);
     final showGeneric = context
         .select<AppState, bool>((s) => s.profile?.showGenericNames ?? false);
     final displayName = (showGeneric && widget.med.genericName.isNotEmpty)
@@ -83,25 +81,6 @@ class _MedCardState extends State<MedCard> {
                           child: Text(
                             _getCategoryEmoji(widget.med.category),
                             style: const TextStyle(fontSize: 22),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: -5,
-                        right: -5,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: L.text,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'REF',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: L.bg,
-                              fontSize: 7,
-                              fontWeight: FontWeight.w900,
-                            ),
                           ),
                         ),
                       ),

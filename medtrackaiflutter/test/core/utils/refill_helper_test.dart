@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:medtrackaiflutter/core/utils/refill_helper.dart';
-import 'package:medtrackaiflutter/domain/entities/medicine.dart';
+import 'package:medai/core/utils/refill_helper.dart';
+import 'package:medai/domain/entities/medicine.dart';
 
 void main() {
   group('RefillHelper Tests', () {

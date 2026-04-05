@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'widgets/home_insight_card.dart';
 
-import 'widgets/trial_countdown_card.dart';
 import '../../providers/app_state.dart';
 import '../../domain/entities/entities.dart';
 import '../../theme/app_theme.dart';
@@ -21,7 +19,6 @@ import 'widgets/home_dose_section.dart';
 import '../../widgets/common/premium_empty_state.dart';
 import '../../widgets/common/mesh_gradient.dart';
 import '../../widgets/common/bouncing_button.dart';
-import '../../widgets/modals/daily_log_sheet.dart';
 
 
 class HomeTab extends StatefulWidget {
@@ -40,6 +37,8 @@ class _HomeTabState extends State<HomeTab> {
   bool _startInEditMode = false;
   double _scrollOffset = 0;
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _medsHeaderKey = GlobalKey();
+  final GlobalKey _medsEmptyKey = GlobalKey();
 
   @override
   void initState() {
@@ -61,14 +60,27 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _openStreak() => setState(() => _showStreak = true);
-  void _openSettings() => setState(() => _showSettings = true);
+
 
   void _scrollToMeds() {
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: 800.ms,
-      curve: Curves.easeOutQuart,
-    );
+    final state = context.read<AppState>();
+    final targetKey = state.meds.isEmpty ? _medsEmptyKey : _medsHeaderKey;
+    final contextObj = targetKey.currentContext;
+    
+    if (contextObj != null) {
+      Scrollable.ensureVisible(
+        contextObj,
+        duration: 800.ms,
+        curve: Curves.easeOutQuart,
+        alignment: 0.1, // Align near the top
+      );
+    } else {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: 600.ms,
+        curve: Curves.easeOutQuart,
+      );
+    }
   }
 
   void _scrollToTop() {
@@ -150,11 +162,11 @@ class _HomeTabState extends State<HomeTab> {
                 ),
 
                 // --- 2. CONSOLIDATED ALERTS (SMART TRIGGER) ---
-                _sliverStaggerDown([
-                  if (context.select<AppState, bool>((s) => s.missedAlerts.any((a) => !a.seen)) ||
+                if (context.select<AppState, bool>((s) => s.missedAlerts.any((a) => !a.seen)) ||
                       context.select<AppState, String?>((s) => s.interactionWarning) != null ||
                       context.select<AppState, List<Medicine>>((s) => s.getLowMeds()).where((m) => m.count < 3).isNotEmpty ||
                       context.select<AppState, int>((s) => s.getStreak()) == 0)
+                _sliverStaggerDown([
                     _HomeAlertHub(state: context.read<AppState>(), L: L, onScrollToMeds: _scrollToMeds, onOpenStreak: _openStreak),
                 ], delay: 150.ms),
 
@@ -167,7 +179,7 @@ class _HomeTabState extends State<HomeTab> {
                     padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding,
                         AppSpacing.l, AppSpacing.screenPadding, AppSpacing.s),
                     sliver: SliverToBoxAdapter(
-                      child: Text("Today's Schedule".toUpperCase(),
+                      child: Text("TODAY'S SCHEDULE",
                           style: AppTypography.labelSmall.copyWith(
                               fontWeight: FontWeight.w900,
                               color: L.sub.withValues(alpha: 0.4),
@@ -202,7 +214,10 @@ class _HomeTabState extends State<HomeTab> {
                   sliver: SliverToBoxAdapter(
                     child: Padding(
                         padding: const EdgeInsets.only(bottom: 16),
-                        child: HomeMedsHeader(onAdd: widget.onScan)),
+                        child: HomeMedsHeader(
+                          key: _medsHeaderKey,
+                          onAdd: widget.onScan,
+                        )),
                   ),
                 ),
                 if (meds.isEmpty)
@@ -210,7 +225,10 @@ class _HomeTabState extends State<HomeTab> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.screenPadding),
                       sliver: SliverToBoxAdapter(
-                          child: HomeMedsEmptyState(onAdd: widget.onScan)))
+                          child: HomeMedsEmptyState(
+                        key: _medsEmptyKey,
+                        onAdd: widget.onScan,
+                      )))
                 else
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(
@@ -376,6 +394,7 @@ class _HomeTabState extends State<HomeTab> {
               title: key,
               doses: list,
               takenToday: takenToday,
+              globalNextEntryKey: doses.firstWhere((d) => takenToday[d.key] != true, orElse: () => doses.last).key,
               state: state,
               onView: (med) => setState(() {
                 _viewingMed = med;
@@ -457,8 +476,12 @@ class _HomeBentoHeader extends StatelessWidget {
                                 fit: BoxFit.scaleDown,
                                 alignment: Alignment.centerLeft,
                                 child: Text(
-                                  '${(dosePct * 100).toInt()}% READY',
-                                  style: AppTypography.displaySmall.copyWith(color: L.bg, fontWeight: FontWeight.w900, fontSize: 32, letterSpacing: -1.0),
+                                  doses.isEmpty
+                                    ? 'NO DOSES\nSCHEDULED'
+                                    : dosePct == 1.0
+                                      ? 'ALL DONE! ✓'
+                                      : '${(dosePct * 100).toInt()}%\nCOMPLETE',
+                                  style: AppTypography.displaySmall.copyWith(color: L.bg, fontWeight: FontWeight.w900, fontSize: doses.isEmpty ? 22 : 32, letterSpacing: -1.0, height: 1.05),
                                 ),
                               ),
                             ],
@@ -605,14 +628,11 @@ class _HomeAlertHub extends StatelessWidget {
     final missed = state.missedAlerts.where((a) => !a.seen).toList();
     final lowMeds = state.getLowMeds().where((m) => m.count < 3).toList();
     final interaction = state.interactionWarning;
-    final streak = state.getStreak();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-      child: Column(
-        children: [
-          if (interaction != null)
-            _ProfessionalAlertTile(
+    return Column(
+      children: [
+        if (interaction != null)
+          _ProfessionalAlertTile(
               title: 'Critical Warning',
               content: interaction,
               icon: Icons.warning_amber_rounded,
@@ -639,8 +659,7 @@ class _HomeAlertHub extends StatelessWidget {
               onTap: onScrollToMeds,
             ),
         ],
-      ),
-    );
+      );
   }
 }
 
@@ -715,119 +734,11 @@ class _ProfessionalAlertTile extends StatelessWidget {
     );
   }
 }
-
-class _AlertItem extends StatelessWidget {
-  final String label;
-  final Color color;
-  final AppThemeColors L;
-
-  const _AlertItem({required this.label, required this.color, required this.L});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            label,
-            style: AppTypography.bodySmall.copyWith(color: L.text, fontWeight: FontWeight.w700, fontSize: 13),
-          ),
-        ),
-        Icon(Icons.chevron_right_rounded, color: L.sub.withValues(alpha: 0.3), size: 16),
-      ],
-    );
-  }
-}
-
-// ------------------------------------------------------------------
-// WELLNESS SNAPSHOT
-// ------------------------------------------------------------------
-class _WellnessSnapshot extends StatelessWidget {
-  final AppState state;
-  final AppThemeColors L;
-
-  const _WellnessSnapshot({required this.state, required this.L});
-
-  @override
-  Widget build(BuildContext context) {
-    final streak = state.getStreak();
-    final meds = state.meds;
-    final today = DateTime.now();
-    final todayKey = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-    final todayEntries = state.history[todayKey] ?? [];
-    final taken = todayEntries.where((d) => d.taken).length;
-    final total = meds.fold<int>(0, (sum, m) => sum + m.schedule.where((s) => s.days.contains(today.weekday % 7)).length);
-    final adherence = total > 0 ? (taken / total * 100).round() : 100;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-      child: Row(
-        children: [
-          Expanded(child: _SnapTile(label: 'Adherence', value: '$adherence%', icon: Icons.show_chart_rounded, color: adherence >= 80 ? const Color(0xFF10B981) : L.warning, L: L)),
-          const SizedBox(width: 10),
-          Expanded(child: _SnapTile(label: 'Doses Left', value: '$total', icon: Icons.pending_actions_rounded, color: L.primary, L: L)),
-          const SizedBox(width: 10),
-          Expanded(child: _SnapTile(label: 'In Stock', value: '${meds.length}', icon: Icons.inventory_2_outlined, color: L.text.withValues(alpha: 0.7), L: L)),
-        ],
-      ),
-    );
-  }
-}
-
-class _SnapTile extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final AppThemeColors L;
-
-  const _SnapTile({required this.label, required this.value, required this.icon, required this.color, required this.L});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: L.border, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: AppTypography.titleLarge.copyWith(
-              fontWeight: FontWeight.w900,
-              color: L.text,
-              fontSize: 20,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: AppTypography.labelSmall.copyWith(
-              color: L.sub,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
 class HomeDoseGroup extends StatefulWidget {
   final String title;
   final List<DoseItem> doses;
   final Map<String, bool> takenToday;
+  final String? globalNextEntryKey;
   final AppState state;
   final Function(Medicine) onView;
   final Function(Medicine) onEdit;
@@ -838,6 +749,7 @@ class HomeDoseGroup extends StatefulWidget {
     required this.title,
     required this.doses,
     required this.takenToday,
+    this.globalNextEntryKey,
     required this.state,
     required this.onView,
     required this.onEdit,
@@ -876,8 +788,7 @@ class _HomeDoseGroupState extends State<HomeDoseGroup> {
           final doseMins = d.sched.h * 60 + d.sched.m;
           final isOverdue = !isTaken && doseMins < nowMins;
           
-          final isNext = !isTaken && 
-              !widget.doses.sublist(0, idx).any((prev) => widget.takenToday[prev.key] != true);
+          final isActualNext = d.key == widget.globalNextEntryKey;
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -885,7 +796,7 @@ class _HomeDoseGroupState extends State<HomeDoseGroup> {
               dose: d,
               taken: isTaken,
               overdue: isOverdue,
-              isNext: isNext,
+              isNext: isActualNext && !isTaken,
               L: L,
               onTake: () {
                 widget.state.toggleDose(d);

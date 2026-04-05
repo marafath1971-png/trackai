@@ -143,14 +143,15 @@ class _AppShellState extends State<AppShell>
                         .slideY(begin: -0.2, end: 0, curve: Curves.easeOutBack),
                   ),
 
-                // ── Sync Status (Subtle technical indicator) ──
+                // ── Sync Status (Subtle floating indicator at bottom-right) ──
                 Positioned(
-                  top: MediaQuery.of(context).padding.top + 4,
-                  right: 16,
+                  bottom: 110 + MediaQuery.of(context).padding.bottom,
+                  right: 20,
                   child: SyncStatusBanner(isSyncing: isSyncing, lastSynced: lastSynced)
                       .animate(target: isSyncing ? 1 : 0)
                       .fadeIn(duration: 300.ms)
-                      .slideY(begin: -0.5, end: 0),
+                      .scale(begin: const Offset(0.8, 0.8))
+                      .slideY(begin: 0.2, end: 0),
                 ),
 
                 // ── Toast (Status Pill) ──
@@ -275,7 +276,8 @@ class _AppShellState extends State<AppShell>
 
   Widget _buildNavItem(int index, String label, IconData icon, AppThemeColors L, int unseenAlerts) {
     final selected = _tab == index;
-    final cnt = index == 3 ? unseenAlerts : 0;
+    // Show badge on Family (unseen alerts) and Alarms (missed doses)
+    final cnt = (index == 3 || index == 1) ? unseenAlerts : 0;
     
     return Expanded(
       child: GestureDetector(

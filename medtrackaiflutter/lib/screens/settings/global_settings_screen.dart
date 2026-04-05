@@ -89,10 +89,10 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
                     ),
                     Text('PREFERENCES', 
                       style: AppTypography.labelSmall.copyWith(
-                        color: L.primary, letterSpacing: 2.0, fontWeight: FontWeight.w900, fontSize: 10)),
+                        color: L.text, letterSpacing: 2.0, fontWeight: FontWeight.w900, fontSize: 10)),
                   ]),
                 ),
-                UnifiedHeader(title: 'Settings', showBack: true),
+                const UnifiedHeader(title: 'Settings', showBack: true),
               ],
             ),
           ),
@@ -208,15 +208,15 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: L.card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: L.border.withValues(alpha: 0.1)),
+                      color: L.fill.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(children: [
-                          Icon(Icons.shield_outlined, color: L.primary, size: 16),
+                          Icon(Icons.shield_outlined, color: L.text, size: 16),
                           const SizedBox(width: 12),
                           Text('DATA INTEGRITY', 
                             style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 2.0, fontSize: 10)),
@@ -259,11 +259,14 @@ class _IndustrialSection extends StatelessWidget {
         ),
         Container(
           decoration: BoxDecoration(
-            color: L.card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: L.border.withValues(alpha: 0.1)),
+            color: L.fill.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
           ),
-          child: Column(children: children),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Column(children: children),
+          ),
         ),
       ],
     );
@@ -361,7 +364,7 @@ class _PickerSheet extends StatelessWidget {
                   Navigator.pop(context, item['code']);
                 },
                 title: Text(item['label']!, style: AppTypography.bodyMedium.copyWith(fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700, color: L.text)),
-                trailing: isSelected ? Icon(Icons.check_rounded, color: L.primary) : null,
+                trailing: isSelected ? Icon(Icons.check_rounded, color: L.text) : null,
               );
             },
           ),

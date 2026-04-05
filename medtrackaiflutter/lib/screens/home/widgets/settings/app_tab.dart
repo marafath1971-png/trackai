@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/app_state.dart';
+import '../../../../widgets/common/bouncing_button.dart';
 import '../../../../theme/app_theme.dart';
+import '../../../../services/share_service.dart';
 import '../../../../widgets/shared/shared_widgets.dart';
 import '../../../../core/utils/color_utils.dart';
 import '../../../../domain/entities/entities.dart';
@@ -130,8 +131,11 @@ class _AppTabState extends State<AppTab> {
             title: 'Personalization',
             child: Column(children: [
               Container(
-                padding: const EdgeInsets.all(16),
-                color: L.card,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: L.text,
+                  borderRadius: BorderRadius.circular(24),
+                ),
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -140,23 +144,25 @@ class _AppTabState extends State<AppTab> {
                         children: [
                           Text('ACCENT COLOR',
                               style: AppTypography.labelLarge.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: L.sub,
-                                  letterSpacing: 0.5)),
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 10,
+                                  color: L.bg.withValues(alpha: 0.4),
+                                  letterSpacing: 2.0)),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                                color: L.green.withValues(alpha: 0.1),
+                                color: L.bg.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4)),
                             child: Text('PREMIUM',
                                 style: AppTypography.labelSmall.copyWith(
                                     fontWeight: FontWeight.w900,
-                                    color: L.green)),
+                                    fontSize: 8,
+                                    color: L.bg.withValues(alpha: 0.8))),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 18),
                       SizedBox(
                         height: 44,
                         child: ListView(
@@ -232,16 +238,20 @@ class _AppTabState extends State<AppTab> {
         SettingsSection(
             title: 'Support & Feedback',
             child: Container(
-              padding: const EdgeInsets.all(16),
-              color: L.card,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: L.fill.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: L.border.withValues(alpha: 0.05)),
+              ),
               child: Column(children: [
                 Text('Enjoying Med AI?',
                     style: AppTypography.titleLarge
-                        .copyWith(fontWeight: FontWeight.w800, color: L.text)),
-                const SizedBox(height: 4),
+                        .copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 18)),
+                const SizedBox(height: 6),
                 Text('Your feedback helps us improve for everyone.',
-                    style: AppTypography.bodySmall.copyWith(color: L.sub)),
-                const SizedBox(height: 16),
+                    style: AppTypography.bodySmall.copyWith(color: L.sub, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
@@ -249,14 +259,14 @@ class _AppTabState extends State<AppTab> {
                       (i) => Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4),
                             child: Icon(Icons.star_rounded,
-                                    color: L.amber, size: 36)
+                                    color: L.text, size: 32)
                                 .animate(
                                     onPlay: (controller) =>
                                         controller.repeat(reverse: true))
                                 .shimmer(
                                     delay: (i * 200).ms,
                                     duration: 2.seconds,
-                                    color: Colors.white.withValues(alpha: 0.3))
+                                    color: L.bg.withValues(alpha: 0.5))
                                 .scale(
                                     begin: const Offset(1, 1),
                                     end: const Offset(1.1, 1.1),
@@ -264,20 +274,21 @@ class _AppTabState extends State<AppTab> {
                                     curve: Curves.easeInOut),
                           )),
                 ),
-                const SizedBox(height: 16),
-                GestureDetector(
-                  // ignore: deprecated_member_use
-                  onTap: () => Share.share(
+                const SizedBox(height: 24),
+                BouncingButton(
+                  onTap: () => ShareService.shareText(
                       'I\'m using Med AI to stay on top of my medications! 💊'),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                        color: const Color(0xFF111111),
-                        borderRadius: BorderRadius.circular(24)),
-                    child: Text('Share with friends',
-                        style: AppTypography.labelLarge.copyWith(
-                            fontWeight: FontWeight.w700, color: Colors.white)),
+                        color: L.text,
+                        borderRadius: BorderRadius.circular(16)),
+                    child: Center(
+                      child: Text('SHARE WITH FRIENDS',
+                          style: AppTypography.labelLarge.copyWith(
+                              fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1.0, color: L.bg)),
+                    ),
                   ),
                 ),
               ]),

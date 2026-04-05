@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:medtrackaiflutter/services/parsers/jahis_parser.dart';
-import 'package:medtrackaiflutter/domain/entities/medicine.dart';
+import 'package:medai/services/parsers/jahis_parser.dart';
+import 'package:medai/domain/entities/medicine.dart';
 
 void main() {
   group('JahisParser Tests', () {

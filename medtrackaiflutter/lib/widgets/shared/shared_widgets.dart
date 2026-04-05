@@ -224,24 +224,19 @@ class AppToast extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    final Color accent;
     final IconData icon;
 
     switch (type) {
       case 'error':
-        accent = L.error;
         icon = Icons.error_rounded;
         break;
       case 'warning':
-        accent = L.warning;
         icon = Icons.warning_rounded;
         break;
       case 'info':
-        accent = L.info;
         icon = Icons.info_rounded;
         break;
       default:
-        accent = L.success;
         icon = Icons.check_circle_rounded;
     }
 

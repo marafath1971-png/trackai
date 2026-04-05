@@ -97,7 +97,10 @@ class _DoseCardState extends State<DoseCard>
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
           HapticEngine.doseTaken();
-          widget.onTake();
+          // Delay state update slightly to let snap-back finish
+          Future.delayed(const Duration(milliseconds: 200), () {
+            widget.onTake();
+          });
         } else {
           HapticEngine.light();
           widget.onSnooze();

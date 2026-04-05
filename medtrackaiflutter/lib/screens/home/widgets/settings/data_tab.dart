@@ -71,31 +71,44 @@ class _DataTabState extends State<DataTab> {
       child: Column(children: [
         // ── Data Summary Hero ─────────────────────────────────────────
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-              color: L.card,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: L.border, width: 1.5)),
+              color: L.text,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: L.text.withValues(alpha: 0.15),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                )
+              ]),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(s.dataSummaryTitle,
-                style: AppTypography.labelLarge.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: L.text,
-                    letterSpacing: 0.5)),
-            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('DATA INFRASTRUCTURE',
+                    style: AppTypography.labelLarge.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: L.bg.withValues(alpha: 0.4),
+                        letterSpacing: 2.0)),
+                Icon(Icons.storage_rounded, color: L.bg.withValues(alpha: 0.3), size: 16),
+              ],
+            ),
+            const SizedBox(height: 20),
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              childAspectRatio: 2.2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.8,
               children: [
-                _SummaryBox(l: s.dataMedicinesLabel, v: '$medsCount', L: L),
-                _SummaryBox(l: 'Symptoms', v: '$symptomsCount', L: L),
-                _SummaryBox(l: s.dataDaysTrackedLabel, v: '$daysTracked', L: L),
-                _SummaryBox(l: s.dataDosesLoggedLabel, v: '$totalDoses', L: L),
+                _SummaryBox(l: "MEDICINES", v: '$medsCount', L: L),
+                _SummaryBox(l: 'SYMPTOMS', v: '$symptomsCount', L: L),
+                _SummaryBox(l: "DAYS TRACKED", v: '$daysTracked', L: L),
+                _SummaryBox(l: "DOSES LOGGED", v: '$totalDoses', L: L),
               ],
             ),
           ]),
@@ -236,19 +249,27 @@ class _SummaryBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-          color: L.fill.withValues(alpha: 0.5),
+          color: L.bg.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: L.border, width: 1.0)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(v,
-            style: AppTypography.displaySmall.copyWith(
-                fontWeight: FontWeight.w800,
-                color: L.text,
-                letterSpacing: -0.8)),
-        Text(l,
-            style: AppTypography.labelSmall
-                .copyWith(fontWeight: FontWeight.w600, color: L.sub)),
-      ]),
+          border: Border.all(color: L.bg.withValues(alpha: 0.1), width: 1.0)),
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(v,
+                style: AppTypography.displaySmall.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: L.bg,
+                    fontSize: 24,
+                    letterSpacing: -1.0)),
+            const SizedBox(height: 2),
+            Text(l.toUpperCase(),
+                style: AppTypography.labelSmall.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: L.bg.withValues(alpha: 0.4),
+                    fontSize: 8,
+                    letterSpacing: 0.5)),
+          ]),
     );
   }
 }

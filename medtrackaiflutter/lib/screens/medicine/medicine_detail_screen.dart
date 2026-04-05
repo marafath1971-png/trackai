@@ -126,6 +126,9 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                     _buildHalalBadge(med.halalStatus!, med.halalNote, L),
                   ],
                   const SizedBox(height: 32),
+                  const SizedBox(height: 12),
+                  _buildSafetyPanel(med, L),
+                  const SizedBox(height: 24),
                   _buildBentoMetrics(med, adherence, L),
                   const SizedBox(height: 24),
                   MedicineSafetyCard(med: med).animate().fadeIn(delay: 200.ms),
@@ -241,86 +244,270 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   }
 
   Widget _buildSliverHeader(Medicine med, Color medColor, AppThemeColors L) {
-    final showGeneric = context.select<AppState, bool>((s) => s.profile?.showGenericNames ?? false);
-    return SliverUnifiedHeader(
-      title: (showGeneric && med.genericName.isNotEmpty) ? med.genericName : med.name,
-      onBack: widget.onBack,
+    return SliverAppBar(
+      expandedHeight: 320,
+      backgroundColor: L.bg,
+      elevation: 0,
+      pinned: true,
+      stretch: true,
+      leading: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: HeaderActionBtn(
+          onTap: widget.onBack,
+          child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: L.text),
+        ),
+      ),
       actions: [
-        HeaderActionBtn(
-          onTap: () {
-            HapticEngine.selection();
-            setState(() {
-              _resetEdit();
-              _editMode = true;
-            });
-          },
-          child: const Icon(Icons.edit_note_rounded, size: 20),
+        Padding(
+          padding: const EdgeInsets.only(right: 16),
+          child: HeaderActionBtn(
+            onTap: () {
+              HapticEngine.selection();
+              setState(() {
+                _resetEdit();
+                _editMode = true;
+              });
+            },
+            child: Icon(Icons.edit_note_rounded, size: 22, color: L.text),
+          ),
         ),
       ],
-      background: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned.fill(child: MeshGradient(colors: [medColor.withValues(alpha: 0.1), L.primary.withValues(alpha: 0.05), L.bg])),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 60),
-              Hero(
-                tag: 'med_${med.id}',
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.4),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2.0),
-                    boxShadow: [BoxShadow(color: medColor.withValues(alpha: 0.15), blurRadius: 40, offset: const Offset(0, 15))],
-                  ),
-                  child: MedImage(imageUrl: med.imageUrl, width: 110, height: 110, borderRadius: 99, 
-                    placeholder: Center(child: Text(med.name.isNotEmpty ? med.name[0].toUpperCase() : '💊', 
-                      style: AppTypography.displayLarge.copyWith(fontSize: 50, color: medColor)))),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          children: [
+            // Mesh Background (Premium)
+            Positioned.fill(
+              child: MeshGradient(
+                colors: [
+                  L.meshBg,
+                  L.primary.withValues(alpha: 0.1),
+                ],
+              ),
+            ),
+            
+            // Hero Content
+            Align(
+              alignment: Alignment.center,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 60, left: 24, right: 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Hero(
+                      tag: 'med_${med.id}',
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: L.bg,
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(color: L.border, width: 1.5),
+                        ),
+                        child: MedImage(
+                          imageUrl: med.imageUrl,
+                          width: 110,
+                          height: 110,
+                          borderRadius: 26,
+                          placeholder: Center(
+                            child: Text(
+                              _getCategoryEmoji(med.category),
+                              style: const TextStyle(fontSize: 44),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: L.text,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        med.brand.isNotEmpty ? med.brand.toUpperCase() : 'BATCH UNKNOWN',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: L.bg,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2.0,
+                          fontSize: 8,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      med.name.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.displaySmall.copyWith(
+                        color: L.text,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1.0,
+                        fontSize: 32,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-              if (med.brand.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: medColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(100),
-                    border: Border.all(color: medColor.withValues(alpha: 0.15)),
-                  ),
-                  child: Text(showGeneric && med.genericName.isNotEmpty ? med.name : med.brand,
-                      style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.w900, color: medColor, letterSpacing: 0.4, fontSize: 12)),
-                ),
-              const SizedBox(height: 48),
-            ],
-          ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.95, 0.95)),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  Widget _buildSafetyPanel(Medicine med, AppThemeColors L) {
+    final isAntibiotic = med.category.toLowerCase().contains('antibiotic');
+    if (!isAntibiotic) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: L.text, // Black background for industrial feel
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: L.text.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          Positioned(
+            right: -20,
+            top: -20,
+            child: Icon(
+              Icons.warning_amber_rounded,
+              size: 140,
+              color: L.bg.withValues(alpha: 0.03),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.amber,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              "PROTOCOL",
+                              style: AppTypography.labelSmall.copyWith(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 9,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'ANTIBIOTIC DETECTED',
+                            style: AppTypography.labelSmall.copyWith(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.5,
+                              color: L.bg.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'MANDATORY COURSE COMPLETION',
+                        style: AppTypography.titleMedium.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: L.bg,
+                          fontSize: 18,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'This medication must be finished entirely. Do not stop early, even if symptoms vanish. Pathogens can remain and build resistance.',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: L.bg.withValues(alpha: 0.7),
+                          height: 1.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: L.bg.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: L.bg.withValues(alpha: 0.1)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text("🛡️", style: TextStyle(fontSize: 16)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                "Safety measure active: Completing the full course prevents antibiotic resistance.",
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: L.bg.withValues(alpha: 0.9),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuart).fadeIn();
+  }
+
   Widget _buildBentoMetrics(Medicine med, int adherence, AppThemeColors L) {
+    final pct = med.totalCount > 0 ? (med.count / med.totalCount).clamp(0.0, 1.0) : 0.0;
+    
     return Column(
       children: [
         Row(
           children: [
             Expanded(
-              flex: 2,
+              flex: 1,
               child: _IndustrialMetricCard(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
                   children: [
-                    _buildCircularProgress(adherence / 100, L),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('ADHERENCE', style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.6), fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 9)),
-                          Text(adherence == -1 ? '•••' : '$adherence%', 
-                            style: AppTypography.displayLarge.copyWith(fontSize: 26, color: adherence >= 80 ? L.success : (adherence >= 50 ? L.warning : L.error), fontWeight: FontWeight.w900)),
-                        ],
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('ADHERENCE', style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.6), fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 9)),
+                        Icon(Icons.query_stats_rounded, size: 12, color: L.text.withValues(alpha: 0.4)),
+                      ],
+                    ),
+                    const Spacer(),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(adherence == -1 ? '••' : '$adherence', 
+                          style: AppTypography.displayLarge.copyWith(fontSize: 28, color: L.text, fontWeight: FontWeight.w900, letterSpacing: -1.0)),
+                        const SizedBox(width: 2),
+                        Text('%', style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 10, fontWeight: FontWeight.w900)),
+                      ],
                     ),
                   ],
                 ),
@@ -329,22 +516,20 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
             ),
             const SizedBox(width: 12),
             Expanded(
+              flex: 2,
               child: _IndustrialMetricCard(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('STOCK', style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.6), fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 9)),
-                    const Spacer(),
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('${med.count}', style: AppTypography.titleLarge.copyWith(color: med.count <= med.refillAt ? L.error : L.text, fontWeight: FontWeight.w900, fontSize: 24)),
-                        const SizedBox(width: 4),
-                        Text(med.unit, style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 9, fontWeight: FontWeight.w900)),
+                        Text('INVENTORY STOCK', style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.6), fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 9)),
+                         Text('${med.count} LEFT', style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 9)),
                       ],
                     ),
+                    const Spacer(),
+                    _MiniStockBar(pct: pct, isLow: med.count <= med.refillAt, L: L),
                   ],
                 ),
                 L: L,
@@ -433,6 +618,19 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
       decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.05), width: 0.5))),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        onTap: () async {
+          HapticEngine.selection();
+          final result = await ModernTimePicker.show(context, 
+              initialTime: TimeOfDay(hour: s.h, minute: s.m), 
+              title: "Edit Reminder");
+          if (result != null) {
+            final updatedEntry = s.copyWith(
+                h: result.hour, 
+                m: result.minute, 
+                label: _getAutoLabel(result.hour));
+            _showRitualPicker(med.id, idx, updatedEntry, isNew: false);
+          }
+        },
         title: Row(
           children: [
             Text('${s.h.toString().padLeft(2, '0')}:${s.m.toString().padLeft(2, '0')}',
@@ -581,6 +779,28 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return 'Night';
   }
 
+  String _getCategoryEmoji(String category) {
+    switch (category.toLowerCase()) {
+      case 'tablet':
+      case 'pill':
+        return '💊';
+      case 'syrup':
+      case 'liquid':
+        return '🧪';
+      case 'injection':
+        return '💉';
+      case 'cream':
+      case 'ointment':
+        return '🧴';
+      case 'drops':
+        return '💧';
+      case 'inhaler':
+        return '🌬️';
+      default:
+        return '📦';
+    }
+  }
+
   void _showRitualPicker(int medId, int scheduleIdx, ScheduleEntry s, {bool isNew = false}) {
     showModalBottomSheet(
       context: context,
@@ -651,9 +871,45 @@ class _IndustrialMetricCard extends StatelessWidget {
   const _IndustrialMetricCard({required this.child, required this.L});
   @override
   Widget build(BuildContext context) {
-    return Container(height: 100, padding: const EdgeInsets.all(16), 
-      decoration: BoxDecoration(color: L.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: L.border.withValues(alpha: 0.1))),
-      child: child);
+    return Container(
+      height: 100,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: L.card,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: L.border, width: 1.5),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _MiniStockBar extends StatelessWidget {
+  final double pct;
+  final bool isLow;
+  final AppThemeColors L;
+  const _MiniStockBar({required this.pct, required this.isLow, required this.L});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(20, (index) {
+        final threshold = index / 20;
+        final isActive = pct > threshold;
+        return Expanded(
+          child: Container(
+            height: 8,
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            decoration: BoxDecoration(
+              color: isActive 
+                  ? (isLow ? L.error : L.text) 
+                  : L.border.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        );
+      }),
+    );
   }
 }
 
@@ -687,9 +943,9 @@ class _HeaderAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BouncingButton(onTap: onTap, child: Row(children: [
-      Icon(icon, size: 14, color: L.primary),
+      Icon(icon, size: 14, color: L.text),
       const SizedBox(width: 4),
-      Text(label, style: AppTypography.labelSmall.copyWith(color: L.primary, fontWeight: FontWeight.w900, letterSpacing: 0.5, fontSize: 10)),
+      Text(label, style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 0.5, fontSize: 10)),
     ]));
   }
 }
@@ -703,7 +959,7 @@ class _Metric extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(children: [
       Text(value, style: AppTypography.displayLarge.copyWith(fontSize: 22, color: color, fontWeight: FontWeight.w900)),
-      Text(label, style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+      Text(label, style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.sub.withValues(alpha: 0.4), fontWeight: FontWeight.w900, letterSpacing: 1.0)),
     ]);
   }
 }
@@ -713,17 +969,32 @@ class _HistoryMatrix extends StatelessWidget {
   const _HistoryMatrix({required this.L});
   @override
   Widget build(BuildContext context) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('STABILITY TREND (LAST 14 DAYS)', style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
-      const SizedBox(height: 12),
-      Center(child: Wrap(spacing: 6, runSpacing: 6, children: List.generate(14, (i) {
-        final isTaken = i < 9; final isFuture = i > 11;
-        return Container(width: 34, height: 34, decoration: BoxDecoration(
-          color: isFuture ? L.fill.withValues(alpha: 0.5) : (isTaken ? L.success.withValues(alpha: 0.1) : L.error.withValues(alpha: 0.1)),
-          borderRadius: BorderRadius.circular(6), border: Border.all(color: isFuture ? L.border.withValues(alpha: 0.1) : (isTaken ? L.success.withValues(alpha: 0.2) : L.error.withValues(alpha: 0.2)))),
-          child: Center(child: Icon(isFuture ? Icons.more_horiz : (isTaken ? Icons.check_rounded : Icons.close_rounded), size: 14, color: isFuture ? L.sub : (isTaken ? L.success : L.error))));
-      }))),
-    ]);
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(30, (i) {
+            final isTaken = i % 3 != 0;
+            return Container(
+              width: 6,
+              height: 12,
+              decoration: BoxDecoration(
+                color: isTaken ? L.text.withValues(alpha: 0.8) : L.border.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(1),
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('DATA_WINDOW 30D', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.sub.withValues(alpha: 0.4), fontWeight: FontWeight.w900)),
+            Text('STABILITY_INDEX_OPTIMAL', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.success, fontWeight: FontWeight.w900)),
+          ],
+        ),
+      ],
+    );
   }
 }
 
@@ -734,14 +1005,27 @@ class _SpecTile extends StatelessWidget {
   const _SpecTile({required this.label, required this.value, required this.icon, required this.L});
   @override
   Widget build(BuildContext context) {
-    return Container(width: (MediaQuery.of(context).size.width - 48) / 2, padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(border: Border.all(color: L.border.withValues(alpha: 0.05), width: 0.25)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(icon, size: 14, color: L.sub.withValues(alpha: 0.5)),
-        const SizedBox(height: 10),
-        Text(label, style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
-        Text(value.isEmpty ? 'NONE' : value.toUpperCase(), style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
-      ]));
+    return Container(
+      width: (MediaQuery.of(context).size.width - 64) / 2,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: L.border.withValues(alpha: 0.05), width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 10, color: L.sub.withValues(alpha: 0.5)),
+              const SizedBox(width: 6),
+              Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub.withValues(alpha: 0.6), fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(value.isEmpty ? 'NONE' : value.toUpperCase(), style: AppTypography.labelLarge.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5)),
+        ],
+      ),
+    );
   }
 }
 
@@ -752,7 +1036,7 @@ class _ManagementTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.05), width: 0.5))),
       child: ListTile(onTap: onTap, leading: Icon(icon, color: color, size: 20),
-        title: Text(title, style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.w900, color: color, fontSize: 14)),
+        title: Text(title.toUpperCase(), style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w900, color: color, fontSize: 11, letterSpacing: 0.5)),
         trailing: Icon(Icons.chevron_right_rounded, color: L.sub.withValues(alpha: 0.3), size: 20)));
   }
 }
@@ -764,9 +1048,9 @@ class _IndustrialFormSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(padding: const EdgeInsets.only(left: 8, bottom: 10), 
-          child: Row(children: [Icon(icon, size: 14, color: L.text.withValues(alpha: 0.6)), const SizedBox(width: 10),
-            Text(label, style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.6), fontWeight: FontWeight.w900, letterSpacing: 1.8, fontSize: 9))])),
-        Container(decoration: BoxDecoration(color: L.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: L.border.withValues(alpha: 0.1))),
+          child: Row(children: [Icon(icon, size: 14, color: L.text.withValues(alpha: 0.4)), const SizedBox(width: 10),
+            Text(label.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.4), fontWeight: FontWeight.w900, letterSpacing: 1.8, fontSize: 9))])),
+        Container(decoration: BoxDecoration(color: L.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: L.border.withValues(alpha: 0.1))),
           child: Column(children: children)),
     ]);
   }
@@ -780,13 +1064,13 @@ class _IndustrialTextField extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.05), width: 0.5))),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(label.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: L.text.withValues(alpha: 0.4), fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 9)),
           const SizedBox(height: 6),
           TextFormField(
             initialValue: value, onChanged: onChanged, keyboardType: keyboard, maxLines: maxLines,
-            style: AppTypography.bodyMedium.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 14),
+            style: AppTypography.bodyMedium.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 15),
             decoration: const InputDecoration(isDense: true, border: InputBorder.none, contentPadding: EdgeInsets.zero),
           ),
         ]),

@@ -36,11 +36,17 @@ class TrialCountdownCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: isExhausted
-                  ? AppColors.primaryBlue.withValues(alpha: 0.3)
+                  ? L.text.withValues(alpha: 0.3)
                   : L.border.withValues(alpha: 0.5),
             ),
             boxShadow: isExhausted
-                ? AppShadows.glow(AppColors.primaryBlue, intensity: 0.08)
+                ? [
+                    BoxShadow(
+                      color: L.text.withValues(alpha: 0.08),
+                      blurRadius: 30,
+                      spreadRadius: 2,
+                    )
+                  ]
                 : AppShadows.soft,
           ),
           child: Column(
@@ -53,14 +59,14 @@ class TrialCountdownCard extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                      color: L.text.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                          color: AppColors.primaryBlue.withValues(alpha: 0.2)),
+                          color: L.text.withValues(alpha: 0.1)),
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Icon(Icons.document_scanner_rounded,
-                          color: AppColors.primaryBlue, size: 22),
+                          color: L.text, size: 22),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -98,15 +104,20 @@ class TrialCountdownCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryBlue,
+                      color: L.text,
                       borderRadius: BorderRadius.circular(AppRadius.max),
-                      boxShadow:
-                          AppShadows.glow(AppColors.primaryBlue, intensity: 0.25),
+                      boxShadow: [
+                        BoxShadow(
+                          color: L.text.withValues(alpha: 0.2),
+                          blurRadius: 20,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
                     ),
                     child: Text(
                       'GO PRO',
                       style: AppTypography.labelMedium.copyWith(
-                        color: Colors.white,
+                        color: L.bg,
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 0.8,
@@ -139,14 +150,14 @@ class TrialCountdownCard extends StatelessWidget {
                           color: used
                               ? (isExhausted
                                   ? L.error.withValues(alpha: 0.7)
-                                  : AppColors.primaryBlue)
+                                  : L.text)
                               : L.fill.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(4),
                           boxShadow: used && !isExhausted
                               ? [
                                   BoxShadow(
-                                    color: AppColors.primaryBlue
-                                        .withValues(alpha: 0.3),
+                                    color: L.text
+                                        .withValues(alpha: 0.15),
                                     blurRadius: 8,
                                   )
                                 ]
@@ -164,15 +175,15 @@ class TrialCountdownCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryBlue.withValues(alpha: 0.06),
+                    color: L.text.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.12)),
+                        color: L.text.withValues(alpha: 0.08)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.star_rounded,
-                          color: AppColors.primaryBlue, size: 16),
+                      Icon(Icons.star_rounded,
+                          color: L.text, size: 16),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(

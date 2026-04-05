@@ -79,57 +79,125 @@ class StatsTab extends StatelessWidget {
       child: Column(children: [
         // Adherence Hero
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-              color: const Color(0xFF111111),
-              borderRadius: BorderRadius.circular(24)),
+              color: L.text,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: L.text.withValues(alpha: 0.15),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                )
+              ]),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('OVERALL ADHERENCE',
-                style: AppTypography.labelLarge.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white.withValues(alpha: 0.45),
-                    letterSpacing: 0.8)),
-            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('HEALTH SCORE',
+                    style: AppTypography.labelLarge.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: L.bg.withValues(alpha: 0.4),
+                        letterSpacing: 2.0)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: L.bg.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    "OPTIMIZED",
+                    style: AppTypography.labelSmall.copyWith(
+                      color: L.bg.withValues(alpha: 0.8),
+                      fontSize: 8,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
               Text('$overallAdh%',
                   style: AppTypography.displayLarge.copyWith(
-                      fontSize: 56,
+                      fontSize: 64,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: -3,
-                      height: 1.0)),
-              const SizedBox(width: 10),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                    overallAdh >= 80
-                        ? 'EXCELLENT'
-                        : (overallAdh >= 60 ? 'STABLE' : 'KEEP GOING'),
-                    style: AppTypography.labelLarge.copyWith(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.0,
-                        color: overallAdh >= 80
+                      color: L.bg,
+                      letterSpacing: -4,
+                      height: 0.9)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                          overallAdh >= 80
+                              ? 'EXCELLENT'
+                              : (overallAdh >= 60 ? 'STABLE' : 'ACTION REQUIRED'),
+                          style: AppTypography.labelLarge.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                              color: overallAdh >= 80
+                                  ? const Color(0xFF34C759)
+                                  : (overallAdh >= 60
+                                      ? const Color(0xFFFF9500)
+                                      : const Color(0xFFFF453A)))),
+                      const SizedBox(height: 2),
+                      Text(
+                        "ADHERENCE PRECISION",
+                        style: AppTypography.labelSmall.copyWith(
+                          color: L.bg.withValues(alpha: 0.3),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ]),
+            const SizedBox(height: 24),
+            Stack(
+              children: [
+                Container(
+                  height: 8,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: L.bg.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                FractionallySizedBox(
+                  widthFactor: (overallAdh / 100.0).clamp(0.05, 1.0),
+                  child: Container(
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: overallAdh >= 80
+                        ? const Color(0xFF34C759)
+                        : (overallAdh >= 60
+                            ? const Color(0xFFFF9500)
+                            : const Color(0xFFFF453A)),
+                      borderRadius: BorderRadius.circular(99),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (overallAdh >= 80
                             ? const Color(0xFF34C759)
                             : (overallAdh >= 60
                                 ? const Color(0xFFFF9500)
-                                : const Color(0xFFFF453A)))),
-              ),
-            ]),
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(99),
-              child: LinearProgressIndicator(
-                  value: overallAdh / 100.0,
-                  minHeight: 6,
-                  backgroundColor: Colors.white.withValues(alpha: 0.15),
-                  color: overallAdh >= 80
-                      ? const Color(0xFF34C759)
-                      : (overallAdh >= 60
-                          ? const Color(0xFFFF9500)
-                          : const Color(0xFFFF453A))),
+                                : const Color(0xFFFF453A))).withValues(alpha: 0.3),
+                          blurRadius: 10,
+                        )
+                      ]
+                    ),
+                  ),
+                ),
+              ],
             ),
           ]),
         ),

@@ -245,60 +245,87 @@ class AppToast extends StatelessWidget {
         icon = Icons.check_circle_rounded;
     }
 
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    
     return Positioned(
-      bottom: 120, // Floating above the bottom nav
+      bottom: bottomPadding + 110, // Floating above navigation
       left: 24,
       right: 24,
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: L.card,
-            borderRadius: BorderRadius.circular(AppRadius.max),
+            color: L.bg,
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: accent.withValues(alpha: 0.15),
+              color: L.text,
               width: 1.5,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 32,
-                offset: const Offset(0, 16),
-                spreadRadius: -8,
-              ),
-              BoxShadow(
-                color: accent.withValues(alpha: 0.08),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: accent, size: 16),
-              ),
+              Icon(icon, color: L.text, size: 16),
               const SizedBox(width: 12),
               Flexible(
                 child: Text(
-                  message,
-                  style: AppTypography.labelLarge.copyWith(
+                  message.toUpperCase(),
+                  style: AppTypography.labelSmall.copyWith(
                     color: L.text,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                    fontSize: 10,
                   ),
                 ),
               ),
-              const SizedBox(width: 4),
             ],
           ),
         ),
-      ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.5, end: 0, curve: Curves.easeOutBack).scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), curve: Curves.easeOutBack),
+      ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.5, end: 0, curve: Curves.easeOutBack),
+    );
+  }
+}
+
+class SyncStatusBanner extends StatelessWidget {
+  final bool isSyncing;
+  final DateTime? lastSynced;
+  const SyncStatusBanner({super.key, required this.isSyncing, this.lastSynced});
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+    if (!isSyncing && lastSynced == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: L.bg.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 0.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: isSyncing ? L.warning : L.success,
+              shape: BoxShape.circle,
+            ),
+          ).animate(onPlay: isSyncing ? (c) => c.repeat(reverse: true) : null).fade(duration: 500.ms),
+          const SizedBox(width: 8),
+          Text(
+            isSyncing ? 'SYNCING_CLOUD' : 'CLOUD_STABLE',
+            style: AppTypography.labelSmall.copyWith(
+              fontSize: 7,
+              fontWeight: FontWeight.w900,
+              color: L.sub.withValues(alpha: 0.5),
+              letterSpacing: 1.0,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -2813,7 +2813,7 @@ class _LungTestStepState extends State<_LungTestStep>
             confettiController: _confettiController,
             blastDirectionality: BlastDirectionality.explosive,
             shouldLoop: false,
-            colors: [widget.oLime, Colors.white, Colors.blue],
+            colors: [widget.oLime, Colors.white, Colors.black],
           ),
         ),
       ],

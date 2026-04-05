@@ -51,64 +51,60 @@ class _MedCardState extends State<MedCard> {
         margin: const EdgeInsets.only(bottom: AppSpacing.p20),
         decoration: BoxDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: L.border.withValues(alpha: 0.15), width: 1.0),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isLow ? L.error : L.border, 
+            width: 1.5,
+          ), // Industrial border (Red if low)
+          // No shadows for clean Cal AI look
         ),
-
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Top Section: Brand & Adherence
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.p16),
+              padding: const EdgeInsets.all(AppSpacing.p20),
               child: Row(
                 children: [
-                  // Holographic-style Med Icon
+                  // Industrial Med Icon
                   Stack(
-                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
                     children: [
                       Container(
-                        width: 56,
-                        height: 56,
+                        width: 52,
+                        height: 52,
                         decoration: BoxDecoration(
-                          color: medColor.withValues(alpha: 0.04),
-                          borderRadius: BorderRadius.circular(AppRadius.l),
-                        ),
-                      ),
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: medColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16),
+                          color: L.text.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: L.border),
                         ),
                         child: Center(
                           child: Text(
                             _getCategoryEmoji(widget.med.category),
-                            style: const TextStyle(fontSize: 20),
+                            style: const TextStyle(fontSize: 22),
                           ),
                         ),
                       ),
-
-                      if (isLow)
-                        Positioned(
-                          top: -2,
-                          right: -2,
-                          child: Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: L.error,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: L.card, width: 2),
+                      Positioned(
+                        top: -5,
+                        right: -5,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: L.text,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'REF',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: L.bg,
+                              fontSize: 7,
+                              fontWeight: FontWeight.w900,
                             ),
-                          ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
-                                begin: const Offset(1, 1),
-                                end: const Offset(1.2, 1.2),
-                                duration: 800.ms,
-                              ),
+                          ),
                         ),
+                      ),
                     ],
                   ),
                   const SizedBox(width: AppSpacing.p16),
@@ -119,23 +115,25 @@ class _MedCardState extends State<MedCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          displayName,
+                          displayName.toUpperCase(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTypography.headlineSmall.copyWith(
+                          style: AppTypography.displaySmall.copyWith(
                             color: L.text,
                             fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
+                            letterSpacing: -1.0,
+                            fontSize: 18,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Row(
                           children: [
                             Text(
-                              widget.med.dose,
+                              widget.med.dose.toUpperCase(),
                               style: AppTypography.labelSmall.copyWith(
-                                color: L.sub,
+                                color: L.sub.withValues(alpha: 0.6),
                                 fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
                               ),
                             ),
                             Container(
@@ -143,16 +141,17 @@ class _MedCardState extends State<MedCard> {
                               width: 3,
                               height: 3,
                               decoration: BoxDecoration(
-                                color: L.sub.withValues(alpha: 0.3),
+                                color: L.sub.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                             ),
                             Text(
                               widget.med.form.toUpperCase(),
                               style: AppTypography.labelSmall.copyWith(
-                                color: L.sub.withValues(alpha: 0.6),
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
+                                color: L.sub.withValues(alpha: 0.4),
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.0,
+                                fontSize: 9,
                               ),
                             ),
                           ],
@@ -161,171 +160,70 @@ class _MedCardState extends State<MedCard> {
                     ),
                   ),
                   
-                  // Adherence "Pill"
+                  // Adherence "Pill" (Monochrome)
                   if (adh != -1)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: (adh >= 80 ? L.success : L.warning).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppRadius.max),
+                        color: L.text.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: L.border.withValues(alpha: 0.1)),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            adh >= 80 ? Icons.trending_up_rounded : Icons.trending_flat_rounded,
-                            size: 12,
-                            color: adh >= 80 ? L.success : L.warning,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '$adh%',
-                            style: AppTypography.labelMedium.copyWith(
-                              color: adh >= 80 ? L.success : L.warning,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        '$adh% ADH',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: L.text,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                 ],
               ),
             ),
 
-            // ── Middle Section: Inventory Status
+            // ── Technical Segmented Inventory Bar (Industrial)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.p16),
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.p12),
-                decoration: BoxDecoration(
-                  color: L.fill.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.inventory_2_rounded,
-                              size: 12,
-                              color: isLow ? L.error : L.sub,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              isLow ? 'CRITICALLY LOW' : 'STOCK LEVEL',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: isLow ? L.error : L.sub,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          '${widget.med.count} LEFT',
-                          style: AppTypography.labelMedium.copyWith(
-                            color: L.text,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.p8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppRadius.max),
-                      child: Container(
-                        height: 4,
-                        width: double.infinity,
-                        color: L.fill.withValues(alpha: 0.1),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: pct,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: medColor,
-                              borderRadius: BorderRadius.circular(AppRadius.max),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  ],
-                ),
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _SegmentedStockBar(pct: pct, isLow: isLow, L: L),
             ),
             
             const SizedBox(height: AppSpacing.p12),
 
             // ── Bottom Action Strip
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.p8, vertical: AppSpacing.p8),
-              decoration: BoxDecoration(
-                color: L.text.withValues(alpha: 0.02),
-                border: Border(top: BorderSide(color: L.border.withValues(alpha: 0.3))),
-              ),
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 8, bottom: 8),
               child: Row(
                 children: [
-                  BouncingButton(
-                    onTap: widget.onView,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.p8),
-                      child: Text(
-                        'VIEW DETAILS',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: L.sub.withValues(alpha: 0.5),
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.0,
-                        ),
-
-                      ),
+                  Text(
+                    '${widget.med.count} UNITS LEFT',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: isLow ? L.error : L.sub.withValues(alpha: 0.4),
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.0,
                     ),
                   ),
                   const Spacer(),
-                  // Premium Inventory Controls
-                  Container(
-                    decoration: BoxDecoration(
-                      color: L.fill.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(AppRadius.max),
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: Row(
-                      children: [
-                        _StepBtn(
-                          icon: Icons.remove_rounded,
-                          onTap: () {
-                            HapticEngine.selection();
-                            context.read<AppState>().updateMed(widget.med.id,
-                                count: (widget.med.count - 1).clamp(0, 999));
-                          },
-                          color: L.text,
-                          bg: L.card,
-                        ),
-                        const SizedBox(width: AppSpacing.p12),
-                        Text(
-                          '${widget.med.count}',
-                          style: AppTypography.titleMedium.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: L.text,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.p12),
-                        _StepBtn(
-                          icon: Icons.add_rounded,
-                          onTap: () {
-                            HapticEngine.success();
-                            context.read<AppState>().updateMed(widget.med.id,
-                                count: (widget.med.count + 1).clamp(0, 999));
-                          },
-                          color: Colors.white,
-                          bg: L.primary,
-                        ),
-                      ],
-                    ),
+                  // Premium Inventory Controls (Industrial)
+                   Row(
+                    children: [
+                      _StepBtn(
+                        icon: Icons.remove_rounded,
+                        onTap: () {
+                          HapticEngine.selection();
+                          context.read<AppState>().updateMed(widget.med.id,
+                              count: (widget.med.count - 1).clamp(0, 999));
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _StepBtn(
+                        icon: Icons.add_rounded,
+                        onTap: () {
+                          HapticEngine.success();
+                          context.read<AppState>().updateMed(widget.med.id,
+                              count: (widget.med.count + 1).clamp(0, 999));
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -365,12 +263,10 @@ class _MedCardState extends State<MedCard> {
 class _StepBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  final Color color, bg;
-  const _StepBtn(
-      {required this.icon,
-      required this.onTap,
-      required this.color,
-      required this.bg});
+  const _StepBtn({
+    required this.icon,
+    required this.onTap,
+  });
   @override
   Widget build(BuildContext context) {
     final L = context.L;
@@ -378,17 +274,43 @@ class _StepBtn extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 44,
-        height: 44,
+        height: 40, // Slightly more rectangular for industrial look
         decoration: BoxDecoration(
-          color: bg,
-          shape: BoxShape.circle,
-          boxShadow: bg == L.primary 
-              ? AppShadows.glow(L.primary, intensity: 0.1) 
-              : AppShadows.subtle,
-          border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.5),
+          color: L.text.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: L.border, width: 1.5),
         ),
-        child: Center(child: Icon(icon, size: 20, color: color)),
+        child: Center(child: Icon(icon, size: 20, color: L.text)),
       ),
+    );
+  }
+}
+
+class _SegmentedStockBar extends StatelessWidget {
+  final double pct;
+  final bool isLow;
+  final AppThemeColors L;
+  const _SegmentedStockBar({required this.pct, required this.isLow, required this.L});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(24, (index) {
+        final threshold = index / 24;
+        final isActive = pct > threshold;
+        return Expanded(
+          child: Container(
+            height: 5,
+            margin: const EdgeInsets.symmetric(horizontal: 1),
+            decoration: BoxDecoration(
+              color: isActive 
+                  ? (isLow ? L.error : L.text) 
+                  : L.border.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        );
+      }),
     );
   }
 }

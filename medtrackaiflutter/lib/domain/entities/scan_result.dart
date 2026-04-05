@@ -41,6 +41,7 @@ class ScanResult {
   String
       halalStatus; // 'unknown'|'halal'|'contains_gelatin'|'contains_alcohol'|'not_halal'
   String halalNote; // Brief halal advisory message
+  String? ahaMoment; // NEW: Quick awareness fact
 
   ScanResult({
     this.identified = false,
@@ -80,6 +81,7 @@ class ScanResult {
     this.isSachet = false,
     this.halalStatus = 'unknown',
     this.halalNote = '',
+    this.ahaMoment,
   });
 
   int _parseInt(dynamic v, int fallback) {
@@ -133,6 +135,7 @@ class ScanResult {
       isSachet: j['isSachet'] ?? false,
       halalStatus: j['halalStatus'] ?? 'unknown',
       halalNote: j['halalNote'] ?? '',
+      ahaMoment: j['ahaMoment'],
     );
   }
 
@@ -174,6 +177,7 @@ class ScanResult {
     bool? isSachet,
     String? halalStatus,
     String? halalNote,
+    String? ahaMoment,
   }) =>
       ScanResult(
         identified: identified ?? this.identified,
@@ -213,5 +217,6 @@ class ScanResult {
         isSachet: isSachet ?? this.isSachet,
         halalStatus: halalStatus ?? this.halalStatus,
         halalNote: halalNote ?? this.halalNote,
+        ahaMoment: ahaMoment ?? this.ahaMoment,
       );
 }

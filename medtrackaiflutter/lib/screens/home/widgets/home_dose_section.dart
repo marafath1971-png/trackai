@@ -65,15 +65,16 @@ class _DoseCardState extends State<DoseCard>
     final L = widget.L;
 
     // Card border glow: lime for NEXT, red for overdue
+    // Status-driven industrial borders (Cal AI)
     Color borderColor;
-    if (widget.isNext && !widget.taken) {
-      borderColor = L.secondary.withValues(alpha: 0.5);
-    } else if (widget.overdue && !widget.taken) {
-      borderColor = L.error.withValues(alpha: 0.3);
-    } else if (widget.taken) {
-      borderColor = L.border.withValues(alpha: 0.08);
+    if (widget.taken) {
+      borderColor = L.success; // Taken: Solid Green
+    } else if (widget.overdue) {
+      borderColor = L.error; // Overdue: Solid Red
+    } else if (widget.isNext) {
+      borderColor = L.text; // Next: High contrast Neutral
     } else {
-      borderColor = L.border.withValues(alpha: 0.15);
+      borderColor = L.border; // Default: Standard Industrial
     }
 
     // Card background
@@ -135,12 +136,7 @@ class _DoseCardState extends State<DoseCard>
             decoration: BoxDecoration(
               color: cardBg,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: borderColor, width: 1.2),
-              boxShadow: [
-                if (widget.isNext && !widget.taken) 
-                  BoxShadow(color: L.secondary.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 4)),
-                BoxShadow(color: L.text.withValues(alpha: 0.02), blurRadius: 10),
-              ],
+              border: Border.all(color: borderColor, width: 1.5), // Industrial 1.5px border
             ),
             child: ClipRRect(
               borderRadius: AppRadius.roundXL,

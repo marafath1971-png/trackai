@@ -62,9 +62,8 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
       width: double.infinity,
       decoration: BoxDecoration(
         color: L.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border, width: 1.5),
-        boxShadow: AppShadows.soft,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: L.border.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,10 +76,10 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: L.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: L.text.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.shield_rounded, color: L.primary, size: 20),
+                  child: Icon(Icons.security_rounded, color: L.text, size: 18),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -97,14 +96,16 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: L.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
+                    color: L.text,
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    s.verified,
+                    s.verified.toUpperCase(),
                     style: AppTypography.labelSmall.copyWith(
-                      color: L.primary,
-                      fontWeight: FontWeight.bold,
+                      color: L.bg,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 8,
+                      letterSpacing: 1.0,
                     ),
                   ),
                 ),
@@ -155,59 +156,83 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
 
   Widget _buildSection(AppThemeColors L, String title, List<String> items,
       {bool isDanger = false, bool isAha = false}) {
-    Color iconColor;
-    if (isAha) {
-      iconColor = const Color(0xFFF59E0B);
-    } else if (isDanger) {
-      iconColor = L.error;
-    } else {
-      iconColor = L.primary;
-    }
+    final bgColor = isAha
+        ? L.text.withValues(alpha: 0.03)
+        : (isDanger ? L.error.withValues(alpha: 0.05) : Colors.transparent);
+    final borderColor = isAha
+        ? L.text.withValues(alpha: 0.1)
+        : (isDanger ? L.error.withValues(alpha: 0.2) : Colors.transparent);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: isDanger || isAha ? const EdgeInsets.all(16) : EdgeInsets.zero,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: AppTypography.labelMedium.copyWith(
-              color: isAha
-                  ? const Color(0xFFD97706)
-                  : (isDanger ? L.error : L.text),
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.5,
-            ),
+          Row(
+            children: [
+              Text(
+                title.toUpperCase(),
+                style: AppTypography.labelSmall.copyWith(
+                  color: isDanger ? L.error : L.text,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.0,
+                ),
+              ),
+              if (isDanger) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: L.error,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    "DANGER",
+                    style: AppTypography.labelSmall.copyWith(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 12),
-          ...items.map((item) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6, right: 12),
-                      child: Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: iconColor.withValues(alpha: 0.5),
-                          shape: BoxShape.circle,
-                        ),
+          ...items.map((item) {
+            String emoji = "•";
+            if (isDanger) emoji = "⚠️";
+            if (isAha) emoji = "✨";
+            if (title.contains("Side Effects")) emoji = "🤢";
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 14)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      item,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDanger ? L.text : L.sub,
+                        height: 1.5,
+                        fontWeight: isDanger ? FontWeight.w700 : FontWeight.w500,
                       ),
                     ),
-                    Expanded(
-                      child: Text(
-                        item,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: L.sub,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -286,16 +311,9 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
         width: double.infinity,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              L.primary.withValues(alpha: 0.1),
-              L.primary.withValues(alpha: 0.02),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: L.primary.withValues(alpha: 0.2)),
+          color: L.text.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: L.border.withValues(alpha: 0.1)),
         ),
         child: Column(
           children: [
@@ -312,8 +330,8 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
                 ],
               ),
               child: _isLoading
-                  ? const AppLoadingIndicator(size: 28)
-                  : Icon(Icons.auto_awesome_rounded, color: L.primary, size: 28)
+                  ? const AppLoadingIndicator(size: 24)
+                  : Icon(Icons.auto_awesome_rounded, color: L.text, size: 24)
                       .animate(onPlay: (c) => c.repeat(reverse: true))
                       .scaleXY(
                           begin: 1,

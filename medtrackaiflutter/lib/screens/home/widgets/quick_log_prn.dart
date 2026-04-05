@@ -68,14 +68,14 @@ class _QuickLogPrnDoseState extends State<QuickLogPrnDose> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                  color: L.text.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.2)),
+                      color: L.text.withValues(alpha: 0.1)),
                 ),
-                child: const Center(
+                child: Center(
                   child: Icon(Icons.flash_on_rounded,
-                      color: AppColors.primaryBlue, size: 22),
+                      color: L.text, size: 22),
                 ),
               ),
               const SizedBox(width: 16),
@@ -115,8 +115,8 @@ class _QuickLogPrnDoseState extends State<QuickLogPrnDose> {
               Container(
                 width: 36,
                 height: 36,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryBlue,
+                decoration: BoxDecoration(
+                  color: L.text,
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
@@ -202,7 +202,7 @@ class _PrnPickerSheet extends StatelessWidget {
                       // Show confirmation toast
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          backgroundColor: AppColors.primaryBlue,
+                          backgroundColor: L.text,
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16)),
@@ -210,17 +210,17 @@ class _PrnPickerSheet extends StatelessWidget {
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors.white24,
+                                decoration: BoxDecoration(
+                                  color: L.bg.withValues(alpha: 0.2),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.check_rounded,
-                                    color: Colors.white, size: 16),
+                                child: Icon(Icons.check_rounded,
+                                    color: L.bg, size: 16),
                               ),
                               const SizedBox(width: 12),
                               Text('Logged ${med.name} dose',
                                   style: AppTypography.titleMedium.copyWith(
-                                      color: Colors.white,
+                                      color: L.bg,
                                       fontWeight: FontWeight.w800)),
                             ],
                           ),
@@ -273,13 +273,13 @@ class _PrnPickerSheet extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                              color: L.text.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
                               'LOG',
                               style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.primaryBlue,
+                                color: L.text,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 0.5,
                               ),

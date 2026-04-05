@@ -70,12 +70,15 @@ class _AppShellState extends State<AppShell>
     final bannerDismissed = context.select<AppState, bool>((s) => s.lowStockBannerDismissed);
     final allSchedules = context.select<AppState, int>((s) => s.getAllSchedules().length);
     final medsCount = context.select<AppState, int>((s) => s.meds.length);
+    final isSyncing = context.select<AppState, bool>((s) => s.isMutating);
+    final lastSynced = context.select<AppState, DateTime?>((s) => s.lastSyncedAt);
+    
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: isLocked
           ? const LockScreen()
           : Scaffold(
-              backgroundColor: L.bg,
+              backgroundColor: L.meshBg,
               resizeToAvoidBottomInset: false,
               body: Stack(children: [
                 // ── Main content (Animated Transitions) ──
@@ -140,16 +143,32 @@ class _AppShellState extends State<AppShell>
                         .slideY(begin: -0.2, end: 0, curve: Curves.easeOutBack),
                   ),
 
+                // ── Sync Status (Subtle technical indicator) ──
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 4,
+                  right: 16,
+                  child: SyncStatusBanner(isSyncing: isSyncing, lastSynced: lastSynced)
+                      .animate(target: isSyncing ? 1 : 0)
+                      .fadeIn(duration: 300.ms)
+                      .slideY(begin: -0.5, end: 0),
+                ),
+
                 // ── Toast (Status Pill) ──
                 if (toast != null)
                   AppToast(message: toast, type: toastType ?? 'success'),
 
                 // ── Bottom nav ──
-                Positioned(
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutQuart,
                   left: 0,
                   right: 0,
-                  bottom: 0,
-                  child: _buildBottomNav(L, unseenAlerts, medsCount, allSchedules),
+                  bottom: _showScan ? -120 : 0, // Slide down out of view
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: _showScan ? 0 : 1,
+                    child: _buildBottomNav(L, unseenAlerts, medsCount, allSchedules),
+                  ),
                 ),
               ]),
             ),

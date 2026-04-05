@@ -52,10 +52,10 @@ class DoseCelebrationModal extends StatelessWidget {
                 final dx = dist * (0.6 + (i % 3) * 0.2) * (angle < 3.14 ? 1 : -1);
                 final dy = -(dist * (0.5 + (i % 5) * 0.1));
                 final color = [
-                  AppColors.primaryBlue,
+                  L.text,
                   AppColors.success,
-                  AppColors.warning,
-                  const Color(0xFF8B5CF6),
+                  L.text.withValues(alpha: 0.5),
+                  const Color(0xFF1F2937),
                 ][i % 4];
                 return Transform.translate(
                   offset: Offset(dx * value, dy * value),
@@ -235,10 +235,15 @@ class DoseCelebrationModal extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryBlue,
+                            color: L.text,
                             borderRadius: BorderRadius.circular(18),
-                            boxShadow: AppShadows.glow(AppColors.primaryBlue,
-                                intensity: 0.25),
+                            boxShadow: [
+                              BoxShadow(
+                                color: L.text.withValues(alpha: 0.15),
+                                blurRadius: 40,
+                                offset: const Offset(0, 10),
+                              )
+                            ],
                           ),
                           child: Center(
                             child: Text(

@@ -198,51 +198,51 @@ class AppShadows {
   /// Nav bar shadow — floating pill effect with occlusion
   static List<BoxShadow> get navBar => [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.20),
-          blurRadius: 48,
-          offset: const Offset(0, 24),
-          spreadRadius: -8,
+          color: Colors.black.withValues(alpha: 0.15),
+          blurRadius: 32,
+          offset: const Offset(0, 16),
+          spreadRadius: -4,
         ),
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.10),
-          blurRadius: 16,
-          offset: const Offset(0, 4),
+          color: Colors.black.withValues(alpha: 0.08),
+          blurRadius: 12,
+          offset: const Offset(0, 2),
         ),
       ];
 }
 
 class AppGradients {
-  /// Primary brand gradient — Cobalt Blue to Indigo
+  /// Primary brand gradient — Industrial Black to Dark Grey
   static LinearGradient get main => const LinearGradient(
-        colors: [Color(0xFF2563EB), Color(0xFF4F46E5)],
+        colors: [Color(0xFF000000), Color(0xFF262626)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
 
-  /// Subtle blue tint for card backgrounds in light mode
+  /// Subtle neutral tint for card backgrounds in light mode
   static LinearGradient get lightCard => const LinearGradient(
-        colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFF)],
+        colors: [Color(0xFFFFFFFF), Color(0xFFFAFAFA)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
 
   /// Midnight dark surface
   static LinearGradient get darkSurface => const LinearGradient(
-        colors: [Color(0xFF161B27), Color(0xFF0D0F14)],
+        colors: [Color(0xFF171717), Color(0xFF000000)],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       );
 
-  /// Emerald green — for success / health states
+  /// Emerald green — Neutrally adjusted for high contrast
   static LinearGradient get healthGreen => const LinearGradient(
-        colors: [Color(0xFF10B981), Color(0xFF059669)],
+        colors: [Color(0xFF059669), Color(0xFF047857)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
 
-  /// Warm amber — for warning / refill states
+  /// Warm amber — Neutrally adjusted for high contrast
   static LinearGradient get warningAmber => const LinearGradient(
-        colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+        colors: [Color(0xFFD97706), Color(0xFFB45309)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
@@ -256,7 +256,7 @@ class AppGradients {
 
   /// Dark card gradient — premium night surface
   static LinearGradient get darkCard => const LinearGradient(
-        colors: [Color(0xFF1E2436), Color(0xFF161B27)],
+        colors: [Color(0xFF111111), Color(0xFF000000)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );

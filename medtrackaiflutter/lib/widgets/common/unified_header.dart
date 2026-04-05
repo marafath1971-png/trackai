@@ -142,15 +142,14 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: AppColors.primaryBlue
-                                            .withValues(alpha: 0.15),
+                                        color: L.text.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
                                         "PRO",
                                         style:
                                             AppTypography.labelLarge.copyWith(
-                                          color: AppColors.primaryBlue,
+                                          color: L.text,
                                           fontSize: 10,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 0.8,

@@ -114,14 +114,23 @@ class ScheduleEntry {
         ),
       );
 
-  ScheduleEntry copyWith({bool? enabled, Ritual? ritual}) => ScheduleEntry(
-        h: h,
-        m: m,
-        label: label,
-        days: days,
-        enabled: enabled ?? this.enabled,
-        ritual: ritual ?? this.ritual,
-      );
+  ScheduleEntry copyWith({
+    int? h,
+    int? m,
+    String? label,
+    List<int>? days,
+    bool? enabled,
+    Ritual? ritual,
+  }) {
+    return ScheduleEntry(
+      h: h ?? this.h,
+      m: m ?? this.m,
+      label: label ?? this.label,
+      days: days ?? this.days,
+      enabled: enabled ?? this.enabled,
+      ritual: ritual ?? this.ritual,
+    );
+  }
 }
 
 class DoseEntry {

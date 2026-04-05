@@ -182,7 +182,7 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
                         value: completion,
                         strokeWidth: 7,
                         backgroundColor: L.border.withValues(alpha: 0.2),
-                        color: completion == 1.0 ? L.success : AppColors.primaryBlue,
+                        color: completion == 1.0 ? L.success : L.text,
                         strokeCap: StrokeCap.round,
                       ),
                       Text(
@@ -385,7 +385,7 @@ class _DoseLogRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isPrnBadge = isPrn;
     final accentColor = taken
-        ? (isPrnBadge ? L.primary : L.success)
+        ? (isPrnBadge ? L.text : L.success)
         : L.sub.withValues(alpha: 0.4);
 
     return Container(
@@ -450,7 +450,7 @@ class _DoseLogRow extends StatelessWidget {
                         child: Text(
                           'PRN',
                           style: AppTypography.labelSmall.copyWith(
-                            color: L.primary,
+                            color: L.text,
                             fontWeight: FontWeight.w900,
                             fontSize: 9,
                             letterSpacing: 0.5,

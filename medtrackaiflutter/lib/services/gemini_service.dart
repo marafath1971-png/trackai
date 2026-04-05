@@ -353,12 +353,14 @@ Return ONLY valid JSON with NO markdown, NO code fences, NO explanations:
   "unit": "tablets|ml|puffs|drops|sachets|units",
   "halalStatus": "unknown|halal|contains_gelatin|contains_alcohol|not_halal",
   "halalNote": "Brief note on halal status if relevant, else empty string",
+  "ahaMoment": "A one-sentence scientific/educational 'Did you know?' fact about this medicine that increases user awareness (e.g. 'Did you know? Taking this with vitamin C increases absorption by 40%')",
   "scheduleSlots": [
     {"label": "Morning", "h": 8, "m": 0, "days": [0,1,2,3,4,5,6], "ritual": "withBreakfast"}
   ],
   "confidence": "high|medium|low"
 }
 Notes:
+- ahaMoment: Must be a concise, interesting, and medically accurate awareness fact.
 - scheduleSlots days: 0=Sun, 1=Mon...6=Sat
 - Ritual values: none, beforeBreakfast, withBreakfast, afterBreakfast, beforeLunch, withLunch, afterLunch, beforeDinner, withDinner, afterDinner, beforeSleep, onWaking, asNeeded
 - Set isSachet=true for Japanese/Korean sachet/envelope dose forms

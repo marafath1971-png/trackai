@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
@@ -132,13 +133,17 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     final nextMode = modes[nextIndex];
 
     try {
-      await _controller!.setFlashMode(nextMode);
+      if (nextMode == FlashMode.torch) {
+        await _controller!.setFlashMode(FlashMode.torch);
+      } else if (nextMode == FlashMode.auto) {
+        await _controller!.setFlashMode(FlashMode.auto);
+      } else {
+        await _controller!.setFlashMode(FlashMode.off);
+      }
       setState(() => _flashMode = nextMode);
       HapticEngine.selection();
     } catch (e) {
-      // Flash not supported on this device/simulator
-      setState(() => _flashSupported = false);
-      debugPrint('Flash not supported: $e');
+      // Fallback
     }
   }
 
@@ -425,7 +430,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
           // 2. Scan Frame Brackets (Pro Minimalist)
           Center(
             child: Container(
-              margin: const EdgeInsets.only(bottom: 80),
+              margin: const EdgeInsets.only(bottom: 60), // Lowered from 120
               width: size.width * 0.8,
               height: size.width * 0.8,
               child: RepaintBoundary(
@@ -471,12 +476,12 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
             alignment: Alignment.bottomCenter,
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 56), // Moved higher from 24
+                padding: const EdgeInsets.only(bottom: 64), // Lowered from 160 to follow user request
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildCategoryPill(),
-                    const SizedBox(height: 24), // Increased spacing from 16
+                    const SizedBox(height: 20), // Slightly reduced from 24
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 40),
                       child: _buildBottomControls(),
@@ -1298,24 +1303,43 @@ class _ResultModalState extends State<_ResultModal> {
                               .fadeIn(duration: 600.ms)
                               .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuart),
 
-                        // Verification Badge
+                        // ── 1. Hero Magic Section ──────────────────
+                        _buildHeroSection(L)
+                            .animate()
+                            .fadeIn(duration: 600.ms)
+                            .scale(begin: const Offset(0.95, 0.95), curve: Curves.easeOutQuart),
+
+                        const SizedBox(height: 20),
+
+                        // ── 2. Safety Analytics (The "Aha" Moment) ──────────────────
+                        _buildSafetyAdvisory(L)
+                            .animate()
+                            .fadeIn(delay: 200.ms, duration: 600.ms)
+                            .slideX(begin: 0.1),
+
+                        const SizedBox(height: 12),
+
+                        _buildMagicSummary(L)
+                            .animate()
+                            .fadeIn(delay: 400.ms, duration: 600.ms)
+                            .slideX(begin: -0.1),
+
+                        const SizedBox(height: 32),
+
+                        // ── 3. Quick Actions ──────────────────
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            _buildStatusBadge(
-                                widget.result.identified, widget.result.systemBusy),
-                            Row(
-                              children: [
-                                _buildHeaderAction(Icons.share_rounded, () {
-                                   HapticEngine.selection();
-                                   ShareService.shareAchievement(title: 'AI Scan Result', subtitle: 'Checking ${_nameController.text}');
-                                }, L),
-                                const SizedBox(width: 8),
-                                _buildHeaderAction(Icons.help_outline_rounded, _showReviewHelp, L),
-                              ],
-                            ),
+                            _buildHeaderAction(Icons.share_rounded, () {
+                               HapticEngine.selection();
+                               ShareService.shareAchievement(title: 'AI Scan Result', subtitle: 'Checking ${_nameController.text}');
+                            }, L),
+                            const SizedBox(width: 8),
+                            _buildHeaderAction(Icons.help_outline_rounded, _showReviewHelp, L),
                           ],
                         ),
+
+                        const SizedBox(height: 12),
 
                   const SizedBox(height: 20),
 
@@ -1562,24 +1586,30 @@ class _ResultModalState extends State<_ResultModal> {
                     },
                     child: Container(
                       width: double.infinity,
-                      height: 60,
+                      height: 64,
                       decoration: BoxDecoration(
                         color: L.text,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: L.text, width: 1),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: L.text.withValues(alpha: 0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          )
+                        ],
                       ),
                       child: Center(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.check_circle_rounded, color: L.bg, size: 20),
+                            const Text("🔒", style: TextStyle(fontSize: 16)),
                             const SizedBox(width: 12),
                             Text(
-                              "FINALIZE REPORT",
+                              "SECURE & FINALIZE",
                               style: AppTypography.labelLarge.copyWith(
                                   fontWeight: FontWeight.w900,
                                   color: L.bg,
-                                  letterSpacing: 2.0),
+                                  letterSpacing: 1.5),
                             ),
                           ],
                         ),
@@ -1725,7 +1755,148 @@ class _ResultModalState extends State<_ResultModal> {
     );
   }
 
-  Widget _buildExpandableCard({
+  // ── NEW PREMIUM UI COMPONENTS ──────────────────
+
+  Widget _buildHeroSection(AppThemeColors L) {
+    return Container(
+      height: 180,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: L.card,
+        borderRadius: BorderRadius.circular(24),
+        image: widget.result.imageUrl != null
+            ? DecorationImage(
+                image: NetworkImage(widget.result.imageUrl!),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.2), BlendMode.darken),
+              )
+            : null,
+        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+        boxShadow: L.shadowSoft,
+      ),
+      child: Stack(
+        children: [
+          if (widget.result.imageUrl == null)
+            Center(child: Icon(Icons.medication_rounded, size: 64, color: L.text.withValues(alpha: 0.1))),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  color: L.bg.withValues(alpha: 0.7),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          _buildStatusBadge(widget.result.identified, widget.result.systemBusy),
+                          const Spacer(),
+                          if (widget.result.confidence == 'high')
+                             const Text("⚡ 98% MATCH", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1, color: Colors.black)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _buildEditableField(
+                        controller: _nameController,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        hint: "Medicine Name",
+                        L: L,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMagicSummary(AppThemeColors L) {
+    String summary = widget.result.ahaMoment ?? widget.result.description;
+    if (summary.isEmpty) summary = "Detected ${widget.result.name} ${widget.result.dose}. Tap to refine medical purpose.";
+    
+    final bool isAha = widget.result.ahaMoment != null && widget.result.ahaMoment!.isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isAha ? L.text.withValues(alpha: 0.03) : L.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isAha ? L.text.withValues(alpha: 0.1) : L.border.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: L.text.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Text(isAha ? "💡" : "✨", style: const TextStyle(fontSize: 16)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(isAha ? "AHA DISCOVERY" : "AI INSIGHT", style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                const SizedBox(height: 6),
+                Text(
+                  summary,
+                  style: AppTypography.bodyMedium.copyWith(color: L.text, fontWeight: FontWeight.w700, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSafetyAdvisory(AppThemeColors L) {
+    final isAntibiotic = widget.result.isAntibiotic;
+    final hasWarning = widget.result.warnings.isNotEmpty || widget.result.sideEffects.contains('severe') || widget.result.sideEffects.contains('danger');
+    
+    if (!isAntibiotic && !hasWarning) return const SizedBox();
+
+    final Color accent = isAntibiotic ? Colors.orangeAccent : Colors.redAccent;
+    final String label = isAntibiotic ? "ANTIBIOTIC COURSE" : "MEDICAL ADVISORY";
+    final String msg = isAntibiotic 
+        ? "Finish the entire course as prescribed. Do not skip doses."
+        : "Safety concerns detected. Review warnings before finalize.";
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accent.withValues(alpha: 0.3), width: 1.5),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(isAntibiotic ? Icons.science_rounded : Icons.warning_rounded, color: accent, size: 20),
+              const SizedBox(width: 12),
+              Text(label, style: AppTypography.labelMedium.copyWith(color: accent, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(msg, style: AppTypography.bodySmall.copyWith(color: L.text.withValues(alpha: 0.8), fontWeight: FontWeight.w700, height: 1.4)),
+          if (isAntibiotic) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(color: accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, size: 14, color: Color  Widget _buildExpandableCard({
     required String title,
     required IconData icon,
     required TextEditingController controller,
@@ -1733,44 +1904,68 @@ class _ResultModalState extends State<_ResultModal> {
     Color? accentColor,
     String? hint,
   }) {
-    // Show if text not empty OR if it's the "Personal Notes" field
-    if (controller.text.isEmpty && title != "Personal Notes") {
-      return const SizedBox();
-    }
+    if (controller.text.isEmpty && title != "Personal Notes") return const SizedBox();
+
+    final bool isDengerous = title == "Side Effects" || title == "Warnings" || title == "Interactions";
+    final Color itemColor = isDengerous ? Colors.redAccent.withValues(alpha: 0.7) : L.text;
+    
+    String emojiTitle = "";
+    if (title == "Side Effects") emojiTitle = "🤢";
+    if (title == "Warnings") emojiTitle = "⚠️";
+    if (title == "Interactions") emojiTitle = "💊";
+
     return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+        color: isDengerous ? Colors.redAccent.withValues(alpha: 0.05) : L.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isDengerous ? Colors.redAccent.withValues(alpha: 0.2) : L.border.withValues(alpha: 0.1), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: L.text, size: 14),
-              const SizedBox(width: 8),
+              Icon(icon, color: itemColor, size: 16),
+              const SizedBox(width: 12),
               Text(
-                title.toUpperCase(),
+                "${title.toUpperCase()} $emojiTitle",
                 style: AppTypography.labelSmall.copyWith(
-                  color: L.sub,
+                  color: isDengerous ? Colors.redAccent : L.sub,
                   fontWeight: FontWeight.w900,
-                  fontSize: 10,
-                  letterSpacing: 1.0,
+                  fontSize: 11,
+                  letterSpacing: 1.2,
                 ),
               ),
+              const Spacer(),
+              if (isDengerous)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    "DANGER",
+                    style: AppTypography.labelSmall.copyWith(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           TextField(
             controller: controller,
             maxLines: null,
             style: AppTypography.bodyMedium.copyWith(
               color: L.text,
-              height: 1.5,
-              fontWeight: FontWeight.w600,
+              height: 1.6,
+              fontWeight: isDengerous ? FontWeight.w800 : FontWeight.w600,
+              fontSize: 15,
             ),
             decoration: InputDecoration(
               hintText: hint,
@@ -2162,7 +2357,6 @@ class _ResultModalState extends State<_ResultModal> {
     );
   }
 }
-
 class _BentoMetricTile extends StatelessWidget {
   final String title;
   final String icon;
@@ -2182,29 +2376,31 @@ class _BentoMetricTile extends StatelessWidget {
     return Flexible(
       flex: flex,
       child: Container(
-        margin: const EdgeInsets.all(3),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+          boxShadow: [
+             BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+          ],
         ),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               children: [
-                Text(icon, style: const TextStyle(fontSize: 14)),
-                const SizedBox(width: 8),
+                Text(_getIconForTitle(title), style: const TextStyle(fontSize: 12)),
+                const SizedBox(width: 10),
                 Text(
-                  title.toUpperCase(),
+                  title.replaceFirst('ID_', '').toUpperCase(),
                   style: AppTypography.labelSmall.copyWith(
-                    color: L.text.withValues(alpha: 0.4),
+                    color: L.sub.withValues(alpha: 0.5),
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.0,
-                    fontSize: 10,
+                    fontSize: 9,
                   ),
                 ),
               ],
@@ -2215,6 +2411,15 @@ class _BentoMetricTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getIconForTitle(String t) {
+    if (t.contains('NAME')) return "🏷️";
+    if (t.contains('BRAND')) return "🏢";
+    if (t.contains('DOSE')) return "⚖️";
+    if (t.contains('FORM')) return "💊";
+    if (t.contains('UNIT')) return "📦";
+    return icon;
   }
 }
 

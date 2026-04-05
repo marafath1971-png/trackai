@@ -111,6 +111,9 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   int _scanCount = 0;
   DateTime? _lastReviewRequest;
   int get scanCount => _scanCount;
+  bool _isMutating = false;
+  bool get isMutating => _isMutating;
+  DateTime? lastSyncedAt;
 
   // ── PENDING ACTIONS (WAL) ──────────────────────────────────────────
   List<Map<String, dynamic>> _pendingActions = [];
@@ -145,6 +148,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
           }
           _pendingActions.remove(action);
           await _savePendingActions();
+          lastSyncedAt = DateTime.now(); // Update sync timestamp
         } catch (e) {
           final errStr = e.toString().toLowerCase();
           appLogger.e('[AppState] Sync failed for $action: $e');
@@ -152,7 +156,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
           if (errStr.contains('not-found') || errStr.contains('404')) {
             appLogger.w(
                 '[AppState] Cloud Function not found. Suspending sync for this session.');
-            break; // Stop attempting to sync if the backend is missing
+            break; 
           }
 
           if (errStr.contains('network') || errStr.contains('unavailable')) {
@@ -166,6 +170,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     } finally {
       _isSyncing = false;
       await trace.stop();
+      safeNotifyListeners();
     }
   }
 
@@ -764,6 +769,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
   // ── Symptoms ───────────────────────────────────────────────────────
   Future<void> logSymptom(Symptom symptom) async {
+    if (_isMutating) return;
+    _isMutating = true;
     try {
       await symptomRepo.saveSymptom(symptom);
       final idx = symptoms.indexWhere((s) => s.id == symptom.id);
@@ -772,9 +779,9 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       } else {
         symptoms.add(symptom);
       }
-      hasNewDataForAI = true;
+      _invalidateCache();
+      safeNotifyListeners();
 
-      // Automatic AI Analysis
       analyzingSymptom = true;
       symptomAnalysis = null;
       safeNotifyListeners();
@@ -784,10 +791,30 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         symptomAnalysis = result.value;
       }
       analyzingSymptom = false;
-      safeNotifyListeners();
+      HapticEngine.lightImpact();
+      showToast('Symptom logged');
     } catch (e) {
       appLogger.e('[AppState] logSymptom failed', error: e);
       analyzingSymptom = false;
+    } finally {
+      _isMutating = false;
+      safeNotifyListeners();
+    }
+  }
+
+  Future<void> deleteSymptom(String id) async {
+    if (_isMutating) return;
+    _isMutating = true;
+    try {
+      await symptomRepo.deleteSymptom(id);
+      symptoms.removeWhere((s) => s.id == id);
+      _invalidateCache();
+      HapticEngine.selection();
+      showToast('Symptom removed', type: 'info');
+    } catch (e) {
+      appLogger.e('[AppState] deleteSymptom failed', error: e);
+    } finally {
+      _isMutating = false;
       safeNotifyListeners();
     }
   }
@@ -832,16 +859,6 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> deleteSymptom(String id) async {
-    try {
-      await symptomRepo.deleteSymptom(id);
-      symptoms.removeWhere((s) => s.id == id);
-      safeNotifyListeners();
-    } catch (e) {
-      appLogger.e('[AppState] deleteSymptom failed', error: e);
-    }
-  }
-
   void clearInteractionWarning() {
     interactionWarning = null;
     interactionWarningMedName = null;
@@ -852,6 +869,14 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void showToast(String message, {String type = 'success'}) {
     toast = message;
     toastType = type;
+    
+    // Industrial logic: Trigger haptics based on type
+    if (type == 'error' || type == 'warning') {
+      HapticEngine.selection(); // Or a custom 'warning' haptic if available
+    } else if (type == 'success') {
+      HapticEngine.lightImpact();
+    }
+
     safeNotifyListeners();
     Future.delayed(const Duration(seconds: 3), () {
       toast = null;
@@ -1126,7 +1151,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> toggleDose(DoseItem dose) async {
     final key = dose.key;
-    if (_processingDoses[key] == true) return; // Prevent double-tap
+    if (_isMutating || _processingDoses[key] == true) return; 
+    _isMutating = true;
     _processingDoses[key] = true;
 
     try {
@@ -1134,7 +1160,6 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       final wasTaken = takenToday[key] ?? false;
       takenToday = {...takenToday, key: !wasTaken};
 
-      // Optimistic UI update instantly for perceived speed.
       _invalidateCache();
       safeNotifyListeners();
 
@@ -1228,10 +1253,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         };
       }
 
-      // updateNotifs: true forces the cancellation of any immediate pending alarms for THIS dose today.
       await _persistAll(dateKey: todayKey, updateNotifs: true);
     } finally {
       _processingDoses.remove(key);
+      _isMutating = false;
+      safeNotifyListeners();
     }
   }
 
@@ -1279,20 +1305,31 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
   // ── Medicine CRUD ──────────────────────────────────────────────────
   void addMedicine(Medicine med, {BuildContext? context}) {
+    if (_isMutating) return;
+    _isMutating = true;
+    
     final isPremium = profile?.isPremium ?? false;
     if (!isPremium && meds.length >= 3) {
       showToast(
           'Free plan limited to 3 medicines. Upgrade to Pro for unlimited! 💎',
           type: 'error');
+      _isMutating = false;
+      safeNotifyListeners();
       return;
     }
+    
     meds = [...meds, med];
     medRepo.addMedicine(med);
     _updateNotifications();
     _invalidateCache();
+    
+    HapticEngine.heavyImpact(); 
+    showToast('Medicine added');
+    
+    _isMutating = false;
     safeNotifyListeners();
 
-    // Async drug interaction check — run in background, show toast if risk found
+    // Async drug interaction check
     _checkDrugInteractionsAsync(med);
   }
 
@@ -1339,53 +1376,60 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     return result;
   }
 
-  /// Log a PRN (as-needed) dose for a medicine outside its schedule.
   Future<void> logPrnDose(Medicine med) async {
     final medIdx = meds.indexWhere((m) => m.id == med.id);
     if (medIdx == -1) return;
 
-    final now = DateTime.now();
-    final todayKey = todayStr();
-    final timeStr =
-        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    final prnLabel = 'PRN-$timeStr';
+    if (_isMutating) return;
+    _isMutating = true;
 
-    // Record in history
-    history = {
-      ...history,
-      todayKey: [
-        ...(history[todayKey] ?? []),
-        DoseEntry(
-          medId: med.id,
-          label: prnLabel,
-          time: timeStr,
-          taken: true,
-          takenAt: now.toIso8601String(),
-        ),
-      ],
-    };
+    try {
+      final now = DateTime.now();
+      final todayKey = todayStr();
+      final timeStr =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+      final prnLabel = 'PRN-$timeStr';
 
-    // Decrement stock
-    final m = meds[medIdx];
-    if (m.count > 0) {
-      final updatedRefill = m.refillInfo?.copyWith(
-        currentInventory: (m.refillInfo!.currentInventory - 1)
-            .clamp(0, m.refillInfo!.totalQuantity),
-      );
-      final updatedMed = m.copyWith(
-        count: m.count - 1,
-        refillInfo: updatedRefill ?? m.refillInfo,
-      );
-      meds[medIdx] = updatedMed;
-      medRepo.updateMedicine(updatedMed);
+      // Record in history
+      history = {
+        ...history,
+        todayKey: [
+          ...(history[todayKey] ?? []),
+          DoseEntry(
+            medId: med.id,
+            label: prnLabel,
+            time: timeStr,
+            taken: true,
+            takenAt: now.toIso8601String(),
+          ),
+        ],
+      };
+
+      // Decrement stock
+      final m = meds[medIdx];
+      if (m.count > 0) {
+        final updatedRefill = m.refillInfo?.copyWith(
+          currentInventory: (m.refillInfo!.currentInventory - 1)
+              .clamp(0, m.refillInfo!.totalQuantity),
+        );
+        final updatedMed = m.copyWith(
+          count: m.count - 1,
+          refillInfo: updatedRefill ?? m.refillInfo,
+        );
+        meds[medIdx] = updatedMed;
+        medRepo.updateMedicine(updatedMed);
+      }
+
+      await _persistAll(dateKey: todayKey);
+      hasNewDataForAI = true;
+      _invalidateCache();
+      safeNotifyListeners();
+      HapticEngine.heavyImpact();
+      showToast('✓ ${med.name} PRN dose logged');
+    } finally {
+      _isMutating = false;
+      safeNotifyListeners();
     }
-
-    await _persistAll(dateKey: todayKey);
-    hasNewDataForAI = true;
-    _invalidateCache();
-    safeNotifyListeners();
-    HapticEngine.heavyImpact();
-    showToast('✓ ${med.name} PRN dose logged');
   }
 
   /// Undo a PRN dose by removing it from history and restoring inventory.
@@ -1397,33 +1441,40 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
     if (idx == -1) return;
 
-    entries.removeAt(idx);
-    history = {
-      ...history,
-      todayKey: entries,
-    };
+    if (_isMutating) return;
+    _isMutating = true;
+    try {
+      entries.removeAt(idx);
+      history = {
+        ...history,
+        todayKey: entries,
+      };
 
-    // Increment stock back
-    final medIdx = meds.indexWhere((m) => m.id == medId);
-    if (medIdx != -1) {
-      final m = meds[medIdx];
-      final updatedRefill = m.refillInfo?.copyWith(
-        currentInventory: (m.refillInfo!.currentInventory + 1)
-            .clamp(0, m.refillInfo!.totalQuantity),
-      );
-      final updatedMed = m.copyWith(
-        count: m.count + 1,
-        refillInfo: updatedRefill ?? m.refillInfo,
-      );
-      meds[medIdx] = updatedMed;
-      medRepo.updateMedicine(updatedMed);
+      // Increment stock back
+      final medIdx = meds.indexWhere((m) => m.id == medId);
+      if (medIdx != -1) {
+        final m = meds[medIdx];
+        final updatedRefill = m.refillInfo?.copyWith(
+          currentInventory: (m.refillInfo!.currentInventory + 1)
+              .clamp(0, m.refillInfo!.totalQuantity),
+        );
+        final updatedMed = m.copyWith(
+          count: m.count + 1,
+          refillInfo: updatedRefill ?? m.refillInfo,
+        );
+        meds[medIdx] = updatedMed;
+        medRepo.updateMedicine(updatedMed);
+      }
+
+      await _persistAll(dateKey: todayKey);
+      _invalidateCache();
+      safeNotifyListeners();
+      HapticEngine.selection();
+      showToast('PRN dose removed', type: 'info');
+    } finally {
+      _isMutating = false;
+      safeNotifyListeners();
     }
-
-    await _persistAll(dateKey: todayKey);
-    _invalidateCache();
-    safeNotifyListeners();
-    HapticEngine.selection();
-    showToast('PRN dose removed');
   }
 
   void updateMed(
@@ -1443,6 +1494,9 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     String? courseStartDate,
     bool updateNotifs = true,
   }) {
+    if (_isMutating) return;
+    _isMutating = true;
+    
     meds = meds.map((m) {
       if (m.id != id) return m;
       final updated = m.copyWith(
@@ -1462,38 +1516,55 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       medRepo.updateMedicine(updated);
       return updated;
     }).toList();
+    
     if (updateNotifs) {
       _updateNotifications();
     }
+    
     _invalidateCache();
+    HapticEngine.selection();
+    _isMutating = false;
     safeNotifyListeners();
   }
 
   void updateMedDirect(Medicine updated) {
+    if (_isMutating) return;
+    _isMutating = true;
+    
     meds = meds.map((m) => m.id == updated.id ? updated : m).toList();
     medRepo.updateMedicine(updated);
     _updateNotifications();
     _invalidateCache();
+    HapticEngine.selection();
+    
+    _isMutating = false;
     safeNotifyListeners();
   }
 
-  void deleteMed(int id) {
+  void deleteMed(int id) async {
+    if (_isMutating) return;
+    _isMutating = true;
+    
     meds = meds.where((m) => m.id != id).toList();
-    medRepo.deleteMedicine(id);
+    await medRepo.deleteMedicine(id);
     _updateNotifications();
     _invalidateCache();
+    HapticEngine.selection(); 
+    showToast('Medicine removed', type: 'warning');
+    
+    _isMutating = false;
     safeNotifyListeners();
-    showToast('Medicine removed');
   }
 
   /// Archive a completed medicine course (hides it from active list).
 
   /// Skip a specific dose without marking it taken.
-  void skipDose(DoseItem dose) {
+  Future<void> skipDose(DoseItem dose) async {
+    if (_isMutating) return;
+    _isMutating = true;
+    
     final key = dose.key;
     final todayKey = todayStr();
-    // Mark as explicitly skipped in takenToday (false = not taken, but don't add auto-mark).
-    // We record a DoseEntry with skipped=true so history reflects it.
     history = {
       ...history,
       todayKey: [
@@ -1509,9 +1580,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       ],
     };
     takenToday = {...takenToday, key: false};
-    _persistAll(dateKey: todayKey);
-    safeNotifyListeners();
+    await _persistAll(dateKey: todayKey);
+    HapticEngine.selection();
     showToast('Dose skipped', type: 'info');
+    
+    _isMutating = false;
+    safeNotifyListeners();
   }
 
   // ── Dashboard Data & Insights ──────────────────────────────────────

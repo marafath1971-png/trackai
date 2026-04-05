@@ -99,26 +99,24 @@ class _HomeTabState extends State<HomeTab> {
     final mainContent = Scaffold(
         body: Stack(
       children: [
-        // ── MESH GRADIENT BACKGROUND ──
+        // ── MESH GRADIENT BACKGROUND (USER REQUESTED) ──
         Positioned.fill(
           child: MeshGradient(
             colors: [
-              L.primary.withValues(alpha: 0.08),
-              L.bg,
-              const Color(0xFFF0F4FF), // Subtle cool tint
-              L.primary.withValues(alpha: 0.03),
+              L.meshBg,
+              context.isDark ? L.bg : L.purple.withValues(alpha: 0.1), // Subtle accent for light mode
             ],
           ),
         ),
 
-        RefreshIndicator(
+          RefreshIndicator(
           onRefresh: () async {
             HapticEngine.selection();
             await context.read<AppState>().loadFromStorage();
           },
           displacement: 110,
-          color: L.primary,
-          backgroundColor: L.bg,
+          color: L.text,
+          backgroundColor: L.meshBg,
           child: Scrollbar(
             controller: _scrollController,
             child: CustomScrollView(
@@ -160,10 +158,7 @@ class _HomeTabState extends State<HomeTab> {
                     _HomeAlertHub(state: context.read<AppState>(), L: L, onScrollToMeds: _scrollToMeds, onOpenStreak: _openStreak),
                 ], delay: 150.ms),
 
-                // --- 4. WELLNESS SNAPSHOT ---
-                _sliverStaggerDown([
-                  _WellnessSnapshot(state: context.read<AppState>(), L: L),
-                ], delay: 400.ms),
+
 
                 // --- 6. TIMELINE ---
 
@@ -172,11 +167,11 @@ class _HomeTabState extends State<HomeTab> {
                     padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding,
                         AppSpacing.l, AppSpacing.screenPadding, AppSpacing.s),
                     sliver: SliverToBoxAdapter(
-                      child: Text("Today's Schedule",
-                          style: AppTypography.titleLarge.copyWith(
+                      child: Text("Today's Schedule".toUpperCase(),
+                          style: AppTypography.labelSmall.copyWith(
                               fontWeight: FontWeight.w900,
-                              color: L.text,
-                              letterSpacing: -0.8)),
+                              color: L.sub.withValues(alpha: 0.4),
+                              letterSpacing: 1.5)),
                     ),
                   ),
                   ..._buildGroupedTimelineSlivers(
@@ -189,7 +184,7 @@ class _HomeTabState extends State<HomeTab> {
                         horizontal: AppSpacing.screenPadding),
                     sliver: SliverToBoxAdapter(
                       child: PremiumEmptyState(
-                        title: 'All caught up! 🌟',
+                        title: 'ALL CAUGHT UP',
                         subtitle:
                             'You have no scheduled doses for the rest of today.',
                         icon: Icons.check_circle_outline_rounded,
@@ -426,22 +421,25 @@ class _HomeBentoHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final streak = state.getStreak();
+    final meds = state.meds;
+    final medsCount = meds.length;
+    
     return Column(
       children: [
         IntrinsicHeight(
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // ── MAIN PROGRESS CARD ──
                   Expanded(
                     flex: 3,
                     child: Container(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: L.text,
                         borderRadius: BorderRadius.circular(32),
-                        boxShadow: [
-                          BoxShadow(color: L.text.withValues(alpha: 0.1), blurRadius: 40, offset: const Offset(0, 20))
-                        ],
+                        border: Border.all(color: L.text, width: 1.5),
+                        // No shadows for pure industrial look
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,16 +449,16 @@ class _HomeBentoHeader extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'TREATMENT ADHERENCE',
-                                style: AppTypography.labelSmall.copyWith(color: L.bg.withValues(alpha: 0.5), letterSpacing: 1.5, fontWeight: FontWeight.w900),
+                                'TREATMENT PROGRESS',
+                                style: AppTypography.labelSmall.copyWith(color: L.bg.withValues(alpha: 0.4), letterSpacing: 1.5, fontWeight: FontWeight.w900, fontSize: 9),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               FittedBox(
                                 fit: BoxFit.scaleDown,
                                 alignment: Alignment.centerLeft,
                                 child: Text(
-                                  '${(dosePct * 100).toInt()}% Done',
-                                  style: AppTypography.displaySmall.copyWith(color: L.bg, fontWeight: FontWeight.w900, fontSize: 28, letterSpacing: -1.0),
+                                  '${(dosePct * 100).toInt()}% READY',
+                                  style: AppTypography.displaySmall.copyWith(color: L.bg, fontWeight: FontWeight.w900, fontSize: 32, letterSpacing: -1.0),
                                 ),
                               ),
                             ],
@@ -468,9 +466,9 @@ class _HomeBentoHeader extends StatelessWidget {
                           const SizedBox(height: 24),
                           Row(
                             children: [
-                              Expanded(child: _SmallDoseIndicator(count: takenCount, label: 'Taken', color: L.bg, L: L)),
-                              const SizedBox(width: 12),
-                              Expanded(child: _SmallDoseIndicator(count: remaining, label: 'Remaining', color: L.bg.withValues(alpha: 0.4), L: L)),
+                              Expanded(child: _SmallDoseIndicator(count: takenCount, label: 'COMPLETED', color: L.bg, L: L)),
+                              Container(width: 1, height: 24, color: L.bg.withValues(alpha: 0.1), margin: const EdgeInsets.symmetric(horizontal: 16)),
+                              Expanded(child: _SmallDoseIndicator(count: remaining, label: 'PENDING', color: L.bg.withValues(alpha: 0.4), L: L)),
                             ],
                           ),
                         ],
@@ -482,24 +480,28 @@ class _HomeBentoHeader extends StatelessWidget {
                   Expanded(
                     flex: 2,
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _BentoMiniCard(
-                          title: 'STREAK',
-                          value: '$streak',
-                          icon: '🔥',
-                          color: Colors.orange.withValues(alpha: 0.1),
-                          textColor: Colors.orange.shade800,
-                          L: L,
+                        Expanded(
+                          child: _BentoMiniCard(
+                            title: 'STREAK',
+                            value: '$streak',
+                            icon: '🔥',
+                            color: L.text.withValues(alpha: 0.05),
+                            textColor: L.text,
+                            L: L,
+                          ),
                         ),
                         const SizedBox(height: 12),
-                        _BentoMiniCard(
-                          title: 'HEALTH',
-                          value: '98%',
-                          icon: '✨',
-                          color: Colors.blue.withValues(alpha: 0.1),
-                          textColor: Colors.blue.shade800,
-                          L: L,
+                        Expanded(
+                          child: _BentoMiniCard(
+                            title: 'IN STOCK',
+                            value: '$medsCount',
+                            icon: '📦',
+                            color: L.text.withValues(alpha: 0.05),
+                            textColor: L.text,
+                            L: L,
+                          ),
                         ),
                       ],
                     ),
@@ -531,7 +533,7 @@ class _BentoMiniCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: L.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border.withValues(alpha: 0.3)),
+        border: Border.all(color: L.border, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -669,8 +671,8 @@ class _ProfessionalAlertTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: L.card,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
-          boxShadow: L.shadowSoft,
+          border: Border.all(color: color, width: 1.5), // Pure color border (Cal AI)
+          // No shadows for pure industrial look
         ),
         child: Row(
           children: [
@@ -790,8 +792,7 @@ class _SnapTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: L.card,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.15)),
-        boxShadow: L.shadowSoft,
+        border: Border.all(color: L.border, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

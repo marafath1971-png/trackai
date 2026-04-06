@@ -134,14 +134,16 @@ class _PaywallSheetState extends State<PaywallSheet> {
                 duration: 300.ms,
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: isSel ? L.primary.withValues(alpha: 0.04) : L.card,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSel ? L.primary : L.border.withValues(alpha: 0.1),
-                    width: isSel ? 2 : 1,
+                  shape: ContinuousRectangleBorder(
+                    borderRadius: BorderRadius.circular(32),
+                    side: BorderSide(
+                      color: isSel ? L.primary : L.border.withValues(alpha: 0.1),
+                      width: isSel ? 2 : 1,
+                    ),
                   ),
-                  boxShadow: isSel
+                  shadows: isSel
                       ? [
                           BoxShadow(
                             color: L.primary.withValues(alpha: 0.08),
@@ -212,10 +214,12 @@ class _PaywallSheetState extends State<PaywallSheet> {
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 20),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: L.primary,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: AppShadows.glow(L.primary),
+                shape: ContinuousRectangleBorder(
+                  borderRadius: BorderRadius.circular(32),
+                ),
+                shadows: AppShadows.glow(L.primary),
               ),
               child: state.isPurchasing
                   ? const Center(child: AppLoadingIndicator(size: 24))

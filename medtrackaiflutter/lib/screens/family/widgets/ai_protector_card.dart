@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
-import '../../../domain/entities/caregiver.dart';
 import '../../../providers/app_state.dart';
 
 class AIProtectorCard extends StatefulWidget {

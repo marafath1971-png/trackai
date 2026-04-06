@@ -181,7 +181,7 @@ class CompleteProfileCard extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  state.updateProfile(
+                  state.saveProfile(
                       state.profile!.copyWith(age: controller.text));
                   Navigator.pop(c);
                   HapticEngine.success();

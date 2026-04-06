@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
-import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../services/auth_service.dart';
@@ -19,7 +18,6 @@ import 'widgets/alert_log_widgets.dart';
 import 'widgets/demo_widgets.dart';
 import '../../widgets/common/premium_empty_state.dart';
 import '../../widgets/common/paywall_sheet.dart';
-import '../../widgets/shared/shared_widgets.dart';
 
 enum FamilyView {
   hub,
@@ -735,7 +733,7 @@ class _CircleStatBento extends StatelessWidget {
             Text(label, style: AppTypography.labelSmall.copyWith(
               color: L.sub.withValues(alpha: 0.4), 
               fontWeight: FontWeight.w900, 
-              fontSize: 9, 
+              fontSize: 10, 
               letterSpacing: 1.0)),
           ],
         ),

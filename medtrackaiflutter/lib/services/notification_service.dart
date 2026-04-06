@@ -213,6 +213,28 @@ class NotificationService {
   static Future<void> cancelAll() => _plugin.cancelAll();
   static Future<void> cancel(int id) => _plugin.cancel(id: id);
 
+  static Future<void> scheduleAll(List<Medicine> meds) async {
+    await cancelAll();
+    for (var med in meds) {
+      for (int i = 0; i < med.schedule.length; i++) {
+        final sched = med.schedule[i];
+        if (!sched.enabled) continue;
+        for (var day in sched.days) {
+          final notifId = med.id * 100 + i * 10 + day;
+          await scheduleWeeklyReminder(
+            med: med,
+            sched: sched,
+            dayIdx: day,
+            notifId: notifId,
+            enableSound: true,
+            enableVibration: true,
+            isTakenToday: false, // Default for bulk refresh
+          );
+        }
+      }
+    }
+  }
+
   static Future<void> showRefillAlert({
     required Medicine med,
     String? title,

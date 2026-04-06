@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../providers/app_state.dart';
-import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/common/app_loading_indicator.dart';
 

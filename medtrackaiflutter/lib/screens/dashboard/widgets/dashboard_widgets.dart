@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/app_state.dart';
-import '../../../core/utils/haptic_engine.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../widgets/shared/shared_widgets.dart';
 import '../../../widgets/shared/shared_widgets.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/smoothing_text.dart';
-import '../../../domain/entities/entities.dart';
 
 class LatencyHeatmap extends StatelessWidget {
   final List<Map<String, dynamic>> latencyData;
@@ -93,7 +90,7 @@ class LatencyHeatmap extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][date.weekday % 7],
-                        style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.sub, fontWeight: FontWeight.w900),
+                        style: AppTypography.labelSmall.copyWith(fontSize: 11, color: L.sub, fontWeight: FontWeight.w900),
                       ),
                     ],
                   ),
@@ -182,7 +179,7 @@ class HealthCoachCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
-                        child: Text(cat.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: color, fontSize: 8, fontWeight: FontWeight.w900)),
+                        child: Text(cat.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: color, fontSize: 11, fontWeight: FontWeight.w900)),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -342,8 +339,8 @@ class AdherenceTrendChart extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('30D_AGO', style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 8, fontWeight: FontWeight.w900)),
-                    Text('CURRENT', style: AppTypography.labelSmall.copyWith(color: L.text, fontSize: 8, fontWeight: FontWeight.w900)),
+                    Text('30D_AGO', style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 10, fontWeight: FontWeight.w900)),
+                    Text('CURRENT', style: AppTypography.labelSmall.copyWith(color: L.text, fontSize: 10, fontWeight: FontWeight.w900)),
                   ],
                 ),
               ],

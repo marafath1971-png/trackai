@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../providers/app_state.dart';
 import '../../../theme/app_theme.dart';
-import '../../../domain/entities/entities.dart';
 import '../../../widgets/modals/ask_ai_sheet.dart';
 import '../../../widgets/common/paywall_sheet.dart';
 import '../../../core/utils/haptic_engine.dart';
@@ -58,11 +57,13 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Container(
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
-          boxShadow: L.shadowSoft,
+          shape: ContinuousRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+            side: BorderSide(color: L.border.withValues(alpha: 0.05), width: 1.5),
+          ),
+          shadows: L.shadowSoft,
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
@@ -118,7 +119,7 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                                         style:
                                             AppTypography.labelSmall.copyWith(
                                           color: L.green,
-                                          fontSize: 8,
+                                          fontSize: 10,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 0.3,
                                         ),
@@ -141,7 +142,7 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                                         style:
                                             AppTypography.labelSmall.copyWith(
                                           color: L.text,
-                                          fontSize: 9,
+                                          fontSize: 11,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 0.5,
                                         ),
@@ -162,12 +163,13 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
+                                decoration: ShapeDecoration(
                                   color: L.text.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(AppRadius.max),
-                                  border: Border.all(
-                                      color: L.text.withValues(alpha: 0.03)),
-                                  boxShadow: AppShadows.subtle,
+                                  shape: ContinuousRectangleBorder(
+                                    borderRadius: BorderRadius.circular(32),
+                                    side: BorderSide(color: L.text.withValues(alpha: 0.03)),
+                                  ),
+                                  shadows: AppShadows.subtle,
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -267,17 +269,14 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                                                     const EdgeInsets.symmetric(
                                                         horizontal: 10,
                                                         vertical: 6),
-                                                decoration: BoxDecoration(
-                                                  color: L.text
-                                                      .withValues(alpha: 0.02),
-                                                  borderRadius:
-                                                      BorderRadius.circular(AppRadius.m),
-                                                  border: Border.all(
-                                                      color: L.border
-                                                          .withValues(
-                                                              alpha: 0.03)),
-                                                  boxShadow: AppShadows.subtle,
-                                                ),
+                                                  decoration: ShapeDecoration(
+                                                    color: L.text.withValues(alpha: 0.02),
+                                                    shape: ContinuousRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(16),
+                                                      side: BorderSide(color: L.border.withValues(alpha: 0.03)),
+                                                    ),
+                                                    shadows: AppShadows.subtle,
+                                                  ),
                                                 child: Row(
                                                   mainAxisSize:
                                                       MainAxisSize.min,
@@ -395,10 +394,12 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 12),
-                          decoration: BoxDecoration(
+                          decoration: ShapeDecoration(
                             color: L.secondary,
-                            borderRadius: BorderRadius.circular(AppRadius.max),
-                            boxShadow: [
+                            shape: ContinuousRectangleBorder(
+                              borderRadius: BorderRadius.circular(32),
+                            ),
+                            shadows: [
                               BoxShadow(
                                 color: L.secondary.withValues(alpha: 0.3),
                                 blurRadius: 25,

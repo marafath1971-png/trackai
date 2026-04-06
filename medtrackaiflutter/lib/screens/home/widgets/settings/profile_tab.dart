@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../providers/app_state.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../services/auth_service.dart';
-import '../../../../domain/entities/entities.dart';
 import '../../../../widgets/common/paywall_sheet.dart';
 import '../../../../widgets/shared/shared_widgets.dart';
 import 'settings_shared.dart';
@@ -140,7 +139,7 @@ class _ProfileTabState extends State<ProfileTab> {
                           child: Text('PRO',
                               style: AppTypography.labelSmall.copyWith(
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 8,
+                                  fontSize: 10,
                                   color: Colors.black,
                                   letterSpacing: 0.5)),
                         ),

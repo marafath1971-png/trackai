@@ -31,4 +31,7 @@ abstract class IUserRepository {
       String patientUid);
   Future<void> nudgePatient(String patientUid);
   Stream<UserProfile?> getProfileStream();
+  
+  Future<List<Medicine>> getPatientMeds(String uid);
+  Future<Map<String, List<DoseEntry>>> getPatientHistory(String uid);
 }

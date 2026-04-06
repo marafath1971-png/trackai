@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../core/utils/haptic_engine.dart';
+import '../../widgets/shared/shared_widgets.dart';
 
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
@@ -42,12 +44,13 @@ class _LockScreenState extends State<LockScreen> {
             child: Container(
               width: MediaQuery.of(context).size.width * 0.85,
               padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: L.bg.withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(32),
-                border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1), width: 1.0),
-                boxShadow: [
+                shape: ContinuousRectangleBorder(
+                  borderRadius: BorderRadius.circular(32),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 1.0),
+                ),
+                shadows: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 40,
@@ -93,17 +96,18 @@ class _LockScreenState extends State<LockScreen> {
                     ),
                   ).animate().fadeIn(delay: 200.ms),
                   const SizedBox(height: 32),
-                  GestureDetector(
+                  BouncingButton(
                     onTap: () {
+                      HapticEngine.selection();
                       context.read<AppState>().unlockApp();
                     },
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: L.green,
-                        borderRadius: BorderRadius.circular(28),
-                        boxShadow: [
+                        shape: ContinuousRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                        shadows: [
                           BoxShadow(
                             color: L.green.withValues(alpha: 0.3),
                             blurRadius: 20,

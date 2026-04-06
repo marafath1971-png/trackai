@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../providers/app_state.dart';
-import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
 import '../../../services/auth_service.dart';
 import '../../../core/utils/haptic_engine.dart';
@@ -59,11 +58,11 @@ class PatientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<Medicine>>(
-      stream: state.getPatientMeds(patient['uid']),
+    return FutureBuilder<List<Medicine>>(
+      future: state.getPatientMeds(patient['uid']),
       builder: (context, medSnap) {
-        return StreamBuilder<Map<String, List<DoseEntry>>>(
-          stream: state.getPatientHistory(patient['uid']),
+        return FutureBuilder<Map<String, List<DoseEntry>>>(
+          future: state.getPatientHistory(patient['uid']),
           builder: (context, historySnap) {
             final history = historySnap.data ?? {};
             final dateKey = DateTime.now().toIso8601String().substring(0, 10);
@@ -235,7 +234,7 @@ class WeeklyAdherenceChart extends StatelessWidget {
                 style: AppTypography.labelSmall.copyWith(
                     color: L.sub.withValues(alpha: 0.5),
                     fontWeight: FontWeight.w800,
-                    fontSize: 9,
+                    fontSize: 10,
                     letterSpacing: 0.5)),
           ],
         ),
@@ -311,12 +310,12 @@ class ProtectorInsights extends StatelessWidget {
         state: state,
       );
     }
-    return StreamBuilder<List<Medicine>>(
-      stream: state.getPatientMeds(cg.patientUid),
+    return FutureBuilder<List<Medicine>>(
+      future: state.getPatientMeds(cg.patientUid),
       builder: (context, medSnap) {
         final meds = medSnap.data ?? [];
-        return StreamBuilder<Map<String, List<DoseEntry>>>(
-          stream: state.getPatientHistory(cg.patientUid),
+        return FutureBuilder<Map<String, List<DoseEntry>>>(
+          future: state.getPatientHistory(cg.patientUid),
           builder: (context, historySnap) {
             final history = historySnap.data ?? {};
             return InsightsContent(

@@ -369,10 +369,12 @@ class _GoogleBtn extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: L.fill,
-          borderRadius: AppRadius.roundXL,
-          border: Border.all(color: L.border),
+          shape: ContinuousRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+            side: BorderSide(color: L.border),
+          ),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           loading
@@ -406,10 +408,12 @@ class _AppleBtn extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: L.fill,
-          borderRadius: AppRadius.roundXL,
-          border: Border.all(color: L.border),
+          shape: ContinuousRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+            side: BorderSide(color: L.border),
+          ),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           loading
@@ -445,10 +449,12 @@ class _AuthField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: L.fill,
-        borderRadius: AppRadius.roundL,
-        border: Border.all(color: L.border),
+        shape: ContinuousRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: L.border),
+        ),
       ),
       child: TextField(
         controller: controller,
@@ -490,10 +496,12 @@ class _PrimaryBtn extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: L.green,
-          borderRadius: AppRadius.roundXL,
-          boxShadow: [
+          shape: ContinuousRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+          ),
+          shadows: [
             BoxShadow(
                 color: L.green.withValues(alpha: 0.25),
                 blurRadius: 20,

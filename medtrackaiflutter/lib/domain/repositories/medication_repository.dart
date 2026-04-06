@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../entities/entities.dart';
+import '../../core/utils/result.dart';
 
 abstract class IMedicationRepository {
   Future<List<Medicine>> getMedicines();
@@ -20,5 +21,6 @@ abstract class IMedicationRepository {
   Future<List<Map<String, dynamic>>> getPendingActions();
   Future<void> savePendingActions(List<Map<String, dynamic>> actions);
 
+  Future<Result<AISafetyProfile>> analyzeMedicineSafety(Medicine m);
   Future<SharedPreferences> getPrefs();
 }

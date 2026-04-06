@@ -189,7 +189,7 @@ class ReportService {
         pw.Text(
           s.reportFooter,
           textAlign: pw.TextAlign.center,
-          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+          style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
         ),
       ],
     );

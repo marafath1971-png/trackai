@@ -272,7 +272,7 @@ class _BentoMetricCard extends StatelessWidget {
                       color: L.sub.withValues(alpha: 0.6),
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.5,
-                      fontSize: 9,
+                      fontSize: 10,
                     ),
                   ),
                 ),

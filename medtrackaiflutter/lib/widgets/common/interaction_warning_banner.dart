@@ -59,7 +59,7 @@ class InteractionWarningBanner extends StatelessWidget {
                   Text(
                     'DRUG INTERACTION DETECTED',
                     style: AppTypography.labelMedium.copyWith(
-                      fontSize: 9,
+                      fontSize: 10,
                       color: L.amber,
                       letterSpacing: 0.8,
                       fontWeight: FontWeight.w900,

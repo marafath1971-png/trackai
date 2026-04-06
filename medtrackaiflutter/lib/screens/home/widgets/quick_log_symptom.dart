@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/app_state.dart';
 import '../../../theme/app_theme.dart';
-import '../../../domain/entities/entities.dart';
 import '../../../core/utils/haptic_engine.dart';
 import '../../../widgets/modals/daily_log_sheet.dart';
 import '../../../widgets/common/app_loading_indicator.dart';
@@ -27,16 +26,16 @@ class QuickLogSymptom extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('HOW ARE YOU FEELING?',
-                  style: AppTypography.labelLarge.copyWith(
-                    fontSize: 11,
+              Text('SYMPTOM_TELEMETRY',
+                  style: AppTypography.labelSmall.copyWith(
+                    fontSize: 10,
                     color: L.sub,
-                    letterSpacing: 1.2,
+                    letterSpacing: 2.0,
+                    fontWeight: FontWeight.w900,
                   )),
               GestureDetector(
                 onTap: () {
@@ -44,24 +43,27 @@ class QuickLogSymptom extends StatelessWidget {
                   DailyLogSheet.show(context);
                 },
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: L.secondary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: ShapeDecoration(
+                    color: L.text.withValues(alpha: 0.05),
+                    shape: ContinuousRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: L.border.withValues(alpha: 0.2)),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('DAILY LOG',
+                      Text('FULL_LOG',
                           style: AppTypography.labelLarge.copyWith(
                             fontSize: 10,
-                            color: L.secondary,
+                            color: L.text,
                             fontWeight: FontWeight.w900,
+                            letterSpacing: 1.0,
                           )),
                       const SizedBox(width: 4),
                       Icon(Icons.arrow_forward_ios_rounded,
-                          color: L.secondary, size: 8),
+                          color: L.text, size: 8),
                     ],
                   ),
                 ),
@@ -115,29 +117,33 @@ class _SymptomButtonState extends State<_SymptomButton> {
       onTap: () => _showSeverityPicker(context),
       child: Container(
         width: 85,
-        decoration: BoxDecoration(
-          color: widget.L.card,
-          borderRadius: AppRadius.roundM,
-          border: Border.all(color: widget.L.border, width: 1.0),
-          boxShadow: widget.L.shadowSoft,
+        decoration: ShapeDecoration(
+          color: widget.L.fill.withValues(alpha: 0.3),
+          shape: ContinuousRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+            side: BorderSide(color: widget.L.border.withValues(alpha: 0.2)),
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: widget.L.fill,
-                shape: BoxShape.circle,
+              padding: const EdgeInsets.all(10),
+              decoration: ShapeDecoration(
+                color: widget.L.card,
+                shape: ContinuousRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               child: Icon(widget.icon, color: widget.L.text, size: 20),
             ),
             const SizedBox(height: 12),
-            Text(widget.name,
+            Text(widget.name.toUpperCase(),
                 style: AppTypography.labelMedium.copyWith(
-                  fontSize: 12,
+                  fontSize: 10,
                   color: widget.L.text,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.0,
                 )),
           ],
         ),
@@ -182,10 +188,10 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: widget.L.bg,
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        shape: const ContinuousRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -254,11 +260,12 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
               final analysis = state.symptomAnalysis!;
               return Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: widget.L.purple.withValues(alpha: 0.05),
-                  borderRadius: AppRadius.roundM,
-                  border:
-                      Border.all(color: widget.L.purple.withValues(alpha: 0.1)),
+                  shape: ContinuousRectangleBorder(
+                    borderRadius: AppRadius.roundM,
+                    side: BorderSide(color: widget.L.purple.withValues(alpha: 0.1)),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,7 +283,7 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Text(analysis.description,
+                    Text(analysis.body,
                         style: AppTypography.bodySmall.copyWith(
                             color: widget.L.text,
                             height: 1.5,
@@ -294,13 +301,12 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 10, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: widget.L.purple
-                                          .withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                          color: widget.L.purple
-                                              .withValues(alpha: 0.2)),
+                                    decoration: ShapeDecoration(
+                                      color: widget.L.purple.withValues(alpha: 0.1),
+                                      shape: ContinuousRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        side: BorderSide(color: widget.L.purple.withValues(alpha: 0.2)),
+                                      ),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -323,7 +329,7 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    Text(analysis.warning,
+                    Text(analysis.title,
                         style: AppTypography.labelSmall.copyWith(
                             color: widget.L.sub,
                             fontSize: 10,

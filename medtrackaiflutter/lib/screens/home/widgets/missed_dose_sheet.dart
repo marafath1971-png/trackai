@@ -160,7 +160,7 @@ class MissedDoseProtocolSheet extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                     child: Text(
-                  state.getDoseGuidance(dose),
+                  state.getDoseGuidance(dose.med),
                   style: AppTypography.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: minutesLate < 120

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../providers/app_state.dart';
-import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
 import '../../../core/utils/color_utils.dart';
 import '../../../widgets/shared/shared_widgets.dart';
@@ -85,7 +84,7 @@ class _CaregiverCardState extends State<CaregiverCard> {
                             style: AppTypography.labelSmall.copyWith(
                               color: L.sub.withValues(alpha: 0.5),
                               fontWeight: FontWeight.w900,
-                              fontSize: 9,
+                              fontSize: 10,
                               letterSpacing: 1.0,
                             ),
                           ),
@@ -103,7 +102,7 @@ class _CaregiverCardState extends State<CaregiverCard> {
                                 children: [
                                   Icon(Icons.inventory_2_rounded, size: 8, color: L.success),
                                   const SizedBox(width: 4),
-                                  Text('REFILL COORDINATOR', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.success, fontWeight: FontWeight.w900)),
+                                  Text('REFILL COORDINATOR', style: AppTypography.labelSmall.copyWith(fontSize: 10, color: L.success, fontWeight: FontWeight.w900)),
                                 ],
                               ),
                             ),

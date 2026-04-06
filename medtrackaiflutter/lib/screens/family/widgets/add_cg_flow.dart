@@ -4,7 +4,6 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/app_state.dart';
-import '../../../models/models.dart';
 import '../../../models/constants.dart';
 import '../../../theme/app_theme.dart';
 

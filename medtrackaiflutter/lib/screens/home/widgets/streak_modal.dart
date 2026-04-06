@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../models/models.dart';
 import '../../../theme/app_theme.dart';
 import '../../../services/share_service.dart';
 import '../../../core/utils/haptic_engine.dart';
@@ -140,11 +139,13 @@ class StreakModal extends StatelessWidget {
                         // Main Metric Card B&W Refined
                         Container(
                           padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
+                          decoration: ShapeDecoration(
                               color: L.card,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: L.text.withValues(alpha: 0.1), width: 1.0),
-                              boxShadow: L.shadowSoft),
+                              shape: ContinuousRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(color: L.text.withValues(alpha: 0.1), width: 1.0),
+                              ),
+                              shadows: L.shadowSoft),
                           child: Row(children: [
                             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text('$streak',
@@ -181,10 +182,12 @@ class StreakModal extends StatelessWidget {
                         if (streak < (milestones.last['d'] as int))
                           Container(
                             padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
+                            decoration: ShapeDecoration(
                                 color: L.card,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: L.border.withValues(alpha: 0.5))),
+                                shape: ContinuousRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: L.border.withValues(alpha: 0.5)),
+                                )),
                             child: Column(children: [
                               Row(children: [
                                 Text(nextM['e'] as String, style: const TextStyle(fontSize: 22)),
@@ -227,11 +230,12 @@ class StreakModal extends StatelessWidget {
                           return Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
+                            decoration: ShapeDecoration(
                                 color: achieved ? L.primary.withValues(alpha: 0.05) : L.card,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                    color: achieved ? L.primary.withValues(alpha: 0.2) : L.border.withValues(alpha: 0.5))),
+                                shape: ContinuousRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: achieved ? L.primary.withValues(alpha: 0.2) : L.border.withValues(alpha: 0.5)),
+                                )),
                             child: Row(children: [
                               Opacity(opacity: achieved ? 1.0 : 0.4, child: Text(m['e'] as String, style: const TextStyle(fontSize: 20))),
                               const SizedBox(width: 14),
@@ -259,7 +263,10 @@ class StreakModal extends StatelessWidget {
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 18),
-                            decoration: BoxDecoration(color: L.text, borderRadius: BorderRadius.circular(12)),
+                            decoration: ShapeDecoration(
+                              color: L.text, 
+                              shape: ContinuousRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
                             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                               Icon(Icons.share_rounded, color: L.bg, size: 18),
                               const SizedBox(width: 10),
@@ -294,7 +301,7 @@ class _MiniStat extends StatelessWidget {
               .copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 18, letterSpacing: -0.5)),
       Text(label,
           style: AppTypography.labelSmall
-              .copyWith(fontWeight: FontWeight.w900, color: L.sub, fontSize: 9, letterSpacing: 1.0)),
+              .copyWith(fontWeight: FontWeight.w900, color: L.sub, fontSize: 11, letterSpacing: 1.0)),
     ]);
   }
 }
@@ -308,8 +315,12 @@ class _StatBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-          color: L.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: L.border.withValues(alpha: 0.5))),
+      decoration: ShapeDecoration(
+          color: L.card, 
+          shape: ContinuousRectangleBorder(
+            borderRadius: BorderRadius.circular(12), 
+            side: BorderSide(color: L.border.withValues(alpha: 0.5)),
+          )),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(icon, size: 16, color: L.sub),
         const SizedBox(height: 12),
@@ -319,7 +330,7 @@ class _StatBox extends StatelessWidget {
         const SizedBox(height: 2),
         Text(label.toUpperCase(),
             style: AppTypography.labelSmall
-                .copyWith(color: L.sub, fontWeight: FontWeight.w900, fontSize: 8, letterSpacing: 1.0)),
+                .copyWith(color: L.sub, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.0)),
       ]),
     );
   }
@@ -356,7 +367,10 @@ class _Heatmap extends StatelessWidget {
         }
 
         return Container(
-          decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
+          decoration: ShapeDecoration(
+            color: bg, 
+            shape: ContinuousRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
           child: Center(
             child: Text('${d.day}',
                 style: AppTypography.labelSmall.copyWith(

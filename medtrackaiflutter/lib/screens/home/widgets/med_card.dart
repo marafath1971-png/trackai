@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/app_state.dart';
-import '../../../domain/entities/medicine.dart';
 import '../../../theme/app_theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/utils/haptic_engine.dart';
 import '../../../core/utils/refill_helper.dart';
 import '../../../widgets/shared/shared_widgets.dart';
 
-class MedCard extends StatefulWidget {
+class MedCard extends StatelessWidget {
   final Medicine med;
   final VoidCallback onView;
   final VoidCallback onEdit;
@@ -21,247 +20,218 @@ class MedCard extends StatefulWidget {
   });
 
   @override
-  State<MedCard> createState() => _MedCardState();
-}
-
-class _MedCardState extends State<MedCard> {
-
-
-  @override
   Widget build(BuildContext context) {
     final L = context.L;
-    final adh = context
-        .select<AppState, int>((s) => s.getAdherenceForMed(widget.med.id));
-    final pct = widget.med.totalCount > 0
-        ? (widget.med.count / widget.med.totalCount).clamp(0.0, 1.0)
-        : 0.0;
-    final isLow = RefillHelper.isCriticallyLow(widget.med);
-    final showGeneric = context
-        .select<AppState, bool>((s) => s.profile?.showGenericNames ?? false);
-    final displayName = (showGeneric && widget.med.genericName.isNotEmpty)
-        ? widget.med.genericName
-        : widget.med.name;
+    final adh = context.select<AppState, int>((s) => s.getAdherenceForMed(med.id));
+    final pct = med.totalCount > 0 ? (med.count / med.totalCount).clamp(0.0, 1.0) : 0.0;
+    final isLow = RefillHelper.isCriticallyLow(med);
+    final showGeneric = context.select<AppState, bool>((s) => s.profile?.showGenericNames ?? false);
+    final displayName = (showGeneric && med.genericName.isNotEmpty) ? med.genericName : med.name;
+    final friendlyName = _toTitleCase(displayName);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 12),
       child: BouncingButton(
-        onTap: widget.onView,
+        onTap: onView,
         scaleFactor: 0.98,
         child: SquircleCard(
           padding: EdgeInsets.zero,
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── Top Section: Brand & Adherence
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  // Squircle Med Icon
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: L.fill,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: L.border.withValues(alpha: 0.5)),
-                    ),
-                    child: Center(
-                      child: Text(
-                        _getCategoryEmoji(widget.med.category),
-                        style: const TextStyle(fontSize: 22),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  
-                  // Text Info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          displayName.toUpperCase(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.displaySmall.copyWith(
-                            color: L.text,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1.0,
-                            fontSize: 18,
-                            height: 1.1,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Text(
-                              widget.med.dose.toUpperCase(),
-                              style: AppTypography.labelSmall.copyWith(
-                                color: L.sub,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
-                                fontSize: 9,
-                              ),
-                            ),
-                            Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 8),
-                              width: 3,
-                              height: 3,
-                              decoration: BoxDecoration(
-                                color: L.border,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            Text(
-                              widget.med.form.toUpperCase(),
-                              style: AppTypography.labelSmall.copyWith(
-                                color: L.sub.withValues(alpha: 0.5),
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.0,
-                                fontSize: 8,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  // Adherence "Pill" (High Fidelity)
-                  if (adh != -1)
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ── Top Section ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+                child: Row(
+                  children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      width: 52,
+                      height: 52,
                       decoration: BoxDecoration(
-                        color: L.text.withValues(alpha: 0.03),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: L.border.withValues(alpha: 0.3)),
+                        color: _categoryColor(med.category).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _categoryColor(med.category).withValues(alpha: 0.15),
+                          width: 1,
+                        ),
                       ),
-                      child: Text(
-                        '$adh% ADH',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: L.text,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 8,
+                      child: Center(
+                        child: Icon(
+                          _categoryIcon(med.category),
+                          size: 24,
+                          color: _categoryColor(med.category),
                         ),
                       ),
                     ),
-                ],
-              ),
-            ),
-
-            // ── Technical Segmented Inventory Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _SegmentedStockBar(pct: pct, isLow: isLow, L: L),
-            ),
-            
-            const SizedBox(height: 16),
-
-            // ── Bottom Action Strip
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
-              decoration: BoxDecoration(
-                color: L.fill.withValues(alpha: 0.3),
-                border: Border(top: BorderSide(color: L.border.withValues(alpha: 0.3))),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    isLow ? Icons.error_outline_rounded : Icons.inventory_2_outlined,
-                    size: 14,
-                    color: isLow ? L.error : L.sub.withValues(alpha: 0.4),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${widget.med.count} UNITS_STABLE',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: isLow ? L.error : L.sub.withValues(alpha: 0.4),
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.0,
-                      fontSize: 8,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            friendlyName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.titleLarge.copyWith(
+                              color: L.text,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
+                              fontSize: 17,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${med.dose} · ${med.form.toLowerCase()}',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: L.sub.withValues(alpha: 0.5),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      _StepBtn(
-                        icon: Icons.remove_rounded,
-                        onTap: () {
-                          HapticEngine.selection();
-                          context.read<AppState>().updateMed(widget.med.id,
-                              count: (widget.med.count - 1).clamp(0, 999));
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      _StepBtn(
-                        icon: Icons.add_rounded,
-                        onTap: () {
-                          HapticEngine.success();
-                          context.read<AppState>().updateMed(widget.med.id,
-                              count: (widget.med.count + 1).clamp(0, 999));
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+                    if (adh != -1)
+                      _AdherenceChip(adh: adh, L: L),
+                  ],
+                ),
               ),
-            ),
-          ],
+
+              // ── Stock bar ──
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _SegmentedStockBar(pct: pct, isLow: isLow, L: L),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ── Bottom strip ──
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                decoration: BoxDecoration(
+                  color: L.fill.withValues(alpha: 0.08),
+                  border: Border(top: BorderSide(color: L.border.withValues(alpha: 0.05), width: 1)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isLow ? Icons.warning_amber_rounded : Icons.inventory_2_rounded,
+                      size: 13,
+                      color: isLow ? L.warning : L.sub.withValues(alpha: 0.35),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isLow ? '${med.count} units — refill soon' : '${med.count} units remaining',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: isLow ? L.warning : L.sub.withValues(alpha: 0.45),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    const Spacer(),
+                    _StepBtn(
+                      icon: Icons.remove_rounded,
+                      onTap: () {
+                        HapticEngine.selection();
+                        context.read<AppState>().updateMed(med.id, count: (med.count - 1).clamp(0, 999));
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _StepBtn(
+                      icon: Icons.add_rounded,
+                      onTap: () {
+                        HapticEngine.success();
+                        context.read<AppState>().updateMed(med.id, count: (med.count + 1).clamp(0, 999));
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    )
-        .animate()
-        .fadeIn(duration: 400.ms)
-        .slideX(begin: 0.05, end: 0, curve: Curves.easeOutQuart)
-        .scale(begin: const Offset(0.98, 0.98), curve: Curves.easeOutQuart),
-    );
+    ).animate()
+     .fadeIn(duration: 400.ms)
+     .slideY(begin: 0.04, end: 0, curve: Curves.easeOutBack);
   }
 
+  String _toTitleCase(String s) {
+    if (s.isEmpty) return s;
+    return s
+        .toLowerCase()
+        .split(' ')
+        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
+  }
 
-  String _getCategoryEmoji(String category) {
+  IconData _categoryIcon(String category) {
     switch (category.toLowerCase()) {
-      case 'tablet':
-      case 'pill':
-        return '💊';
-      case 'liquid':
-      case 'syrup':
-        return '💧';
-      case 'spray':
-        return '💨';
-      case 'injection':
-        return '💉';
-      default:
-        return '💊';
+      case 'tablet': return Icons.medication_rounded;
+      case 'liquid': return Icons.water_drop_rounded;
+      case 'spray': return Icons.air_rounded;
+      case 'injection': return Icons.vaccines_rounded;
+      case 'cream': return Icons.spa_rounded;
+      case 'drops': return Icons.opacity_rounded;
+      default: return Icons.medication_rounded;
+    }
+  }
+
+  Color _categoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'liquid': return const Color(0xFF0EA5E9);
+      case 'spray': return const Color(0xFF8B5CF6);
+      case 'injection': return const Color(0xFFEF4444);
+      case 'cream': return const Color(0xFF10B981);
+      default: return const Color(0xFF6366F1);
     }
   }
 }
 
+class _AdherenceChip extends StatelessWidget {
+  final int adh;
+  final AppThemeColors L;
+  const _AdherenceChip({required this.adh, required this.L});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: ShapeDecoration(
+        color: L.success.withValues(alpha: 0.08),
+        shape: StadiumBorder(side: BorderSide(color: L.success.withValues(alpha: 0.2))),
+      ),
+      child: Text(
+        '$adh%',
+        style: AppTypography.labelMedium.copyWith(
+          color: L.success,
+          fontWeight: FontWeight.w900,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+}
 
-// ─────────────────────────────────────────────────────────────
-// STEP BUTTON (+ / -)
-// ─────────────────────────────────────────────────────────────
 class _StepBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  const _StepBtn({
-    required this.icon,
-    required this.onTap,
-  });
+  const _StepBtn({required this.icon, required this.onTap});
+
   @override
   Widget build(BuildContext context) {
     final L = context.L;
     return BouncingButton(
       onTap: onTap,
       child: Container(
-        width: 44,
-        height: 40, // Slightly more rectangular for industrial look
+        width: 42,
+        height: 38,
         decoration: BoxDecoration(
-          color: L.text.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: L.border, width: 1.5),
+          color: L.text.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
         ),
-        child: Center(child: Icon(icon, size: 20, color: L.text)),
+        child: Center(child: Icon(icon, size: 18, color: L.text.withValues(alpha: 0.7))),
       ),
     );
   }
@@ -276,17 +246,17 @@ class _SegmentedStockBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: List.generate(24, (index) {
-        final threshold = index / 24;
+      children: List.generate(30, (index) {
+        final threshold = index / 30;
         final isActive = pct > threshold;
         return Expanded(
           child: Container(
-            height: 5,
-            margin: const EdgeInsets.symmetric(horizontal: 1),
+            height: 4,
+            margin: const EdgeInsets.symmetric(horizontal: 0.5),
             decoration: BoxDecoration(
-              color: isActive 
-                  ? (isLow ? L.error : L.text) 
-                  : L.border.withValues(alpha: 0.1),
+              color: isActive
+                  ? (isLow ? L.warning : L.primary)
+                  : L.fill.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(1),
             ),
           ),

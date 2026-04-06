@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
-import '../../domain/entities/entities.dart';
 import '../../core/utils/haptic_engine.dart';
 import '../../core/utils/date_formatter.dart';
 import '../common/refined_sheet_wrapper.dart';
@@ -165,11 +164,13 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
           // Completion Header
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: L.card,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: L.border),
-              boxShadow: L.shadowSoft,
+              shape: ContinuousRectangleBorder(
+                borderRadius: BorderRadius.circular(32),
+                side: BorderSide(color: L.border),
+              ),
+              shadows: L.shadowSoft,
             ),
             child: Row(
               children: [
@@ -392,17 +393,19 @@ class _DoseLogRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: L.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: taken
-              ? (isPrnBadge
-                  ? L.primary.withValues(alpha: 0.2)
-                  : L.success.withValues(alpha: 0.2))
-              : L.border.withValues(alpha: 0.5),
+        shape: ContinuousRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+          side: BorderSide(
+            color: taken
+                ? (isPrnBadge
+                    ? L.primary.withValues(alpha: 0.2)
+                    : L.success.withValues(alpha: 0.2))
+                : L.border.withValues(alpha: 0.5),
+          ),
         ),
-        boxShadow: L.shadowSoft,
+        shadows: L.shadowSoft,
       ),
       child: Row(
         children: [
@@ -453,7 +456,7 @@ class _DoseLogRow extends StatelessWidget {
                           style: AppTypography.labelSmall.copyWith(
                             color: L.text,
                             fontWeight: FontWeight.w900,
-                            fontSize: 9,
+                            fontSize: 10,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -520,10 +523,12 @@ class _SymptomLogRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: L.bg,
-        borderRadius: AppRadius.roundM,
-        border: Border.all(color: L.border.withValues(alpha: 0.5)),
+        shape: ContinuousRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: L.border.withValues(alpha: 0.5)),
+        ),
       ),
       child: Row(
         children: [

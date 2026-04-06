@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../../theme/app_theme.dart';
-import '../../../domain/entities/entities.dart';
 import '../../../providers/app_state.dart';
-import '../../../core/utils/result.dart';
 import '../../../core/utils/haptic_engine.dart';
 import '../../../widgets/common/app_loading_indicator.dart';
 import '../../../widgets/shared/shared_widgets.dart';
@@ -36,8 +34,8 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
 
     if (mounted) {
       setState(() => _isLoading = false);
-      if (result is Error) {
-        setState(() => _errorMessage = (result as Error).error.toString());
+      if (result.isFailure) {
+        setState(() => _errorMessage = result.failure.toString());
         HapticEngine.heavyImpact();
       } else {
         HapticEngine.success();
@@ -104,7 +102,7 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
                     style: AppTypography.labelSmall.copyWith(
                       color: L.bg,
                       fontWeight: FontWeight.w900,
-                      fontSize: 8,
+                      fontSize: 10,
                       letterSpacing: 1.0,
                     ),
                   ),
@@ -197,7 +195,7 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
                     "DANGER",
                     style: AppTypography.labelSmall.copyWith(
                       color: Colors.white,
-                      fontSize: 8,
+                      fontSize: 10,
                       fontWeight: FontWeight.w900,
                     ),
                   ),

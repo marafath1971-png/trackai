@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import '../../../../models/models.dart';
 import '../../../../providers/app_state.dart';
 import '../../../../theme/app_theme.dart';
-import '../../../../core/utils/date_formatter.dart';
-import '../../../../domain/entities/medicine.dart';
 import '../../../widgets/shared/shared_widgets.dart';
-import '../../../../core/utils/color_utils.dart';
-import '../../../../core/utils/haptic_engine.dart';
 
 class HomeDoseSection extends StatefulWidget {
   final Medicine med;
@@ -95,7 +90,8 @@ class _HomeDoseSectionState extends State<HomeDoseSection> {
   }
 
   void _markTaken(BuildContext context, _DoseCardData d) {
-    context.read<AppState>().recordDose(d.med.id, d.sched.id, DateTime.now());
+    final doseItem = DoseItem(med: d.med, sched: d.sched, key: '${d.med.id}_${d.sched.id}');
+    context.read<AppState>().recordDose(doseItem);
   }
 
   void _snooze(BuildContext context, _DoseCardData d) {

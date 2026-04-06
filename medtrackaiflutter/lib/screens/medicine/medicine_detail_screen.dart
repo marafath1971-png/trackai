@@ -2,15 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/app_state.dart';
-import '../../domain/entities/entities.dart';
 import '../../theme/app_theme.dart';
 import '../../core/utils/color_utils.dart';
 import '../../core/utils/haptic_engine.dart';
-import '../../core/utils/date_formatter.dart';
 import '../../widgets/shared/shared_widgets.dart';
-import '../../l10n/app_localizations.dart';
 import '../../widgets/common/unified_header.dart';
-import 'widgets/medicine_safety_card.dart';
 import '../../widgets/common/modern_time_picker.dart';
 import '../../widgets/common/mesh_gradient.dart';
 
@@ -119,18 +115,17 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (med.intakeInstructions.isNotEmpty && med.intakeInstructions != 'None')
+                  if (med.intakeInstructions.isNotEmpty && med.intakeInstructions != 'None') ...[
                     _buildIntakeChip(med.intakeInstructions, L),
-                  if (med.halalStatus != null && med.halalStatus != 'none') ...[
-                    const SizedBox(height: 12),
-                    _buildHalalBadge(med.halalStatus!, med.halalNote, L),
+                    const SizedBox(height: 24),
                   ],
-                  const SizedBox(height: 24),
                   _buildBentoMetrics(med, adherence, L),
                   const SizedBox(height: 24),
-                  _buildScheduleSection(med, context.read<AppState>(), L),
+                  _buildSafetyPanel(med, L),
                   const SizedBox(height: 24),
                   _buildHistorySection(med, adherence, historyCount.taken, historyCount.total, L),
+                  const SizedBox(height: 24),
+                  _buildScheduleSection(med, context.read<AppState>(), L),
                   const SizedBox(height: 24),
                   _buildSpecificationsSection(med, L),
                   const SizedBox(height: 24),
@@ -239,8 +234,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   }
 
   Widget _buildSliverHeader(Medicine med, Color medColor, AppThemeColors L) {
-    final topPadding = MediaQuery.of(context).padding.top;
-    
+
     return SliverAppBar(
       expandedHeight: 380,
       backgroundColor: L.bg,
@@ -319,7 +313,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                         color: L.bg,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2.0,
-                        fontSize: 9,
+                        fontSize: 11,
                       ),
                     ),
                   ),
@@ -419,7 +413,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                               style: AppTypography.labelSmall.copyWith(
                                 color: Colors.black,
                                 fontWeight: FontWeight.w900,
-                                fontSize: 9,
+                                fontSize: 11,
                                 letterSpacing: 1.0,
                               ),
                             ),
@@ -533,8 +527,8 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('STOCK_LEVEL', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.sub.withValues(alpha: 0.5), fontWeight: FontWeight.w900)),
-                  Text('${(pct * 100).toInt()}%', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.text, fontWeight: FontWeight.w900)),
+                  Text('STOCK_LEVEL', style: AppTypography.labelSmall.copyWith(fontSize: 10, color: L.sub.withValues(alpha: 0.5), fontWeight: FontWeight.w900)),
+                  Text('${(pct * 100).toInt()}%', style: AppTypography.labelSmall.copyWith(fontSize: 10, color: L.text, fontWeight: FontWeight.w900)),
                 ],
               ),
               const SizedBox(height: 8),
@@ -577,31 +571,6 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
             Text(intake.toUpperCase(), style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 11, letterSpacing: 0.5)),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildHalalBadge(String status, String? note, AppThemeColors L) {
-    final S = AppLocalizations.of(context)!;
-    Color color = L.sub;
-    String text = S.halalUncertain;
-    if (status.toLowerCase().contains('safe') || status.toLowerCase().contains('halal')) { color = L.success; text = S.halalSafe; }
-    else if (status.toLowerCase().contains('gelatin')) { color = L.error; text = S.gelatinWarning; }
-
-    return Center(
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8), border: Border.all(color: color.withValues(alpha: 0.2))),
-            child: Text(text.toUpperCase(), style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w900, color: color, fontSize: 9, letterSpacing: 0.5)),
-          ),
-          if (note != null && note.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(note, style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 10, fontWeight: FontWeight.w500)),
-            ),
-        ],
       ),
     );
   }
@@ -669,7 +638,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                 style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w900, color: s.enabled ? L.text : L.sub)),
             const SizedBox(width: 12),
             Text((s.ritual != Ritual.none ? s.ritual.displayName : s.label).toUpperCase(),
-                style: AppTypography.labelSmall.copyWith(fontSize: 8, fontWeight: FontWeight.w900, color: L.sub, letterSpacing: 1.0)),
+                style: AppTypography.labelSmall.copyWith(fontSize: 10, fontWeight: FontWeight.w900, color: L.sub, letterSpacing: 1.0)),
           ],
         ),
         subtitle: Padding(
@@ -900,7 +869,7 @@ class _DiagnosticCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 110,
+      height: 100,
       child: SquircleCard(
         padding: const EdgeInsets.all(16),
         child: child ?? Column(
@@ -910,13 +879,13 @@ class _DiagnosticCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.2, fontSize: 8)),
-                Icon(icon, size: 14, color: L.sub.withValues(alpha: 0.3)),
+                Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub.withValues(alpha: 0.5), fontWeight: FontWeight.w900, letterSpacing: 1.2, fontSize: 10)),
+                Icon(icon, size: 12, color: L.sub.withValues(alpha: 0.2)),
               ],
             ),
             const Spacer(),
             Text(value, 
-              style: AppTypography.displayLarge.copyWith(fontSize: 26, color: color, fontWeight: FontWeight.w900, letterSpacing: -1.0)),
+              style: AppTypography.displayLarge.copyWith(fontSize: 24, color: color, fontWeight: FontWeight.w900, letterSpacing: -1.0)),
           ],
         ),
       ),
@@ -992,7 +961,7 @@ class _HeaderAction extends StatelessWidget {
       child: Row(children: [
         Icon(icon, size: 14, color: L.text),
         const SizedBox(width: 4),
-        Text(label, style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 0.5, fontSize: 9)),
+        Text(label, style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 0.5, fontSize: 10)),
       ]),
     ));
   }
@@ -1007,7 +976,7 @@ class _Metric extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(children: [
       Text(value, style: AppTypography.displayLarge.copyWith(fontSize: 32, color: color, fontWeight: FontWeight.w900, letterSpacing: -1.0)),
-      Text(label, style: AppTypography.labelSmall.copyWith(fontSize: 9, color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+      Text(label, style: AppTypography.labelSmall.copyWith(fontSize: 11, color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
     ]);
   }
 }
@@ -1019,26 +988,35 @@ class _HistoryMatrix extends StatelessWidget {
     final L = context.L;
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(24, (i) {
-            final isTaken = i % 4 != 0;
-            return Container(
-              width: 8,
-              height: 24,
-              decoration: BoxDecoration(
-                color: isTaken ? L.text : L.fill,
-                borderRadius: BorderRadius.circular(2),
-              ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const spacing = 4.0;
+            const count = 28;
+            final itemWidth = (constraints.maxWidth - (spacing * (count - 1))) / count;
+            
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(count, (i) {
+                final isTaken = i % 5 != 0;
+                return Container(
+                  width: itemWidth,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: isTaken ? L.text : L.fill,
+                    borderRadius: BorderRadius.circular(2),
+                    border: isTaken ? null : Border.all(color: L.border.withValues(alpha: 0.5)),
+                  ),
+                );
+              }),
             );
-          }),
+          },
         ),
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('HISTORY_MATRIX_30D', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.sub, fontWeight: FontWeight.w900)),
-            Text('OPTIMAL_STABILITY', style: AppTypography.labelSmall.copyWith(fontSize: 8, color: L.text, fontWeight: FontWeight.w900)),
+            Text('HISTORY_MATRIX_28D', style: AppTypography.labelSmall.copyWith(fontSize: 10, color: L.sub.withValues(alpha: 0.5), fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+            Text('OPTIMAL_STABILITY', style: AppTypography.labelSmall.copyWith(fontSize: 10, color: L.text, fontWeight: FontWeight.w900, letterSpacing: 1.0)),
           ],
         ),
       ],
@@ -1054,18 +1032,24 @@ class _SpecTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: (MediaQuery.of(context).size.width - 44) / 2,
-      padding: const EdgeInsets.all(20),
+      width: (MediaQuery.of(context).size.width - 40.5) / 2, // Accurate 2-column split
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         border: Border.all(color: L.border.withValues(alpha: 0.05), width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
-          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(icon, size: 10, color: L.sub.withValues(alpha: 0.3)),
+              const SizedBox(width: 6),
+              Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub.withValues(alpha: 0.5), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+            ],
+          ),
+          const SizedBox(height: 4),
           Text(value.isEmpty ? 'UNDEFINED' : value.toUpperCase(), 
-            style: AppTypography.titleMedium.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+            style: AppTypography.titleMedium.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 0.5, fontSize: 13)),
         ],
       ),
     );
@@ -1100,8 +1084,8 @@ class _FormSection extends StatelessWidget {
 }
 
 class _ModernTextField extends StatelessWidget {
-  final String label, value; final ValueChanged<String> onChanged; final AppThemeColors L; final TextInputType keyboard; final int maxLines; final bool isLast;
-  const _ModernTextField({required this.label, required this.value, required this.onChanged, required this.L, this.keyboard = TextInputType.text, this.maxLines = 1, this.isLast = false});
+  final String label, value; final ValueChanged<String> onChanged; final AppThemeColors L; final TextInputType keyboard; final bool isLast;
+  const _ModernTextField({required this.label, required this.value, required this.onChanged, required this.L, this.keyboard = TextInputType.text, this.isLast = false});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1109,10 +1093,10 @@ class _ModernTextField extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 9)),
+          Text(label.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.0, fontSize: 10)),
           const SizedBox(height: 6),
           TextFormField(
-            initialValue: value, onChanged: onChanged, keyboardType: keyboard, maxLines: maxLines,
+            initialValue: value, onChanged: onChanged, keyboardType: keyboard, maxLines: 1,
             style: AppTypography.titleMedium.copyWith(color: L.text, fontWeight: FontWeight.w900),
             decoration: const InputDecoration(isDense: true, border: InputBorder.none, contentPadding: EdgeInsets.zero, fillColor: Colors.transparent),
           ),

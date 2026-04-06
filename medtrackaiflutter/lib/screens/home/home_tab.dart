@@ -2,18 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/app_state.dart';
-import '../../domain/entities/entities.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/shared/shared_widgets.dart';
 import '../../core/utils/haptic_engine.dart';
-import '../../core/utils/date_formatter.dart';
 import 'widgets/home_meds_section.dart';
 import 'widgets/med_card.dart';
-import 'widgets/home_dose_section.dart';
 
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/common/premium_empty_state.dart';
-import '../../widgets/common/mesh_gradient.dart';
 import 'widgets/home_header.dart';
 import 'widgets/streak_modal.dart';
 import 'widgets/settings_modal_new.dart';
@@ -60,18 +56,17 @@ class _HomeTabState extends State<HomeTab> {
 
   void _openStreak() => setState(() => _showStreak = true);
 
-
   void _scrollToMeds() {
     final state = context.read<AppState>();
     final targetKey = state.meds.isEmpty ? _medsEmptyKey : _medsHeaderKey;
     final contextObj = targetKey.currentContext;
-    
+
     if (contextObj != null) {
       Scrollable.ensureVisible(
         contextObj,
         duration: 800.ms,
         curve: Curves.easeOutQuart,
-        alignment: 0.1, // Align near the top
+        alignment: 0.1,
       );
     } else {
       _scrollController.animateTo(
@@ -108,18 +103,9 @@ class _HomeTabState extends State<HomeTab> {
         : (dosePct > 0.0 ? L.text.withValues(alpha: 0.5) : L.border);
 
     final mainContent = Scaffold(
+        backgroundColor: L.bg,
         body: Stack(
       children: [
-        // ── MESH GRADIENT BACKGROUND (USER REQUESTED) ──
-        Positioned.fill(
-          child: MeshGradient(
-            colors: [
-              L.meshBg,
-              context.isDark ? L.bg : L.purple.withValues(alpha: 0.1), // Subtle accent for light mode
-            ],
-          ),
-        ),
-
           RefreshIndicator(
           onRefresh: () async {
             HapticEngine.selection();
@@ -127,7 +113,7 @@ class _HomeTabState extends State<HomeTab> {
           },
           displacement: 110,
           color: L.text,
-          backgroundColor: L.meshBg,
+          backgroundColor: L.bg,
           child: Scrollbar(
             controller: _scrollController,
             child: CustomScrollView(
@@ -136,53 +122,79 @@ class _HomeTabState extends State<HomeTab> {
               physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics()),
               slivers: [
-                // --- 0. HEADER SPACER (SUMMARIZED) ---
+                // -- TOP SPACER --
                 SliverToBoxAdapter(
-                  child: SizedBox(height: MediaQuery.of(context).padding.top + 150),
+                  child: SizedBox(height: MediaQuery.of(context).padding.top + 76),
                 ),
 
-                // --- 1. PREMIUM BENTO HEADER ---
+                // --- WEEK STRIP ---
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                   sliver: SliverToBoxAdapter(
-                    child: _HomeBentoHeader(
+                    child: HomeWeekStrip(
                       state: context.read<AppState>(),
+                    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.05, end: 0, curve: Curves.easeOutCubic),
+                  ),
+                ),
+
+                // --- HERO STAT CARD ---
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  sliver: SliverToBoxAdapter(
+                    child: _HeroProgressCard(
                       doses: doses,
                       takenCount: takenCount,
                       remaining: remaining,
                       dosePct: dosePct,
                       ringCol: ringCol,
+                      streak: streak,
+                      medsCount: meds.length,
                       L: L,
                     )
                         .animate()
-                        .fadeIn(duration: 800.ms)
-                        .scale(begin: const Offset(0.98, 0.98), curve: Curves.easeOutQuart),
+                        .fadeIn(duration: 700.ms, delay: 100.ms)
+                        .slideY(begin: 0.04, end: 0, curve: Curves.easeOutExpo),
                   ),
                 ),
 
-                // --- 2. CONSOLIDATED ALERTS (SMART TRIGGER) ---
-                if (context.select<AppState, bool>((s) => s.missedAlerts.any((a) => !a.seen)) ||
-                      context.select<AppState, String?>((s) => s.interactionWarning) != null ||
-                      context.select<AppState, List<Medicine>>((s) => s.getLowMeds()).where((m) => m.count < 3).isNotEmpty ||
-                      context.select<AppState, int>((s) => s.getStreak()) == 0)
+                // --- HEALTH SNAPSHOT ---
+                if (context.select<AppState, bool>((s) => s.health.isConnected))
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  sliver: SliverToBoxAdapter(
+                    child: _HealthSnapshotCard(
+                      steps: context.select<AppState, double>((s) => s.health.steps),
+                      heartRate: context.select<AppState, double>((s) => s.health.heartRate),
+                      isSyncing: context.select<AppState, bool>((s) => s.health.isSyncing),
+                      L: L,
+                    )
+                        .animate()
+                        .fadeIn(duration: 700.ms, delay: 120.ms)
+                        .slideY(begin: 0.04, end: 0, curve: Curves.easeOutExpo),
+                  ),
+                ),
+
+                // --- SMART ALERTS ---
+                if (context.read<AppState>().missedAlerts.any((a) => !a.seen) ||
+                      context.read<AppState>().interactionWarning != null ||
+                      context.read<AppState>().getLowMeds().where((m) => m.count < 3).isNotEmpty ||
+                      context.read<AppState>().getStreak() == 0)
                 _sliverStaggerDown([
                     _HomeAlertHub(state: context.read<AppState>(), L: L, onScrollToMeds: _scrollToMeds, onOpenStreak: _openStreak),
                 ], delay: 150.ms),
 
-
-
-                // --- 6. TIMELINE ---
-
+                // --- TODAY'S SCHEDULE ---
                 if (doses.isNotEmpty) ...[
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding,
                         AppSpacing.l, AppSpacing.screenPadding, AppSpacing.s),
                     sliver: SliverToBoxAdapter(
-                      child: Text("TODAY'S SCHEDULE",
-                          style: AppTypography.labelSmall.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: L.sub.withValues(alpha: 0.4),
-                              letterSpacing: 1.5)),
+                      child: Text('Today\'s schedule',
+                          style: AppTypography.labelMedium.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: L.sub.withValues(alpha: 0.55),
+                              letterSpacing: 0,
+                              fontSize: 13)),
                     ),
                   ),
                   ..._buildGroupedTimelineSlivers(
@@ -195,9 +207,9 @@ class _HomeTabState extends State<HomeTab> {
                         horizontal: AppSpacing.screenPadding),
                     sliver: SliverToBoxAdapter(
                       child: PremiumEmptyState(
-                        title: 'ALL CAUGHT UP',
+                        title: 'All caught up',
                         subtitle:
-                            'You have no scheduled doses for the rest of today.',
+                            'No scheduled doses remaining for today.',
                         icon: Icons.check_circle_outline_rounded,
                       ),
                     ),
@@ -206,7 +218,7 @@ class _HomeTabState extends State<HomeTab> {
                       child: SizedBox(height: AppSpacing.l)),
                 ],
 
-                // --- 7. MEDICINE LIST ---
+                // --- MEDICINE LIST ---
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.screenPadding),
@@ -252,7 +264,7 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                     ),
                   ),
-                const SliverToBoxAdapter(child: SizedBox(height: 120)),
+                const SliverToBoxAdapter(child: SizedBox(height: 180)),
               ],
             ),
           ),
@@ -296,7 +308,7 @@ class _HomeTabState extends State<HomeTab> {
 
     return AnimatedSwitcher(
       duration: 400.ms,
-      switchInCurve: Curves.easeOutQuart,
+      switchInCurve: Curves.easeOutExpo,
       transitionBuilder: (child, animation) => FadeTransition(
         opacity: animation,
         child: SlideTransition(
@@ -330,7 +342,7 @@ class _HomeTabState extends State<HomeTab> {
           )
               .animate()
               .fadeIn(delay: delay + (index * 100).ms, duration: 600.ms)
-              .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuart),
+              .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
           childCount: validChildren.length,
         ),
       ),
@@ -340,7 +352,7 @@ class _HomeTabState extends State<HomeTab> {
   Widget _buildOverlay(bool visible, String key, Widget child) {
     return AnimatedSwitcher(
       duration: 350.ms,
-      switchInCurve: Curves.easeOutCubic,
+      switchInCurve: Curves.easeOutExpo,
       transitionBuilder: (child, anim) => FadeTransition(
         opacity: anim,
         child: SlideTransition(
@@ -415,198 +427,134 @@ class _HomeTabState extends State<HomeTab> {
 }
 
 // ─────────────────────────────────────────────────────────────
-// HOME BENTO HEADER (Minimalist Stats)
+// HERO PROGRESS CARD — Single focused metric
 // ─────────────────────────────────────────────────────────────
-class _HomeBentoHeader extends StatelessWidget {
-  final AppState state;
+class _HeroProgressCard extends StatelessWidget {
   final List<DoseItem> doses;
   final int takenCount;
   final int remaining;
   final double dosePct;
   final Color ringCol;
+  final int streak;
+  final int medsCount;
   final AppThemeColors L;
 
-  const _HomeBentoHeader({
-    required this.state,
+  const _HeroProgressCard({
     required this.doses,
     required this.takenCount,
     required this.remaining,
     required this.dosePct,
     required this.ringCol,
+    required this.streak,
+    required this.medsCount,
     required this.L,
   });
 
   @override
   Widget build(BuildContext context) {
-    final streak = state.getStreak();
-    final medsCount = state.meds.length;
-    
-    return Column(
-      children: [
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    final statusLabel = doses.isEmpty
+        ? 'No doses today'
+        : dosePct == 1.0
+            ? 'All caught up'
+            : remaining == 1
+                ? '1 dose pending'
+                : '$remaining doses pending';
+
+    return GlassCard(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              // ── MAIN PROGRESS CARD (Glassmorphic) ──
               Expanded(
-                flex: 3,
-                child: GlassCard(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'TREATMENT_METRIC',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: L.text.withValues(alpha: 0.4),
-                              letterSpacing: 2.0,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 9,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              doses.isEmpty
-                                  ? 'NO_DATA'
-                                  : dosePct == 1.0
-                                      ? 'OPTIMIZED'
-                                      : '${(dosePct * 100).toInt()}%_STABLE',
-                              style: AppTypography.displaySmall.copyWith(
-                                color: L.text,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 28,
-                                letterSpacing: -1.5,
-                                height: 1.0,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          _MetricBit(count: takenCount, label: 'COMPLETED', color: L.text, L: L),
-                          const Spacer(),
-                          _MetricBit(count: remaining, label: 'PENDING', color: L.sub, L: L),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // ── SIDE BENTO GRID ──
-              Expanded(
-                flex: 2,
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: _BentoMiniCard(
-                        title: 'STREAK',
-                        value: '$streak',
-                        icon: Icons.local_fire_department_rounded,
-                        color: L.primary,
-                        L: L,
+                    Text(
+                      doses.isEmpty
+                          ? 'Today'
+                          : '$takenCount of ${doses.length} taken',
+                      style: AppTypography.displaySmall.copyWith(
+                        color: L.text,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 22,
+                        letterSpacing: -0.8,
+                        height: 1.1,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: _BentoMiniCard(
-                        title: 'STOCK',
-                        value: '$medsCount',
-                        icon: Icons.inventory_2_rounded,
-                        color: L.text,
-                        L: L,
+                    const SizedBox(height: 6),
+                    Text(
+                      statusLabel.toUpperCase(),
+                      style: AppTypography.labelSmall.copyWith(
+                        color: L.sub.withValues(alpha: 0.5),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                        fontSize: 10,
                       ),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 16),
+              RingChart(
+                percent: dosePct,
+                size: 80,
+                color: dosePct == 1.0 ? L.success : L.text,
+                label: doses.isEmpty ? '—' : '${(dosePct * 100).toInt()}%',
+                sub: 'DOSE',
+              ),
             ],
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MetricBit extends StatelessWidget {
-  final int count;
-  final String label;
-  final Color color;
-  final AppThemeColors L;
-
-  const _MetricBit({required this.count, required this.label, required this.color, required this.L});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '$count',
-          style: AppTypography.titleLarge.copyWith(color: color, fontWeight: FontWeight.w900, fontSize: 18),
-        ),
-        Text(
-          label,
-          style: AppTypography.labelSmall.copyWith(
-            color: color.withValues(alpha: 0.5),
-            fontSize: 8,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.0,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _BentoMiniCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final AppThemeColors L;
-
-  const _BentoMiniCard({required this.title, required this.value, required this.icon, required this.color, required this.L});
-
-  @override
-  Widget build(BuildContext context) {
-    return SquircleCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 14, color: color.withValues(alpha: 0.5)),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: AppTypography.titleLarge.copyWith(
-              color: L.text,
-              fontWeight: FontWeight.w900,
-              fontSize: 20,
-              letterSpacing: -1.0,
-            ),
-          ),
-          Text(
-            title,
-            style: AppTypography.labelSmall.copyWith(
-              color: L.sub.withValues(alpha: 0.5),
-              fontSize: 8,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0.5,
-            ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              _MetaItem(
+                icon: Icons.local_fire_department_rounded,
+                label: 'Streak',
+                value: '$streak',
+                L: L,
+              ),
+              const SizedBox(width: 28),
+              _MetaItem(
+                icon: Icons.medication_rounded,
+                label: 'Meds',
+                value: '$medsCount',
+                L: L,
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MetaItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final AppThemeColors L;
+  const _MetaItem({required this.icon, required this.label, required this.value, required this.L});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(color: L.fill.withValues(alpha: 0.1), shape: BoxShape.circle),
+          child: Icon(icon, size: 14, color: L.sub.withValues(alpha: 0.65)),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub.withValues(alpha: 0.45), fontSize: 10, fontWeight: FontWeight.w700)),
+            Text(value, style: AppTypography.labelMedium.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: -0.2)),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -636,38 +584,42 @@ class _HomeAlertHub extends StatelessWidget {
     return Column(
       children: [
         if (interaction != null)
-          _ProfessionalAlertTile(
-              title: 'Critical Warning',
-              content: interaction,
-              icon: Icons.warning_amber_rounded,
-              color: L.error,
-              L: L,
-              onTap: () {},
-            ),
-          if (missed.isNotEmpty)
-            _ProfessionalAlertTile(
-              title: 'Missed Doses',
-              content: 'You have ${missed.length} doses pending review. Tap to review.',
-              icon: Icons.history_rounded,
-              color: L.error,
-              L: L,
-              onTap: onScrollToMeds,
-            ),
-          if (lowMeds.isNotEmpty)
-            _ProfessionalAlertTile(
-              title: 'Low Supply',
-              content: '${lowMeds.length} medications are almost empty.',
-              icon: Icons.inventory_2_outlined,
-              color: L.primary,
-              L: L,
-              onTap: onScrollToMeds,
-            ),
-        ],
-      );
+          _AlertTile(
+            title: 'Drug interaction detected',
+            content: interaction,
+            icon: Icons.warning_amber_rounded,
+            color: L.error,
+            L: L,
+            onTap: () => HapticEngine.selection(),
+          ),
+        if (missed.isNotEmpty)
+          _AlertTile(
+            title: 'Missed doses',
+            content: missed.length == 1
+                ? 'You have 1 dose pending review.'
+                : 'You have ${missed.length} doses pending review.',
+            icon: Icons.history_rounded,
+            color: L.error,
+            L: L,
+            onTap: onScrollToMeds,
+          ),
+        if (lowMeds.isNotEmpty)
+          _AlertTile(
+            title: 'Low supply',
+            content: lowMeds.length == 1
+                ? '${lowMeds.first.name} is almost empty.'
+                : '${lowMeds.length} medicines need a refill.',
+            icon: Icons.inventory_2_rounded,
+            color: L.warning,
+            L: L,
+            onTap: onScrollToMeds,
+          ),
+      ],
+    );
   }
 }
 
-class _ProfessionalAlertTile extends StatelessWidget {
+class _AlertTile extends StatelessWidget {
   final String title;
   final String content;
   final IconData icon;
@@ -675,7 +627,7 @@ class _ProfessionalAlertTile extends StatelessWidget {
   final AppThemeColors L;
   final VoidCallback onTap;
 
-  const _ProfessionalAlertTile({
+  const _AlertTile({
     required this.title,
     required this.content,
     required this.icon,
@@ -687,48 +639,186 @@ class _ProfessionalAlertTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: SquircleCard(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         child: InkWell(
           onTap: onTap,
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title.toUpperCase(),
-                    style: AppTypography.labelSmall.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2.0,
-                      fontSize: 8,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    content,
-                    style: AppTypography.labelMedium.copyWith(
-                      color: L.text,
-                      fontWeight: FontWeight.w900,
-                      height: 1.2,
-                    ),
-                  ),
-                ],
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 18, color: color),
               ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: L.sub.withValues(alpha: 0.3), size: 20),
-          ],
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.labelMedium.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      content,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: L.text.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w500,
+                        height: 1.3,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.chevron_right_rounded, color: L.sub.withValues(alpha: 0.3), size: 20),
+            ],
+          ),
         ),
       ),
-    ),
-   );
+    );
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// HEALTH SNAPSHOT CARD — Steps, Heart Rate, etc.
+// ─────────────────────────────────────────────────────────────
+class _HealthSnapshotCard extends StatelessWidget {
+  final double steps;
+  final double heartRate;
+  final bool isSyncing;
+  final AppThemeColors L;
+
+  const _HealthSnapshotCard({
+    required this.steps,
+    required this.heartRate,
+    required this.isSyncing,
+    required this.L,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'HEALTH SNAPSHOT',
+                style: AppTypography.labelSmall.copyWith(
+                  color: L.sub.withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                  fontSize: 10,
+                ),
+              ),
+              if (isSyncing)
+                const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white24),
+                )
+              else
+                Icon(Icons.sync_rounded, size: 14, color: L.sub.withValues(alpha: 0.3)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _HealthMetric(
+                  icon: Icons.directions_run_rounded,
+                  label: 'Steps',
+                  value: steps.toInt().toString(),
+                  unit: 'today',
+                  color: const Color(0xFF34C759),
+                  L: L,
+                ),
+              ),
+              Container(width: 1, height: 40, color: L.border.withValues(alpha: 0.1)),
+              Expanded(
+                child: _HealthMetric(
+                  icon: Icons.favorite_rounded,
+                  label: 'Heart Rate',
+                  value: heartRate > 0 ? heartRate.toInt().toString() : '--',
+                  unit: 'bpm',
+                  color: const Color(0xFFFF2D55),
+                  L: L,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HealthMetric extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final String unit;
+  final Color color;
+  final AppThemeColors L;
+
+  const _HealthMetric({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.unit,
+    required this.color,
+    required this.L,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 6),
+              Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub.withValues(alpha: 0.45), fontSize: 10, fontWeight: FontWeight.w700)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(value, style: AppTypography.displaySmall.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 24, letterSpacing: -0.5)),
+              const SizedBox(width: 4),
+              Text(unit, style: AppTypography.bodySmall.copyWith(color: L.sub.withValues(alpha: 0.4), fontSize: 10, fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOSE GROUP — grouped timeline section
+// ─────────────────────────────────────────────────────────────
 class HomeDoseGroup extends StatefulWidget {
   final String title;
   final List<DoseItem> doses;
@@ -766,13 +856,14 @@ class _HomeDoseGroupState extends State<HomeDoseGroup> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          padding: const EdgeInsets.only(left: 4, bottom: 10),
           child: Text(
-            widget.title.toUpperCase(),
-            style: AppTypography.labelSmall.copyWith(
-              color: L.sub,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.5,
+            widget.title,
+            style: AppTypography.labelMedium.copyWith(
+              color: L.sub.withValues(alpha: 0.55),
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0,
+              fontSize: 13,
             ),
           ),
         ),
@@ -782,7 +873,6 @@ class _HomeDoseGroupState extends State<HomeDoseGroup> {
           final isTaken = widget.takenToday[d.key] == true;
           final doseMins = d.sched.h * 60 + d.sched.m;
           final isOverdue = !isTaken && doseMins < nowMins;
-          
           final isActualNext = d.key == widget.globalNextEntryKey;
 
           return Padding(
@@ -797,7 +887,7 @@ class _HomeDoseGroupState extends State<HomeDoseGroup> {
                 widget.state.toggleDose(d);
                 _showUndoSnackbar(context, d);
               },
-              onSnooze: () => widget.state.snoozeDose(d, 30), 
+              onSnooze: () => widget.state.snoozeDose(d, 30),
               onTap: () => widget.onView(d.med),
             )
                 .animate(delay: widget.delayOffset + (idx * 50).ms)
@@ -817,7 +907,7 @@ class _HomeDoseGroupState extends State<HomeDoseGroup> {
         showCloseIcon: true,
         closeIconColor: Colors.white70,
         action: SnackBarAction(
-          label: 'UNDO',
+          label: 'Undo',
           onPressed: () => widget.state.toggleDose(d),
           textColor: context.L.primary,
         ),
@@ -829,4 +919,3 @@ class _HomeDoseGroupState extends State<HomeDoseGroup> {
     );
   }
 }
-

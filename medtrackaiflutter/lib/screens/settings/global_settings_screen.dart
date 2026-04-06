@@ -2,9 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
-import '../../domain/entities/user_profile.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/common/unified_header.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/shared/shared_widgets.dart';
 import '../../core/utils/haptic_engine.dart';
@@ -252,7 +250,7 @@ class _IndustrialSection extends StatelessWidget {
               color: L.text.withValues(alpha: 0.4), 
               fontWeight: FontWeight.w900, 
               letterSpacing: 2.0, 
-              fontSize: 9)),
+              fontSize: 10)),
           ]),
         ),
         SquircleCard(

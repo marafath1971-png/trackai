@@ -6,8 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/app_state.dart';
-import '../../domain/entities/medicine.dart';
-import '../../domain/entities/scan_result.dart';
 import '../../theme/app_theme.dart';
 import '../../services/gemini_service.dart';
 import '../../services/auth_service.dart';
@@ -1956,7 +1954,7 @@ class _ResultModalState extends State<_ResultModal> {
                     "DANGER",
                     style: AppTypography.labelSmall.copyWith(
                       color: Colors.white,
-                      fontSize: 8,
+                      fontSize: 10,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -2407,7 +2405,7 @@ class _BentoMetricTile extends StatelessWidget {
                     color: L.sub.withValues(alpha: 0.5),
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.0,
-                    fontSize: 9,
+                    fontSize: 10,
                   ),
                 ),
               ],

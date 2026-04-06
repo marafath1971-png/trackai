@@ -31,11 +31,16 @@ class AppColors {
   static const Color grey900 = Color(0xFF171717);
   static const Color grey950 = Color(0xFF000000);
 
-  // ── Semantics ──────────────────────────────────────────
-  static const Color error = Color(0xFFEF4444);
-  static const Color success = Color(0xFF10B981);
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color info = Color(0xFF4B5563);
+  // ── Muted Functional Semantics ─────────────────────────
+  static const Color error = Color(0xFF991B1B);   // Crimson Rose (Light)
+  static const Color success = Color(0xFF2D6A4F); // Sage Emerald (Light)
+  static const Color warning = Color(0xFFB45309); // Amber Ocher (Light)
+  
+  static const Color errorDark = Color(0xFFF87171);   // Light Crimson (Dark Mode)
+  static const Color successDark = Color(0xFF52B788); // Light Sage (Dark Mode)
+  static const Color warningDark = Color(0xFFFBBF24); // Light Amber (Dark Mode)
+
+  static const Color info = Color(0xFF1E293B);    // deep slate
 
   // ── Compatibility Aliases ─────────────────────────────
   static const Color lRed = error;
@@ -137,7 +142,7 @@ class AppTheme {
     );
   }
 
-  static ThemeData dark({bool isAmoled = false, String? accentHex}) {
+  static ThemeData dark({bool isAmoled = true, String? accentHex}) {
     final accent = accentHex != null ? hexToColor(accentHex) : AppColors.primaryBlueLight;
     final bg = isAmoled ? AppColors.black : AppColors.grey950;
     final surface = isAmoled ? AppColors.black : AppColors.grey900;
@@ -168,7 +173,7 @@ class AppTheme {
         splashRadius: 0,
       ),
       cardTheme: CardThemeData(
-        color: AppColors.grey900,
+        color: AppColors.grey950, // Darker card for true black bg
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.roundXL),
       ),
@@ -279,28 +284,28 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     return AppThemeColors(
       bg: isDark ? (isAmoled ? Colors.black : AppColors.grey950) : AppColors.white,
       onBg: isDark ? AppColors.white : AppColors.black,
-      card: isDark ? AppColors.grey900 : AppColors.white,
+      card: isDark ? AppColors.grey950 : AppColors.white,
       onCard: isDark ? AppColors.white : AppColors.black,
-      card2: isDark ? AppColors.grey800 : AppColors.grey50,
+      card2: isDark ? AppColors.grey900 : AppColors.grey50,
       onCard2: isDark ? AppColors.white : AppColors.black,
       border: isDark ? AppColors.grey800 : AppColors.grey200,
       text: isDark ? AppColors.white : AppColors.black,
-      sub: isDark ? AppColors.grey400 : AppColors.grey500,
+      sub: isDark ? AppColors.grey500 : AppColors.grey500,
       fill: isDark ? AppColors.grey900 : AppColors.grey100,
       onFill: isDark ? AppColors.white : AppColors.black,
       primary: colorScheme.primary,
       onPrimary: colorScheme.onPrimary,
       secondary: colorScheme.secondary,
-      error: AppColors.error,
-      red: AppColors.error,
-      redLight: AppColors.error.withValues(alpha: 0.1),
-      success: AppColors.success,
-      green: AppColors.success,
-      greenLight: AppColors.success.withValues(alpha: 0.1),
-      warning: AppColors.warning,
-      amber: AppColors.warning,
+      error: isDark ? AppColors.errorDark : AppColors.error,
+      red: isDark ? AppColors.errorDark : AppColors.error,
+      redLight: isDark ? (isDark ? AppColors.errorDark : AppColors.error).withValues(alpha: 0.15) : AppColors.error.withValues(alpha: 0.15),
+      success: isDark ? AppColors.successDark : AppColors.success,
+      green: isDark ? AppColors.successDark : AppColors.success,
+      greenLight: isDark ? (isDark ? AppColors.successDark : AppColors.success).withValues(alpha: 0.15) : AppColors.success.withValues(alpha: 0.15),
+      warning: isDark ? AppColors.warningDark : AppColors.warning,
+      amber: isDark ? AppColors.warningDark : AppColors.warning,
       info: AppColors.info,
-      purple: const Color(0xFF8B5CF6),
+      purple: const Color(0xFF7C3AED),
       meshBg: isDark ? AppColors.black : AppColors.meshBg,
       glass: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.7),
       glassBorder: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),

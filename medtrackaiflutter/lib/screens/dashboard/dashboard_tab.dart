@@ -4,15 +4,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/app_state.dart';
 import '../../widgets/shared/shared_widgets.dart';
 import '../../theme/app_theme.dart';
-import '../../domain/entities/health_insight.dart';
-import '../../domain/entities/medicine.dart';
 import '../../widgets/common/unified_header.dart';
 import '../../widgets/modals/trend_drilldown_sheet.dart';
 import '../../core/utils/haptic_engine.dart';
 import '../../services/report_service.dart';
 import '../../widgets/common/paywall_sheet.dart';
 import '../../l10n/app_localizations.dart';
-import '../../widgets/shared/shared_widgets.dart';
 import '../../widgets/common/shimmer_loader.dart';
 import '../../widgets/modals/daily_log_sheet.dart';
 import '../home/widgets/streak_modal.dart';
@@ -155,7 +152,7 @@ class _DashboardTabState extends State<DashboardTab> {
                         history: state.history,
                       );
                     },
-                  ).animate(delay: 100.ms).fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuart),
+                  ).animate(delay: 100.ms).fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
                   const SizedBox(height: 32),
 
                   // --- 30-DAY ADHERENCE TREND ---
@@ -169,7 +166,7 @@ class _DashboardTabState extends State<DashboardTab> {
                         InventoryStatusCard(meds: meds, L: L)
                             .animate()
                             .fadeIn(duration: 600.ms)
-                            .slideY(begin: 0.1, end: 0),
+                            .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
                       ],
                     ),
                   ),
@@ -183,7 +180,7 @@ class _DashboardTabState extends State<DashboardTab> {
                     child: LatencyHeatmap(latencyData: latency, L: L)
                         .animate()
                         .fadeIn(duration: 600.ms)
-                        .slideY(begin: 0.1, end: 0),
+                        .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
                   ),
 
                   const SizedBox(height: AppSpacing.xl),
@@ -211,10 +208,10 @@ class _DashboardTabState extends State<DashboardTab> {
                     child: Container(
                       width: double.infinity,
                       height: 60,
-                      decoration: BoxDecoration(
-                        borderRadius: AppRadius.roundL,
+                      decoration: ShapeDecoration(
+                        shape: ContinuousRectangleBorder(borderRadius: BorderRadius.circular(32)),
                         gradient: AppGradients.main,
-                        boxShadow: [
+                        shadows: [
                           BoxShadow(
                             color: L.secondary.withValues(alpha: 0.3),
                             blurRadius: 20,
@@ -258,10 +255,10 @@ class _DashboardTabState extends State<DashboardTab> {
                         ),
                       ),
                     ),
-                  )
+                      )
                       .animate(delay: 100.ms)
                       .fadeIn(duration: 600.ms)
-                      .slideY(begin: 0.1, end: 0),
+                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
 
                   const SizedBox(height: AppSpacing.xxl),
 
@@ -271,10 +268,12 @@ class _DashboardTabState extends State<DashboardTab> {
                         horizontal: AppSpacing.screenPadding),
                     child: Container(
                       padding: const EdgeInsets.all(AppSpacing.m),
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: L.fill,
-                        borderRadius: AppRadius.roundL,
-                        border: Border.all(color: L.border),
+                        shape: ContinuousRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          side: BorderSide(color: L.border),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -294,9 +293,9 @@ class _DashboardTabState extends State<DashboardTab> {
                   )
                       .animate(delay: 150.ms)
                       .fadeIn(duration: 600.ms)
-                      .slideY(begin: 0.1, end: 0),
+                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
 
-                  const SizedBox(height: 120),
+                  const SizedBox(height: 180), // Expanded clear area for the detached Cal AI FAB
                 ],
               ),
             ),
@@ -343,15 +342,15 @@ class _DashboardTabState extends State<DashboardTab> {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: L.text.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(10),
+                      shape: ContinuousRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
                     child: Icon(icon, color: L.text, size: 18),
                   ),
                   Text(label,
                       style: AppTypography.labelSmall.copyWith(
-                          fontSize: 9,
+                          fontSize: 10,
                           color: L.sub,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.5)),
@@ -384,10 +383,12 @@ class _DashboardTabState extends State<DashboardTab> {
         const SizedBox(height: 16),
         Container(
           width: double.infinity,
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: L.card,
-            borderRadius: AppRadius.roundL,
-            border: Border.all(color: L.border, width: 1.5),
+            shape: ContinuousRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+              side: BorderSide(color: L.border, width: 1.5),
+            ),
           ),
           child: const Padding(
             padding: EdgeInsets.all(20),
@@ -491,20 +492,22 @@ class _QuickActionButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: L.border.withValues(alpha: 0.15)),
-          boxShadow: L.shadowSoft,
+          shape: ContinuousRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+            side: BorderSide(color: L.border.withValues(alpha: 0.15)),
+          ),
+          shadows: L.shadowSoft,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: L.text.withValues(alpha: 0.07),
-                borderRadius: BorderRadius.circular(10),
+                shape: ContinuousRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
               child: Icon(icon, size: 18, color: L.text),
             ),

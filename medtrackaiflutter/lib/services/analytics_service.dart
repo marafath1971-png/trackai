@@ -43,4 +43,30 @@ class AnalyticsService {
   static Future<void> setUserId(String? uid) async {
     await _analytics.setUserId(id: uid);
   }
+
+  /// Log Dose interactions (take, skip, miss)
+  static Future<void> logDoseAction({
+    required String medName,
+    required String action,
+    Map<String, dynamic>? extra,
+  }) async {
+    await logEvent('dose_action', parameters: {
+      'medicine_name': medName,
+      'action': action, // 'take', 'skip', 'miss'
+      ...?extra,
+    });
+  }
+
+  /// Log Screen Views for non-standard routing
+  static Future<void> logScreenView(String screenName) async {
+    await _analytics.logEvent(
+      name: 'screen_view_custom',
+      parameters: {'screen_name': screenName},
+    );
+  }
+
+  /// Log Onboarding Completion
+  static Future<void> logOnboardingComplete() async {
+    await logEvent('onboarding_complete');
+  }
 }

@@ -24,7 +24,7 @@ class RingChart extends StatelessWidget {
     super.key,
     required this.percent,
     this.size = 100,
-    this.strokeWidth = 8,
+    this.strokeWidth = 6, // Refined thinner stroke
     required this.color,
     required this.label,
     this.sub = '',
@@ -47,16 +47,20 @@ class RingChart extends StatelessWidget {
         ),
         Column(mainAxisSize: MainAxisSize.min, children: [
           Text(label,
-              style: AppTypography.titleLarge.copyWith(
-                  fontWeight: FontWeight.w800,
-                  fontSize: size * 0.185,
+              style: AppTypography.displaySmall.copyWith(
+                  fontWeight: FontWeight.w900,
+                  fontSize: size * 0.22,
                   color: L.text,
-                  letterSpacing: -0.5)),
+                  letterSpacing: -1.0,
+                  height: 1.0)),
           if (sub.isNotEmpty)
-            Text(sub,
-                style: AppTypography.labelSmall
-                    .copyWith(fontSize: size * 0.1, color: L.sub),
-                textAlign: TextAlign.center),
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(sub.toUpperCase(),
+                  style: AppTypography.labelSmall
+                      .copyWith(fontSize: size * 0.08, color: L.sub, letterSpacing: 0.5, fontWeight: FontWeight.w900),
+                  textAlign: TextAlign.center),
+            ),
         ]),
       ]),
     );
@@ -80,30 +84,35 @@ class _RingPainter extends CustomPainter {
     final radius = (size.width - strokeWidth) / 2;
     const startAngle = -1.5708; // -π/2
 
+    final bgPaint = Paint()
+      ..color = bg
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
     // Background
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
-      startAngle,
+      0,
       2 * 3.14159,
       false,
-      Paint()
-        ..color = bg
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round,
+      bgPaint,
     );
+    
     // Foreground
     if (percent > 0) {
+      final fgPaint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
         startAngle,
         2 * 3.14159 * percent,
         false,
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..strokeCap = StrokeCap.round,
+        fgPaint,
       );
     }
   }
@@ -197,21 +206,27 @@ class GlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    return ClipRRect(
-      borderRadius: borderRadius ?? AppRadius.roundSquircle,
+    final r = borderRadius ?? AppRadius.roundSquircle;
+    
+    return ClipPath(
+      clipper: ShapeBorderClipper(
+        shape: ContinuousRectangleBorder(borderRadius: r),
+      ),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           width: width,
           height: height,
           padding: padding ?? const EdgeInsets.all(20),
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: L.glass,
-            borderRadius: borderRadius ?? AppRadius.roundSquircle,
-            border: showBorder 
-              ? Border.all(color: L.glassBorder, width: 1.5)
-              : null,
-            boxShadow: AppShadows.glass,
+            shape: ContinuousRectangleBorder(
+              borderRadius: r,
+              side: showBorder 
+                ? BorderSide(color: L.glassBorder, width: 1.5)
+                : BorderSide.none,
+            ),
+            shadows: AppShadows.glass,
           ),
           child: child,
         ),
@@ -261,7 +276,13 @@ class _BouncingButtonState extends State<BouncingButton> {
         scale: _isPressed ? widget.scaleFactor : 1.0,
         duration: widget.duration,
         curve: Curves.easeOutCubic,
-        child: widget.child,
+        child: ColorFiltered(
+          colorFilter: ColorFilter.mode(
+            Colors.black.withValues(alpha: _isPressed ? 0.05 : 0),
+            BlendMode.srcATop,
+          ),
+          child: widget.child,
+        ),
       ),
     );
   }
@@ -290,11 +311,13 @@ class SquircleCard extends StatelessWidget {
     final L = context.L;
     return Container(
       padding: padding ?? const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: color ?? L.card,
-        borderRadius: AppRadius.roundSquircle,
-        boxShadow: shadow ?? AppShadows.soft,
-        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+        shape: ContinuousRectangleBorder(
+          borderRadius: AppRadius.roundSquircle,
+          side: BorderSide(color: L.border.withValues(alpha: 0.1), width: 1),
+        ),
+        shadows: shadow ?? AppShadows.soft,
       ),
       child: child,
     );
@@ -428,7 +451,7 @@ class SyncStatusBanner extends StatelessWidget {
           Text(
             isSyncing ? 'SYNCING_CLOUD' : 'CLOUD_STABLE',
             style: AppTypography.labelSmall.copyWith(
-              fontSize: 7,
+              fontSize: 10,
               fontWeight: FontWeight.w900,
               color: L.sub.withValues(alpha: 0.5),
               letterSpacing: 1.0,

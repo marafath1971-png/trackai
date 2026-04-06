@@ -57,13 +57,18 @@ void main() async {
     return true;
   };
 
-  await NotificationService.init();
-  await EncryptionService.init();
+  // Initialize Peripheral Services in Parallel
+  final results = await Future.wait([
+    NotificationService.init(),
+    EncryptionService.init(),
+    SharedPreferences.getInstance(),
+  ]);
 
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = results[2] as SharedPreferences;
   final localDataSource = LocalDataSource(prefs);
   final firestoreDataSource = FirestoreDataSource();
   final storageService = StorageService();
+  
   final medRepo = MedicationRepositoryImpl(
       localDataSource, firestoreDataSource, storageService);
   final userRepo = UserRepositoryImpl(localDataSource, firestoreDataSource);
@@ -77,6 +82,7 @@ void main() async {
           medRepo: medRepo,
           userRepo: userRepo,
           symptomRepo: symptomRepo,
+          prefs: prefs,
         )..loadFromStorage(),
         child: const MedAIApp(),
       ),

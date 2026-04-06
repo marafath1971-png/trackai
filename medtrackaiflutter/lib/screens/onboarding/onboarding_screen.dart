@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
-import '../../domain/entities/entities.dart';
 import '../../core/utils/haptic_engine.dart';
 import '../../models/constants.dart';
 import '../../theme/app_theme.dart';

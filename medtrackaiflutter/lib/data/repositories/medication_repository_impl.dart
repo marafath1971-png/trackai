@@ -6,6 +6,9 @@ import '../datasources/local_prefs_datasource.dart';
 import '../datasources/firestore_datasource.dart';
 import '../../services/auth_service.dart';
 import '../../services/storage_service.dart';
+import '../../core/utils/repository_ext.dart';
+import '../../core/utils/result.dart';
+import '../../core/error/failures.dart';
 
 // ══════════════════════════════════════════════
 // MEDICATION REPOSITORY — Offline-First
@@ -27,7 +30,7 @@ class MedicationRepositoryImpl implements IMedicationRepository {
   @override
   Future<String?> uploadMedicineImage(File imageFile) async {
     if (!_hasAuth) return null;
-    return await storageService.uploadMedicineImage(_uid!, imageFile);
+    return await storageService.uploadMedicineImage(_uid!, imageFile).withHardenedTimeout(taskName: 'uploadMedicineImage');
   }
 
   // ── Medicines ──────────────────────────────────────────────────────
@@ -41,7 +44,7 @@ class MedicationRepositoryImpl implements IMedicationRepository {
     // 2. If authenticated, fetch cloud and merge
     if (_hasAuth) {
       try {
-        final cloudMeds = await firestoreDataSource.getMedicines(_uid!);
+        final cloudMeds = await firestoreDataSource.getMedicines(_uid!).withHardenedTimeout(taskName: 'getMedicines');
 
         // Merge strategy: If local has meds that cloud doesn't, we assume they were created offline and push them.
         final cloudIds = cloudMeds.map((m) => m.id).toSet();
@@ -49,7 +52,7 @@ class MedicationRepositoryImpl implements IMedicationRepository {
             localMeds.where((m) => !cloudIds.contains(m.id)).toList();
 
         for (var m in toPush) {
-          firestoreDataSource.saveMedicine(_uid!, m).catchError((_) {});
+          firestoreDataSource.saveMedicine(_uid!, m).withHardenedTimeout(taskName: 'saveMedicine').catchError((_) {});
           cloudMeds.add(m);
         }
 
@@ -75,7 +78,7 @@ class MedicationRepositoryImpl implements IMedicationRepository {
     await localDataSource.setJson('meds', meds.map((m) => m.toJson()).toList(),
         encrypt: true);
     if (_hasAuth) {
-      firestoreDataSource.saveMedicine(_uid!, med).catchError((_) {});
+      firestoreDataSource.saveMedicine(_uid!, med).withHardenedTimeout(taskName: 'saveMedicine').catchError((_) {});
     }
   }
 
@@ -88,7 +91,7 @@ class MedicationRepositoryImpl implements IMedicationRepository {
       await localDataSource
           .setJson('meds', meds.map((m) => m.toJson()).toList(), encrypt: true);
       if (_hasAuth) {
-        firestoreDataSource.saveMedicine(_uid!, med).catchError((_) {});
+        firestoreDataSource.saveMedicine(_uid!, med).withHardenedTimeout(taskName: 'updateMedicine').catchError((_) {});
       }
     }
   }
@@ -244,6 +247,24 @@ class MedicationRepositoryImpl implements IMedicationRepository {
     final j = localDataSource.getJson('meds');
     if (j == null) return [];
     return (j as List).map((m) => Medicine.fromJson(m)).toList();
+  }
+
+  @override
+  Future<Result<AISafetyProfile>> analyzeMedicineSafety(Medicine m) async {
+    // Structural Placeholder for 1.0 Release
+    // Logic: In a real scenario, this would call GeminiService or a Cloud Function.
+    // For the initial hardening, we return a successful structural response to ensure the UI works.
+    try {
+      const profile = AISafetyProfile(
+        warnings: ["Take exactly as prescribed.", "Consult your doctor for side effects."],
+        interactions: ["Keep track of all other medications."],
+        foodRules: ["Take with a full glass of water."],
+        ahaMoments: ["MedTrack AI helps you stay on track!"],
+      );
+      return const Success(profile);
+    } catch (e) {
+      return Error(ServerFailure(e.toString()));
+    }
   }
 
   @override

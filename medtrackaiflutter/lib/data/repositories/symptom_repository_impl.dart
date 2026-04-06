@@ -5,6 +5,7 @@ import '../../services/auth_service.dart';
 import '../../data/datasources/local_prefs_datasource.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/repositories/symptom_repository.dart';
+import '../../core/utils/repository_ext.dart';
 
 class SymptomRepositoryImpl implements SymptomRepository {
   final LocalDataSource _storage;
@@ -19,7 +20,7 @@ class SymptomRepositoryImpl implements SymptomRepository {
     if (uid != null) {
       try {
         final snap =
-            await _db.collection('users').doc(uid).collection('symptoms').get();
+            await _db.collection('users').doc(uid).collection('symptoms').get().withHardenedTimeout(taskName: 'getSymptoms');
         final cloudSymptoms =
             snap.docs.map((doc) => Symptom.fromJson(doc.data())).toList();
 
@@ -63,7 +64,8 @@ class SymptomRepositoryImpl implements SymptomRepository {
             .doc(uid)
             .collection('symptoms')
             .doc(symptom.id)
-            .set(symptom.toJson());
+            .set(symptom.toJson())
+            .withHardenedTimeout(taskName: 'saveSymptom');
       } catch (e) {
         appLogger.e('[SymptomRepo] Failed to save to Firestore', error: e);
       }
@@ -88,7 +90,8 @@ class SymptomRepositoryImpl implements SymptomRepository {
             .doc(uid)
             .collection('symptoms')
             .doc(id)
-            .delete();
+            .delete()
+            .withHardenedTimeout(taskName: 'deleteSymptom');
       } catch (e) {
         appLogger.e('[SymptomRepo] Failed to delete from Firestore', error: e);
       }

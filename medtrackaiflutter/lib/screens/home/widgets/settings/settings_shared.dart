@@ -159,7 +159,7 @@ class SettingsEditField extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label.toUpperCase(),
             style: AppTypography.labelLarge.copyWith(
-                fontWeight: FontWeight.w900, letterSpacing: 1.2, color: L.sub, fontSize: 9)),
+                fontWeight: FontWeight.w900, letterSpacing: 1.2, color: L.sub, fontSize: 10)),
         const SizedBox(height: 6),
         TextField(
           controller: ctrl,
@@ -280,7 +280,7 @@ class SettingsStatCard extends StatelessWidget {
                   style: AppTypography.labelLarge.copyWith(
                       fontWeight: FontWeight.w900,
                       color: L.sub.withValues(alpha: 0.6),
-                      fontSize: 9,
+                      fontSize: 10,
                       letterSpacing: 1.0),
                   overflow: TextOverflow.ellipsis),
             ),

@@ -101,37 +101,39 @@ class AppTypography {
   static TextStyle get titleMedium => GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.2,
+        letterSpacing: -0.4,
       );
   static TextStyle get bodyLarge => GoogleFonts.inter(
         fontSize: 17,
         fontWeight: FontWeight.w400,
-        letterSpacing: -0.3,
+        letterSpacing: -0.4,
       );
   static TextStyle get bodyMedium => GoogleFonts.inter(
         fontSize: 15,
         fontWeight: FontWeight.w400,
-        height: 1.6,
+        height: 1.5,
+        letterSpacing: -0.2,
       );
   static TextStyle get labelLarge => GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w800,
-        letterSpacing: 0.2,
+        letterSpacing: 0.1,
       );
   static TextStyle get labelMedium => GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w700,
-        letterSpacing: 0.5,
+        letterSpacing: 0.2,
       );
   static TextStyle get labelSmall => GoogleFonts.inter(
         fontSize: 10,
         fontWeight: FontWeight.w900,
-        letterSpacing: 1.5,
+        letterSpacing: 1.0,
       );
   static TextStyle get bodySmall => GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w500,
         height: 1.4,
+        letterSpacing: -0.1,
       );
 }
 
@@ -253,21 +255,21 @@ class AppGradients {
 
   /// Emerald green — Neutrally adjusted for high contrast
   static LinearGradient get healthGreen => const LinearGradient(
-        colors: [Color(0xFF059669), Color(0xFF047857)],
+        colors: [Color(0xFF2D6A4F), Color(0xFF1B4332)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
 
   /// Warm amber — Neutrally adjusted for high contrast
   static LinearGradient get warningAmber => const LinearGradient(
-        colors: [Color(0xFFD97706), Color(0xFFB45309)],
+        colors: [Color(0xFFB45309), Color(0xFF78350F)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
 
   /// Red gradient — for danger / missed dose
   static LinearGradient get dangerRed => const LinearGradient(
-        colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+        colors: [Color(0xFF991B1B), Color(0xFF7F1D1D)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );

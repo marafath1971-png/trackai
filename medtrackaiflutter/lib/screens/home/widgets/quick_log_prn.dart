@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../providers/app_state.dart';
-import '../../../domain/entities/medicine.dart';
 import '../../../theme/app_theme.dart';
 import '../../../core/utils/haptic_engine.dart';
 import '../../../widgets/shared/shared_widgets.dart';
@@ -104,7 +103,7 @@ class _QuickLogPrnDoseState extends State<QuickLogPrnDose> {
                         style: AppTypography.labelMedium.copyWith(
                           color: L.sub,
                           fontWeight: FontWeight.w800,
-                          fontSize: 9,
+                          fontSize: 10,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -196,7 +195,9 @@ class _PrnPickerSheet extends StatelessWidget {
                   child: BouncingButton(
                     onTap: () {
                       HapticEngine.success();
-                      state.logPrnDose(med);
+                      final now = DateTime.now();
+                      final timeStr = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+                      state.logPrnDose(med.id, 'PRN', timeStr);
                       Navigator.pop(context);
 
                       // Show confirmation toast

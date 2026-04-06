@@ -70,7 +70,7 @@ class AlertLogCard extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 6),
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(color: L.error, borderRadius: BorderRadius.circular(4)),
-                    child: Text('NEW', style: TextStyle(color: L.card, fontSize: 8, fontWeight: FontWeight.w900)),
+                    child: Text('NEW', style: TextStyle(color: L.card, fontSize: 10, fontWeight: FontWeight.w900)),
                   ),
                 Text(alert.timestamp.split(',').first,
                     style: AppTypography.labelLarge.copyWith(

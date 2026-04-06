@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/app_state.dart';
 import '../../../../widgets/shared/shared_widgets.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../services/share_service.dart';
-import '../../../../widgets/shared/shared_widgets.dart';
-import '../../../../core/utils/color_utils.dart';
-import '../../../../domain/entities/entities.dart';
 import '../../../settings/privacy_policy_screen.dart';
 import '../../../../widgets/common/paywall_sheet.dart';
 import 'settings_shared.dart';
+
 
 class AppTab extends StatefulWidget {
   final AppState state;
@@ -128,95 +127,25 @@ class _AppTabState extends State<AppTab> {
                         context.read<AppState>().toggleDarkMode()),
                 border: false)),
         SettingsSection(
-            title: 'Personalization',
-            child: Column(children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: L.text,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('ACCENT COLOR',
-                              style: AppTypography.labelLarge.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 10,
-                                  color: L.bg.withValues(alpha: 0.4),
-                                  letterSpacing: 2.0)),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                                color: L.bg.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(4)),
-                            child: Text('PREMIUM',
-                                style: AppTypography.labelSmall.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 8,
-                                    color: L.bg.withValues(alpha: 0.8))),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      SizedBox(
-                        height: 44,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            'A3E635', // Lime
-                            '3B82F6', // Blue
-                            '8B5CF6', // Purple
-                            'EC4899', // Pink
-                            'EF4444', // Red
-                            'F59E0B', // Amber
-                            '10B981', // Emerald
-                            '06B6D4', // Cyan
-                          ].map((hex) {
-                            final isSel = profile?.accentColor == hex;
-                            return GestureDetector(
-                              onTap: () => context
-                                  .read<AppState>()
-                                  .updateAccentColor(hex),
-                              child: Container(
-                                width: 44,
-                                height: 44,
-                                margin: const EdgeInsets.only(right: 10),
-                                decoration: BoxDecoration(
-                                    color: hexToColor(hex),
-                                    shape: BoxShape.circle,
-                                    border: isSel
-                                        ? Border.all(color: L.text, width: 2.0)
-                                        : null,
-                                    boxShadow: isSel
-                                        ? [
-                                            BoxShadow(
-                                                color: hexToColor(hex)
-                                                    .withValues(alpha: 0.4),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 4))
-                                          ]
-                                        : null),
-                                child: isSel
-                                    ? Center(
-                                        child: Icon(Icons.check_rounded,
-                                            color: hex == 'A3E635'
-                                                ? Colors.black
-                                                : Colors.white,
-                                            size: 20))
-                                    : null,
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ]),
-              ),
-            ])),
+            title: 'Health & Wellness',
+            child: SettingsModalRow(
+                icon: Icons.favorite_border_rounded,
+                iconBg: const Color(0xFFFF2D55),
+                label: 'Connect Health Data',
+                sub: context.select<AppState, bool>((s) => s.health.isConnected)
+                    ? 'Synced with ${defaultTargetPlatform == TargetPlatform.iOS ? 'Apple Health' : 'Health Connect'}'
+                    : 'Sync vitals and activity data',
+                right: AppToggle(
+                    value: context.select<AppState, bool>((s) => s.health.isConnected),
+                    onChanged: (v) {
+                      final s = context.read<AppState>();
+                      if (v) {
+                        s.health.connect();
+                      } else {
+                        s.health.disconnect();
+                      }
+                    }),
+                border: false)),
         SettingsSection(
             title: 'Security',
             child: SettingsModalRow(

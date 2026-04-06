@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../../../providers/app_state.dart';
 import '../../../../theme/app_theme.dart';
-import '../../../../domain/entities/entities.dart';
 import '../../../../core/utils/refill_helper.dart';
 import 'settings_shared.dart';
 import '../../../../widgets/shared/shared_widgets.dart';
@@ -111,7 +110,7 @@ class StatsTab extends StatelessWidget {
                     "OPTIMIZED",
                     style: AppTypography.labelSmall.copyWith(
                       color: L.bg.withValues(alpha: 0.8),
-                      fontSize: 8,
+                      fontSize: 10,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -153,7 +152,7 @@ class StatsTab extends StatelessWidget {
                         "ADHERENCE PRECISION",
                         style: AppTypography.labelSmall.copyWith(
                           color: L.bg.withValues(alpha: 0.3),
-                          fontSize: 9,
+                          fontSize: 10,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -444,7 +443,7 @@ class StatsTab extends StatelessWidget {
                                         Text('left',
                                             style: AppTypography.labelSmall
                                                 .copyWith(
-                                                    color: L.sub, fontSize: 9)),
+                                                    color: L.sub, fontSize: 10)),
                                       ],
                                     ),
                                     const SizedBox(width: 16),
@@ -469,7 +468,7 @@ class StatsTab extends StatelessWidget {
                                               .copyWith(
                                             color: L.text,
                                             fontWeight: FontWeight.w900,
-                                            fontSize: 9,
+                                            fontSize: 10,
                                             letterSpacing: 0.5,
                                           ),
                                         ),

@@ -7,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../providers/app_state.dart';
 import '../../../../services/export_service.dart';
 import '../../../../theme/app_theme.dart';
-import '../../../../domain/entities/entities.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'settings_shared.dart';
 
@@ -267,7 +266,7 @@ class _SummaryBox extends StatelessWidget {
                 style: AppTypography.labelSmall.copyWith(
                     fontWeight: FontWeight.w900,
                     color: L.bg.withValues(alpha: 0.4),
-                    fontSize: 8,
+                    fontSize: 10,
                     letterSpacing: 0.5)),
           ]),
     );

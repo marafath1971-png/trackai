@@ -90,7 +90,7 @@ class GeminiService {
             'model': modelName,
             'isImage': true,
             'imageBase64': base64Image,
-          });
+          }).timeout(const Duration(seconds: 30));
 
           final responseText = result.data['text'] ?? '';
           appLogger.d('[GeminiService] Proxy Response: $responseText');
@@ -127,7 +127,7 @@ class GeminiService {
                       TextPart(prompt),
                       DataPart('image/jpeg', bytes),
                     ]),
-                  ]));
+                  ]).timeout(const Duration(seconds: 30)));
 
               if (response.text != null && response.text!.isNotEmpty) {
                 final parsed = _parseScanResponse(response.text!);
@@ -190,7 +190,7 @@ class GeminiService {
               .call({
             'prompt': prompt,
             'model': modelName,
-          });
+          }).timeout(const Duration(seconds: 30));
 
           if (result.data['text'] != null) {
             final responseText = result.data['text'].trim();
@@ -236,7 +236,7 @@ class GeminiService {
                   country: country);
 
               final response = await _withRetry(
-                  () => model.generateContent([Content.text(prompt)]));
+                  () => model.generateContent([Content.text(prompt)]).timeout(const Duration(seconds: 30)));
 
               if (response.text != null && response.text!.isNotEmpty) {
                 final responseText = response.text!.trim();
@@ -469,7 +469,7 @@ Use emojis ✨.
       try {
         final model = _getModel(modelName, apiVersion: apiVersion);
         final response = await _withRetry(
-            () => model.generateContent([Content.text(prompt)]));
+            () => model.generateContent([Content.text(prompt)]).timeout(const Duration(seconds: 30)));
         if (response.text != null && response.text!.isNotEmpty) {
           final responseText = response.text!.trim();
           try {
@@ -492,7 +492,7 @@ Use emojis ✨.
           try {
             final model = _getModel(modelName, apiVersion: apiVersion);
             final response = await _withRetry(
-                () => model.generateContent([Content.text(prompt)]));
+                () => model.generateContent([Content.text(prompt)]).timeout(const Duration(seconds: 30)));
             if (response.text != null && response.text!.isNotEmpty) {
               final responseText = response.text!.trim();
               final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(responseText);
@@ -668,7 +668,8 @@ Rules:
 
     try {
       final model = _getModel('gemini-1.5-flash');
-      final response = await model.generateContent([Content.text(prompt)]);
+      final response = await model.generateContent([Content.text(prompt)])
+          .timeout(const Duration(seconds: 20));
       final text = response.text?.trim() ?? '';
       if (text.isEmpty) {
         return const Error(
@@ -715,7 +716,8 @@ Rules:
         model: 'gemini-1.5-flash',
         apiKey: _apiKey,
       );
-      final response = await model.generateContent([Content.text(prompt)]);
+      final response = await model.generateContent([Content.text(prompt)])
+          .timeout(const Duration(seconds: 15));
       final text = response.text?.trim() ?? '';
       if (text.isEmpty || text.toUpperCase() == 'SAFE') return null;
       return text;
@@ -768,7 +770,8 @@ Example: "Take your dose now — it's only been ${hoursLate}h and you have ${nex
         model: 'gemini-1.5-flash',
         apiKey: _apiKey,
       );
-      final response = await model.generateContent([Content.text(prompt)]);
+      final response = await model.generateContent([Content.text(prompt)])
+          .timeout(const Duration(seconds: 15));
       return response.text?.trim() ??
           _defaultMissedDoseAdvice(minutesMissedBy, nextDoseInMinutes);
     } catch (e) {

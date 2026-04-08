@@ -16,7 +16,7 @@ class ManagedProfile {
     required this.id,
     required this.name,
     required this.relation,
-    this.avatar = '👤',
+    this.avatar = '👨‍⚕️',
     this.colorAccent,
     this.isCritical = false,
     this.dateOfBirth,

@@ -103,10 +103,10 @@ class PredictiveInsightCard extends StatelessWidget {
 
   String _getEmoji(PredictiveType type) {
     switch (type) {
-      case PredictiveType.eveningRisk: return '🌙';
-      case PredictiveType.weekendSlump: return '🏃‍♂️';
-      case PredictiveType.travelRisk: return '✈️';
-      case PredictiveType.heatWarning: return '🔥';
+      case PredictiveType.eveningRisk: return '🌃';
+      case PredictiveType.weekendSlump: return '⚖️';
+      case PredictiveType.travelRisk: return '🌐';
+      case PredictiveType.heatWarning: return '🌡️';
     }
   }
 }

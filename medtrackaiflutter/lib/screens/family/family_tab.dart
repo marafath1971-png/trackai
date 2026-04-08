@@ -46,7 +46,7 @@ class _FamilyTabState extends State<FamilyTab> {
   final _nameCtrl = TextEditingController();
   final _contactCtrl = TextEditingController();
   String _relation = 'Spouse';
-  String _avatar = '👩';
+  String _avatar = '👨‍⚕️';
   int _pivot = 1; // Default to Family Circle as per reference style
   int _alertDelay = 30;
   bool _isScrolled = false;
@@ -333,7 +333,7 @@ class HubView extends StatelessWidget {
                             child: _CircleStatBento(
                               label: 'MONITORING',
                               value: unseenCount > 0 ? 'URGENT' : 'SECURE',
-                              emoji: '✅',
+                              emoji: unseenCount > 0 ? '🚨' : '🛡️',
                               iconColor: unseenCount > 0 ? L.error : L.success,
                               L: L,
                               glow: unseenCount > 0,
@@ -395,7 +395,7 @@ class HubView extends StatelessWidget {
                             ),
                             child: Row(
                               children: [
-                                const Text('⚠️', style: TextStyle(fontSize: 24))
+                                const Text('🚨', style: TextStyle(fontSize: 24))
                                     .animate(
                                         onPlay: (c) => c.repeat(reverse: true))
                                     .scale(
@@ -698,7 +698,7 @@ class HubView extends StatelessWidget {
       title: 'Protect your family',
       subtitle:
           'Join as a caregiver to see real-time health updates for your loved ones.',
-      emoji: '❤️',
+      emoji: '🫂',
       actionLabel: 'Join Circle',
       onAction: onJoin,
     );
@@ -798,7 +798,7 @@ class _FamilyHeader extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          '👨‍👩‍👧 Circle',
+                          '🫂 Circle',
                           style: AppTypography.headlineMedium.copyWith(
                             color: L.text,
                             fontWeight: FontWeight.w900,
@@ -843,7 +843,7 @@ class _FamilyHeader extends StatelessWidget {
                   ),
                   child: const Center(
                       child: Center(
-                          child: Text('🤳', style: TextStyle(fontSize: 20)))),
+                          child: Text('📲', style: TextStyle(fontSize: 20)))),
                 ),
               ),
               const SizedBox(width: 10),

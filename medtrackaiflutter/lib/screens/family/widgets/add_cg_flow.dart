@@ -298,7 +298,7 @@ class AddCgStep1 extends StatelessWidget {
                                     ? null
                                     : AppShadows.neumorphic,
                               ),
-                              child: Text('GENERATE QR CODE →',
+                              child: Text('GENERATE QR CODE 🪄',
                                   style: AppTypography.labelLarge.copyWith(
                                       fontWeight: FontWeight.w900,
                                       letterSpacing: 1.0,
@@ -730,20 +730,20 @@ class AddCgStep3 extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               HowItWorksRow(
-                                  emoji: '📊',
+                                  emoji: '📈',
                                   title: 'See your daily adherence',
                                   desc: 'Live dashboard with today\'s doses',
                                   isLast: false,
                                   L: L),
                               HowItWorksRow(
-                                  emoji: '⚠️',
+                                  emoji: '🚨',
                                   title: 'Get missed-dose alerts',
                                   desc:
                                       'Notified after ${cg.alertDelay} min if you miss a dose',
                                   isLast: false,
                                   L: L),
                               HowItWorksRow(
-                                  emoji: '📋',
+                                  emoji: '🔬',
                                   title: 'View your medicine list',
                                   desc: 'All your medications at a glance',
                                   isLast: true,

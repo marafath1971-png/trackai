@@ -1,80 +1,53 @@
-//
-//  MedTrackActivityWidgetLiveActivity.swift
-//  MedTrackActivityWidget
-//
-//  Created by Arafat Hossain on 8/4/26.
-//
-
 import ActivityKit
 import WidgetKit
 import SwiftUI
 
-struct MedTrackActivityWidgetAttributes: ActivityAttributes {
+struct MedTrackActivityAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
-        // Dynamic stateful properties about your activity go here!
-        var emoji: String
+        var medName: String
+        var dose: String
+        var timeLeft: String
     }
-
-    // Fixed non-changing properties about your activity go here!
-    var name: String
 }
 
 struct MedTrackActivityWidgetLiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: MedTrackActivityWidgetAttributes.self) { context in
-            // Lock screen/banner UI goes here
+        ActivityConfiguration(for: MedTrackActivityAttributes.self) { context in
+            // Lock screen / Banner UI
             VStack {
-                Text("Hello \(context.state.emoji)")
+                HStack {
+                    Text("💊 Time to take \(context.state.medName)")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    Spacer()
+                    Text(context.state.timeLeft)
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+                .padding()
             }
-            .activityBackgroundTint(Color.cyan)
-            .activitySystemActionForegroundColor(Color.black)
-
+            .activityBackgroundTint(Color.black)
+            
         } dynamicIsland: { context in
             DynamicIsland {
-                // Expanded UI goes here.  Compose the expanded UI through
-                // various regions, like leading/trailing/center/bottom
+                // Expanded UI
                 DynamicIslandExpandedRegion(.leading) {
-                    Text("Leading")
+                    Text("💊 \(context.state.medName)")
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text("Trailing")
+                    Text(context.state.timeLeft)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text("Bottom \(context.state.emoji)")
-                    // more content
+                    Text("Dose: \(context.state.dose)")
                 }
             } compactLeading: {
-                Text("L")
+                Text("💊")
             } compactTrailing: {
-                Text("T \(context.state.emoji)")
+                Text(context.state.timeLeft)
             } minimal: {
-                Text(context.state.emoji)
+                Text("💊")
             }
-            .widgetURL(URL(string: "http://www.apple.com"))
-            .keylineTint(Color.red)
         }
     }
 }
 
-extension MedTrackActivityWidgetAttributes {
-    fileprivate static var preview: MedTrackActivityWidgetAttributes {
-        MedTrackActivityWidgetAttributes(name: "World")
-    }
-}
-
-extension MedTrackActivityWidgetAttributes.ContentState {
-    fileprivate static var smiley: MedTrackActivityWidgetAttributes.ContentState {
-        MedTrackActivityWidgetAttributes.ContentState(emoji: "😀")
-     }
-     
-     fileprivate static var starEyes: MedTrackActivityWidgetAttributes.ContentState {
-         MedTrackActivityWidgetAttributes.ContentState(emoji: "🤩")
-     }
-}
-
-#Preview("Notification", as: .content, using: MedTrackActivityWidgetAttributes.preview) {
-   MedTrackActivityWidgetLiveActivity()
-} contentStates: {
-    MedTrackActivityWidgetAttributes.ContentState.smiley
-    MedTrackActivityWidgetAttributes.ContentState.starEyes
-}

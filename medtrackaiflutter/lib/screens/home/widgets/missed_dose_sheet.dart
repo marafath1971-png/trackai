@@ -208,7 +208,7 @@ class MissedDoseProtocolSheet extends StatelessWidget {
                     'take|${dose.med.id}|${dose.sched.h}|${dose.sched.m}|${dose.sched.label}';
                 NotificationService.scheduleOneOffReminder(
                   id: dose.med.id + 500000,
-                  title: '⏰ Rescheduled: ${dose.med.name}',
+                  title: '⏱️ Rescheduled: ${dose.med.name}',
                   body: 'You asked me to remind you again later.',
                   scheduledDate: DateTime.now().add(const Duration(hours: 1)),
                   payload: payloadForSnooze,

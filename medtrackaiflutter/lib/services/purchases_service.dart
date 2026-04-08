@@ -10,13 +10,17 @@ class PurchasesService {
   static String get _googleApiKey =>
       dotenv.env['RC_GOOGLE_KEY'] ?? 're_your_real_google_key_here';
 
-  /// If RC_IS_MOCK is set to true in .env, we bypass real payments
-  static bool get _isMock => dotenv.env['RC_IS_MOCK']?.toLowerCase() == 'true';
+  /// If RC_IS_MOCK is set to true in .env, or if keys are missing, we bypass real payments
+  static bool get _isMock {
+    final mockFlag = dotenv.env['RC_IS_MOCK']?.toLowerCase() == 'true';
+    final missingKeys = _appleApiKey.startsWith('re_your_real_') || _googleApiKey.startsWith('re_your_real_');
+    return mockFlag || missingKeys;
+  }
 
   static Future<void> init() async {
-    if (_isMock || _appleApiKey.startsWith('re_your_real_')) {
+    if (_isMock) {
       appLogger.i(
-          '💰 RevenueCat: Running in MOCK mode (No valid keys provided in .env or RC_IS_MOCK=true)');
+          '💰 RevenueCat: Running in MOCK mode (RC_IS_MOCK=true or generic keys detected)');
       return;
     }
 

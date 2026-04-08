@@ -399,7 +399,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                 _editMode = true;
               });
             },
-            child: const Text('📝', style: TextStyle(fontSize: 20)),
+            child: const Text('🖊️', style: TextStyle(fontSize: 20)),
           ),
         ),
       ],
@@ -425,7 +425,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
             right: -20,
             top: -20,
             child: Text(
-              "⚠️",
+              "🛡️",
               style: TextStyle(
                 fontSize: 140,
                 color: L.bg.withValues(alpha: 0.03),
@@ -801,7 +801,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'TECHNICAL_SPECS', icon: '📑', L: L),
+        _SectionHeader(label: 'TECHNICAL_SPECS', icon: '🔬', L: L),
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.only(top: 8),
@@ -811,10 +811,10 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
             children: [
               _SpecTile(label: 'FORM', value: med.form, icon: '💊', L: L),
               _SpecTile(
-                  label: 'CATEGORY', value: med.category, icon: '📂', L: L),
-              _SpecTile(label: 'UNIT', value: med.unit, icon: '🔢', L: L),
+                  label: 'CATEGORY', value: med.category, icon: '🏷️', L: L),
+              _SpecTile(label: 'UNIT', value: med.unit, icon: '⚖️', L: L),
               _SpecTile(
-                  label: 'START', value: med.courseStartDate, icon: '📅', L: L),
+                  label: 'START', value: med.courseStartDate, icon: '🗓️', L: L),
             ],
           ),
         ),
@@ -826,7 +826,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'DATA_MANAGEMENT', icon: '⚙️', L: L),
+        _SectionHeader(label: 'DATA_MANAGEMENT', icon: '🔐', L: L),
         const SizedBox(height: 12),
         SquircleCard(
           padding: EdgeInsets.zero,
@@ -862,7 +862,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   Widget _buildEditForm(Medicine med, AppState state, AppThemeColors L) {
     return Column(
       children: [
-        _FormSection(label: 'IDENTITY', icon: '🪪', L: L, children: [
+        _FormSection(label: 'IDENTITY', icon: '👤', L: L, children: [
           _ModernTextField(
               label: 'Medicine Name',
               value: _editFields['name'],

@@ -55,19 +55,19 @@ extension RitualExtension on Ritual {
       case Ritual.beforeBreakfast:
       case Ritual.withBreakfast:
       case Ritual.afterBreakfast:
-        return '🍞';
+        return '🍳'; // More descriptive than bread
       case Ritual.beforeLunch:
       case Ritual.withLunch:
       case Ritual.afterLunch:
-        return '🥗';
+        return '🍱'; // Modern bento box for lunch
       case Ritual.beforeDinner:
       case Ritual.withDinner:
       case Ritual.afterDinner:
-        return '🍲';
+        return '🍽️'; // Premium dinner setting
       case Ritual.beforeSleep:
-        return '🌙';
+        return '🌃'; // Modern night vista
       case Ritual.onWaking:
-        return '🌅';
+        return '☀️'; // Crisp sunrise
       case Ritual.asNeeded:
         return '🆘';
     }

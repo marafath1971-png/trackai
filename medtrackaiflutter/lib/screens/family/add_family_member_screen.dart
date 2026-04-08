@@ -27,6 +27,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
     {'label': 'Child', 'icon': '👶'},
     {'label': 'Spouse', 'icon': '💍'},
     {'label': 'Parent', 'icon': '👵'},
+    {'label': 'Senior', 'icon': '👴'},
+    {'label': 'Sibling', 'icon': '🧑‍🤝‍🧑'},
+    {'label': 'Guardian', 'icon': '🛡️'},
+    {'label': 'Pet', 'icon': '🐾'},
     {'label': 'Other', 'icon': '👤'},
   ];
 

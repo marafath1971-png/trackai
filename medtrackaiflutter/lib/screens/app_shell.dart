@@ -460,7 +460,7 @@ class _MedScanFAB extends StatelessWidget {
             ],
           ),
           child: const Center(
-            child: Text('✨', style: TextStyle(fontSize: 28)),
+            child: Text('🔬', style: TextStyle(fontSize: 28)),
           ),
         ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(
             duration: 3.seconds, color: Colors.white.withValues(alpha: 0.10)),

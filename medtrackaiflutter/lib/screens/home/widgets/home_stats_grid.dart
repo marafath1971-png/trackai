@@ -70,7 +70,7 @@ class HomeStatsGrid extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _BentoSmallCard(
-                        emoji: streak > 0 ? '🔥' : '❄️',
+                        emoji: streak > 0 ? '⚡' : '🛡️',
                         label: 'Streak',
                         value: '$streak days',
                         valueColor: L.warning,
@@ -83,7 +83,7 @@ class HomeStatsGrid extends StatelessWidget {
                     const SizedBox(height: AppSpacing.p12),
                     Expanded(
                       child: _BentoSmallCard(
-                        emoji: '📊',
+                        emoji: '📈',
                         label: 'Adherence',
                         value: '$adherence%',
                         valueColor: L.success,
@@ -137,7 +137,7 @@ class HomeStatsGrid extends StatelessWidget {
               const SizedBox(width: AppSpacing.p12),
               Expanded(
                 child: _BentoMetricCard(
-                  emoji: '☀️',
+                  emoji: '✨',
                   iconColor: const Color(0xFFF59E0B),
                   label: 'Mood',
                   value: state.getMoodSummary(
@@ -402,7 +402,7 @@ class _NextDoseCard extends StatelessWidget {
         ? 'in $diff min'
         : 'at ${dose.sched.h}:${dose.sched.m.toString().padLeft(2, '0')}';
     // Contextual emoji: urgent ⚡, soon ⏰, scheduled 💊
-    final doseEmoji = diff <= 15 ? '⚡' : (diff <= 60 ? '⏰' : '💊');
+    final doseEmoji = diff <= 15 ? '⚡' : (diff <= 60 ? '⏱️' : '🛡️');
     final pulseMs = diff <= 15 ? 700 : (diff <= 60 ? 1000 : 1600);
 
     return _PressableCard(

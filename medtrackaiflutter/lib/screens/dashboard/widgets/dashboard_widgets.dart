@@ -273,7 +273,7 @@ class HealthCoachCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Text('✨', style: TextStyle(fontSize: 14)),
+                const Text('🧠', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 8),
                 Text('AI_MEDICAL_BRIEFING',
                     style: AppTypography.labelSmall.copyWith(
@@ -285,7 +285,7 @@ class HealthCoachCard extends StatelessWidget {
             ),
             BouncingButton(
                 onTap: onRetry,
-                child: const Text('🔄', style: TextStyle(fontSize: 14))),
+                child: const Text('🪄', style: TextStyle(fontSize: 14))),
           ],
         ),
         const SizedBox(height: 16),

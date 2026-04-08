@@ -350,7 +350,7 @@ class _FastTrackingBento extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
             child: _TrackCard(
-          emoji: '⏳',
+          emoji: '⏱️',
           topValue: noDoses ? '--' : '$skipped',
           topUnit: 'left',
           label: 'Doses\nleft',
@@ -548,10 +548,10 @@ class _AdherenceScoreCard extends StatelessWidget {
         : dosePct == 1.0
             ? '🎯'
             : dosePct >= 0.8
-                ? '😊'
+                ? '⭐️'
                 : dosePct >= 0.5
-                    ? '😐'
-                    : '😔';
+                    ? '🌤️'
+                    : '🚨';
 
     final msg = noDoses
         ? 'Add your medications to start tracking adherence and get AI insights.'

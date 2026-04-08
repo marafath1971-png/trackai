@@ -63,8 +63,8 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
 
   final List<Map<String, dynamic>> _categories = [
     {'name': 'Tablet', 'icon': '💊'},
-    {'name': 'Liquid', 'icon': '🧪'},
-    {'name': 'Spray', 'icon': '🚿'},
+    {'name': 'Liquid', 'icon': '🔬'},
+    {'name': 'Spray', 'icon': '🫧'},
     {'name': 'Beauty', 'icon': '✨'},
   ];
 
@@ -341,7 +341,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                     color: L.error.withValues(alpha: 0.1), width: 0.5),
               ),
               child: const Center(
-                  child: Text('📷', style: TextStyle(fontSize: 32))),
+                  child: Text('📸', style: TextStyle(fontSize: 32))),
             ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
             const SizedBox(height: 24),
             Text(
@@ -516,7 +516,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                     if (_imageFile != null)
                       _buildPulsingThumbnail(L)
                     else
-                      const Text('🧬', style: TextStyle(fontSize: 64)),
+                      const Text('🔬', style: TextStyle(fontSize: 64)),
 
                     const SizedBox(height: 64),
 
@@ -1155,7 +1155,7 @@ class _ResultModalState extends State<_ResultModal> {
               ),
             ),
             const SizedBox(height: 32),
-            const Text('✨', style: TextStyle(fontSize: 44)),
+            const Text('🛡️', style: TextStyle(fontSize: 44)),
             const SizedBox(height: 28),
             Text(
               "Secure Your Data",
@@ -1522,7 +1522,7 @@ class _ResultModalState extends State<_ResultModal> {
                       children: [
                         Expanded(
                           child: _buildToggleBtn(
-                              "Auto suggested ✨",
+                              "Auto suggested 🪄",
                               _useAutoSchedule,
                               () => setState(() => _useAutoSchedule = true),
                               L),
@@ -1698,7 +1698,7 @@ class _ResultModalState extends State<_ResultModal> {
   Widget _buildStatusBadge(bool identified, bool systemBusy) {
     final L = context.L;
     String label = identified ? "VERIFIED" : "MANUAL";
-    String emoji = identified ? "✅" : "ℹ️";
+    String emoji = identified ? '✅' : '📝';
     Color color = L.text;
 
     if (systemBusy) {
@@ -1870,7 +1870,7 @@ class _ResultModalState extends State<_ResultModal> {
             decoration: BoxDecoration(
                 color: L.text.withValues(alpha: 0.1), shape: BoxShape.circle),
             child:
-                Text(isAha ? "💡" : "✨", style: const TextStyle(fontSize: 16)),
+                Text(isAha ? "💡" : "🧠", style: const TextStyle(fontSize: 16)),
           ),
           const SizedBox(width: 16),
           Expanded(

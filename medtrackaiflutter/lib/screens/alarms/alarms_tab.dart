@@ -835,12 +835,12 @@ class _AlarmCard extends StatelessWidget {
                               label: '\u2705 Taken', color: L.success, L: L)
                         else if (isOverdue)
                           _StatusChip(
-                              label: '\u26a0\ufe0f Missed',
+                              label: '\ud83d\udea8 Missed',
                               color: L.error,
                               L: L)
                         else if (isEnabled)
                           _StatusChip(
-                              label: '\u23f0 Soon',
+                              label: '\u23f1\ufe0f Soon',
                               color: L.text.withValues(alpha: 0.6),
                               L: L),
                       ],
@@ -1025,7 +1025,7 @@ class _EmptyAlarmsState extends StatelessWidget {
             ),
             child: const Center(
               child: Text(
-                '🔕',
+                '🔔',
                 style: TextStyle(fontSize: 40),
               ),
             ),

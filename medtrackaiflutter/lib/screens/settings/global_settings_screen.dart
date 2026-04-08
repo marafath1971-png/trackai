@@ -63,7 +63,7 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
               // ── LOCALIZATION BLOCK ───────────────────────
               _IndustrialSection(
                 label: 'LOCALIZATION',
-                icon: '🌍',
+                icon: '🌐',
                 L: L,
                 children: [
                   _PickerTile(
@@ -169,7 +169,7 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
               // ── DISPLAY ARCHITECTURE BLOCK ───────────────
               _IndustrialSection(
                 label: 'DISPLAY ARCHITECTURE',
-                icon: '🎨',
+                icon: '🔮',
                 L: L,
                 children: [
                   _ToggleTile(

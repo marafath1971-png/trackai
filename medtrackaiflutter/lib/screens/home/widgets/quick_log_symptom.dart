@@ -16,11 +16,11 @@ class QuickLogSymptom extends StatelessWidget {
     final L = context.L;
 
     final commonSymptoms = [
-      {'name': 'Pain', 'emoji': '💆'},
+      {'name': 'Pain', 'emoji': '🧠'},
       {'name': 'Energy', 'emoji': '⚡'},
-      {'name': 'Mood', 'emoji': '🎭'},
-      {'name': 'Sleep', 'emoji': '💤'},
-      {'name': 'Nausea', 'emoji': '🤢'},
+      {'name': 'Mood', 'emoji': '✨'},
+      {'name': 'Sleep', 'emoji': '🌌'},
+      {'name': 'Nausea', 'emoji': '🌀'},
     ];
 
     return Column(

@@ -30,6 +30,12 @@ import 'data/repositories/medication_repository_impl.dart';
 import 'data/repositories/user_repository_impl.dart';
 import 'data/repositories/symptom_repository_impl.dart';
 import 'widgets/common/global_error_boundary.dart';
+import 'services/purchases_service.dart';
+import 'providers/controllers/auth_controller.dart';
+import 'providers/controllers/medication_controller.dart';
+import 'providers/controllers/wellness_controller.dart';
+import 'providers/controllers/social_controller.dart';
+import 'providers/controllers/health_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,6 +71,7 @@ void main() async {
     NotificationService.init(),
     EncryptionService.init(),
     SharedPreferences.getInstance(),
+    PurchasesService.init(),
   ]);
 
   final prefs = results[2] as SharedPreferences;
@@ -87,7 +94,19 @@ void main() async {
           symptomRepo: symptomRepo,
           prefs: prefs,
         )..loadFromStorage(),
-        child: const MedAIApp(),
+        builder: (context, child) {
+          final state = context.read<AppState>();
+          return MultiProvider(
+            providers: [
+              ChangeNotifierProvider.value(value: state.auth),
+              ChangeNotifierProvider.value(value: state.med),
+              ChangeNotifierProvider.value(value: state.wellness),
+              ChangeNotifierProvider.value(value: state.social),
+              ChangeNotifierProvider.value(value: state.health),
+            ],
+            child: const MedAIApp(),
+          );
+        },
       ),
     ),
   );

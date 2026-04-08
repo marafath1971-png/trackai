@@ -53,7 +53,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     'motivation': <String>[],
     'reminderStyle': '',
     'notifPerm': false,
-    'avatar': '😊',
+    'avatar': '👤',
     'country': '',
   };
 
@@ -65,7 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         const _OBStep(
             id: 'name',
             type: 'text',
-            emoji: '👋',
+            emoji: '🤝',
             title: "What's your name?",
             subtitle: "We'll personalise everything for you",
             field: 'name',
@@ -73,7 +73,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         const _OBStep(
             id: 'goal',
             type: 'single',
-            emoji: '🎯',
+            emoji: '🛡️',
             title: "What's your main health goal?",
             subtitle: 'This shapes your entire experience',
             field: 'goal',
@@ -81,7 +81,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         const _OBStep(
             id: 'pain_points',
             type: 'pain_points',
-            emoji: '🚧',
+            emoji: '🚨',
             title: 'What\'s the hardest part?',
             subtitle: 'Select all that apply',
             field: 'painPoints',
@@ -93,7 +93,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         _OBStep(
             id: 'country',
             type: 'single',
-            emoji: '🌍',
+            emoji: '🌐',
             title: AppLocalizations.of(context)?.countrySelectionTitle ??
                 'Where are you located?',
             subtitle: AppLocalizations.of(context)?.countrySelectionSubtitle ??
@@ -103,7 +103,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         const _OBStep(
             id: 'conditions',
             type: 'multi',
-            emoji: '🩺',
+            emoji: '🔬',
             title: 'Any health conditions?',
             subtitle: 'Select all that apply — helps us customise',
             field: 'conditions',
@@ -111,14 +111,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         const _OBStep(
             id: 'health_sync',
             type: 'health_sync',
-            emoji: '📱',
+            emoji: '📲',
             title: 'Sync Health Data',
             subtitle:
                 'Automatically import steps, sleep, and heart rate for deeper AI insights.'),
         const _OBStep(
             id: 'scan_demo',
             type: 'scan_demo',
-            emoji: '✨',
+            emoji: '🪄',
             title: 'The Magic of MedAI',
             subtitle: 'Never type a medicine name again. Just scan the box.'),
         const _OBStep(id: 'notif', type: 'notif'),
@@ -188,7 +188,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       motivation: List<String>.from(_form['motivation'] ?? []),
       reminderStyle: _form['reminderStyle'] ?? '',
       notifPerm: _form['notifPerm'] ?? false,
-      avatar: _form['avatar'] ?? '😊',
+      avatar: _form['avatar'] ?? '👤',
       country: _form['country'] ?? '',
       promoCode: null,
       appliedPromo: null,
@@ -1576,7 +1576,7 @@ class _PlanReadyStep extends StatelessWidget {
               color: const Color(0x1FA3E635),
               borderRadius: BorderRadius.circular(28)),
           child: Center(
-              child: Text('🎯',
+              child: Text('💎',
                   style: AppTypography.displayLarge.copyWith(fontSize: 48))),
         ),
         const SizedBox(height: 24),
@@ -1621,7 +1621,7 @@ class _PlanReadyStep extends StatelessWidget {
                 decoration: BoxDecoration(
                     color: oLime.withValues(alpha: 0.15),
                     shape: BoxShape.circle),
-                child: const Text('✅', style: TextStyle(fontSize: 14)),
+                child: const Text('🛡️', style: TextStyle(fontSize: 14)),
               ),
               const SizedBox(width: 16),
               Expanded(

@@ -89,13 +89,13 @@ class StreakModal extends StatelessWidget {
     }
 
     final milestones = [
-      {'d': 3, 'e': '🌱', 'l': '3 Days'},
+      {'d': 3, 'e': '🛡️', 'l': '3 Days'},
       {'d': 7, 'e': '⚡', 'l': '1 Week'},
-      {'d': 14, 'e': '🏅', 'l': '2 Weeks'},
+      {'d': 14, 'e': '⚔️', 'l': '2 Weeks'},
       {'d': 30, 'e': '🏆', 'l': '1 Month'},
       {'d': 60, 'e': '💎', 'l': '2 Months'},
       {'d': 100, 'e': '👑', 'l': '100 Days'},
-      {'d': 365, 'e': '🌟', 'l': '1 Year'},
+      {'d': 365, 'e': '🪐', 'l': '1 Year'},
     ];
     final nextM = milestones.firstWhere((m) => streak < (m['d'] as int),
         orElse: () => milestones.last);
@@ -225,21 +225,21 @@ class StreakModal extends StatelessWidget {
                                   child: _StatBox(
                                       label: 'Tracked',
                                       val: '$totalDaysTracked',
-                                      emoji: '📅',
+                                      emoji: '🗓️',
                                       L: L)),
                               const SizedBox(width: 12),
                               Expanded(
                                   child: _StatBox(
                                       label: 'Taken',
                                       val: '$totalTaken',
-                                      emoji: '✅',
+                                      emoji: '🛡️',
                                       L: L)),
                               const SizedBox(width: 12),
                               Expanded(
                                   child: _StatBox(
                                       label: 'Logged',
                                       val: '$totalDoses',
-                                      emoji: '📈',
+                                      emoji: '📉',
                                       L: L)),
                             ]),
 

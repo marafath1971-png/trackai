@@ -85,25 +85,46 @@ class PatientCard extends StatelessWidget {
                 padding: const EdgeInsets.all(AppSpacing.p16),
                 margin: const EdgeInsets.only(bottom: AppSpacing.p12),
                 decoration: BoxDecoration(
-                  color: L.card,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: L.border.withValues(alpha: 0.5), width: 1.0),
+                  boxShadow: AppShadows.neumorphic,
                 ),
                 child: Column(
                   children: [
                     Row(
                       children: [
                         Container(
-                          width: 48,
-                          height: 48,
+                          width: 52,
+                          height: 52,
                           decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.05),
                             shape: BoxShape.circle,
-                            border: Border.all(color: color.withValues(alpha: 0.1), width: 1),
+                            gradient: LinearGradient(
+                              colors: [color.withValues(alpha: 0.8), color.withValues(alpha: 0.1)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 16, spreadRadius: 0)
+                            ],
                           ),
-                          child: Center(
-                            child: Text(patient['avatar'] ?? '👤',
-                                style: const TextStyle(fontSize: 22)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(2.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: L.card,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(patient['avatar'] ?? '👤',
+                                      style: const TextStyle(fontSize: 22)),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 14),
@@ -395,12 +416,12 @@ class InsightsContent extends StatelessWidget {
     final historyEntries = history[dateKey] ?? [];
     
     return Scaffold(
-      backgroundColor: L.bg,
+      backgroundColor: L.meshBg,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
           SliverAppBar(
-            backgroundColor: L.bg,
+            backgroundColor: L.meshBg,
             elevation: 0,
             pinned: true,
             leading: IconButton(icon: Icon(Icons.arrow_back_ios_new_rounded, color: L.text, size: 18), onPressed: onBack),
@@ -417,9 +438,9 @@ class InsightsContent extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: L.card,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: L.border),
+                      boxShadow: AppShadows.neumorphic,
                     ),
                     child: Column(
                       children: [
@@ -469,7 +490,11 @@ class InsightsContent extends StatelessWidget {
                   
                   Container(
                     padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(color: L.card, borderRadius: BorderRadius.circular(24), border: Border.all(color: L.border)),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: AppShadows.neumorphic,
+                    ),
                     child: WeeklyAdherenceChart(meds: meds, history: history, L: L),
                   ),
                   

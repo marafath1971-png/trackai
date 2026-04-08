@@ -36,25 +36,9 @@ class PremiumEmptyState extends StatelessWidget {
             width: 110,
             height: 110,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  L.card,
-                  L.fill.withValues(alpha: 0.5),
-                ],
-              ),
+              color: Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(
-                  color: L.border.withValues(alpha: 0.5), width: 2.0),
-              boxShadow: [
-                BoxShadow(
-                  color: L.onBg.withValues(alpha: 0.1),
-                  blurRadius: 40,
-                  offset: const Offset(0, 20),
-                  spreadRadius: -10,
-                ),
-              ],
+              boxShadow: AppShadows.neumorphic,
             ),
             child: Center(
               child: icon != null
@@ -112,14 +96,13 @@ class PremiumEmptyState extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
                 decoration: BoxDecoration(
-                  color: L.text,
+                  color: Colors.black,
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: L.text.withValues(alpha: 0.25),
-                      blurRadius: 30,
-                      offset: const Offset(0, 15),
-                      spreadRadius: -5,
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
                   ],
                 ),

@@ -50,8 +50,8 @@ class _AppTabState extends State<AppTab> {
             title: 'Notifications',
             child: Column(children: [
               SettingsModalRow(
-                  icon: Icons.notifications_active_outlined,
-                  iconBg: const Color(0xFFEF4444),
+                  icon: '🔔',
+                  iconBg: const Color(0xFFEF4444).withValues(alpha: 0.1),
                   label: 'Dose Reminders',
                   sub: 'Get notified when it\'s time',
                   right: AppToggle(
@@ -65,8 +65,8 @@ class _AppTabState extends State<AppTab> {
                   first: true,
                   border: true),
               SettingsModalRow(
-                  icon: Icons.flash_on_outlined,
-                  iconBg: const Color(0xFFF59E0B),
+                  icon: '⚡',
+                  iconBg: const Color(0xFFF59E0B).withValues(alpha: 0.1),
                   label: 'Sound & Haptics',
                   sub: 'Vibrate and play sound',
                   right: AppToggle(
@@ -79,8 +79,8 @@ class _AppTabState extends State<AppTab> {
                       }),
                   border: true),
               SettingsModalRow(
-                  icon: Icons.access_time_outlined,
-                  iconBg: const Color(0xFF6366F1),
+                  icon: '⏰',
+                  iconBg: const Color(0xFF6366F1).withValues(alpha: 0.1),
                   label: 'Refill Alerts',
                   sub: 'Alert when meds run low',
                   right: AppToggle(
@@ -108,29 +108,12 @@ class _AppTabState extends State<AppTab> {
                   last: e.key == _leadOpts.length - 1,
                   border: e.key < _leadOpts.length - 1);
             }).toList())),
-        SettingsSection(
-            title: 'Appearance',
-            child: SettingsModalRow(
-                icon: context.select<AppState, bool>((s) => s.darkMode)
-                    ? Icons.dark_mode_outlined
-                    : Icons.light_mode_outlined,
-                iconBg: context.select<AppState, bool>((s) => s.darkMode)
-                    ? const Color(0xFF5856D6)
-                    : const Color(0xFFF59E0B),
-                label: 'Dark Mode',
-                sub: context.select<AppState, bool>((s) => s.darkMode)
-                    ? 'Using dark theme'
-                    : 'Using light theme',
-                right: AppToggle(
-                    value: context.select<AppState, bool>((s) => s.darkMode),
-                    onChanged: (_) =>
-                        context.read<AppState>().toggleDarkMode()),
-                border: false)),
+
         SettingsSection(
             title: 'Health & Wellness',
             child: SettingsModalRow(
-                icon: Icons.favorite_border_rounded,
-                iconBg: const Color(0xFFFF2D55),
+                icon: '❤️',
+                iconBg: const Color(0xFFFF2D55).withValues(alpha: 0.1),
                 label: 'Connect Health Data',
                 sub: context.select<AppState, bool>((s) => s.health.isConnected)
                     ? 'Synced with ${defaultTargetPlatform == TargetPlatform.iOS ? 'Apple Health' : 'Health Connect'}'
@@ -149,8 +132,8 @@ class _AppTabState extends State<AppTab> {
         SettingsSection(
             title: 'Security',
             child: SettingsModalRow(
-                icon: Icons.fingerprint_rounded,
-                iconBg: const Color(0xFF111111),
+                icon: '🔐',
+                iconBg: L.text.withValues(alpha: 0.1),
                 label: 'Biometric Lock',
                 sub: 'Unlock with FaceID / Fingerprint',
                 right: AppToggle(
@@ -169,12 +152,13 @@ class _AppTabState extends State<AppTab> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: L.fill.withValues(alpha: 0.3),
+                color: L.card,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: L.border.withValues(alpha: 0.05)),
+                border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+                boxShadow: AppShadows.neumorphic,
               ),
               child: Column(children: [
-                Text('Enjoying Med AI?',
+                Text('Enjoying MedAI?',
                     style: AppTypography.titleLarge
                         .copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 18)),
                 const SizedBox(height: 6),
@@ -206,7 +190,7 @@ class _AppTabState extends State<AppTab> {
                 const SizedBox(height: 24),
                 BouncingButton(
                   onTap: () => ShareService.shareText(
-                      'I\'m using Med AI to stay on top of my medications! 💊'),
+                      'I\'m using MedAI to stay on top of my medications! 💊'),
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -227,12 +211,12 @@ class _AppTabState extends State<AppTab> {
             child: Column(children: [
               const SettingsModalRow(
                   icon: '💊',
-                  label: 'Med AI',
+                  label: 'MedAI',
                   sub: 'Version 2.0 · Premium Enabled',
                   border: true),
               SettingsModalRow(
-                  icon: Icons.shield_outlined,
-                  iconBg: const Color(0xFF22C55E),
+                  icon: '🛡️',
+                  iconBg: const Color(0xFF22C55E).withValues(alpha: 0.1),
                   label: 'Privacy',
                   sub: 'Your data stays on this device',
                   onClick: () => Navigator.push(
@@ -241,8 +225,8 @@ class _AppTabState extends State<AppTab> {
                           builder: (_) => const PrivacyPolicyScreen())),
                   border: true),
               SettingsModalRow(
-                  icon: Icons.info_outline_rounded,
-                  iconBg: const Color(0xFF6366F1),
+                  icon: 'ℹ️',
+                  iconBg: const Color(0xFF6366F1).withValues(alpha: 0.1),
                   label:
                       '${context.select<AppState, int>((s) => s.meds.length)} medicines tracked',
                   sub: 'Smart reminders active',

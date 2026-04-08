@@ -31,28 +31,50 @@ class _CaregiverCardState extends State<CaregiverCard> {
     return BouncingButton(
       onTap: widget.onDashboard,
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.p16),
+        padding: const EdgeInsets.all(AppSpacing.p20),
         decoration: BoxDecoration(
-          color: L.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: L.border.withValues(alpha: 0.5), width: 1.0),
+          color: Colors.white,
+          borderRadius: AppRadius.roundL,
+          boxShadow: AppShadows.neumorphic,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Avatar with Subthe Glow
             Container(
-              width: 48,
-              height: 48,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
-                color: medColor.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
-                border: Border.all(color: medColor.withValues(alpha: 0.1)),
+                gradient: isActive ? LinearGradient(
+                  colors: [medColor.withValues(alpha: 0.8), medColor.withValues(alpha: 0.1)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ) : null,
+                border: isActive ? null : Border.all(color: L.border),
+                boxShadow: isActive ? [
+                  BoxShadow(color: medColor.withValues(alpha: 0.4), blurRadius: 16, spreadRadius: 0)
+                ] : null,
               ),
-              child: Center(
-                child: Text(
-                  cg.avatar,
-                  style: const TextStyle(fontSize: 22),
+              child: Padding(
+                padding: EdgeInsets.all(isActive ? 2.0 : 0.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: L.card,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: medColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        cg.avatar,
+                        style: const TextStyle(fontSize: 22),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -132,7 +154,7 @@ class _CaregiverCardState extends State<CaregiverCard> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: L.fill.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppRadius.roundXS,
               ),
               child: Row(
                 children: [
@@ -199,9 +221,9 @@ class FamStatJSX extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.p16),
       decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: L.border.withValues(alpha: 0.5), width: 1.0),
+        color: Colors.white,
+        borderRadius: AppRadius.roundM,
+        boxShadow: AppShadows.neumorphic,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,7 +282,7 @@ class PivotTab extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: active ? L.text : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.roundS,
         ),
         child: Text(
           label,

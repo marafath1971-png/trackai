@@ -23,10 +23,13 @@ class MedicationController extends ChangeNotifier {
   final StreakData _streakData = const StreakData();
   int _scanCount = 0;
   DateTime? _lastReviewRequest;
+  List<double> _inventoryHistory = [];
 
   bool _isMutating = false;
   String? _interactionWarning;
   String? _interactionWarningMedName;
+  
+  List<double> get inventoryHistory => _inventoryHistory;
   
   // Cache dirty flags
   bool isDosesDirty = true;
@@ -60,6 +63,14 @@ class MedicationController extends ChangeNotifier {
       _scanCount = prefs.getInt('scan_count') ?? 0;
       final lastRev = prefs.getString('last_review_request');
       if (lastRev != null) _lastReviewRequest = DateTime.tryParse(lastRev);
+      
+      final invHistRaw = prefs.getStringList('inventory_history');
+      if (invHistRaw != null) {
+        _inventoryHistory = invHistRaw.map((e) => double.tryParse(e) ?? 0.0).toList();
+      } else {
+        // Seed with current health if empty
+        _inventoryHistory = List.generate(7, (_) => _calculateCurrentInventoryHealth());
+      }
 
       invalidateCache();
       notifyListeners();
@@ -147,6 +158,29 @@ class MedicationController extends ChangeNotifier {
     return _meds.where((m) => m.count <= m.refillAt && m.totalCount > 0).length;
   }
 
+  double _calculateCurrentInventoryHealth() {
+    if (_meds.isEmpty) return 1.0;
+    double totalPct = 0;
+    for (var m in _meds) {
+      if (m.totalCount > 0) {
+        totalPct += (m.count / m.totalCount).clamp(0.0, 1.0);
+      } else {
+        totalPct += 1.0; // Infinite/Untracked stock is "healthy"
+      }
+    }
+    return totalPct / _meds.length;
+  }
+
+  Future<void> _recordInventorySnapshot() async {
+    final currentHealth = _calculateCurrentInventoryHealth();
+    _inventoryHistory.add(currentHealth);
+    if (_inventoryHistory.length > 30) _inventoryHistory.removeAt(0);
+    
+    final prefs = await medRepo.getPrefs();
+    await prefs.setStringList('inventory_history', _inventoryHistory.map((e) => e.toString()).toList());
+    notifyListeners();
+  }
+
   String getDoseGuidance(Medicine m) {
     if (m.intakeInstructions.isNotEmpty) return m.intakeInstructions;
     return '-';
@@ -174,6 +208,7 @@ class MedicationController extends ChangeNotifier {
     }
 
     await medRepo.saveHistory(_history, onlyDateKey: todayKey);
+    await _recordInventorySnapshot();
     invalidateCache();
     notifyListeners();
   }
@@ -202,6 +237,7 @@ class MedicationController extends ChangeNotifier {
     final key = dose.key;
     final wasTaken = _takenToday[key] ?? false;
     _takenToday = {..._takenToday, key: !wasTaken};
+    HapticEngine.selection();
 
     if (!wasTaken) {
       // 1. Update Inventory
@@ -231,6 +267,7 @@ class MedicationController extends ChangeNotifier {
     
     await medRepo.saveTakenToday(_takenToday);
     await medRepo.saveHistory(_history, onlyDateKey: todayKey);
+    await _recordInventorySnapshot();
     invalidateCache();
     notifyListeners();
   }
@@ -243,6 +280,7 @@ class MedicationController extends ChangeNotifier {
       taken: false,
       takenAt: DateTime.now().toIso8601String(),
     );
+    HapticEngine.selection();
     _history = {
       ..._history,
       todayKey: [...(_history[todayKey] ?? []).where((e) => e.label != dose.sched.label || e.medId != dose.med.id), entry],
@@ -267,6 +305,7 @@ class MedicationController extends ChangeNotifier {
       }
       
       await medRepo.saveHistory(_history, onlyDateKey: todayKey);
+      await _recordInventorySnapshot();
       invalidateCache();
       notifyListeners();
     }

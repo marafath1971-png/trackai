@@ -113,50 +113,59 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Date Navigator
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                onPressed: () {
-                  HapticEngine.light();
-                  setState(() => _selectedDate =
-                      _selectedDate.subtract(const Duration(days: 1)));
-                },
-                icon: Icon(Icons.chevron_left_rounded, color: L.sub),
-              ),
-              Column(
-                children: [
-                  Text(
-                    isToday
-                        ? 'TODAY'
-                        : '${_selectedDate.day} ${_getMonthName(_selectedDate.month)} ${_selectedDate.year}',
-                    style: AppTypography.labelLarge.copyWith(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 13,
-                        color: L.text,
-                        letterSpacing: 0.5),
-                  ),
-                  Text(_getWeekdayName(_selectedDate.weekday),
-                      style: AppTypography.bodySmall
-                          .copyWith(color: L.sub, fontSize: 11)),
-                ],
-              ),
-              IconButton(
-                onPressed: _selectedDate.isAfter(
-                        DateTime.now().subtract(const Duration(hours: 1)))
-                    ? null
-                    : () {
-                        HapticEngine.light();
-                        setState(() => _selectedDate =
-                            _selectedDate.add(const Duration(days: 1)));
-                      },
-                icon: Icon(Icons.chevron_right_rounded,
-                    color: _selectedDate.isAfter(
-                            DateTime.now().subtract(const Duration(hours: 1)))
-                        ? L.border
-                        : L.sub),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: AppShadows.neumorphic,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  onPressed: () {
+                    HapticEngine.light();
+                    setState(() => _selectedDate =
+                        _selectedDate.subtract(const Duration(days: 1)));
+                  },
+                  icon: Icon(Icons.chevron_left_rounded, color: L.sub, size: 28),
+                ),
+                Column(
+                  children: [
+                    Text(
+                      isToday
+                          ? 'TODAY'
+                          : '${_selectedDate.day} ${_getMonthName(_selectedDate.month)} ${_selectedDate.year}',
+                      style: AppTypography.labelLarge.copyWith(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                          color: L.text,
+                          letterSpacing: 1.0),
+                    ),
+                    Text(_getWeekdayName(_selectedDate.weekday).toUpperCase(),
+                        style: AppTypography.labelSmall
+                            .copyWith(color: L.sub, fontSize: 9, letterSpacing: 0.5, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                IconButton(
+                  onPressed: _selectedDate.isAfter(
+                          DateTime.now().subtract(const Duration(hours: 1)))
+                      ? null
+                      : () {
+                          HapticEngine.light();
+                          setState(() => _selectedDate =
+                              _selectedDate.add(const Duration(days: 1)));
+                        },
+                  icon: Icon(Icons.chevron_right_rounded,
+                      size: 28,
+                      color: _selectedDate.isAfter(
+                              DateTime.now().subtract(const Duration(hours: 1)))
+                          ? L.border
+                          : L.sub),
+                ),
+              ],
+            ),
           ),
 
           const SizedBox(height: 24),
@@ -164,37 +173,50 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
           // Completion Header
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: ShapeDecoration(
-              color: L.card,
-              shape: ContinuousRectangleBorder(
-                borderRadius: BorderRadius.circular(32),
-                side: BorderSide(color: L.border),
-              ),
-              shadows: L.shadowSoft,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: AppRadius.roundSquircle,
+              boxShadow: AppShadows.neumorphic,
             ),
             child: Row(
               children: [
                 SizedBox(
-                  width: 64,
-                  height: 64,
+                  width: 72,
+                  height: 72,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
+                      // Inner track
+                      SizedBox(
+                        width: 58,
+                        height: 58,
+                        child: CircularProgressIndicator(
+                          value: 1.0,
+                          strokeWidth: 2,
+                          color: L.border.withValues(alpha: 0.15),
+                        ),
+                      ),
+                      // Progress track
                       CircularProgressIndicator(
                         value: completion,
-                        strokeWidth: 7,
-                        backgroundColor: L.border.withValues(alpha: 0.2),
+                        strokeWidth: 10,
+                        backgroundColor: L.fill.withValues(alpha: 0.1),
                         color: completion == 1.0 ? L.success : L.text,
                         strokeCap: StrokeCap.round,
                       ),
-                      Text(
-                        '${(completion * 100).round()}%',
-                        style: AppTypography.labelLarge.copyWith(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 13,
-                          color: L.text,
+                      if (completion == 1.0)
+                        Icon(Icons.star_rounded, color: L.success, size: 24)
+                          .animate(onPlay: (c) => c.repeat())
+                          .shimmer(duration: 2.seconds)
+                      else
+                        Text(
+                          '${(completion * 100).round()}%',
+                          style: AppTypography.labelLarge.copyWith(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 14,
+                            color: L.text,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -393,19 +415,10 @@ class _DoseLogRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
-      decoration: ShapeDecoration(
-        color: L.card,
-        shape: ContinuousRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-          side: BorderSide(
-            color: taken
-                ? (isPrnBadge
-                    ? L.primary.withValues(alpha: 0.2)
-                    : L.success.withValues(alpha: 0.2))
-                : L.border.withValues(alpha: 0.5),
-          ),
-        ),
-        shadows: L.shadowSoft,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppShadows.neumorphic,
       ),
       child: Row(
         children: [
@@ -523,12 +536,10 @@ class _SymptomLogRow extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
-      decoration: ShapeDecoration(
-        color: L.bg,
-        shape: ContinuousRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: L.border.withValues(alpha: 0.5)),
-        ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: AppShadows.neumorphic,
       ),
       child: Row(
         children: [

@@ -6,12 +6,14 @@ class AppLoadingIndicator extends StatelessWidget {
   final double size;
   final bool showText;
   final String? text;
+  final Color? color;
 
   const AppLoadingIndicator({
     super.key,
     this.size = 56,
     this.showText = false,
     this.text,
+    this.color,
   });
 
   @override
@@ -31,7 +33,7 @@ class AppLoadingIndicator extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: L.secondary.withValues(alpha: 0.1),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 32,
                     spreadRadius: 8,
                   ),
@@ -51,7 +53,7 @@ class AppLoadingIndicator extends StatelessWidget {
               child: CircularProgressIndicator(
                 strokeWidth: 2,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  L.secondary.withValues(alpha: 0.3),
+                  Colors.black.withValues(alpha: 0.1),
                 ),
               ),
             ).animate(onPlay: (c) => c.repeat()).rotate(duration: 2000.ms),

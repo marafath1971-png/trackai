@@ -267,7 +267,7 @@ class HubView extends StatelessWidget {
     final unseenCount = state.missedAlerts.where((a) => !a.seen).length;
 
     return Scaffold(
-      backgroundColor: L.bg,
+      backgroundColor: L.meshBg,
       body: Stack(
         children: [
           // ── PREMIUM HEADER BACKGROUND ──
@@ -278,8 +278,8 @@ class HubView extends StatelessWidget {
             height: 120,
             child: Container(
               decoration: BoxDecoration(
-                color: L.bg,
-                border: Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.5))),
+                color: L.meshBg,
+                border: Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.1), width: 0.5)),
               ),
             ),
           ),
@@ -319,7 +319,7 @@ class HubView extends StatelessWidget {
                             child: _CircleStatBento(
                               label: 'PROTECTORS',
                               value: '$activeCount',
-                              icon: Icons.shield_rounded,
+                              emoji: '🛡️',
                               L: L,
                             ),
                           ),
@@ -328,7 +328,7 @@ class HubView extends StatelessWidget {
                             child: _CircleStatBento(
                               label: 'MONITORING',
                               value: unseenCount > 0 ? 'URGENT' : 'SECURE',
-                              icon: Icons.verified_user_rounded,
+                              emoji: '✅',
                               iconColor: unseenCount > 0 ? L.error : L.success,
                               L: L,
                               glow: unseenCount > 0,
@@ -377,14 +377,17 @@ class HubView extends StatelessWidget {
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
                               color: L.error,
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: AppRadius.roundL,
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
                               boxShadow: [
-                                BoxShadow(color: L.error.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))
+                                BoxShadow(color: L.error.withValues(alpha: 0.5), blurRadius: 24, offset: const Offset(0, 10))
                               ],
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.warning_rounded, color: Colors.white, size: 24),
+                                const Text('⚠️', style: TextStyle(fontSize: 24))
+                                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                                    .scale(begin: const Offset(1.0, 1.0), end: const Offset(1.2, 1.2), duration: 600.ms),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
@@ -393,7 +396,7 @@ class HubView extends StatelessWidget {
                                       Text(
                                         'URGENT MONITORING',
                                         style: AppTypography.labelSmall.copyWith(
-                                          color: Colors.white.withValues(alpha: 0.7),
+                                          color: Colors.white.withValues(alpha: 0.8),
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 1.5,
                                         ),
@@ -409,11 +412,12 @@ class HubView extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 20),
+                                const Text('→', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
                               ],
                             ),
                           ),
-                        ),
+                        ).animate(onPlay: (c) => c.repeat(reverse: true))
+                         .shimmer(duration: 1500.ms, color: Colors.white.withValues(alpha: 0.2)),
 
                       // CONTENT BASED ON PIVOT
                       if (pivot == 1) ...[
@@ -517,6 +521,7 @@ class HubView extends StatelessWidget {
             right: 0,
             child: _FamilyHeader(
               scrollOffset: scrollController.hasClients ? scrollController.offset : 0,
+              isActive: activeCount > 0 || state.monitoredPatients.isNotEmpty,
               L: L,
               onAdd: onAddCg,
               onJoin: onJoin,
@@ -533,8 +538,8 @@ class HubView extends StatelessWidget {
                 backgroundColor: L.text,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                icon: const Icon(Icons.add_rounded, color: Colors.white),
+                    borderRadius: AppRadius.roundM),
+                icon: const Text('➕', style: TextStyle(color: Colors.white, fontSize: 14)),
                 label: const Text('Add Guardian',
                     style: TextStyle(
                         color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5)),
@@ -592,7 +597,7 @@ class _CompactPivotPill extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
           color: active ? L.text : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AppRadius.roundXS,
         ),
         child: Text(
           label,
@@ -610,11 +615,13 @@ class _CompactPivotPill extends StatelessWidget {
 
 class _FamilyHeader extends StatelessWidget {
   final double scrollOffset;
+  final bool isActive;
   final AppThemeColors L;
   final VoidCallback onAdd, onJoin;
 
   const _FamilyHeader({
     required this.scrollOffset,
+    required this.isActive,
     required this.L,
     required this.onAdd,
     required this.onJoin,
@@ -632,7 +639,7 @@ class _FamilyHeader extends StatelessWidget {
           duration: 200.ms,
           padding: EdgeInsets.fromLTRB(20, topPad + 12, 20, 16),
           decoration: BoxDecoration(
-            color: L.bg.withValues(alpha: opacity * 0.8),
+            color: L.meshBg.withValues(alpha: opacity * 0.8),
             border: Border(
                 bottom: BorderSide(
                     color: L.border.withValues(alpha: opacity * 0.08),
@@ -654,15 +661,33 @@ class _FamilyHeader extends StatelessWidget {
                         fontSize: 10,
                       ),
                     ),
-                    Text(
-                      'Circle',
-                      style: AppTypography.headlineMedium.copyWith(
-                        color: L.text,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 26,
-                        height: 1.1,
-                        letterSpacing: -1.0,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          '👨‍👩‍👧 Circle',
+                          style: AppTypography.headlineMedium.copyWith(
+                            color: L.text,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 26,
+                            height: 1.1,
+                            letterSpacing: -1.0,
+                          ),
+                        ),
+                        if (isActive) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: L.success,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(color: L.success.withValues(alpha: 0.5), blurRadius: 8)
+                              ]
+                            ),
+                          ).animate(onPlay: (c) => c.repeat(reverse: true)).fade(begin: 0.3, end: 1.0, duration: 1.seconds).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2)),
+                        ]
+                      ],
                     ),
                   ],
                 ),
@@ -674,11 +699,10 @@ class _FamilyHeader extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: L.fill,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: AppRadius.roundS,
                   ),
                   child: Center(
-                      child: Icon(Icons.qr_code_scanner_rounded,
-                          size: 20, color: L.text)),
+                      child: const Center(child: Text('🤳', style: TextStyle(fontSize: 20)))),
                 ),
               ),
               const SizedBox(width: 10),
@@ -689,13 +713,13 @@ class _FamilyHeader extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: L.text,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: AppRadius.roundS,
                     boxShadow: [
                       BoxShadow(color: L.text.withValues(alpha: 0.15), blurRadius: 16, offset: const Offset(0, 4))
                     ],
                   ),
                   child: Center(
-                      child: Icon(Icons.add_rounded, color: L.bg, size: 24)),
+                      child: const Center(child: Text('➕', style: TextStyle(fontSize: 20)))),
                 ),
               ),
             ],
@@ -708,14 +732,16 @@ class _FamilyHeader extends StatelessWidget {
 
 class _CircleStatBento extends StatelessWidget {
   final String label, value;
-  final IconData icon;
+  final String emoji;
   final Color? iconColor;
   final AppThemeColors L;
   final bool glow;
-  const _CircleStatBento({required this.label, required this.value, required this.icon, this.iconColor, required this.L, this.glow = false});
+  const _CircleStatBento({required this.label, required this.value, required this.emoji, this.iconColor, required this.L, this.glow = false});
   @override
   Widget build(BuildContext context) => SquircleCard(
     padding: const EdgeInsets.all(20),
+    radius: 24,
+    borderWidth: 0.5,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -727,8 +753,8 @@ class _CircleStatBento extends StatelessWidget {
                 color: (iconColor ?? L.primary).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 14, color: iconColor ?? L.primary),
-            ),
+              child: Text(emoji, style: TextStyle(fontSize: 12, color: iconColor ?? L.primary)),
+            ).animate(target: glow ? 1 : 0, onPlay: (c) => c.repeat(reverse: true)).scale(begin: const Offset(1.0, 1.0), end: const Offset(1.2, 1.2), curve: Curves.easeInOut),
             const SizedBox(width: 10),
             Text(label, style: AppTypography.labelSmall.copyWith(
               color: L.sub.withValues(alpha: 0.4), 

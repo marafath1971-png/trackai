@@ -44,7 +44,7 @@ class RefinedSheetWrapper extends StatelessWidget {
       padding: EdgeInsets.only(
           bottom: bottomInset > 0 ? bottomInset : bottomPadding),
       decoration: BoxDecoration(
-        color: L.bg,
+        color: L.meshBg,
         borderRadius:
             const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         boxShadow: [

@@ -59,7 +59,7 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
           duration: 250.ms,
           padding: EdgeInsets.fromLTRB(20, topPad + 12, 20, 16),
           decoration: BoxDecoration(
-            color: (backgroundColor ?? L.bg).withValues(alpha: isScrolled || blurred ? 0.8 : 0.0),
+            color: (backgroundColor ?? L.meshBg).withValues(alpha: isScrolled || blurred ? 0.8 : 0.0),
             border: Border(
               bottom: BorderSide(
                 color: (isScrolled || blurred) ? L.border.withValues(alpha: 0.08) : Colors.transparent,
@@ -146,15 +146,41 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
         ),
         const SizedBox(width: 10),
         Text(
-          'Med AI',
+          'MedAI',
           style: AppTypography.displayLarge.copyWith(
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: FontWeight.w900,
             color: L.text,
-            letterSpacing: -0.8,
+            letterSpacing: -1.0,
             height: 1.0,
           ),
         ),
+        if (showProBadge) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: L.text,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: L.text.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                )
+              ]
+            ),
+            child: Text(
+              'PRO',
+              style: AppTypography.labelSmall.copyWith(
+                color: L.bg,
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.6,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -174,16 +200,15 @@ class HeaderActionBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
     return BouncingButton(
       onTap: onTap,
       child: Container(
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: backgroundColor ?? Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.l),
-          border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+          color: backgroundColor ?? Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: AppShadows.neumorphic,
         ),
         child: Center(child: child),
       ),
@@ -214,14 +239,14 @@ class SliverUnifiedHeader extends StatelessWidget {
       expandedHeight: expandedHeight,
       pinned: true,
       stretch: true,
-      backgroundColor: L.bg,
+      backgroundColor: L.meshBg,
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: onBack != null
           ? Center(
               child: HeaderActionBtn(
                 onTap: onBack!,
-                backgroundColor: L.bg.withValues(alpha: 0.6),
+                backgroundColor: L.meshBg.withValues(alpha: 0.6),
                 child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16),
               ),
             )

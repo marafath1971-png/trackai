@@ -50,8 +50,15 @@ class _PaywallSheetState extends State<PaywallSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: L.bg,
+        color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 40,
+            offset: const Offset(0, -10),
+          )
+        ],
       ),
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
       child: Column(
@@ -90,11 +97,11 @@ class _PaywallSheetState extends State<PaywallSheet> {
 
           // Social Proof / Trust Badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: L.success.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(AppRadius.m),
-              border: Border.all(color: L.success.withValues(alpha: 0.15)),
+              color: L.success.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: AppShadows.neumorphic,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -102,11 +109,12 @@ class _PaywallSheetState extends State<PaywallSheet> {
                 Icon(Icons.verified_user_rounded, color: L.success, size: 14),
                 const SizedBox(width: 8),
                 Text(
-                  'Join 10,000+ users saving lives with AI Safety',
+                  '10,000+ USERS PROTECTED',
                   style: AppTypography.labelSmall.copyWith(
                     color: L.success,
+                    fontSize: 11,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 0.2,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],
@@ -134,24 +142,11 @@ class _PaywallSheetState extends State<PaywallSheet> {
                 duration: 300.ms,
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(18),
-                decoration: ShapeDecoration(
-                  color: isSel ? L.primary.withValues(alpha: 0.04) : L.card,
-                  shape: ContinuousRectangleBorder(
-                    borderRadius: BorderRadius.circular(32),
-                    side: BorderSide(
-                      color: isSel ? L.primary : L.border.withValues(alpha: 0.1),
-                      width: isSel ? 2 : 1,
-                    ),
-                  ),
-                  shadows: isSel
-                      ? [
-                          BoxShadow(
-                            color: L.primary.withValues(alpha: 0.08),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
-                          )
-                        ]
-                      : null,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: AppShadows.neumorphic,
+                  border: isSel ? Border.all(color: Colors.black, width: 2) : null,
                 ),
                 child: Row(
                   children: [
@@ -163,7 +158,7 @@ class _PaywallSheetState extends State<PaywallSheet> {
                               style: AppTypography.titleLarge.copyWith(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w900,
-                                color: isSel ? L.primary : L.text,
+                                color: isSel ? Colors.black : L.text,
                               )),
                           const SizedBox(height: 2),
                           Text(e.value['desc']!,
@@ -181,7 +176,7 @@ class _PaywallSheetState extends State<PaywallSheet> {
                             style: AppTypography.displayLarge.copyWith(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w900,
-                                color: isSel ? L.primary : L.text)),
+                                color: isSel ? Colors.black : L.text)),
                         Text(e.value['period']!,
                             style: AppTypography.labelSmall.copyWith(
                               fontSize: 10,
@@ -214,12 +209,16 @@ class _PaywallSheetState extends State<PaywallSheet> {
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 20),
-              decoration: ShapeDecoration(
-                color: L.primary,
-                shape: ContinuousRectangleBorder(
-                  borderRadius: BorderRadius.circular(32),
-                ),
-                shadows: AppShadows.glow(L.primary),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  )
+                ],
               ),
               child: state.isPurchasing
                   ? const Center(child: AppLoadingIndicator(size: 24))
@@ -229,7 +228,7 @@ class _PaywallSheetState extends State<PaywallSheet> {
                       style: AppTypography.titleLarge.copyWith(
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
-                        color: L.onPrimary,
+                        color: Colors.white,
                         letterSpacing: 0.5,
                       ),
                     ),

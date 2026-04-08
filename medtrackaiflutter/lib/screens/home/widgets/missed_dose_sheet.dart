@@ -42,10 +42,11 @@ class MissedDoseProtocolSheet extends StatelessWidget {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       decoration: BoxDecoration(
-        color: L.card,
+        color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-        border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
-        boxShadow: L.shadowSoft,
+        boxShadow: [
+           BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 40, offset: const Offset(0, -10), spreadRadius: -10),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 36),

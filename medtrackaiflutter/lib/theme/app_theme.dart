@@ -13,6 +13,7 @@ class AppColors {
   static const Color primaryBlue = Color(0xFF000000);
   static const Color primaryBlueDark = Color(0xFF000000);
   static const Color primaryBlueLight = Color(0xFF1A1A1A);
+  static const Color limeAccent = Color(0xFFCDFF00); // 2026 Core Accent
 
   // ── Monochrome Base ────────────────────────────────────
   static const Color black = Color(0xFF000000);
@@ -49,25 +50,8 @@ class AppColors {
   static const Color oText = white;
   static const Color oBorder = grey800;
   static const Color oFill = grey900;
-  static const Color oLime = primaryBlue;
-  static const Color oLimeDark = primaryBlueDark;
-}
-
-class AppGradients {
-  static LinearGradient get main => const LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [AppColors.black, AppColors.grey800],
-  );
-
-  static LinearGradient glass([Color? color]) => LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      (color ?? Colors.white).withValues(alpha: 0.1),
-      (color ?? Colors.white).withValues(alpha: 0.02),
-    ],
-  );
+  static const Color oLime = limeAccent;
+  static const Color oLimeDark = limeAccent;
 }
 
 class AppTheme {
@@ -77,7 +61,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: AppColors.white,
+      scaffoldBackgroundColor: AppColors.meshBg,
       colorScheme: ColorScheme.light(
         primary: AppColors.black,
         onPrimary: AppColors.white,
@@ -128,7 +112,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.roundXL,
-          borderSide: const BorderSide(color: AppColors.black, width: 2),
+          borderSide: const BorderSide(color: AppColors.black, width: 0.5),
         ),
         contentPadding: const EdgeInsets.all(AppSpacing.fieldPadding),
       ),
@@ -143,16 +127,16 @@ class AppTheme {
   }
 
   static ThemeData dark({bool isAmoled = true, String? accentHex}) {
-    final accent = accentHex != null ? hexToColor(accentHex) : AppColors.primaryBlueLight;
-    final bg = isAmoled ? AppColors.black : AppColors.grey950;
-    final surface = isAmoled ? AppColors.black : AppColors.grey900;
-    final surfaceContainer = isAmoled ? AppColors.grey950 : AppColors.grey800;
+    const accent = AppColors.limeAccent;
+    const bg = AppColors.black; // OLED Perfect Black strictly enforced
+    const surface = AppColors.black; // Surfaces meld into background
+    const surfaceContainer = AppColors.grey950; // Ultra subtle lift
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: bg,
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: AppColors.white,
         onPrimary: AppColors.black,
         secondary: accent,
@@ -190,7 +174,7 @@ class AppTheme {
     ).copyWith(
       extensions: [
         AppThemeColors.fromColorScheme(
-          ColorScheme.dark(primary: AppColors.primaryBlueLight, secondary: accent),
+          const ColorScheme.dark(primary: AppColors.primaryBlueLight, secondary: accent),
           Brightness.dark,
           isAmoled: isAmoled,
         ),
@@ -282,7 +266,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     final isDark = brightness == Brightness.dark;
 
     return AppThemeColors(
-      bg: isDark ? (isAmoled ? Colors.black : AppColors.grey950) : AppColors.white,
+      bg: isDark ? (isAmoled ? Colors.black : AppColors.grey950) : AppColors.meshBg,
       onBg: isDark ? AppColors.white : AppColors.black,
       card: isDark ? AppColors.grey950 : AppColors.white,
       onCard: isDark ? AppColors.white : AppColors.black,

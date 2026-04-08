@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../providers/app_state.dart';
@@ -30,15 +27,7 @@ class _DataTabState extends State<DataTab> {
   bool _confirming = false;
 
   Future<void> _exportCSV() async {
-    final state = widget.state;
-    final sb = state.exportDataCSV();
-    try {
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/med_ai_export.csv');
-      await file.writeAsString(sb);
-      // ignore: deprecated_member_use
-      await Share.shareXFiles([XFile(file.path)], text: 'Med AI Export');
-    } catch (_) {}
+    await widget.state.exportDataCSV();
   }
 
   Future<void> _launchUrl(String url) async {
@@ -72,15 +61,10 @@ class _DataTabState extends State<DataTab> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-              color: L.text,
+              color: L.card,
               borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: L.text.withValues(alpha: 0.15),
-                  blurRadius: 30,
-                  offset: const Offset(0, 10),
-                )
-              ]),
+              border: Border.all(color: L.border.withValues(alpha: 0.1), width: 0.5),
+              boxShadow: AppShadows.neumorphic),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(
@@ -90,9 +74,9 @@ class _DataTabState extends State<DataTab> {
                     style: AppTypography.labelLarge.copyWith(
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
-                        color: L.bg.withValues(alpha: 0.4),
+                        color: L.sub.withValues(alpha: 0.5),
                         letterSpacing: 2.0)),
-                Icon(Icons.storage_rounded, color: L.bg.withValues(alpha: 0.3), size: 16),
+                const Text('📊', style: TextStyle(fontSize: 14)),
               ],
             ),
             const SizedBox(height: 20),
@@ -119,16 +103,16 @@ class _DataTabState extends State<DataTab> {
             title: s.exportAndBackup,
             child: Column(children: [
               SettingsModalRow(
-                  icon: Icons.picture_as_pdf_rounded,
-                  iconBg: const Color(0xFF6366F1),
+                  icon: '📄',
+                  iconBg: const Color(0xFF6366F1).withValues(alpha: 0.1),
                   label: s.exportPdfReport,
                   sub: s.exportPdfSubtitle,
                   onClick: () => ExportService.exportAdherenceReport(
                       context.read<AppState>()),
                   border: true),
               SettingsModalRow(
-                  icon: Icons.download_rounded,
-                  iconBg: const Color(0xFF22C55E),
+                  icon: '📥',
+                  iconBg: const Color(0xFF22C55E).withValues(alpha: 0.1),
                   label: s.exportCsv,
                   sub: s.exportCsvSubtitle(totalTaken),
                   onClick: _exportCSV,
@@ -139,8 +123,8 @@ class _DataTabState extends State<DataTab> {
         SettingsSection(
             title: s.resetSection,
             child: SettingsModalRow(
-                icon: Icons.delete_outline_rounded,
-                iconBg: const Color(0xFFEF4444),
+                icon: '🗑️',
+                iconBg: const Color(0xFFEF4444).withValues(alpha: 0.1),
                 label: s.deleteAllData,
                 sub: s.deleteAllDataSubtitle,
                 onClick: () => setState(() => _confirming = true),
@@ -151,9 +135,10 @@ class _DataTabState extends State<DataTab> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-                color: L.red.withValues(alpha: 0.1),
+                color: L.card,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: L.red.withValues(alpha: 0.2))),
+                boxShadow: AppShadows.neumorphic,
+                border: Border.all(color: L.red.withValues(alpha: 0.3), width: 0.5)),
             child: Column(children: [
               Text(s.deleteConfirmTitle,
                   style: AppTypography.titleMedium
@@ -170,10 +155,8 @@ class _DataTabState extends State<DataTab> {
                         child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
-                                color: L.fill,
-                                borderRadius: BorderRadius.circular(24),
-                                border:
-                                    Border.all(color: L.border, width: 1.5)),
+                                color: L.fill.withValues(alpha: 0.4),
+                                borderRadius: BorderRadius.circular(24)),
                             child: Center(
                                 child: Text(s.cancel,
                                     style: AppTypography.labelLarge.copyWith(
@@ -208,16 +191,16 @@ class _DataTabState extends State<DataTab> {
             title: s.legalSection,
             child: Column(children: [
               SettingsModalRow(
-                  icon: Icons.shield_outlined,
-                  iconBg: const Color(0xFF0EA5E9),
+                  icon: '🔐',
+                  iconBg: const Color(0xFF0EA5E9).withValues(alpha: 0.1),
                   label: s.privacyPolicy,
                   sub: s.privacyPolicySubtitle,
                   onClick: () =>
                       _launchUrl('https://medai.app/privacy'),
                   border: true),
               SettingsModalRow(
-                  icon: Icons.gavel_rounded,
-                  iconBg: const Color(0xFF8B5CF6),
+                  icon: '⚖️',
+                  iconBg: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
                   label: s.termsOfService,
                   sub: s.termsOfServiceSubtitle,
                   onClick: () =>
@@ -248,9 +231,10 @@ class _SummaryBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-          color: L.bg.withValues(alpha: 0.05),
+          color: L.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: L.bg.withValues(alpha: 0.1), width: 1.0)),
+          border: Border.all(color: L.border.withValues(alpha: 0.05), width: 0.5),
+          boxShadow: AppShadows.neumorphic),
       child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -258,14 +242,14 @@ class _SummaryBox extends StatelessWidget {
             Text(v,
                 style: AppTypography.displaySmall.copyWith(
                     fontWeight: FontWeight.w900,
-                    color: L.bg,
+                    color: L.text,
                     fontSize: 24,
                     letterSpacing: -1.0)),
             const SizedBox(height: 2),
             Text(l.toUpperCase(),
                 style: AppTypography.labelSmall.copyWith(
                     fontWeight: FontWeight.w900,
-                    color: L.bg.withValues(alpha: 0.4),
+                    color: L.sub.withValues(alpha: 0.4),
                     fontSize: 10,
                     letterSpacing: 0.5)),
           ]),

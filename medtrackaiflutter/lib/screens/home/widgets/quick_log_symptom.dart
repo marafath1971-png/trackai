@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../../../providers/app_state.dart';
 import '../../../theme/app_theme.dart';
@@ -15,11 +16,11 @@ class QuickLogSymptom extends StatelessWidget {
     final L = context.L;
 
     final commonSymptoms = [
-      {'name': 'Pain', 'icon': Icons.local_hospital_rounded},
-      {'name': 'Energy', 'icon': Icons.bolt_rounded},
-      {'name': 'Mood', 'icon': Icons.sentiment_satisfied_rounded},
-      {'name': 'Sleep', 'icon': Icons.bedtime_rounded},
-      {'name': 'Nausea', 'icon': Icons.sick_rounded},
+      {'name': 'Pain', 'emoji': '💆'},
+      {'name': 'Energy', 'emoji': '⚡'},
+      {'name': 'Mood', 'emoji': '🎭'},
+      {'name': 'Sleep', 'emoji': '💤'},
+      {'name': 'Nausea', 'emoji': '🤢'},
     ];
 
     return Column(
@@ -30,11 +31,11 @@ class QuickLogSymptom extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('SYMPTOM_TELEMETRY',
+              Text('SYMPTOM TRACKING',
                   style: AppTypography.labelSmall.copyWith(
                     fontSize: 10,
                     color: L.sub,
-                    letterSpacing: 2.0,
+                    letterSpacing: 2.5,
                     fontWeight: FontWeight.w900,
                   )),
               GestureDetector(
@@ -54,12 +55,12 @@ class QuickLogSymptom extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('FULL_LOG',
+                      Text('VIEW ALL',
                           style: AppTypography.labelLarge.copyWith(
                             fontSize: 10,
                             color: L.text,
                             fontWeight: FontWeight.w900,
-                            letterSpacing: 1.0,
+                            letterSpacing: 1.2,
                           )),
                       const SizedBox(width: 4),
                       Icon(Icons.arrow_forward_ios_rounded,
@@ -84,7 +85,7 @@ class QuickLogSymptom extends StatelessWidget {
               final symptom = commonSymptoms[index];
               return _SymptomButton(
                 name: symptom['name'] as String,
-                icon: symptom['icon'] as IconData,
+                emoji: symptom['emoji'] as String,
                 L: L,
               );
             },
@@ -97,12 +98,12 @@ class QuickLogSymptom extends StatelessWidget {
 
 class _SymptomButton extends StatefulWidget {
   final String name;
-  final IconData icon;
+  final String emoji;
   final AppThemeColors L;
 
   const _SymptomButton({
     required this.name,
-    required this.icon,
+    required this.emoji,
     required this.L,
   });
 
@@ -116,39 +117,40 @@ class _SymptomButtonState extends State<_SymptomButton> {
     return GestureDetector(
       onTap: () => _showSeverityPicker(context),
       child: Container(
-        width: 85,
-        decoration: ShapeDecoration(
-          color: widget.L.fill.withValues(alpha: 0.3),
-          shape: ContinuousRectangleBorder(
-            borderRadius: BorderRadius.circular(32),
-            side: BorderSide(color: widget.L.border.withValues(alpha: 0.2)),
-          ),
+        width: 90,
+        decoration: BoxDecoration(
+          color: widget.L.card,
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          border: Border.all(color: widget.L.border.withValues(alpha: 0.08), width: 0.5),
+          boxShadow: AppShadows.neumorphic,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
-              decoration: ShapeDecoration(
-                color: widget.L.card,
-                shape: ContinuousRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(widget.icon, color: widget.L.text, size: 20),
+              child: Text(widget.emoji, 
+                style: const TextStyle(fontSize: 24))
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scale(begin: const Offset(1, 1), end: const Offset(1.2, 1.2), duration: 2.seconds, curve: Curves.easeInOut),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Text(widget.name.toUpperCase(),
                 style: AppTypography.labelMedium.copyWith(
                   fontSize: 10,
                   color: widget.L.text,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 1.0,
+                  letterSpacing: 1.2,
                 )),
           ],
         ),
       ),
-    );
+    ).animate(onPlay: (c) => c.repeat(reverse: true))
+     .scale(begin: const Offset(1, 1), end: const Offset(0.98, 0.98), duration: 2.seconds, curve: Curves.easeInOut);
   }
 
   void _showSeverityPicker(BuildContext context) {
@@ -159,7 +161,7 @@ class _SymptomButtonState extends State<_SymptomButton> {
       isScrollControlled: true,
       builder: (context) => _SeverityBottomSheet(
         name: widget.name,
-        icon: widget.icon,
+        emoji: widget.emoji,
         L: widget.L,
       ),
     );
@@ -168,12 +170,12 @@ class _SymptomButtonState extends State<_SymptomButton> {
 
 class _SeverityBottomSheet extends StatefulWidget {
   final String name;
-  final IconData icon;
+  final String emoji;
   final AppThemeColors L;
 
   const _SeverityBottomSheet({
     required this.name,
-    required this.icon,
+    required this.emoji,
     required this.L,
   });
 
@@ -205,7 +207,7 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
             ),
           ),
           const SizedBox(height: 32),
-          Icon(widget.icon, size: 48, color: widget.L.secondary),
+          Text(widget.emoji, style: const TextStyle(fontSize: 48)),
           const SizedBox(height: 16),
           Text('How is your ${widget.name.toLowerCase()}?',
               style: AppTypography.headlineMedium
@@ -217,29 +219,64 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
                 : (_severity <= 7 ? 'Moderate' : 'Severe'),
             style: AppTypography.labelLarge.copyWith(color: widget.L.sub),
           ),
-          const SizedBox(height: 40),
-          Slider(
-            value: _severity,
-            min: 1,
-            max: 10,
-            divisions: 9,
-            activeColor: widget.L.secondary,
-            inactiveColor: widget.L.fill,
-            onChanged: (v) {
-              setState(() => _severity = v);
-              HapticEngine.light();
-            },
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          const SizedBox(height: 48),
+          
+          // --- Premium Segmented Severity Selector ---
+          Column(
             children: [
-              Text('1',
-                  style:
-                      AppTypography.labelSmall.copyWith(color: widget.L.sub)),
-              Text('10',
-                  style:
-                      AppTypography.labelSmall.copyWith(color: widget.L.sub)),
+              SizedBox(
+                height: 54,
+                child: Row(
+                  children: List.generate(10, (index) {
+                    final value = index + 1;
+                    final isSelected = _severity.round() == value;
+                    final isLeading = index == 0;
+                    final isTrailing = index == 9;
+                    
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() => _severity = value.toDouble());
+                          HapticEngine.selection();
+                        },
+                        child: AnimatedContainer(
+                          duration: 200.ms,
+                          margin: EdgeInsets.only(
+                            right: isTrailing ? 0 : 4,
+                            left: isLeading ? 0 : 0,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected 
+                                ? widget.L.text 
+                                : widget.L.card.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: widget.L.border.withValues(alpha: 0.08), width: 0.5),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '$value',
+                              style: AppTypography.labelLarge.copyWith(
+                                color: isSelected ? widget.L.bg : widget.L.sub,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('MILD', style: AppTypography.labelSmall.copyWith(color: widget.L.sub, fontSize: 9, letterSpacing: 1.0)),
+                  Text('MODERATE', style: AppTypography.labelSmall.copyWith(color: widget.L.sub, fontSize: 9, letterSpacing: 1.0)),
+                  Text('SEVERE', style: AppTypography.labelSmall.copyWith(color: widget.L.sub, fontSize: 9, letterSpacing: 1.0)),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 48),
@@ -258,17 +295,20 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
 
             if (state.symptomAnalysis != null) {
               final analysis = state.symptomAnalysis!;
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: ShapeDecoration(
-                  color: widget.L.purple.withValues(alpha: 0.05),
-                  shape: ContinuousRectangleBorder(
-                    borderRadius: AppRadius.roundM,
-                    side: BorderSide(color: widget.L.purple.withValues(alpha: 0.1)),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: widget.L.card.withValues(alpha: 0.95),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: widget.L.purple.withValues(alpha: 0.2), width: 0.5),
+                      boxShadow: AppShadows.neumorphic,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
@@ -347,12 +387,14 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
                     ),
                   ],
                 ),
-              ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95));
+              ),
+            ),
+          ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95));
             }
 
             return SizedBox(
               width: double.infinity,
-              height: 56,
+              height: 64,
               child: ElevatedButton(
                 onPressed: () {
                   final symptom = Symptom(
@@ -363,14 +405,21 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
                   );
                   context.read<AppState>().logSymptom(symptom);
                   HapticEngine.success();
+                  Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: widget.L.text,
-                  shape: RoundedRectangleBorder(borderRadius: AppRadius.roundL),
+                  foregroundColor: widget.L.bg,
+                  elevation: 0,
+                  shape: ContinuousRectangleBorder(
+                    borderRadius: BorderRadius.circular(32),
+                  ),
                 ),
-                child: Text('Log Entry',
+                child: Text('LOG ENTRY',
                     style: AppTypography.titleMedium.copyWith(
-                        color: widget.L.bg, fontWeight: FontWeight.w900)),
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        fontSize: 14)),
               ),
             );
           }),

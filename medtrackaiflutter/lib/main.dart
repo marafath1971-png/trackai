@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'l10n/app_localizations.dart';
@@ -38,15 +39,17 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Initialize App Check for production security
-  try {
-    await FirebaseAppCheck.instance.activate(
-      androidProvider:
-          kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-      appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
-    );
-  } catch (e) {
-    debugPrint('[FirebaseAppCheck] Warning: Activation failed. Falling back to unprotected access: $e');
-  }
+  await FirebaseAppCheck.instance.activate(
+    androidProvider:
+        kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
+  );
+
+  // Initialize Performance Monitoring
+  FirebasePerformance.instance.setPerformanceCollectionEnabled(!kDebugMode);
+
+  // Set Production Version Metadata in Crashlytics
+  await FirebaseCrashlytics.instance.setCustomKey('app_version', '1.0.0+1');
 
   // Pass all uncaught "fatal" errors from the framework to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
@@ -95,7 +98,6 @@ class MedAIApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.select<AppState, bool>((state) => state.darkMode);
     final amoled = context
         .select<AppState, bool>((state) => state.profile?.amoledMode ?? false);
     final accentHex = context
@@ -111,7 +113,7 @@ class MedAIApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
       darkTheme: darkTheme,
-      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+      themeMode: ThemeMode.light, // Locked to Cal AI Light Mode Aesthetic
       locale: Locale(language),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -121,7 +123,7 @@ class MedAIApp extends StatelessWidget {
       builder: (context, child) {
         final L = context.L;
         return Container(
-          color: L.bg,
+          color: L.meshBg,
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 430),

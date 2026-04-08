@@ -75,16 +75,9 @@ class CompleteProfileCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(
           horizontal: AppSpacing.screenPadding, vertical: AppSpacing.m),
       decoration: BoxDecoration(
-        color: L.card,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: L.border.withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: L.onBg.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          )
-        ],
+        boxShadow: AppShadows.neumorphic,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(

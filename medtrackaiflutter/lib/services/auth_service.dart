@@ -99,11 +99,19 @@ class AuthService {
     await _auth.sendPasswordResetEmail(email: email);
   }
 
-  // ── Sign Out ───────────────────────────────────────────────────────
   static Future<void> signOut() async {
     await Future.wait([
       _auth.signOut(),
       _google.signOut(),
     ]);
+  }
+
+  // ── DELETE ACCOUNT ──────────────────────────────────────────────────
+  static Future<void> deleteAccount() async {
+    final user = currentUser;
+    if (user != null) {
+      await user.delete();
+      await _google.disconnect(); // Disconnect Google Sign-In
+    }
   }
 }

@@ -53,13 +53,9 @@ class _QuickLogPrnDoseState extends State<QuickLogPrnDose> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           decoration: BoxDecoration(
-            color: L.card,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: L.border.withValues(alpha: 0.5),
-              width: 1.0,
-            ),
-            boxShadow: AppShadows.soft,
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: AppShadows.neumorphic,
           ),
           child: Row(
             children: [
@@ -67,10 +63,8 @@ class _QuickLogPrnDoseState extends State<QuickLogPrnDose> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: L.text.withValues(alpha: 0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                      color: L.text.withValues(alpha: 0.1)),
                 ),
                 child: Center(
                   child: Icon(Icons.flash_on_rounded,
@@ -95,8 +89,8 @@ class _QuickLogPrnDoseState extends State<QuickLogPrnDose> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: L.sub.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(4),
+                        color: Colors.black.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         '${prnMeds.length} PRN MEDS AVAILABLE',
@@ -231,10 +225,9 @@ class _PrnPickerSheet extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: L.card,
-                        border: Border.all(color: L.border.withValues(alpha: 0.5)),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
-                        boxShadow: L.shadowSoft,
+                        boxShadow: AppShadows.neumorphic,
                       ),
                       child: Row(
                         children: [

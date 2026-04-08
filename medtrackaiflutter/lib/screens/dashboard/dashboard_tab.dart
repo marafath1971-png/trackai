@@ -70,7 +70,7 @@ class _DashboardTabState extends State<DashboardTab> {
         context.select<AppState, List<HealthInsight>>((s) => s.healthInsights);
 
     return Scaffold(
-      backgroundColor: L.bg,
+      backgroundColor: L.meshBg, // Cal AI Texture foundation
       body: Stack(children: [
         Positioned(
           top: 0,
@@ -79,8 +79,7 @@ class _DashboardTabState extends State<DashboardTab> {
           height: 120,
           child: Container(
             decoration: BoxDecoration(
-              color: L.bg,
-              border: Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.5))),
+              color: L.meshBg,
             ),
           ),
         ),
@@ -93,7 +92,7 @@ class _DashboardTabState extends State<DashboardTab> {
           },
           displacement: 100,
           color: L.text,
-          backgroundColor: L.bg,
+          backgroundColor: L.meshBg,
           child: Scrollbar(
             controller: _scrollController,
             child: SingleChildScrollView(
@@ -113,47 +112,36 @@ class _DashboardTabState extends State<DashboardTab> {
                         _buildSummaryCard(
                           context,
                           s.adherenceLabel.toUpperCase(),
-                          '${(adherence * 100).round()}%',
-                          Icons.insights_rounded,
+                          adherence * 100,
+                          '%',
+                          '📊',
                           L.secondary,
                           onTap: () => _showTrendDrilldown(context, state, L),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         _buildSummaryCard(
                           context,
                           s.streakLabel.toUpperCase(),
-                          '${streak}D',
-                          Icons.local_fire_department_rounded,
+                          streak.toDouble(),
+                          'D',
+                          '🔥',
                           L.warning,
                           onTap: () => StreakModal.show(context, state),
                         ),
                       ],
                     ),
                   ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuart),
-                  const SizedBox(height: 24),
-
-                  // --- QUICK ACTIONS ---
-                  _DashboardQuickActionRow(
-                    onLogSymptom: () => DailyLogSheet.show(context),
-                    onShareReport: () {
-                      HapticEngine.selection();
-                      final state = context.read<AppState>();
-                      final s = AppLocalizations.of(context)!;
-                      if (!state.isPremium) {
-                        PaywallSheet.show(context);
-                        return;
-                      }
-                      ReportService.generateAndShareReport(
-                        s: s,
-                        userName: state.profile?.name ?? s.greetingHero,
-                        adherence: adherence,
-                        meds: state.meds,
-                        symptoms: state.symptoms,
-                        history: state.history,
-                      );
-                    },
-                  ).animate(delay: 100.ms).fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
                   const SizedBox(height: 32),
+
+                  // --- TIMELINE PILL SELECTOR ---
+                  Padding(
+                    padding: const EdgeInsets.only(left: 20, bottom: 24),
+                    child: TimelinePillSelector(
+                      selectedIndex: 0,
+                      onSelect: (idx) {},
+                      L: L,
+                    ),
+                  ).animate(delay: 100.ms).fadeIn(duration: 600.ms).slideX(begin: 0.1, end: 0),
 
                   // --- 30-DAY ADHERENCE TREND ---
                   Padding(
@@ -161,10 +149,13 @@ class _DashboardTabState extends State<DashboardTab> {
                         horizontal: AppSpacing.screenPadding),
                     child: Column(
                       children: [
-                        AdherenceTrendChart(trendData: trendData, L: L),
+                        AdherenceTrendChart(trendData: trendData, L: L)
+                            .animate(delay: 150.ms)
+                            .fadeIn(duration: 600.ms)
+                            .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
                         const SizedBox(height: 24),
                         InventoryStatusCard(meds: meds, L: L)
-                            .animate()
+                            .animate(delay: 200.ms)
                             .fadeIn(duration: 600.ms)
                             .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
                       ],
@@ -208,14 +199,14 @@ class _DashboardTabState extends State<DashboardTab> {
                     child: Container(
                       width: double.infinity,
                       height: 60,
-                      decoration: ShapeDecoration(
-                        shape: ContinuousRectangleBorder(borderRadius: BorderRadius.circular(32)),
-                        gradient: AppGradients.main,
-                        shadows: [
+                      decoration: BoxDecoration(
+                        color: L.text,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
                           BoxShadow(
-                            color: L.secondary.withValues(alpha: 0.3),
+                            color: L.text.withValues(alpha: 0.2),
                             blurRadius: 20,
-                            offset: const Offset(0, 8),
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
@@ -242,11 +233,11 @@ class _DashboardTabState extends State<DashboardTab> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const Icon(Icons.picture_as_pdf_rounded,
-                                  color: Colors.black, size: 20),
+                                  color: Colors.white, size: 20),
                               const SizedBox(width: 8),
                               Text(s.generateClinicalReport,
                                   style: AppTypography.labelLarge.copyWith(
-                                      color: Colors.black,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.w900,
                                       letterSpacing: 1.0,
                                       fontSize: 13)),
@@ -268,12 +259,11 @@ class _DashboardTabState extends State<DashboardTab> {
                         horizontal: AppSpacing.screenPadding),
                     child: Container(
                       padding: const EdgeInsets.all(AppSpacing.m),
-                      decoration: ShapeDecoration(
-                        color: L.fill,
-                        shape: ContinuousRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          side: BorderSide(color: L.border),
-                        ),
+                      decoration: BoxDecoration(
+                        color: L.card,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
+                        boxShadow: AppShadows.neumorphic,
                       ),
                       child: Row(
                         children: [
@@ -295,7 +285,7 @@ class _DashboardTabState extends State<DashboardTab> {
                       .fadeIn(duration: 600.ms)
                       .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
 
-                  const SizedBox(height: 180), // Expanded clear area for the detached Cal AI FAB
+                  const SizedBox(height: 180), // Expanded clear area for the FAB
                 ],
               ),
             ),
@@ -307,11 +297,35 @@ class _DashboardTabState extends State<DashboardTab> {
           right: 0,
           child: UnifiedHeader(
             isScrolled: _isScrolled,
-            title: s.insightsTitle,
-            subtitle: s.insightsSubtitle,
+            title: 'Progress',
+            subtitle: "You're making progress - keep pushing!",
+            // Custom coloring for neumorphic light
           ),
         ),
       ]),
+      floatingActionButton: Container(
+        height: 64,
+        width: 64,
+        decoration: BoxDecoration(
+          color: L.text,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: L.text.withValues(alpha: 0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            )
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () => DailyLogSheet.show(context),
+          backgroundColor: Colors.transparent,
+          highlightElevation: 0,
+          elevation: 0,
+          child: const Center(child: Text('➕', style: TextStyle(color: Colors.white, fontSize: 24))),
+        ),
+      ),
     );
   }
 
@@ -325,44 +339,61 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
-  Widget _buildSummaryCard(BuildContext context, String label, String value,
-      IconData icon, Color color, {VoidCallback? onTap}) {
+  Widget _buildSummaryCard(BuildContext context, String label, double numValue, String suffix,
+      String emoji, Color color, {VoidCallback? onTap}) {
     final L = context.L;
     return Expanded(
       child: BouncingButton(
         onTap: onTap,
         scaleFactor: 0.95,
-        child: SquircleCard(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: ShapeDecoration(
-                      color: L.text.withValues(alpha: 0.05),
-                      shape: ContinuousRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: Icon(icon, color: L.text, size: 18),
-                  ),
-                  Text(label,
-                      style: AppTypography.labelSmall.copyWith(
-                          fontSize: 10,
-                          color: L.sub,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5)),
-                ],
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+          decoration: BoxDecoration(
+            color: L.card,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
-              const SizedBox(height: 24),
-              Text(value,
-                  style: AppTypography.displayLarge.copyWith(
-                      fontSize: 34,
-                      color: L.text,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.0)),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 28))
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scale(
+                    begin: const Offset(1.0, 1.0),
+                    end: const Offset(1.18, 1.18),
+                    duration: 1800.ms,
+                    curve: Curves.easeInOut,
+                  ),
+              const SizedBox(height: 10),
+              Text(label,
+                  style: AppTypography.labelMedium.copyWith(
+                      color: L.sub,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.0)),
+              const SizedBox(height: 12),
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0, end: numValue),
+                duration: 1200.ms,
+                curve: Curves.easeOutExpo,
+                builder: (context, value, child) {
+                  return Text('${value.round()}$suffix',
+                      style: AppTypography.displayLarge.copyWith(
+                          fontSize: 42,
+                          color: L.text,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -2.0));
+                },
+              ),
+              const SizedBox(height: 8),
+              Text('Goal 100%', style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 10)),
             ],
           ),
         ),
@@ -383,12 +414,17 @@ class _DashboardTabState extends State<DashboardTab> {
         const SizedBox(height: 16),
         Container(
           width: double.infinity,
-          decoration: ShapeDecoration(
+          decoration: BoxDecoration(
             color: L.card,
-            shape: ContinuousRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-              side: BorderSide(color: L.border, width: 1.5),
-            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: const Padding(
             padding: EdgeInsets.all(20),
@@ -421,7 +457,8 @@ class _DashboardTabState extends State<DashboardTab> {
               ],
             ),
           ),
-        ),
+        ).animate(onPlay: (c) => c.repeat()).shimmer(
+            duration: 2000.ms, color: L.text.withValues(alpha: 0.05)),
       ],
     );
   }
@@ -430,111 +467,4 @@ class _DashboardTabState extends State<DashboardTab> {
 // ------------------------------------------------------------------
 // DASHBOARD QUICK ACTIONS
 // ------------------------------------------------------------------
-class _DashboardQuickActionRow extends StatelessWidget {
-  final VoidCallback onLogSymptom;
-  final VoidCallback onShareReport;
 
-  const _DashboardQuickActionRow({
-    required this.onLogSymptom,
-    required this.onShareReport,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final L = context.L;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-      child: Row(
-        children: [
-          Expanded(
-            child: _QuickActionButton(
-              icon: Icons.edit_note_rounded,
-              label: 'Log Symptom',
-              subtitle: 'Track your wellbeing',
-              onTap: onLogSymptom,
-              L: L,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _QuickActionButton(
-              icon: Icons.picture_as_pdf_rounded,
-              label: 'Share Report',
-              subtitle: 'Export clinical PDF',
-              onTap: onShareReport,
-              L: L,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final VoidCallback onTap;
-  final AppThemeColors L;
-
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.onTap,
-    required this.L,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BouncingButton(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: ShapeDecoration(
-          color: L.card,
-          shape: ContinuousRectangleBorder(
-            borderRadius: BorderRadius.circular(32),
-            side: BorderSide(color: L.border.withValues(alpha: 0.15)),
-          ),
-          shadows: L.shadowSoft,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: ShapeDecoration(
-                color: L.text.withValues(alpha: 0.07),
-                shape: ContinuousRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-              child: Icon(icon, size: 18, color: L.text),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              label,
-              style: TextStyle(
-                color: L.text,
-                fontWeight: FontWeight.w800,
-                fontSize: 13,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: L.sub,
-                fontSize: 11,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

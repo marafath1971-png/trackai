@@ -56,9 +56,15 @@ class _ModernTimePickerState extends State<ModernTimePicker> {
       padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xl),
       decoration: BoxDecoration(
-        color: L.bg,
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 40,
+            offset: const Offset(0, -10),
+          )
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -193,20 +199,28 @@ class _ModernTimePickerState extends State<ModernTimePicker> {
           SizedBox(
             width: double.infinity,
             height: 60,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: L.primary,
-                foregroundColor: L.onPrimary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.m)),
-                elevation: 0,
+            child: Container(
+              width: double.infinity,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  )
+                ],
               ),
-              child: Text(
-                "Set Time",
-                style: AppTypography.labelLarge.copyWith(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
+              child: Center(
+                child: Text(
+                  "Set Time",
+                  style: AppTypography.labelLarge.copyWith(
+                    fontSize: 15,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ),

@@ -9,7 +9,6 @@ import 'widgets/home_meds_section.dart';
 import 'widgets/med_card.dart';
 
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../widgets/common/premium_empty_state.dart';
 import 'widgets/home_header.dart';
 import 'widgets/streak_modal.dart';
 import 'widgets/settings_modal_new.dart';
@@ -54,29 +53,6 @@ class _HomeTabState extends State<HomeTab> {
     });
   }
 
-  void _openStreak() => setState(() => _showStreak = true);
-
-  void _scrollToMeds() {
-    final state = context.read<AppState>();
-    final targetKey = state.meds.isEmpty ? _medsEmptyKey : _medsHeaderKey;
-    final contextObj = targetKey.currentContext;
-
-    if (contextObj != null) {
-      Scrollable.ensureVisible(
-        contextObj,
-        duration: 800.ms,
-        curve: Curves.easeOutQuart,
-        alignment: 0.1,
-      );
-    } else {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: 600.ms,
-        curve: Curves.easeOutQuart,
-      );
-    }
-  }
-
   void _scrollToTop() {
     _scrollController.animateTo(
       0,
@@ -93,17 +69,15 @@ class _HomeTabState extends State<HomeTab> {
     final takenToday =
         context.select<AppState, Map<String, bool>>((s) => s.takenToday);
     final meds = context.select<AppState, List<Medicine>>((s) => s.meds);
-    final L = context.L;
 
     final takenCount = doses.where((d) => takenToday[d.key] == true).length;
     final remaining = doses.length - takenCount;
     final dosePct = doses.isNotEmpty ? takenCount / doses.length : 0.0;
-    final ringCol = dosePct == 1.0
-        ? L.text
-        : (dosePct > 0.0 ? L.text.withValues(alpha: 0.5) : L.border);
 
+    final L = context.L;
+    
     final mainContent = Scaffold(
-        backgroundColor: L.bg,
+        backgroundColor: L.meshBg, // Neumorphic: meshBg texture foundation
         body: Stack(
       children: [
           RefreshIndicator(
@@ -113,7 +87,7 @@ class _HomeTabState extends State<HomeTab> {
           },
           displacement: 110,
           color: L.text,
-          backgroundColor: L.bg,
+          backgroundColor: Colors.white,
           child: Scrollbar(
             controller: _scrollController,
             child: CustomScrollView(
@@ -129,7 +103,7 @@ class _HomeTabState extends State<HomeTab> {
 
                 // --- WEEK STRIP ---
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
                   sliver: SliverToBoxAdapter(
                     child: HomeWeekStrip(
                       state: context.read<AppState>(),
@@ -137,19 +111,16 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                 ),
 
-                // --- HERO STAT CARD ---
+                // --- FAST TRACKING BENTO (3 stat cards) ---
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   sliver: SliverToBoxAdapter(
-                    child: _HeroProgressCard(
+                    child: _FastTrackingBento(
                       doses: doses,
                       takenCount: takenCount,
                       remaining: remaining,
                       dosePct: dosePct,
-                      ringCol: ringCol,
                       streak: streak,
-                      medsCount: meds.length,
-                      L: L,
                     )
                         .animate()
                         .fadeIn(duration: 700.ms, delay: 100.ms)
@@ -157,66 +128,40 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                 ),
 
-                // --- HEALTH SNAPSHOT ---
-                if (context.select<AppState, bool>((s) => s.health.isConnected))
+                // --- ADHERENCE SCORE CARD ---
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   sliver: SliverToBoxAdapter(
-                    child: _HealthSnapshotCard(
-                      steps: context.select<AppState, double>((s) => s.health.steps),
-                      heartRate: context.select<AppState, double>((s) => s.health.heartRate),
-                      isSyncing: context.select<AppState, bool>((s) => s.health.isSyncing),
-                      L: L,
+                    child: _AdherenceScoreCard(
+                      dosePct: dosePct,
+                      doses: doses,
+                      takenCount: takenCount,
                     )
                         .animate()
-                        .fadeIn(duration: 700.ms, delay: 120.ms)
+                        .fadeIn(duration: 600.ms, delay: 150.ms)
                         .slideY(begin: 0.04, end: 0, curve: Curves.easeOutExpo),
                   ),
                 ),
 
-                // --- SMART ALERTS ---
-                if (context.read<AppState>().missedAlerts.any((a) => !a.seen) ||
-                      context.read<AppState>().interactionWarning != null ||
-                      context.read<AppState>().getLowMeds().where((m) => m.count < 3).isNotEmpty ||
-                      context.read<AppState>().getStreak() == 0)
-                _sliverStaggerDown([
-                    _HomeAlertHub(state: context.read<AppState>(), L: L, onScrollToMeds: _scrollToMeds, onOpenStreak: _openStreak),
-                ], delay: 150.ms),
-
-                // --- TODAY'S SCHEDULE ---
-                if (doses.isNotEmpty) ...[
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding,
-                        AppSpacing.l, AppSpacing.screenPadding, AppSpacing.s),
-                    sliver: SliverToBoxAdapter(
-                      child: Text('Today\'s schedule',
-                          style: AppTypography.labelMedium.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: L.sub.withValues(alpha: 0.55),
-                              letterSpacing: 0,
-                              fontSize: 13)),
-                    ),
+                // --- NEXT DOSE CAROUSEL ---
+                if (doses.isNotEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  sliver: SliverToBoxAdapter(
+                    child: _NextDoseCarousel(
+                      doses: doses,
+                      takenToday: takenToday,
+                      state: context.read<AppState>(),
+                      onView: (med) => setState(() {
+                        _viewingMed = med;
+                        _startInEditMode = false;
+                      }),
+                    )
+                        .animate()
+                        .fadeIn(duration: 700.ms, delay: 200.ms)
+                        .slideY(begin: 0.04, end: 0, curve: Curves.easeOutExpo),
                   ),
-                  ..._buildGroupedTimelineSlivers(
-                      context, doses, takenToday, context.read<AppState>(), L),
-                  const SliverToBoxAdapter(
-                      child: SizedBox(height: AppSpacing.l)),
-                ] else if (meds.isNotEmpty) ...[
-                  const SliverPadding(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: AppSpacing.screenPadding),
-                    sliver: SliverToBoxAdapter(
-                      child: PremiumEmptyState(
-                        title: 'All caught up',
-                        subtitle:
-                            'No scheduled doses remaining for today.',
-                        icon: Icons.check_circle_outline_rounded,
-                      ),
-                    ),
-                  ),
-                  const SliverToBoxAdapter(
-                      child: SizedBox(height: AppSpacing.l)),
-                ],
+                ),
 
                 // --- MEDICINE LIST ---
                 SliverPadding(
@@ -303,7 +248,8 @@ class _HomeTabState extends State<HomeTab> {
             SettingsModal(
               onClose: () => setState(() => _showSettings = false),
             )),
-      ]),
+        ],
+      ),
     );
 
     return AnimatedSwitcher(
@@ -327,28 +273,6 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _sliverStaggerDown(List<Widget> children, {required Duration delay}) {
-    final validChildren = children.where((c) => c is! SizedBox).toList();
-    if (validChildren.isEmpty) {
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.s),
-            child: validChildren[index],
-          )
-              .animate()
-              .fadeIn(delay: delay + (index * 100).ms, duration: 600.ms)
-              .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
-          childCount: validChildren.length,
-        ),
-      ),
-    );
-  }
-
   Widget _buildOverlay(bool visible, String key, Widget child) {
     return AnimatedSwitcher(
       duration: 350.ms,
@@ -367,162 +291,169 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  List<Widget> _buildGroupedTimelineSlivers(
-      BuildContext context,
-      List<DoseItem> doses,
-      Map<String, bool> takenToday,
-      AppState state,
-      AppThemeColors L) {
-    final Map<String, List<DoseItem>> groups = {
-      'Morning': [],
-      'Afternoon': [],
-      'Evening': [],
-      'Night': [],
-    };
-
-    for (final d in doses) {
-      final m = d.sched.h * 60 + d.sched.m;
-      if (m < 720) {
-        groups['Morning']!.add(d);
-      } else if (m < 1020) {
-        groups['Afternoon']!.add(d);
-      } else if (m < 1260) {
-        groups['Evening']!.add(d);
-      } else {
-        groups['Night']!.add(d);
-      }
-    }
-
-    final out = <Widget>[];
-    int groupIdx = 0;
-    groups.forEach((key, list) {
-      if (list.isNotEmpty) {
-        out.add(SliverPadding(
-          padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.screenPadding, vertical: 8),
-          sliver: SliverToBoxAdapter(
-            child: HomeDoseGroup(
-              title: key,
-              doses: list,
-              takenToday: takenToday,
-              globalNextEntryKey: doses.firstWhere((d) => takenToday[d.key] != true, orElse: () => doses.last).key,
-              state: state,
-              onView: (med) => setState(() {
-                _viewingMed = med;
-                _startInEditMode = false;
-              }),
-              onEdit: (med) => setState(() {
-                _viewingMed = med;
-                _startInEditMode = true;
-              }),
-              delayOffset: (groupIdx * 150).ms,
-            ),
-          ),
-        ));
-        groupIdx++;
-      }
-    });
-    return out;
-  }
 }
 
 // ─────────────────────────────────────────────────────────────
-// HERO PROGRESS CARD — Single focused metric
+// FAST TRACKING BENTO — 3 circular stat cards (Cal AI style)
 // ─────────────────────────────────────────────────────────────
-class _HeroProgressCard extends StatelessWidget {
+class _FastTrackingBento extends StatelessWidget {
   final List<DoseItem> doses;
   final int takenCount;
   final int remaining;
   final double dosePct;
-  final Color ringCol;
   final int streak;
-  final int medsCount;
-  final AppThemeColors L;
 
-  const _HeroProgressCard({
+  const _FastTrackingBento({
     required this.doses,
     required this.takenCount,
     required this.remaining,
     required this.dosePct,
-    required this.ringCol,
     required this.streak,
-    required this.medsCount,
-    required this.L,
   });
 
   @override
   Widget build(BuildContext context) {
-    final statusLabel = doses.isEmpty
-        ? 'No doses today'
-        : dosePct == 1.0
-            ? 'All caught up'
-            : remaining == 1
-                ? '1 dose pending'
-                : '$remaining doses pending';
+    final noDoses = doses.isEmpty;
+    final skipped = noDoses ? 0 : doses.length - takenCount;
+    final streakEmoji = streak > 10 ? '🔥' : (streak > 0 ? '✨' : '❄️');
 
-    return GlassCard(
-      padding: const EdgeInsets.all(24),
+    return Row(
+      children: [
+        Expanded(child: _TrackCard(
+          emoji: '💊',
+          topValue: noDoses ? '--' : '$takenCount',
+          topUnit: 'taken',
+          label: 'Doses\ntaken',
+          ringPct: dosePct,
+          ringColor: const Color(0xFF8B5CF6),
+          ringTrack: const Color(0xFFEDE9FE),
+        )),
+        const SizedBox(width: 10),
+        Expanded(child: _TrackCard(
+          emoji: '⏳',
+          topValue: noDoses ? '--' : '$skipped',
+          topUnit: 'left',
+          label: 'Doses\nleft',
+          ringPct: noDoses ? 0 : (skipped / doses.length).clamp(0, 1),
+          ringColor: const Color(0xFFEC4899),
+          ringTrack: const Color(0xFFFCE7F3),
+        )),
+        const SizedBox(width: 10),
+        Expanded(child: _TrackCard(
+          emoji: streakEmoji,
+          topValue: '$streak',
+          topUnit: 'd',
+          label: 'Day\nstreak',
+          ringPct: (streak / 30).clamp(0, 1),
+          ringColor: const Color(0xFFF59E0B),
+          ringTrack: const Color(0xFFFEF3C7),
+        )),
+      ],
+    );
+  }
+}
+
+class _TrackCard extends StatelessWidget {
+  final String emoji;
+  final String topValue;
+  final String topUnit;
+  final String label;
+  final double ringPct;
+  final Color ringColor;
+  final Color ringTrack;
+
+  const _TrackCard({
+    required this.emoji,
+    required this.topValue,
+    required this.topUnit,
+    required this.label,
+    required this.ringPct,
+    required this.ringColor,
+    required this.ringTrack,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: L.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
+        boxShadow: AppShadows.neumorphic,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Animated emoji ──
+          Text(emoji, style: const TextStyle(fontSize: 22))
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .scale(
+                begin: const Offset(1.0, 1.0),
+                end: const Offset(1.2, 1.2),
+                duration: 1800.ms,
+                curve: Curves.easeInOut,
+              ),
+          const SizedBox(height: 8),
+          // ── Value + unit ──
           Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      doses.isEmpty
-                          ? 'Today'
-                          : '$takenCount of ${doses.length} taken',
-                      style: AppTypography.displaySmall.copyWith(
-                        color: L.text,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 22,
-                        letterSpacing: -0.8,
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      statusLabel.toUpperCase(),
-                      style: AppTypography.labelSmall.copyWith(
-                        color: L.sub.withValues(alpha: 0.5),
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              RingChart(
-                percent: dosePct,
-                size: 80,
-                color: dosePct == 1.0 ? L.success : L.text,
-                label: doses.isEmpty ? '—' : '${(dosePct * 100).toInt()}%',
-                sub: 'DOSE',
-              ),
+              Text(topValue,
+                  style: AppTypography.displaySmall.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: L.text,
+                    letterSpacing: -0.5,
+                  )),
+              const SizedBox(width: 2),
+              Text(topUnit,
+                  style: AppTypography.labelSmall.copyWith(
+                    fontSize: 10,
+                    color: L.sub.withValues(alpha: 0.45),
+                    fontWeight: FontWeight.w600,
+                  )),
             ],
           ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              _MetaItem(
-                icon: Icons.local_fire_department_rounded,
-                label: 'Streak',
-                value: '$streak',
-                L: L,
+          const SizedBox(height: 2),
+          Text(label,
+              style: AppTypography.labelSmall.copyWith(
+                fontSize: 10.5,
+                color: L.sub.withValues(alpha: 0.45),
+                fontWeight: FontWeight.w500,
+                height: 1.3,
+              )),
+          const SizedBox(height: 12),
+          // ── Ring chart with % inside ──
+          Center(
+            child: SizedBox(
+              width: 52,
+              height: 52,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: ringPct),
+                duration: const Duration(milliseconds: 1200),
+                curve: Curves.easeOutExpo,
+                builder: (ctx, val, _) => CustomPaint(
+                  painter: _MiniRingPainter(
+                    pct: val,
+                    color: ringColor,
+                    track: ringTrack,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${(ringPct * 100).round()}%',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        color: ringColor,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(width: 28),
-              _MetaItem(
-                icon: Icons.medication_rounded,
-                label: 'Meds',
-                value: '$medsCount',
-                L: L,
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -530,291 +461,456 @@ class _HeroProgressCard extends StatelessWidget {
   }
 }
 
-class _MetaItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final AppThemeColors L;
-  const _MetaItem({required this.icon, required this.label, required this.value, required this.L});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(color: L.fill.withValues(alpha: 0.1), shape: BoxShape.circle),
-          child: Icon(icon, size: 14, color: L.sub.withValues(alpha: 0.65)),
-        ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub.withValues(alpha: 0.45), fontSize: 10, fontWeight: FontWeight.w700)),
-            Text(value, style: AppTypography.labelMedium.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: -0.2)),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-// ------------------------------------------------------------------
-// SMART ALERT HUB
-// ------------------------------------------------------------------
-class _HomeAlertHub extends StatelessWidget {
-  final AppState state;
-  final AppThemeColors L;
-  final VoidCallback onScrollToMeds;
-  final VoidCallback onOpenStreak;
-
-  const _HomeAlertHub({
-    required this.state,
-    required this.L,
-    required this.onScrollToMeds,
-    required this.onOpenStreak,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final missed = state.missedAlerts.where((a) => !a.seen).toList();
-    final lowMeds = state.getLowMeds().where((m) => m.count < 3).toList();
-    final interaction = state.interactionWarning;
-
-    return Column(
-      children: [
-        if (interaction != null)
-          _AlertTile(
-            title: 'Drug interaction detected',
-            content: interaction,
-            icon: Icons.warning_amber_rounded,
-            color: L.error,
-            L: L,
-            onTap: () => HapticEngine.selection(),
-          ),
-        if (missed.isNotEmpty)
-          _AlertTile(
-            title: 'Missed doses',
-            content: missed.length == 1
-                ? 'You have 1 dose pending review.'
-                : 'You have ${missed.length} doses pending review.',
-            icon: Icons.history_rounded,
-            color: L.error,
-            L: L,
-            onTap: onScrollToMeds,
-          ),
-        if (lowMeds.isNotEmpty)
-          _AlertTile(
-            title: 'Low supply',
-            content: lowMeds.length == 1
-                ? '${lowMeds.first.name} is almost empty.'
-                : '${lowMeds.length} medicines need a refill.',
-            icon: Icons.inventory_2_rounded,
-            color: L.warning,
-            L: L,
-            onTap: onScrollToMeds,
-          ),
-      ],
-    );
-  }
-}
-
-class _AlertTile extends StatelessWidget {
-  final String title;
-  final String content;
-  final IconData icon;
+class _MiniRingPainter extends CustomPainter {
+  final double pct;
   final Color color;
-  final AppThemeColors L;
-  final VoidCallback onTap;
-
-  const _AlertTile({
-    required this.title,
-    required this.content,
-    required this.icon,
-    required this.color,
-    required this.L,
-    required this.onTap,
-  });
+  final Color track;
+  _MiniRingPainter({required this.pct, required this.color, required this.track});
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: SquircleCard(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        child: InkWell(
-          onTap: onTap,
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 18, color: color),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTypography.labelMedium.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      content,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: L.text.withValues(alpha: 0.8),
-                        fontWeight: FontWeight.w500,
-                        height: 1.3,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right_rounded, color: L.sub.withValues(alpha: 0.3), size: 20),
-            ],
-          ),
-        ),
-      ),
-    );
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r = (size.width - 7) / 2;
+    final trackPaint = Paint()..color = track..strokeWidth = 7..style = PaintingStyle.stroke..strokeCap = StrokeCap.round;
+    final fgPaint = Paint()..color = color..strokeWidth = 7..style = PaintingStyle.stroke..strokeCap = StrokeCap.round;
+    canvas.drawCircle(Offset(cx, cy), r, trackPaint);
+    if (pct > 0) {
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset(cx, cy), radius: r),
+        -3.14159 / 2,
+        2 * 3.14159 * pct,
+        false,
+        fgPaint,
+      );
+    }
   }
+
+  @override
+  bool shouldRepaint(_MiniRingPainter old) => old.pct != pct;
 }
 
 // ─────────────────────────────────────────────────────────────
-// HEALTH SNAPSHOT CARD — Steps, Heart Rate, etc.
+// ADHERENCE SCORE CARD — Cal AI "Health Score" card
 // ─────────────────────────────────────────────────────────────
-class _HealthSnapshotCard extends StatelessWidget {
-  final double steps;
-  final double heartRate;
-  final bool isSyncing;
-  final AppThemeColors L;
+class _AdherenceScoreCard extends StatelessWidget {
+  final double dosePct;
+  final List<DoseItem> doses;
+  final int takenCount;
 
-  const _HealthSnapshotCard({
-    required this.steps,
-    required this.heartRate,
-    required this.isSyncing,
-    required this.L,
+  const _AdherenceScoreCard({
+    required this.dosePct,
+    required this.doses,
+    required this.takenCount,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
+    final L = context.L;
+    final score = doses.isEmpty ? 0 : (dosePct * 10).round();
+    final noDoses = doses.isEmpty;
+    final moodEmoji = noDoses ? '💊'
+        : dosePct == 1.0 ? '🎯'
+        : dosePct >= 0.8 ? '😊'
+        : dosePct >= 0.5 ? '😐'
+        : '😔';
+
+    final msg = noDoses
+        ? 'Add your medications to start tracking adherence and get AI insights.'
+        : dosePct == 1.0
+            ? "\uD83C\uDF89 Perfect score! All doses taken today. Incredible consistency!"
+            : dosePct >= 0.8
+                ? "Great job \u2014 you're nearly perfect. Don't miss your remaining doses."
+                : dosePct >= 0.5
+                    ? "You're making progress. Take your remaining doses for full adherence."
+                    : "Your adherence is low today. Focus on your scheduled doses to improve.";
+
+    return Container(
       padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: L.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
+        boxShadow: AppShadows.neumorphic,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'HEALTH SNAPSHOT',
-                style: AppTypography.labelSmall.copyWith(
-                  color: L.sub.withValues(alpha: 0.5),
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
-                  fontSize: 10,
-                ),
+              Row(
+                children: [
+                  Text(moodEmoji, style: const TextStyle(fontSize: 22))
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scale(
+                        begin: const Offset(1.0, 1.0),
+                        end: const Offset(1.2, 1.2),
+                        duration: 2000.ms,
+                        curve: Curves.easeInOut,
+                      ),
+                  const SizedBox(width: 8),
+                  Text('Adherence Score',
+                      style: AppTypography.labelMedium.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: L.text,
+                        fontSize: 15,
+                        letterSpacing: -0.2,
+                      )),
+                ],
               ),
-              if (isSyncing)
-                const SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white24),
-                )
-              else
-                Icon(Icons.sync_rounded, size: 14, color: L.sub.withValues(alpha: 0.3)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _HealthMetric(
-                  icon: Icons.directions_run_rounded,
-                  label: 'Steps',
-                  value: steps.toInt().toString(),
-                  unit: 'today',
-                  color: const Color(0xFF34C759),
-                  L: L,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: L.text.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ),
-              Container(width: 1, height: 40, color: L.border.withValues(alpha: 0.1)),
-              Expanded(
-                child: _HealthMetric(
-                  icon: Icons.favorite_rounded,
-                  label: 'Heart Rate',
-                  value: heartRate > 0 ? heartRate.toInt().toString() : '--',
-                  unit: 'bpm',
-                  color: const Color(0xFFFF2D55),
-                  L: L,
-                ),
+                child: Text('$score/10',
+                    style: AppTypography.labelLarge.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: L.text,
+                      fontSize: 13,
+                    )),
               ),
             ],
           ),
+          const SizedBox(height: 14),
+          // Gradient progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(100),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: dosePct),
+              duration: const Duration(milliseconds: 1000),
+              curve: Curves.easeOutExpo,
+              builder: (ctx, val, _) {
+                return Stack(
+                  children: [
+                    Container(
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: L.fill.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: noDoses ? 0 : val,
+                      child: Container(
+                        height: 8,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: dosePct >= 0.8
+                                ? [const Color(0xFFD4F544), const Color(0xFFE8F000)]
+                                : dosePct >= 0.5
+                                    ? [Colors.orange.shade300, Colors.orange]
+                                    : [Colors.red.shade300, Colors.red],
+                          ),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(msg,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodySmall.copyWith(
+                color: L.sub.withValues(alpha: 0.65),
+                fontSize: 12.5,
+                height: 1.5,
+              )),
         ],
       ),
     );
   }
 }
 
-class _HealthMetric extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final String unit;
-  final Color color;
-  final AppThemeColors L;
+// ─────────────────────────────────────────────────────────────
+// NEXT DOSE CAROUSEL — Cal AI "Recently uploaded" style card
+// ─────────────────────────────────────────────────────────────
+class _NextDoseCarousel extends StatelessWidget {
+  final List<DoseItem> doses;
+  final Map<String, bool> takenToday;
+  final AppState state;
+  final Function(Medicine) onView;
 
-  const _HealthMetric({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.unit,
-    required this.color,
-    required this.L,
+  const _NextDoseCarousel({
+    required this.doses,
+    required this.takenToday,
+    required this.state,
+    required this.onView,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    // Find upcoming (untaken) doses, fall back to all
+    final upcoming = doses.where((d) => takenToday[d.key] != true).toList();
+    final toShow = upcoming.isEmpty ? doses.take(3).toList() : upcoming.take(3).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, size: 14, color: color),
-              const SizedBox(width: 6),
-              Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub.withValues(alpha: 0.45), fontSize: 10, fontWeight: FontWeight.w700)),
+              Text('Recently scheduled',
+                  style: AppTypography.labelMedium.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: Colors.black,
+                    letterSpacing: -0.2,
+                  )),
+              if (upcoming.isEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text('All done ✓',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: const Color(0xFF166534),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                      )),
+                ),
             ],
           ),
-          const SizedBox(height: 4),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(value, style: AppTypography.displaySmall.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 24, letterSpacing: -0.5)),
-              const SizedBox(width: 4),
-              Text(unit, style: AppTypography.bodySmall.copyWith(color: L.sub.withValues(alpha: 0.4), fontSize: 10, fontWeight: FontWeight.w600)),
-            ],
+        ),
+        ...toShow.map((d) {
+          final isTaken = takenToday[d.key] == true;
+          final timeStr = '${d.sched.h.toString().padLeft(2, '0')}:${d.sched.m.toString().padLeft(2, '0')}';
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: BouncingButton(
+              onTap: () => onView(d.med),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 14, spreadRadius: -2, offset: const Offset(0, 4)),
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 4, offset: const Offset(0, 1)),
+                  ],
+                  border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                ),
+                child: Row(
+                  children: [
+                    // Icon
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: isTaken ? const Color(0xFFDCFCE7) : const Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          isTaken ? Icons.check_rounded : Icons.medication_rounded,
+                          color: isTaken ? const Color(0xFF16A34A) : Colors.black.withValues(alpha: 0.6),
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    // Details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(d.med.name,
+                              style: AppTypography.labelMedium.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black,
+                                fontSize: 14,
+                              )),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(Icons.medication_liquid_outlined, size: 12, color: Colors.black.withValues(alpha: 0.4)),
+                              const SizedBox(width: 4),
+                              Text(d.med.dose,
+                                  style: AppTypography.labelSmall.copyWith(
+                                    fontSize: 11,
+                                    color: Colors.black.withValues(alpha: 0.45),
+                                    fontWeight: FontWeight.w500,
+                                  )),
+                              const SizedBox(width: 10),
+                              Icon(Icons.schedule_outlined, size: 12, color: Colors.black.withValues(alpha: 0.4)),
+                              const SizedBox(width: 4),
+                              Text(timeStr,
+                                  style: AppTypography.labelSmall.copyWith(
+                                    fontSize: 11,
+                                    color: Colors.black.withValues(alpha: 0.45),
+                                    fontWeight: FontWeight.w500,
+                                  )),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Time badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: isTaken ? const Color(0xFFDCFCE7) : Colors.black,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: Text(
+                        isTaken ? 'Taken' : timeStr,
+                        style: AppTypography.labelSmall.copyWith(
+                          fontSize: 11,
+                          color: isTaken ? const Color(0xFF16A34A) : Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+
+
+// ─────────────────────────────────────────────────────────────
+// ANIMATED RING PAINTER — CustomPainter arc (kept for possible reuse)
+// ─────────────────────────────────────────────────────────────
+class _AnimatedRing extends StatefulWidget {
+  final double percent;
+  final Color color;
+  final Color trackColor;
+  final double size;
+  final double strokeWidth;
+  final Widget child;
+
+  const _AnimatedRing({
+    required this.percent,
+    required this.color,
+    required this.trackColor,
+    required this.size,
+    required this.strokeWidth,
+    required this.child,
+  });
+
+  @override
+  State<_AnimatedRing> createState() => _AnimatedRingState();
+}
+
+class _AnimatedRingState extends State<_AnimatedRing>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _anim = Tween<double>(begin: 0, end: widget.percent)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutExpo));
+    _ctrl.forward();
+  }
+
+  @override
+  void didUpdateWidget(_AnimatedRing old) {
+    super.didUpdateWidget(old);
+    if (old.percent != widget.percent) {
+      _anim = Tween<double>(begin: _anim.value, end: widget.percent)
+          .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutExpo));
+      _ctrl
+        ..reset()
+        ..forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (context, _) => SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: CustomPaint(
+          painter: _RingPainter(
+            percent: _anim.value,
+            color: widget.color,
+            trackColor: widget.trackColor,
+            strokeWidth: widget.strokeWidth,
           ),
-        ],
+          child: Center(child: widget.child),
+        ),
       ),
     );
   }
 }
+
+class _RingPainter extends CustomPainter {
+  final double percent;
+  final Color color;
+  final Color trackColor;
+  final double strokeWidth;
+
+  _RingPainter({
+    required this.percent,
+    required this.color,
+    required this.trackColor,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+    const startAngle = -1.5707963267948966; // -π/2 (top)
+    final sweepAngle = 2 * 3.14159265358979323846 * percent;
+
+    // Track
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      0, 2 * 3.14159265358979323846, false,
+      Paint()
+        ..color = trackColor
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
+    );
+
+    if (percent > 0) {
+      // Progress arc
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle, sweepAngle, false,
+        Paint()
+          ..color = color
+          ..strokeWidth = strokeWidth
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) =>
+      old.percent != percent || old.color != color;
+}
+
 
 // ─────────────────────────────────────────────────────────────
 // DOSE GROUP — grouped timeline section

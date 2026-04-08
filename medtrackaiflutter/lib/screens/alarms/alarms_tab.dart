@@ -91,7 +91,7 @@ class _AlarmsTabState extends State<AlarmsTab> {
         (activeSchedules.isNotEmpty ? activeSchedules.first : null);
 
     return Scaffold(
-      backgroundColor: L.bg,
+      backgroundColor: L.meshBg,
       body: Stack(
         children: [
           // ── MAIN SCROLL CONTENT ──
@@ -102,7 +102,7 @@ class _AlarmsTabState extends State<AlarmsTab> {
             },
             displacement: 100,
             color: L.text,
-            backgroundColor: L.bg,
+            backgroundColor: L.meshBg,
             child: CustomScrollView(
               controller: _scrollController,
               physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
@@ -352,7 +352,7 @@ class _AlarmsHeader extends StatelessWidget {
           duration: 300.ms,
           padding: EdgeInsets.fromLTRB(28, topPad + 18, 20, 18),
           decoration: BoxDecoration(
-            color: isScrolled ? L.bg.withValues(alpha: 0.85) : Colors.transparent,
+            color: isScrolled ? L.meshBg.withValues(alpha: 0.85) : Colors.transparent,
             border: Border(
               bottom: BorderSide(
                 color: isScrolled ? L.border.withValues(alpha: 0.1) : Colors.transparent,
@@ -403,7 +403,7 @@ class _AlarmsHeader extends StatelessWidget {
                         BoxShadow(color: L.text.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 6))
                       ],
                     ),
-                    child: Icon(Icons.add_rounded, color: L.bg, size: 26),
+                    child: const Center(child: Text('➕', style: TextStyle(fontSize: 22))),
                   ),
                 ),
             ],
@@ -487,10 +487,16 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: AppGradients.glass(L.text),
-        borderRadius: BorderRadius.circular(32),
+        color: L.card,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
         boxShadow: [
-          BoxShadow(color: L.text.withValues(alpha: 0.25), blurRadius: 24, offset: const Offset(0, 8))
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 32,
+            offset: const Offset(0, 16),
+            spreadRadius: -8,
+          ),
         ],
       ),
       child: Padding(
@@ -504,7 +510,7 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: L.fill.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Row(
@@ -513,14 +519,14 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                       Container(
                         width: 6,
                         height: 6,
-                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: L.text, shape: BoxShape.circle),
                       ).animate(onPlay: (c) => c.repeat(reverse: true))
                           .scale(duration: 1500.ms, begin: const Offset(0.8, 0.8), end: const Offset(1.4, 1.4)),
                       const SizedBox(width: 8),
                       Text(
                         'UPCOMING DOSE',
                         style: AppTypography.labelSmall.copyWith(
-                          color: Colors.white,
+                          color: L.text,
                           fontWeight: FontWeight.w900,
                           fontSize: 10,
                           letterSpacing: 1.5,
@@ -532,7 +538,7 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                 Text(
                   fmtTime(s.h, s.m, context).toUpperCase(),
                   style: AppTypography.labelSmall.copyWith(
-                    color: Colors.white.withValues(alpha: 0.6),
+                    color: L.text.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.0,
                   ),
@@ -547,20 +553,28 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                 height: 140,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
+                  color: L.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.verified_rounded, color: Colors.white, size: 48)
+                    const Text('✅', style: TextStyle(fontSize: 48))
                         .animate()
-                        .scale(duration: 400.ms, curve: Curves.easeOutBack),
+                        .scale(duration: 400.ms, curve: Curves.easeOutBack)
+                        .then()
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .scale(
+                          begin: const Offset(1.0, 1.0),
+                          end: const Offset(1.1, 1.1),
+                          duration: 800.ms,
+                          curve: Curves.easeInOut,
+                        ),
                     const SizedBox(height: 12),
                     Text(
                       'LOGGED SUCCESSFULLY',
                       style: AppTypography.labelSmall.copyWith(
-                        color: Colors.white,
+                        color: L.success,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2.0,
                       ),
@@ -579,7 +593,7 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                         Text(
                           med.name,
                           style: AppTypography.headlineMedium.copyWith(
-                            color: Colors.white,
+                            color: L.text,
                             fontWeight: FontWeight.w900,
                             fontSize: 32,
                             letterSpacing: -1.0,
@@ -590,7 +604,7 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                         Text(
                           '${med.dose} · ${s.label.toUpperCase()}',
                           style: AppTypography.labelSmall.copyWith(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: L.sub.withValues(alpha: 0.5),
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.0,
                           ),
@@ -599,7 +613,7 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                         Text(
                           _diffStr.toUpperCase(),
                           style: AppTypography.displaySmall.copyWith(
-                            color: Colors.white,
+                            color: L.text,
                             fontSize: 14,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.5,
@@ -612,11 +626,18 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: L.text.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Center(
-                      child: Icon(Icons.medication_rounded, color: Colors.white, size: 32),
+                    child: Center(
+                      child: const Text('💊', style: TextStyle(fontSize: 32))
+                          .animate(onPlay: (c) => c.repeat(reverse: true))
+                          .scale(
+                            begin: const Offset(1.0, 1.0),
+                            end: const Offset(1.15, 1.15),
+                            duration: 1800.ms,
+                            curve: Curves.easeInOut,
+                          ),
                     ),
                   ),
                 ],
@@ -690,12 +711,14 @@ class _AlarmCard extends StatelessWidget {
           color: L.error.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(24),
         ),
-        child: Icon(Icons.delete_outline_rounded, color: L.error, size: 24),
+        child: const Center(child: Text('🗑️', style: TextStyle(fontSize: 18))),
       ),
       child: GestureDetector(
         onTap: onEdit,
         child: SquircleCard(
           padding: const EdgeInsets.all(16),
+          radius: 24,
+          borderWidth: 0.5,
           child: Row(
             children: [
               Container(
@@ -709,12 +732,13 @@ class _AlarmCard extends StatelessWidget {
                   children: [
                     Text(
                       fmtTime(s.h, s.m, context).split(' ')[0],
-                      style: AppTypography.titleMedium.copyWith(
-                        fontSize: 20,
+                      style: AppTypography.displayLarge.copyWith(
+                        fontSize: 28,
                         fontWeight: FontWeight.w900,
+                        fontFamily: 'Courier',
                         color: isEnabled ? L.bg : L.sub.withValues(alpha: 0.5),
                         height: 1.0,
-                        letterSpacing: -1.0,
+                        letterSpacing: -1.5,
                       ),
                     ),
                     Text(
@@ -750,11 +774,11 @@ class _AlarmCard extends StatelessWidget {
                           ),
                         ),
                         if (taken)
-                          _StatusChip(label: 'Taken', color: L.success, L: L)
+                          _StatusChip(label: '\u2705 Taken', color: L.success, L: L)
                         else if (isOverdue)
-                          _StatusChip(label: 'Missed', color: L.error, L: L)
+                          _StatusChip(label: '\u26a0\ufe0f Missed', color: L.error, L: L)
                         else if (isEnabled)
-                          _StatusChip(label: 'Upcoming', color: L.text.withValues(alpha: 0.6), L: L),
+                          _StatusChip(label: '\u23f0 Soon', color: L.text.withValues(alpha: 0.6), L: L),
                       ],
                     ),
                     const SizedBox(height: 2),
@@ -810,7 +834,7 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
         return Container(
           height: 60,
           decoration: BoxDecoration(
-            color: widget.L.bg.withValues(alpha: 0.12),
+            color: widget.L.text.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(100),
           ),
           child: Stack(
@@ -820,7 +844,7 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
                 height: 60,
                 width: _knobSize + _offset + _trackPad,
                 decoration: BoxDecoration(
-                  color: widget.L.bg.withValues(alpha: progress * 0.12),
+                  color: widget.L.text.withValues(alpha: progress * 0.12),
                   borderRadius: BorderRadius.circular(100),
                 ),
               ),
@@ -831,7 +855,7 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
                   child: Text(
                     'Slide to record dose →',
                     style: AppTypography.labelMedium.copyWith(
-                      color: widget.L.bg.withValues(alpha: 0.65),
+                      color: widget.L.text.withValues(alpha: 0.65),
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
                     ),
@@ -843,11 +867,12 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
                   child: Text(
                     '✓ Dose Recorded',
                     style: AppTypography.labelMedium.copyWith(
-                      color: widget.L.bg,
+                      color: widget.L.text,
                       fontWeight: FontWeight.w900,
                       fontSize: 13,
+                      letterSpacing: 0.5,
                     ),
-                  ).animate().fadeIn(duration: 300.ms).scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1)),
+                  ).animate().fadeIn(duration: 300.ms).scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1)),
                 ),
               if (!_confirmed)
                 Positioned(
@@ -874,18 +899,18 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
                       width: _knobSize,
                       height: _knobSize,
                       decoration: BoxDecoration(
-                        color: widget.L.bg,
+                        color: widget.L.text,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.15),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
                       child: Center(
-                        child: Icon(Icons.chevron_right_rounded, color: widget.L.text, size: 32),
+                        child: const Center(child: Text('→', style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.w900))),
                       ),
                     ),
                   ),
@@ -920,14 +945,19 @@ class _EmptyAlarmsState extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 72,
-            height: 72,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
-              color: L.text.withValues(alpha: 0.06),
+              color: L.text.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
-            child: Center(child: Icon(Icons.notifications_none_rounded, color: L.text, size: 32)),
-          ),
+            child: const Center(
+              child: Text(
+                '🔕',
+                style: TextStyle(fontSize: 40),
+              ),
+            ),
+          ).animate().slideY(begin: 0.2, end: 0, curve: Curves.easeOutBack, duration: 600.ms),
           const SizedBox(height: 24),
           Text(
             'No reminders yet',
@@ -1017,21 +1047,34 @@ class _MedAlarmTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: L.fill.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: L.border.withValues(alpha: 0.05)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppShadows.neumorphic,
       ),
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         onTap: onAdd,
         leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(color: L.text.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
-          child: Icon(Icons.medication_rounded, color: L.text.withValues(alpha: 0.7), size: 20),
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+              color: L.text.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(12)),
+          child: const Center(
+            child: Text('💊', style: TextStyle(fontSize: 22)),
+          ),
         ),
-        title: Text(med.name, style: AppTypography.titleMedium.copyWith(fontSize: 15, fontWeight: FontWeight.w800)),
-        subtitle: Text('No schedule set', style: AppTypography.labelSmall.copyWith(color: L.sub.withValues(alpha: 0.5), fontSize: 10, letterSpacing: 0.5)),
-        trailing: Icon(Icons.add_circle_outline_rounded, color: L.text.withValues(alpha: 0.4), size: 22),
+        title: Text(med.name,
+            style: AppTypography.titleMedium
+                .copyWith(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+        subtitle: Text('Needs schedule'.toUpperCase(),
+            style: AppTypography.labelSmall.copyWith(
+                color: L.sub.withValues(alpha: 0.4),
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.0)),
+        trailing: Icon(Icons.add_circle_outline_rounded,
+            color: L.text.withValues(alpha: 0.3), size: 24),
       ),
     );
   }
@@ -1046,19 +1089,18 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.15), width: 0.5),
       ),
       child: Text(
         label.toUpperCase(),
         style: AppTypography.labelSmall.copyWith(
           color: color,
-          fontSize: 9,
+          fontSize: 8.5,
           fontWeight: FontWeight.w900,
-          letterSpacing: 0.5,
+          letterSpacing: 0.8,
         ),
       ),
     );
@@ -1078,7 +1120,7 @@ class _MedPickerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: L.bg,
+        color: L.meshBg,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
@@ -1121,9 +1163,9 @@ class _MedPickerSheet extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: L.fill.withValues(alpha: 0.08),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: L.border.withValues(alpha: 0.06), width: 1.5),
+                      boxShadow: AppShadows.neumorphic,
                     ),
                     child: Row(children: [
                       Container(
@@ -1133,7 +1175,7 @@ class _MedPickerSheet extends StatelessWidget {
                           color: L.text.withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(11),
                         ),
-                        child: Center(child: Icon(Icons.medication_rounded, color: L.text, size: 20)),
+                        child: const Center(child: Text('💊', style: TextStyle(fontSize: 14))),
                       ),
                       const SizedBox(width: 14),
                       Expanded(child: Column(
@@ -1202,9 +1244,9 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: L.fill.withValues(alpha: 0.08),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: L.border.withValues(alpha: 0.06)),
+              boxShadow: AppShadows.neumorphic,
             ),
             child: Row(children: [
               Container(
@@ -1214,7 +1256,7 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                   color: L.text.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Center(child: Icon(Icons.medication_rounded, color: L.text, size: 18)),
+                child: const Center(child: Text('💊', style: TextStyle(fontSize: 12))),
               ),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

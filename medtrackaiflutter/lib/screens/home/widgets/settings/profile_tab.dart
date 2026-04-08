@@ -61,6 +61,33 @@ class _ProfileTabState extends State<ProfileTab> {
     super.dispose();
   }
 
+  void _confirmDeleteAccount(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: widget.L.bg,
+        title: Text('Delete Account?', style: AppTypography.titleLarge.copyWith(color: widget.L.text, fontWeight: FontWeight.w900)),
+        content: Text(
+          'This action is permanent and will delete all your medication history and account data from our servers.',
+          style: AppTypography.bodyMedium.copyWith(color: widget.L.sub),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('CANCEL', style: AppTypography.labelLarge.copyWith(color: widget.L.sub)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              widget.state.deleteAccount();
+            },
+            child: Text('DELETE', style: AppTypography.labelLarge.copyWith(color: Colors.redAccent, fontWeight: FontWeight.w900)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = widget.state.profile;
@@ -76,24 +103,19 @@ class _ProfileTabState extends State<ProfileTab> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: L.text, // Premium Industrial Black
+            color: L.card,
             borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: L.text.withValues(alpha: 0.15),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              )
-            ],
+            border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
+            boxShadow: AppShadows.neumorphic,
           ),
           child: Row(children: [
             Container(
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                  color: L.bg.withValues(alpha: 0.1),
+                  color: L.fill.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: L.bg.withValues(alpha: 0.2))),
+                  border: Border.all(color: L.border.withValues(alpha: 0.1))),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(24),
                 child: Center(
@@ -109,7 +131,14 @@ class _ProfileTabState extends State<ProfileTab> {
                           )
                         : Text(p?.avatar ?? '😊',
                             style: AppTypography.displaySmall
-                                .copyWith(fontSize: 36))),
+                                .copyWith(fontSize: 36))
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .scale(
+                              begin: const Offset(1.0, 1.0),
+                              end: const Offset(1.1, 1.1),
+                              duration: 2000.ms,
+                              curve: Curves.easeInOut,
+                            )),
               ),
             ),
             const SizedBox(width: 20),
@@ -123,7 +152,7 @@ class _ProfileTabState extends State<ProfileTab> {
                         child: Text(p?.name ?? 'Your Name',
                             style: AppTypography.titleLarge.copyWith(
                                 fontWeight: FontWeight.w900,
-                                color: L.bg,
+                                color: L.text,
                                 fontSize: 22,
                                 letterSpacing: -0.5)),
                       ),
@@ -150,7 +179,7 @@ class _ProfileTabState extends State<ProfileTab> {
                   Text(
                       '${p?.age != null && p!.age.isNotEmpty ? "Age ${p.age}" : "Age not set"}${p?.gender != null && p!.gender.isNotEmpty ? " · ${p.gender}" : ""}',
                       style: AppTypography.bodySmall
-                          .copyWith(color: L.bg.withValues(alpha: 0.5), fontWeight: FontWeight.w700)),
+                          .copyWith(color: L.sub.withValues(alpha: 0.6), fontWeight: FontWeight.w700)),
                 ])),
             if (!_editing)
               BouncingButton(
@@ -163,15 +192,15 @@ class _ProfileTabState extends State<ProfileTab> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                      color: L.bg.withValues(alpha: 0.1), 
+                      color: L.fill.withValues(alpha: 0.5), 
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: L.bg.withValues(alpha: 0.15))),
+                      border: Border.all(color: L.border.withValues(alpha: 0.1))),
                   child: Text(s.edit.toUpperCase(),
                       style: AppTypography.labelLarge.copyWith(
                           fontWeight: FontWeight.w900,
                           fontSize: 10,
                           letterSpacing: 1.0,
-                          color: L.bg)),
+                          color: L.text)),
                 ),
               ),
           ]),
@@ -359,9 +388,8 @@ class _ProfileTabState extends State<ProfileTab> {
                 decoration: BoxDecoration(
                   color: L.card,
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                      color: L.primary.withValues(alpha: 0.3), width: 1.5),
-                  boxShadow: AppShadows.soft,
+                  border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
+                  boxShadow: AppShadows.neumorphic,
                 ),
                 child: Row(children: [
                   Container(
@@ -371,8 +399,15 @@ class _ProfileTabState extends State<ProfileTab> {
                       color: L.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Center(
-                        child: Text('🚀', style: TextStyle(fontSize: 24))),
+                    child: Center(
+                        child: const Text('🚀', style: TextStyle(fontSize: 24))
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .scale(
+                              begin: const Offset(1.0, 1.0),
+                              end: const Offset(1.2, 1.2),
+                              duration: 1500.ms,
+                              curve: Curves.easeInOut,
+                            )),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -439,12 +474,31 @@ class _ProfileTabState extends State<ProfileTab> {
                 border: true,
               ),
               SettingsModalRow(
-                icon: widget.state.darkMode
-                    ? Icons.dark_mode_rounded
-                    : Icons.light_mode_rounded,
-                label: 'Appearance',
-                sub: widget.state.darkMode ? 'Dark Mode' : 'Light Mode',
-                onClick: () => widget.state.toggleDarkMode(),
+                icon: '🌐',
+                label: 'Language',
+                sub: 'English (Default)',
+                onClick: () {},
+                last: true,
+                border: false,
+              ),
+            ]),
+          ),
+          SettingsSection(
+            title: 'Data & Reports',
+            child: Column(children: [
+              SettingsModalRow(
+                icon: Icons.assignment_rounded,
+                label: 'Clinical PDF Report',
+                sub: 'Generate a summary for your doctor',
+                onClick: () => widget.state.exportDataPDF(),
+                first: true,
+                border: true,
+              ),
+              SettingsModalRow(
+                icon: '📊',
+                label: 'Export CSV Data',
+                sub: 'Download raw history for backup',
+                onClick: () => widget.state.exportDataCSV(),
                 last: true,
                 border: false,
               ),
@@ -456,11 +510,19 @@ class _ProfileTabState extends State<ProfileTab> {
               children: [
                 if (AuthService.isLoggedIn) ...[
                   SettingsModalRow(
-                    icon: Icons.logout_rounded,
+                    icon: '🚪',
                     label: 'Sign Out',
                     sub: AuthService.email,
                     onClick: () => widget.state.signOut(),
                     first: true,
+                    border: true,
+                  ),
+                  SettingsModalRow(
+                    icon: '🗑️',
+                    label: 'Delete Account',
+                    sub: 'Permanently remove your data',
+                    iconBg: L.red,
+                    onClick: () => _confirmDeleteAccount(context),
                     last: true,
                     border: false,
                   ),
@@ -483,9 +545,85 @@ class _ProfileTabState extends State<ProfileTab> {
               ],
             ),
           ),
+          SettingsSection(
+            title: 'Support & Feedback',
+            child: Column(children: [
+              SettingsModalRow(
+                icon: '💬',
+                label: 'Contact Support',
+                sub: 'Get help with your account',
+                onClick: () => widget.state.contactSupport(),
+                first: true,
+                border: true,
+              ),
+              SettingsModalRow(
+                icon: '⭐',
+                label: 'Rate MedAI',
+                sub: 'Help us improve for others',
+                onClick: () => widget.state.requestReview(),
+                last: true,
+                border: false,
+              ),
+            ]),
+          ),
+          SettingsSection(
+            title: 'Legal & Privacy',
+            child: Column(children: [
+              SettingsModalRow(
+                icon: '🔐',
+                label: 'Privacy Policy',
+                sub: 'How we protect your data',
+                onClick: () => widget.state.openPrivacyPolicy(),
+                first: true,
+                border: true,
+              ),
+              SettingsModalRow(
+                icon: '📜',
+                label: 'Terms of Service',
+                sub: 'Your rights and responsibilities',
+                onClick: () => widget.state.openTermsOfService(),
+                border: true,
+              ),
+              SettingsModalRow(
+                icon: 'ℹ️',
+                label: 'Open Source Licenses',
+                sub: 'Software that makes MedAI possible',
+                onClick: () => showLicensePage(context: context),
+                last: true,
+                border: false,
+              ),
+            ]),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  'MedAI 1.0.0+1',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: L.sub.withValues(alpha: 0.4),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 10,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'MADE WITH ❤️ BY MEDAI TEAM',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: L.sub.withValues(alpha: 0.2),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 8,
+                    letterSpacing: 2.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 140),
         ],
-        const SizedBox(height: 120),
-      ]),
-    );
-  }
+      ],
+    ),
+  );
+}
 }

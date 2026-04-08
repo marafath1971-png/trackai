@@ -114,7 +114,7 @@ class StreakModal extends StatelessWidget {
               decoration: BoxDecoration(
                   color: L.bg,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                  border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.0)),
+                  border: Border.all(color: L.border.withValues(alpha: 0.1), width: 0.5)),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 const SizedBox(height: 12),
                 Center(child: Container(width: 36, height: 4, decoration: BoxDecoration(color: L.border.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(99)))),
@@ -139,13 +139,18 @@ class StreakModal extends StatelessWidget {
                         // Main Metric Card B&W Refined
                         Container(
                           padding: const EdgeInsets.all(24),
-                          decoration: ShapeDecoration(
-                              color: L.card,
-                              shape: ContinuousRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(color: L.text.withValues(alpha: 0.1), width: 1.0),
+                          decoration: BoxDecoration(
+                            color: L.card,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.02),
+                                blurRadius: 16,
+                                offset: const Offset(0, 8),
                               ),
-                              shadows: L.shadowSoft),
+                            ],
+                          ),
                           child: Row(children: [
                             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text('$streak',
@@ -169,11 +174,11 @@ class StreakModal extends StatelessWidget {
                         
                         // B&W Stats Grid
                         Row(children: [
-                          Expanded(child: _StatBox(label: 'Tracked', val: '$totalDaysTracked', icon: Icons.calendar_today_rounded, L: L)),
+                          Expanded(child: _StatBox(label: 'Tracked', val: '$totalDaysTracked', emoji: '📅', L: L)),
                           const SizedBox(width: 12),
-                          Expanded(child: _StatBox(label: 'Taken', val: '$totalTaken', icon: Icons.done_all_rounded, L: L)),
+                          Expanded(child: _StatBox(label: 'Taken', val: '$totalTaken', emoji: '✅', L: L)),
                           const SizedBox(width: 12),
-                          Expanded(child: _StatBox(label: 'Logged', val: '$totalDoses', icon: Icons.analytics_rounded, L: L)),
+                          Expanded(child: _StatBox(label: 'Logged', val: '$totalDoses', emoji: '📈', L: L)),
                         ]),
                         
                         const SizedBox(height: 24),
@@ -182,12 +187,18 @@ class StreakModal extends StatelessWidget {
                         if (streak < (milestones.last['d'] as int))
                           Container(
                             padding: const EdgeInsets.all(16),
-                            decoration: ShapeDecoration(
-                                color: L.card,
-                                shape: ContinuousRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(color: L.border.withValues(alpha: 0.5)),
-                                )),
+                            decoration: BoxDecoration(
+                              color: L.card,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.02),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
                             child: Column(children: [
                               Row(children: [
                                 Text(nextM['e'] as String, style: const TextStyle(fontSize: 22)),
@@ -230,12 +241,11 @@ class StreakModal extends StatelessWidget {
                           return Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            decoration: ShapeDecoration(
-                                color: achieved ? L.primary.withValues(alpha: 0.05) : L.card,
-                                shape: ContinuousRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(color: achieved ? L.primary.withValues(alpha: 0.2) : L.border.withValues(alpha: 0.5)),
-                                )),
+                            decoration: BoxDecoration(
+                              color: achieved ? L.primary.withValues(alpha: 0.05) : L.card,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: achieved ? L.primary.withValues(alpha: 0.2) : L.border.withValues(alpha: 0.06), width: 0.5),
+                            ),
                             child: Row(children: [
                               Opacity(opacity: achieved ? 1.0 : 0.4, child: Text(m['e'] as String, style: const TextStyle(fontSize: 20))),
                               const SizedBox(width: 14),
@@ -247,7 +257,7 @@ class StreakModal extends StatelessWidget {
                                     style: AppTypography.bodySmall.copyWith(
                                         fontWeight: FontWeight.w700, fontSize: 11, color: achieved ? L.primary : L.sub)),
                               ])),
-                              if (achieved) Icon(Icons.check_circle_rounded, color: L.primary, size: 20),
+                              if (achieved) const Text('✅', style: TextStyle(fontSize: 14)),
                             ]),
                           );
                         }),
@@ -308,21 +318,27 @@ class _MiniStat extends StatelessWidget {
 
 class _StatBox extends StatelessWidget {
   final String label, val;
-  final IconData icon;
+  final String emoji;
   final AppThemeColors L;
-  const _StatBox({required this.label, required this.val, required this.icon, required this.L});
+  const _StatBox({required this.label, required this.val, required this.emoji, required this.L});
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: ShapeDecoration(
-          color: L.card, 
-          shape: ContinuousRectangleBorder(
-            borderRadius: BorderRadius.circular(12), 
-            side: BorderSide(color: L.border.withValues(alpha: 0.5)),
-          )),
+      decoration: BoxDecoration(
+        color: L.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.015),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(icon, size: 16, color: L.sub),
+        Text(emoji, style: const TextStyle(fontSize: 16)),
         const SizedBox(height: 12),
         Text(val,
             style: AppTypography.titleLarge

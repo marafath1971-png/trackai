@@ -151,13 +151,7 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
               decoration: BoxDecoration(
                 color: L.text,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: L.text.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                boxShadow: AppShadows.neumorphic,
               ),
               child: Center(
                 child: _isProcessing
@@ -199,8 +193,9 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: L.fill,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
+              boxShadow: AppShadows.neumorphic,
             ),
             child: Icon(icon, size: 18, color: L.text),
           ),
@@ -240,9 +235,9 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          color: bg,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: context.L.border),
+          boxShadow: AppShadows.neumorphic,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Row(

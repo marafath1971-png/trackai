@@ -70,28 +70,9 @@ class ShareAchievementCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  L.bg,
-                  L.card2,
-                  L.secondary.withValues(alpha: 0.15),
-                ],
-              ),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(36),
-              border: Border.all(
-                color: L.onBg.withValues(alpha: 0.08),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: L.secondary.withValues(alpha: 0.15),
-                  blurRadius: 50,
-                  offset: const Offset(0, 25),
-                  spreadRadius: -10,
-                ),
-              ],
+              boxShadow: AppShadows.neumorphic,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -102,11 +83,8 @@ class ShareAchievementCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
-                      color: L.onBg.withValues(alpha: 0.08),
+                      color: L.onBg.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(99),
-                      border: Border.all(
-                        color: L.onBg.withValues(alpha: 0.1),
-                      ),
                     ),
                     child: Text(
                       badgeLabel!.toUpperCase(),
@@ -126,12 +104,9 @@ class ShareAchievementCard extends StatelessWidget {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: L.onBg.withValues(alpha: 0.06),
+                    color: Colors.white,
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: L.onBg.withValues(alpha: 0.1),
-                      width: 2,
-                    ),
+                    boxShadow: AppShadows.neumorphic,
                   ),
                   child: Center(
                     child: Text(emoji,
@@ -229,11 +204,8 @@ class ShareAchievementCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
+                      color: Colors.black.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.06),
-                      ),
                     ),
                     child: Center(
                       child: Text(
@@ -257,13 +229,13 @@ class ShareAchievementCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.black,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.15),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 20,
-                          offset: const Offset(0, 8),
+                          offset: const Offset(0, 10),
                         ),
                       ],
                     ),

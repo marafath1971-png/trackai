@@ -23,6 +23,7 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
 
   static const List<Map<String, String>> _languages = [
     {'code': 'en', 'label': 'English', 'flag': '🇺🇸'},
+    {'code': 'es', 'label': 'Español (Spanish)', 'flag': '🇪🇸'},
     {'code': 'fr', 'label': 'Français (French)', 'flag': '🇫🇷'},
     {'code': 'ja', 'label': '日本語 (Japanese)', 'flag': '🇯🇵'},
     {'code': 'ko', 'label': '한국어 (Korean)', 'flag': '🇰🇷'},
@@ -35,6 +36,11 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
     {'code': 'US', 'label': 'United States', 'flag': '🇺🇸'},
     {'code': 'GB', 'label': 'United Kingdom', 'flag': '🇬🇧'},
     {'code': 'CA', 'label': 'Canada', 'flag': '🇨🇦'},
+    {'code': 'ES', 'label': 'Spain', 'flag': '🇪🇸'},
+    {'code': 'MX', 'label': 'Mexico', 'flag': '🇲🇽'},
+    {'code': 'CO', 'label': 'Colombia', 'flag': '🇨🇴'},
+    {'code': 'AR', 'label': 'Argentina', 'flag': '🇦🇷'},
+    {'code': 'CL', 'label': 'Chile', 'flag': '🇨🇱'},
     {'code': 'AU', 'label': 'Australia', 'flag': '🇦🇺'},
     {'code': 'JP', 'label': 'Japan', 'flag': '🇯🇵'},
     {'code': 'KR', 'label': 'South Korea', 'flag': '🇰🇷'},
@@ -76,7 +82,7 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
                   // ── LOCALIZATION BLOCK ───────────────────────
                   _IndustrialSection(
                     label: 'LOCALIZATION',
-                    icon: Icons.public_rounded,
+                    icon: '🌍',
                     L: L,
                     children: [
                       _PickerTile(
@@ -86,9 +92,12 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
                         onTap: () async {
                           final res = await showModalBottomSheet<String>(
                             context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
                             builder: (_) => _PickerSheet(title: 'Select Country', items: _countries, selectedCode: _profile.country),
                           );
-                          if (res != null) _save(_profile.copyWith(country: res));
+                          if (!mounted || res == null) return;
+                          _save(_profile.copyWith(country: res));
                         },
                         L: L,
                       ),
@@ -99,9 +108,12 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
                         onTap: () async {
                           final res = await showModalBottomSheet<String>(
                             context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
                             builder: (_) => _PickerSheet(title: 'Select Language', items: _languages, selectedCode: _profile.preferredLanguage),
                           );
-                          if (res != null) _save(_profile.copyWith(preferredLanguage: res));
+                          if (!mounted || res == null) return;
+                          _save(_profile.copyWith(preferredLanguage: res));
                         },
                         L: L,
                         isLast: true,
@@ -114,7 +126,7 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
                   // ── CLINICAL MODES BLOCK ─────────────────────
                   _IndustrialSection(
                     label: 'CLINICAL MODES',
-                    icon: Icons.science_rounded,
+                    icon: '🔬',
                     L: L,
                     children: [
                       _ToggleTile(
@@ -154,7 +166,7 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
                   // ── DISPLAY ARCHITECTURE BLOCK ───────────────
                   _IndustrialSection(
                     label: 'DISPLAY ARCHITECTURE',
-                    icon: Icons.palette_rounded,
+                    icon: '🎨',
                     L: L,
                     children: [
                       _ToggleTile(
@@ -187,7 +199,7 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
                     children: [
                       BouncingButton(
                         onTap: () => Navigator.pop(context),
-                        child: Icon(Icons.arrow_back_ios_new_rounded, color: L.text, size: 22),
+                        child: Text('←', style: TextStyle(color: L.text, fontSize: 24, fontWeight: FontWeight.w900)),
                       ),
                       const SizedBox(width: 20),
                       Expanded(
@@ -231,7 +243,7 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
 
 class _IndustrialSection extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final String icon;
   final List<Widget> children;
   final AppThemeColors L;
   const _IndustrialSection({required this.label, required this.icon, required this.children, required this.L});
@@ -244,7 +256,7 @@ class _IndustrialSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 12, bottom: 12),
           child: Row(children: [
-            Icon(icon, size: 14, color: L.text.withValues(alpha: 0.4)),
+            Text(icon, style: const TextStyle(fontSize: 14)),
             const SizedBox(width: 10),
             Text(label, style: AppTypography.labelSmall.copyWith(
               color: L.text.withValues(alpha: 0.4), 
@@ -322,7 +334,7 @@ class _PickerTile extends StatelessWidget {
           children: [
             Text('$flag $value', style: AppTypography.bodySmall.copyWith(color: L.text.withValues(alpha: 0.8), fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: -0.2)),
             const SizedBox(width: 10),
-            Icon(Icons.chevron_right_rounded, size: 20, color: L.sub.withValues(alpha: 0.3)),
+            Text('→', style: TextStyle(color: L.sub.withValues(alpha: 0.3), fontSize: 18, fontWeight: FontWeight.w900)),
           ],
         ),
       ),
@@ -349,22 +361,24 @@ class _PickerSheet extends StatelessWidget {
           const SizedBox(height: 24),
           Text(title, style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 18)),
           const SizedBox(height: 24),
-          ListView.builder(
-            shrinkWrap: true,
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 48),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              final isSelected = item['code'] == selectedCode;
-              return ListTile(
-                onTap: () {
-                  HapticEngine.selection();
-                  Navigator.pop(context, item['code']);
-                },
-                title: Text(item['label']!, style: AppTypography.bodyMedium.copyWith(fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700, color: L.text)),
-                trailing: isSelected ? Icon(Icons.check_rounded, color: L.text) : null,
-              );
-            },
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 48),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                final isSelected = item['code'] == selectedCode;
+                return ListTile(
+                  onTap: () {
+                    HapticEngine.selection();
+                    Navigator.pop(context, item['code']);
+                  },
+                  title: Text(item['label']!.toUpperCase(), style: AppTypography.labelLarge.copyWith(fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700, color: isSelected ? L.text : L.sub.withValues(alpha: 0.5), fontSize: 14, letterSpacing: 0.5)),
+                  trailing: isSelected ? Text('✓', style: TextStyle(color: L.text, fontSize: 18, fontWeight: FontWeight.w900)) : null,
+                );
+              },
+            ),
           ),
         ],
       ),

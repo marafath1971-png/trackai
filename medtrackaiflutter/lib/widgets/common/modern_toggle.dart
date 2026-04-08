@@ -23,9 +23,6 @@ class ModernToggle extends StatefulWidget {
 class _ModernToggleState extends State<ModernToggle> {
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
-    final activeColor = widget.activeColor ?? L.text;
-    
     return GestureDetector(
       onTap: () {
         HapticEngine.selection();
@@ -38,13 +35,8 @@ class _ModernToggleState extends State<ModernToggle> {
         height: 30,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
-          color: widget.value ? activeColor : L.fill,
-          border: Border.all(
-            color: widget.value 
-              ? activeColor 
-              : L.text.withValues(alpha: 0.05),
-            width: 1,
-          ),
+          color: widget.value ? Colors.black : Colors.white,
+          boxShadow: AppShadows.neumorphic,
         ),
         child: Stack(
           children: [
@@ -59,10 +51,10 @@ class _ModernToggleState extends State<ModernToggle> {
                   height: 24,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: widget.value ? L.bg : L.text.withValues(alpha: 0.8),
+                    color: widget.value ? Colors.white : Colors.black,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -91,8 +83,6 @@ class GlassToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
-    
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
       child: BackdropFilter(
@@ -109,8 +99,8 @@ class GlassToggle extends StatelessWidget {
             height: 32,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
-              color: value ? L.text.withValues(alpha: 0.9) : L.glass,
-              border: Border.all(color: L.glassBorder, width: 1.5),
+              color: value ? Colors.black : Colors.white.withValues(alpha: 0.1),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
             ),
             child: Stack(
               children: [
@@ -124,7 +114,7 @@ class GlassToggle extends StatelessWidget {
                     height: 24,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: value ? L.bg : L.text.withValues(alpha: 0.7),
+                      color: value ? Colors.white : Colors.black.withValues(alpha: 0.9),
                       boxShadow: AppShadows.soft,
                     ),
                   ).animate(target: value ? 1 : 0)

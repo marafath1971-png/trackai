@@ -259,7 +259,7 @@ class MedicationRepositoryImpl implements IMedicationRepository {
         warnings: ["Take exactly as prescribed.", "Consult your doctor for side effects."],
         interactions: ["Keep track of all other medications."],
         foodRules: ["Take with a full glass of water."],
-        ahaMoments: ["MedTrack AI helps you stay on track!"],
+        ahaMoments: ["MedAI helps you stay on track!"],
       );
       return const Success(profile);
     } catch (e) {

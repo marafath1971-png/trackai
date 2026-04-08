@@ -45,24 +45,48 @@ class MedCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Container(
-                      width: 52,
-                      height: 52,
+                      width: 54,
+                      height: 54,
                       decoration: BoxDecoration(
-                        color: _categoryColor(med.category).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _categoryColor(med.category).withValues(alpha: 0.15),
-                          width: 1,
+                        color: L.text.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Text(
+                                _categoryEmoji(med.category),
+                                style: const TextStyle(fontSize: 26),
+                              ).animate(onPlay: (c) => c.repeat(reverse: true))
+                               .scale(
+                                 begin: const Offset(1.0, 1.0),
+                                 end: const Offset(1.12, 1.12),
+                                 duration: 2200.ms,
+                                 curve: Curves.easeInOut,
+                               ),
+                            ),
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.white.withValues(alpha: 0.05),
+                                      Colors.transparent,
+                                      Colors.black.withValues(alpha: 0.02),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Center(
-                        child: Icon(
-                          _categoryIcon(med.category),
-                          size: 24,
-                          color: _categoryColor(med.category),
-                        ),
-                      ),
-                    ),
+                    ).animate(onPlay: (c) => c.repeat())
+                     .shimmer(duration: 3.seconds, color: Colors.white.withValues(alpha: 0.05)),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -92,7 +116,10 @@ class MedCard extends StatelessWidget {
                       ),
                     ),
                     if (adh != -1)
-                      _AdherenceChip(adh: adh, L: L),
+                      _AdherenceChip(adh: adh, L: L)
+                        .animate()
+                        .fadeIn(delay: 200.ms)
+                        .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), curve: Curves.easeOutBack),
                   ],
                 ),
               ),
@@ -109,24 +136,28 @@ class MedCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
                 decoration: BoxDecoration(
-                  color: L.fill.withValues(alpha: 0.08),
-                  border: Border(top: BorderSide(color: L.border.withValues(alpha: 0.05), width: 1)),
+                  color: L.text.withValues(alpha: 0.03),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       isLow ? Icons.warning_amber_rounded : Icons.inventory_2_rounded,
                       size: 13,
-                      color: isLow ? L.warning : L.sub.withValues(alpha: 0.35),
+                      color: isLow ? L.warning : L.sub.withValues(alpha: 0.3),
                     ),
                     const SizedBox(width: 6),
                     Text(
                       isLow ? '${med.count} units — refill soon' : '${med.count} units remaining',
                       style: AppTypography.labelSmall.copyWith(
-                        color: isLow ? L.warning : L.sub.withValues(alpha: 0.45),
-                        fontWeight: FontWeight.w700,
+                        color: isLow ? L.warning : L.sub.withValues(alpha: 0.4),
+                        fontWeight: FontWeight.w800,
                         fontSize: 11,
                         letterSpacing: 0.2,
+                        height: 1.0,
                       ),
                     ),
                     const Spacer(),
@@ -166,25 +197,19 @@ class MedCard extends StatelessWidget {
         .join(' ');
   }
 
-  IconData _categoryIcon(String category) {
+  // 2026 design: expressive emoji per category
+  String _categoryEmoji(String category) {
     switch (category.toLowerCase()) {
-      case 'tablet': return Icons.medication_rounded;
-      case 'liquid': return Icons.water_drop_rounded;
-      case 'spray': return Icons.air_rounded;
-      case 'injection': return Icons.vaccines_rounded;
-      case 'cream': return Icons.spa_rounded;
-      case 'drops': return Icons.opacity_rounded;
-      default: return Icons.medication_rounded;
-    }
-  }
-
-  Color _categoryColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'liquid': return const Color(0xFF0EA5E9);
-      case 'spray': return const Color(0xFF8B5CF6);
-      case 'injection': return const Color(0xFFEF4444);
-      case 'cream': return const Color(0xFF10B981);
-      default: return const Color(0xFF6366F1);
+      case 'tablet': return '💊';
+      case 'capsule': return '💊';
+      case 'liquid': return '💧';
+      case 'spray': return '💨';
+      case 'injection': return '💉';
+      case 'cream': return '🧴';
+      case 'drops': return '🪷';
+      case 'patch': return '🩹';
+      case 'inhaler': return '🌬️';
+      default: return '💊';
     }
   }
 }
@@ -195,19 +220,29 @@ class _AdherenceChip extends StatelessWidget {
   const _AdherenceChip({required this.adh, required this.L});
   @override
   Widget build(BuildContext context) {
+    final chipEmoji = adh >= 90 ? '🎯' : adh >= 70 ? '😊' : adh >= 50 ? '😐' : '😔';
+    final chipColor = adh >= 80 ? L.success : adh >= 50 ? L.warning : Colors.red.shade400;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: ShapeDecoration(
-        color: L.success.withValues(alpha: 0.08),
-        shape: StadiumBorder(side: BorderSide(color: L.success.withValues(alpha: 0.2))),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: chipColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: chipColor.withValues(alpha: 0.18), width: 0.5),
       ),
-      child: Text(
-        '$adh%',
-        style: AppTypography.labelMedium.copyWith(
-          color: L.success,
-          fontWeight: FontWeight.w900,
-          fontSize: 12,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(chipEmoji, style: const TextStyle(fontSize: 11)),
+          const SizedBox(width: 3),
+          Text(
+            '$adh%',
+            style: AppTypography.labelMedium.copyWith(
+              color: chipColor,
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -227,9 +262,8 @@ class _StepBtn extends StatelessWidget {
         width: 42,
         height: 38,
         decoration: BoxDecoration(
-          color: L.text.withValues(alpha: 0.04),
+          color: L.text.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
         ),
         child: Center(child: Icon(icon, size: 18, color: L.text.withValues(alpha: 0.7))),
       ),
@@ -246,20 +280,21 @@ class _SegmentedStockBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: List.generate(30, (index) {
-        final threshold = index / 30;
+      children: List.generate(40, (index) {
+        final threshold = index / 40;
         final isActive = pct > threshold;
         return Expanded(
           child: Container(
-            height: 4,
-            margin: const EdgeInsets.symmetric(horizontal: 0.5),
+            height: 3,
+            margin: const EdgeInsets.symmetric(horizontal: 0.4),
             decoration: BoxDecoration(
               color: isActive
-                  ? (isLow ? L.warning : L.primary)
-                  : L.fill.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(1),
+                  ? (isLow ? L.warning : L.text)
+                  : L.fill.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(0.5),
             ),
-          ),
+          ).animate(target: (isLow && isActive) ? 1 : 0)
+           .shimmer(duration: 2.seconds, color: Colors.white.withValues(alpha: 0.2)),
         );
       }),
     );

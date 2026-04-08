@@ -6,12 +6,14 @@ import 'package:medai/domain/repositories/user_repository.dart';
 import 'package:medai/domain/repositories/symptom_repository.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:medai/services/link_service.dart';
 
 class MockMedicationRepository extends Mock implements IMedicationRepository {}
 class MockUserRepository extends Mock implements IUserRepository {}
 class MockSymptomRepository extends Mock implements SymptomRepository {}
 class MockAudioPlayer extends Mock implements AudioPlayer {}
 class MockSharedPreferences extends Mock implements SharedPreferences {}
+class MockLinkService extends Mock implements LinkService {}
 
 class FakeUserProfile extends Fake implements UserProfile {}
 class FakeMedicine extends Fake implements Medicine {}
@@ -31,6 +33,7 @@ void main() {
   late MockSymptomRepository mockSymptomRepo;
   late MockAudioPlayer mockAudioPlayer;
   late MockSharedPreferences mockPrefs;
+  late MockLinkService mockLinkService;
 
   setUp(() {
     mockMedRepo = MockMedicationRepository();
@@ -57,12 +60,19 @@ void main() {
     when(() => mockPrefs.getInt(any())).thenReturn(0);
     when(() => mockPrefs.getString(any())).thenReturn(null);
 
+    mockLinkService = MockLinkService();
+
+    when(() => mockLinkService.init()).thenAnswer((_) async {});
+    // Field assignment instead of 'when' for non-method fields
+    mockLinkService.onJoinCodeDetected = (code) {};
+
     appState = AppState(
       medRepo: mockMedRepo,
       userRepo: mockUserRepo,
       symptomRepo: mockSymptomRepo,
       audioPlayer: mockAudioPlayer,
       prefs: mockPrefs,
+      linkService: mockLinkService,
     );
   });
 

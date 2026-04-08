@@ -87,7 +87,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     final medColor = hexToColor(med.color);
 
     return Scaffold(
-      backgroundColor: L.bg,
+      backgroundColor: L.meshBg,
       body: Stack(
         children: [
           _editMode
@@ -147,8 +147,8 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
         Container(
           padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 8),
           decoration: BoxDecoration(
-            color: L.bg,
-            border: Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.1), width: 0.5)),
+            color: L.meshBg,
+            border: Border(bottom: BorderSide(color: L.text.withValues(alpha: 0.05), width: 0.5)),
           ),
           child: Column(
             children: [
@@ -172,7 +172,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                 showBack: false,
                 actions: [
                   HeaderActionBtn(
-                    child: Icon(Icons.close_rounded, color: L.sub),
+                    child: const Text('✕', style: TextStyle(fontSize: 18)),
                     onTap: () {
                       HapticEngine.selection();
                       setState(() {
@@ -210,8 +210,8 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
         Container(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
           decoration: BoxDecoration(
-            color: L.bg,
-            border: Border(top: BorderSide(color: L.border.withValues(alpha: 0.1), width: 0.5)),
+            color: L.meshBg,
+            border: Border(top: BorderSide(color: L.text.withValues(alpha: 0.05), width: 0.5)),
           ),
           child: BouncingButton(
             onTap: () {
@@ -221,7 +221,11 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
             child: Container(
               height: 54,
               width: double.infinity,
-              decoration: BoxDecoration(color: L.text, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: L.text,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: AppShadows.neumorphic,
+              ),
               child: Center(
                 child: Text('SAVE CHANGES', 
                   style: AppTypography.labelLarge.copyWith(color: L.bg, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
@@ -237,7 +241,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
 
     return SliverAppBar(
       expandedHeight: 380,
-      backgroundColor: L.bg,
+      backgroundColor: L.meshBg,
       elevation: 0,
       pinned: true,
       stretch: true,
@@ -260,7 +264,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                     end: Alignment.bottomCenter,
                     colors: [
                       medColor.withValues(alpha: 0.15),
-                      L.bg,
+                      L.meshBg,
                     ],
                   ),
                 ),
@@ -282,9 +286,10 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: L.bg,
+                        color: L.card,
                         borderRadius: AppRadius.roundSquircle,
-                        boxShadow: AppShadows.card,
+                        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 0.5),
+                        boxShadow: AppShadows.neumorphic,
                       ),
                       child: MedImage(
                         imageUrl: med.imageUrl,
@@ -341,7 +346,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
         alignment: Alignment.centerLeft,
         child: HeaderActionBtn(
           onTap: widget.onBack,
-          child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: L.text),
+          child: const Text('←', style: TextStyle(fontSize: 20)),
         ),
       ),
       actions: [
@@ -356,7 +361,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                 _editMode = true;
               });
             },
-            child: Icon(Icons.edit_note_rounded, size: 24, color: L.text),
+            child: const Text('📝', style: TextStyle(fontSize: 20)),
           ),
         ),
       ],
@@ -370,15 +375,10 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: L.text, // Black background for industrial feel
+        color: L.card,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: L.text.withValues(alpha: 0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          )
-        ],
+        border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+        boxShadow: AppShadows.neumorphic,
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -386,10 +386,12 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
           Positioned(
             right: -20,
             top: -20,
-            child: Icon(
-              Icons.warning_amber_rounded,
-              size: 140,
-              color: L.bg.withValues(alpha: 0.03),
+            child: Text(
+              "⚠️",
+              style: TextStyle(
+                fontSize: 140,
+                color: L.bg.withValues(alpha: 0.03),
+              ),
             ),
           ),
           Padding(
@@ -424,7 +426,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                             style: AppTypography.labelSmall.copyWith(
                               fontWeight: FontWeight.w900,
                               letterSpacing: 1.5,
-                              color: L.bg.withValues(alpha: 0.5),
+                              color: L.text.withValues(alpha: 0.5),
                             ),
                           ),
                         ],
@@ -434,7 +436,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                         'MANDATORY COURSE COMPLETION',
                         style: AppTypography.titleMedium.copyWith(
                           fontWeight: FontWeight.w900,
-                          color: L.bg,
+                          color: L.text,
                           fontSize: 18,
                           letterSpacing: -0.5,
                         ),
@@ -443,7 +445,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                       Text(
                         'This medication must be finished entirely. Do not stop early, even if symptoms vanish. Pathogens can remain and build resistance.',
                         style: AppTypography.bodySmall.copyWith(
-                          color: L.bg.withValues(alpha: 0.7),
+                          color: L.text.withValues(alpha: 0.7),
                           height: 1.5,
                           fontWeight: FontWeight.w500,
                         ),
@@ -452,9 +454,9 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: L.bg.withValues(alpha: 0.1),
+                          color: L.text.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: L.bg.withValues(alpha: 0.1)),
+                          border: Border.all(color: L.text.withValues(alpha: 0.1)),
                         ),
                         child: Row(
                           children: [
@@ -464,7 +466,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                               child: Text(
                                 "Safety measure active: Completing the full course prevents antibiotic resistance.",
                                 style: AppTypography.labelSmall.copyWith(
-                                  color: L.bg.withValues(alpha: 0.9),
+                                  color: L.text.withValues(alpha: 0.9),
                                   fontWeight: FontWeight.w700,
                                   fontSize: 10,
                                 ),
@@ -496,7 +498,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
               child: _DiagnosticCard(
                 label: 'ADHERENCE',
                 value: adherence == -1 ? '••' : '$adherence%',
-                icon: Icons.auto_graph_rounded,
+                icon: '📈',
                 color: L.text,
                 L: L,
               ),
@@ -506,7 +508,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
               child: _DiagnosticCard(
                 label: 'NEXT_DOSE',
                 value: nextDose,
-                icon: Icons.timer_outlined,
+                icon: '⏱️',
                 color: L.text,
                 L: L,
               ),
@@ -517,7 +519,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
         _DiagnosticCard(
           label: 'INVENTORY_RESERVE',
           value: '${med.count} UNITS',
-          icon: Icons.inventory_2_outlined,
+          icon: '📦',
           color: L.text,
           L: L,
           child: Column(
@@ -559,14 +561,15 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: L.text.withValues(alpha: 0.03),
+          color: L.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: L.border.withValues(alpha: 0.1)),
+          border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+          boxShadow: AppShadows.neumorphic,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.restaurant_menu_rounded, size: 14, color: L.primary),
+            const Text("🍽️", style: TextStyle(fontSize: 14)),
             const SizedBox(width: 10),
             Text(intake.toUpperCase(), style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 11, letterSpacing: 0.5)),
           ],
@@ -579,8 +582,8 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'FREQUENCY_MATRIX', icon: Icons.notifications_active_rounded, L: L, 
-          trailing: _HeaderAction(icon: Icons.add_rounded, label: 'ADD_SLOT', onTap: () async {
+        _SectionHeader(label: 'FREQUENCY_MATRIX', icon: '⏰', L: L, 
+          trailing: _HeaderAction(icon: '➕', label: 'ADD_SLOT', onTap: () async {
             HapticEngine.selection();
             final result = await ModernTimePicker.show(context, initialTime: TimeOfDay.now(), title: "Add Reminder");
             if (result != null) {
@@ -590,7 +593,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
           }, L: L)),
         const SizedBox(height: 12),
         if (med.schedule.isEmpty)
-          _buildEmptyCard('NO_ACTIVE_REMINDERS', Icons.notifications_off_rounded, L)
+          _buildEmptyCard('NO_ACTIVE_REMINDERS', '🔕', L)
         else
           SquircleCard(
             padding: EdgeInsets.zero,
@@ -626,10 +629,11 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
             color: s.enabled ? medColor.withValues(alpha: 0.1) : L.fill,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            s.h < 12 ? Icons.wb_sunny_rounded : Icons.nightlight_round,
-            size: 20,
-            color: s.enabled ? medColor : L.sub,
+          child: Center(
+            child: Text(
+              s.h < 12 ? "☀️" : "🌙",
+              style: const TextStyle(fontSize: 18),
+            ),
           ),
         ),
         title: Row(
@@ -661,7 +665,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'STABILITY_MATRIX', icon: Icons.grid_view_rounded, L: L),
+        _SectionHeader(label: 'STABILITY_MATRIX', icon: '📊', L: L),
         const SizedBox(height: 12),
         SquircleCard(
           padding: const EdgeInsets.all(24),
@@ -690,16 +694,18 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'TECHNICAL_SPECS', icon: Icons.terminal_rounded, L: L),
+        _SectionHeader(label: 'TECHNICAL_SPECS', icon: '📑', L: L),
         const SizedBox(height: 12),
-        SquircleCard(
-          padding: EdgeInsets.zero,
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
           child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
             children: [
-              _SpecTile(label: 'FORM', value: med.form, icon: Icons.medication_rounded, L: L),
-              _SpecTile(label: 'CATEGORY', value: med.category, icon: Icons.category_rounded, L: L),
-              _SpecTile(label: 'UNIT', value: med.unit, icon: Icons.numbers_rounded, L: L),
-              _SpecTile(label: 'START', value: med.courseStartDate, icon: Icons.calendar_today_rounded, L: L),
+              _SpecTile(label: 'FORM', value: med.form, icon: '💊', L: L),
+              _SpecTile(label: 'CATEGORY', value: med.category, icon: '📂', L: L),
+              _SpecTile(label: 'UNIT', value: med.unit, icon: '🔢', L: L),
+              _SpecTile(label: 'START', value: med.courseStartDate, icon: '📅', L: L),
             ],
           ),
         ),
@@ -711,14 +717,14 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'DATA_MANAGEMENT', icon: Icons.tune_rounded, L: L),
+        _SectionHeader(label: 'DATA_MANAGEMENT', icon: '⚙️', L: L),
         const SizedBox(height: 12),
         SquircleCard(
           padding: EdgeInsets.zero,
           child: Column(
             children: [
-              _ManagementTile(icon: Icons.add_circle_outline_rounded, title: 'Quick Refill (+10)', color: L.text, onTap: () { HapticEngine.success(); state.updateMed(med.id, count: med.count + 10); }, L: L),
-              _ManagementTile(icon: Icons.delete_outline_rounded, title: 'Decommission Medicine', color: L.error, onTap: () { HapticEngine.alertWarning(); state.deleteMed(med.id); widget.onBack(); }, L: L, isLast: true),
+              _ManagementTile(icon: '➕', title: 'Quick Refill (+10)', color: L.text, onTap: () { HapticEngine.success(); state.updateMed(med.id, count: med.count + 10); }, L: L),
+              _ManagementTile(icon: '🗑️', title: 'Decommission Medicine', color: L.error, onTap: () { HapticEngine.alertWarning(); state.deleteMed(med.id); widget.onBack(); }, L: L, isLast: true),
             ],
           ),
         ),
@@ -729,17 +735,17 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   Widget _buildEditForm(Medicine med, AppState state, AppThemeColors L) {
     return Column(
       children: [
-        _FormSection(label: 'IDENTITY', icon: Icons.fingerprint_rounded, L: L, children: [
+        _FormSection(label: 'IDENTITY', icon: '🪪', L: L, children: [
           _ModernTextField(label: 'Medicine Name', value: _editFields['name'], onChanged: (v) => _editFields['name'] = v, L: L),
           _ModernTextField(label: 'Brand Name', value: _editFields['brand'], onChanged: (v) => _editFields['brand'] = v, L: L, isLast: true),
         ]),
         const SizedBox(height: 20),
-        _FormSection(label: 'CONFIGURATION', icon: Icons.medication_rounded, L: L, children: [
+        _FormSection(label: 'CONFIGURATION', icon: '🧬', L: L, children: [
           _ModernTextField(label: 'Dosage', value: _editFields['dose'], onChanged: (v) => _editFields['dose'] = v, L: L),
           _ModernTextField(label: 'Form', value: _editFields['form'], onChanged: (v) => _editFields['form'] = v, L: L, isLast: true),
         ]),
         const SizedBox(height: 20),
-        _FormSection(label: 'LOGISTICS', icon: Icons.inventory_2_rounded, L: L, children: [
+        _FormSection(label: 'LOGISTICS', icon: '📦', L: L, children: [
           _ModernTextField(label: 'Current Count', value: _editFields['count'], onChanged: (v) => _editFields['count'] = v, L: L, keyboard: TextInputType.number),
           _ModernTextField(label: 'Refill Alert', value: _editFields['refillAt'], onChanged: (v) => _editFields['refillAt'] = v, L: L, keyboard: TextInputType.number, isLast: true),
         ]),
@@ -840,11 +846,24 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     );
   }
 
-  Widget _buildEmptyCard(String text, IconData icon, AppThemeColors L) {
-    return Container(width: double.infinity, padding: const EdgeInsets.all(24), 
-      decoration: BoxDecoration(color: L.fill.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(24), border: Border.all(color: L.border.withValues(alpha: 0.1))),
-      child: Column(children: [Icon(icon, color: L.sub.withValues(alpha: 0.4), size: 24), const SizedBox(height: 12), 
-        Text(text, style: AppTypography.bodySmall.copyWith(color: L.sub, fontWeight: FontWeight.w600, fontSize: 12))]));
+  Widget _buildEmptyCard(String text, String icon, AppThemeColors L) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: L.card,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 0.5),
+        boxShadow: AppShadows.neumorphic,
+      ),
+      child: Column(
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 24)),
+          const SizedBox(height: 12),
+          Text(text, style: AppTypography.bodySmall.copyWith(color: L.sub, fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.5)),
+        ],
+      ),
+    );
   }
 }
 
@@ -852,7 +871,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
 
 class _DiagnosticCard extends StatelessWidget {
   final String label, value;
-  final IconData icon;
+  final String icon;
   final Color color;
   final AppThemeColors L;
   final Widget? child;
@@ -880,7 +899,9 @@ class _DiagnosticCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub.withValues(alpha: 0.5), fontWeight: FontWeight.w900, letterSpacing: 1.2, fontSize: 10)),
-                Icon(icon, size: 12, color: L.sub.withValues(alpha: 0.2)),
+                Text(icon, style: const TextStyle(fontSize: 12))
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scale(begin: const Offset(1.0, 1.0), end: const Offset(1.2, 1.2), duration: 2000.ms),
               ],
             ),
             const Spacer(),
@@ -930,7 +951,7 @@ class _ModernStockBar extends StatelessWidget {
 
 class _SectionHeader extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final String icon;
   final Widget? trailing;
   final AppThemeColors L;
   const _SectionHeader({required this.label, required this.icon, this.trailing, required this.L});
@@ -939,6 +960,8 @@ class _SectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Row(children: [
+        Text(icon, style: const TextStyle(fontSize: 14)),
+        const SizedBox(width: 8),
         Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub, fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 10)),
         const Spacer(),
         if (trailing != null) trailing!,
@@ -948,7 +971,7 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _HeaderAction extends StatelessWidget {
-  final IconData icon;
+  final String icon;
   final String label;
   final VoidCallback onTap;
   final AppThemeColors L;
@@ -957,9 +980,14 @@ class _HeaderAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return BouncingButton(onTap: onTap, child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: L.text.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: L.card,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 0.5),
+        boxShadow: AppShadows.neumorphic,
+      ),
       child: Row(children: [
-        Icon(icon, size: 14, color: L.text),
+        Text(icon, style: const TextStyle(fontSize: 12)),
         const SizedBox(width: 4),
         Text(label, style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 0.5, fontSize: 10)),
       ]),
@@ -1003,8 +1031,9 @@ class _HistoryMatrix extends StatelessWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     color: isTaken ? L.text : L.fill,
-                    borderRadius: BorderRadius.circular(2),
-                    border: isTaken ? null : Border.all(color: L.border.withValues(alpha: 0.5)),
+                    borderRadius: BorderRadius.circular(4),
+                    border: isTaken ? null : Border.all(color: L.border.withValues(alpha: 0.05), width: 0.5),
+                    boxShadow: isTaken ? null : AppShadows.neumorphic,
                   ),
                 );
               }),
@@ -1026,23 +1055,27 @@ class _HistoryMatrix extends StatelessWidget {
 
 class _SpecTile extends StatelessWidget {
   final String label, value;
-  final IconData icon;
+  final String icon;
   final AppThemeColors L;
   const _SpecTile({required this.label, required this.value, required this.icon, required this.L});
   @override
   Widget build(BuildContext context) {
+    final width = (MediaQuery.of(context).size.width - 52) / 2; // Adjusted for 12px gap
     return Container(
-      width: (MediaQuery.of(context).size.width - 40.5) / 2, // Accurate 2-column split
+      width: width,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
+        color: L.card,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: L.border.withValues(alpha: 0.05), width: 0.5),
+        boxShadow: AppShadows.neumorphic,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 10, color: L.sub.withValues(alpha: 0.3)),
+              Text(icon, style: const TextStyle(fontSize: 10)),
               const SizedBox(width: 6),
               Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub.withValues(alpha: 0.5), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
             ],
@@ -1057,21 +1090,21 @@ class _SpecTile extends StatelessWidget {
 }
 
 class _ManagementTile extends StatelessWidget {
-  final IconData icon; final String title; final Color color; final VoidCallback onTap; final AppThemeColors L; final bool isLast;
+  final String icon; final String title; final Color color; final VoidCallback onTap; final AppThemeColors L; final bool isLast;
   const _ManagementTile({required this.icon, required this.title, required this.color, required this.onTap, required this.L, this.isLast = false});
   @override
   Widget build(BuildContext context) {
     return Container(decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.03), width: 0.5))),
       child: ListTile(onTap: onTap, 
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Icon(icon, color: color, size: 22),
+        leading: Text(icon, style: const TextStyle(fontSize: 22)),
         title: Text(title.toUpperCase(), style: AppTypography.labelSmall.copyWith(fontWeight: FontWeight.w900, color: color, fontSize: 11, letterSpacing: 1.0)),
-        trailing: Icon(Icons.chevron_right_rounded, color: L.sub.withValues(alpha: 0.3), size: 20)));
+        trailing: Text('→', style: TextStyle(color: L.sub.withValues(alpha: 0.3), fontSize: 18, fontWeight: FontWeight.w900))));
   }
 }
 
 class _FormSection extends StatelessWidget {
-  final String label; final IconData icon; final List<Widget> children; final AppThemeColors L;
+  final String label; final String icon; final List<Widget> children; final AppThemeColors L;
   const _FormSection({required this.label, required this.icon, required this.children, required this.L});
   @override
   Widget build(BuildContext context) {

@@ -1,4 +1,4 @@
-/// Unified Domain Exception Model for MedTrack AI 1.0
+/// Unified Domain Exception Model for MedAI 1.0
 ///
 /// Following the 'Hardening Point 4' of the 15-point checklist.
 /// Aim: Prevent runtime crashes by ensuring all repository failures are typed.

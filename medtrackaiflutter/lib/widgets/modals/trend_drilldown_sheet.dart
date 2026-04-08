@@ -36,9 +36,9 @@ class TrendDrilldownSheet extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: L.green.withValues(alpha: 0.1),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: L.green.withValues(alpha: 0.2)),
+                  boxShadow: AppShadows.neumorphic,
                 ),
                 child: Text('${(avgAdherence * 100).round()}% AVG',
                     style: AppTypography.labelMedium.copyWith(
@@ -125,9 +125,9 @@ class TrendDrilldownSheet extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: L.fill,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: L.border),
+              boxShadow: AppShadows.neumorphic,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,25 +165,31 @@ class TrendDrilldownSheet extends StatelessWidget {
           const SizedBox(height: 32),
 
           // --- LINK TO DAILY LOG ---
-          SizedBox(
-            width: double.infinity,
-            height: 54,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                HapticEngine.selection();
-                DailyLogSheet.show(context, date: DateTime.now());
-              },
-              icon: Icon(Icons.history_rounded, size: 18, color: L.text),
-              label: Text('VIEW DETAILED DAILY LOG',
-                  style: AppTypography.labelLarge.copyWith(
-                      color: L.text,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 12,
-                      letterSpacing: 0.5)),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: L.border),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
+          GestureDetector(
+            onTap: () {
+              HapticEngine.selection();
+              DailyLogSheet.show(context, date: DateTime.now());
+            },
+            child: Container(
+              width: double.infinity,
+              height: 54,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: AppShadows.neumorphic,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.history_rounded, size: 18, color: L.text),
+                  const SizedBox(width: 10),
+                  Text('VIEW DETAILED DAILY LOG',
+                      style: AppTypography.labelLarge.copyWith(
+                          color: L.text,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          letterSpacing: 0.5)),
+                ],
               ),
             ),
           ).animate(delay: 500.ms).fadeIn().slideY(begin: 0.1, end: 0),

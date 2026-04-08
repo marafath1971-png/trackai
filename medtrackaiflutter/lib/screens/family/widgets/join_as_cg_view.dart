@@ -64,7 +64,7 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
   Widget build(BuildContext context) {
     final L = widget.L;
     return Scaffold(
-        backgroundColor: L.bg,
+        backgroundColor: L.meshBg,
         body: SafeArea(
             child: Column(children: [
           Padding(
@@ -98,8 +98,10 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                             width: 280,
                             height: 280,
                             decoration: BoxDecoration(
+                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(32),
-                                border: Border.all(color: L.green, width: 2)),
+                                boxShadow: AppShadows.neumorphic,
+                                border: Border.all(color: L.green, width: 2.5)),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(30),
                               child: MobileScanner(
@@ -134,10 +136,10 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           decoration: BoxDecoration(
-                              color: L.card,
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                  color: _error != null ? L.red : L.border)),
+                              boxShadow: AppShadows.neumorphic,
+                              border: _error != null ? Border.all(color: L.red, width: 1.5) : null),
                           child: TextField(
                             controller: _codeCtrl,
                             style: AppTypography.displayLarge.copyWith(
@@ -174,7 +176,9 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                     color: _isChecking ? L.greenLight : L.green,
-                                    borderRadius: BorderRadius.circular(24)),
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: _isChecking ? null : AppShadows.neumorphic,
+                                ),
                                 child: _isChecking
                                     ? const AppLoadingIndicator(size: 20)
                                     : Text('Verify and Join',

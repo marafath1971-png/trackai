@@ -150,15 +150,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      color: L.fill,
-                      borderRadius: AppRadius.roundXL,
-                      border: Border.all(color: L.border),
-                      boxShadow: [
-                        BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8))
-                      ],
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: AppShadows.neumorphic,
                     ),
                     child: const Center(
                         child: Image(
@@ -172,7 +166,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   RichText(
                       text: TextSpan(
                     style: AppTypography.displayLarge.copyWith(
-                        fontSize: 30, color: L.text, letterSpacing: -0.8),
+                        fontSize: 32, color: L.text, letterSpacing: -1.0, fontWeight: FontWeight.w900),
                     children: [
                       TextSpan(
                           text: _isSignUp
@@ -181,11 +175,11 @@ class _AuthScreenState extends State<AuthScreen> {
                       TextSpan(
                           text: 'Med ',
                           style: AppTypography.displayLarge
-                              .copyWith(fontSize: 30, color: L.text)),
+                              .copyWith(fontSize: 32, color: L.text, fontWeight: FontWeight.w900)),
                       TextSpan(
                           text: 'Ai',
                           style: AppTypography.displayLarge
-                              .copyWith(fontSize: 30, color: L.green)),
+                              .copyWith(fontSize: 32, color: L.success, fontWeight: FontWeight.w900)),
                     ],
                   )),
                   const SizedBox(height: 8),
@@ -258,8 +252,8 @@ class _AuthScreenState extends State<AuthScreen> {
                           child: Text('Forgot password?',
                               style: AppTypography.labelLarge.copyWith(
                                   fontSize: 13,
-                                  color: L.green,
-                                  fontWeight: FontWeight.w600)),
+                                  color: L.text.withValues(alpha: 0.6),
+                                  fontWeight: FontWeight.w800)),
                         ),
                       ),
                     ),
@@ -317,8 +311,9 @@ class _AuthScreenState extends State<AuthScreen> {
                               text: _isSignUp ? 'Sign In' : 'Sign Up',
                               style: AppTypography.bodySmall.copyWith(
                                   fontSize: 14,
-                                  color: L.green,
-                                  fontWeight: FontWeight.w700),
+                                  color: L.text,
+                                  fontWeight: FontWeight.w900,
+                                  decoration: TextDecoration.underline),
                             ),
                           ],
                         )),
@@ -369,12 +364,10 @@ class _GoogleBtn extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: ShapeDecoration(
-          color: L.fill,
-          shape: ContinuousRectangleBorder(
-            borderRadius: BorderRadius.circular(32),
-            side: BorderSide(color: L.border),
-          ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: AppShadows.neumorphic,
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           loading
@@ -408,12 +401,10 @@ class _AppleBtn extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: ShapeDecoration(
-          color: L.fill,
-          shape: ContinuousRectangleBorder(
-            borderRadius: BorderRadius.circular(32),
-            side: BorderSide(color: L.border),
-          ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: AppShadows.neumorphic,
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           loading
@@ -449,28 +440,26 @@ class _AuthField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: ShapeDecoration(
-        color: L.fill,
-        shape: ContinuousRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: L.border),
-        ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppShadows.neumorphic,
       ),
       child: TextField(
         controller: controller,
         obscureText: obscure,
         keyboardType: keyboardType,
-        style: AppTypography.bodyLarge.copyWith(fontSize: 15, color: L.text),
+        style: AppTypography.bodyLarge.copyWith(fontSize: 15, color: L.text, fontWeight: FontWeight.w600),
         decoration: InputDecoration(
           labelText: label,
           labelStyle:
-              AppTypography.bodySmall.copyWith(fontSize: 14, color: L.sub),
+              AppTypography.bodySmall.copyWith(fontSize: 14, color: L.sub, fontWeight: FontWeight.w600),
           border: InputBorder.none,
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           suffixIcon: suffix != null
               ? Padding(
-                  padding: const EdgeInsets.only(right: 12), child: suffix)
+                  padding: const EdgeInsets.only(right: 16), child: suffix)
               : null,
           suffixIconConstraints:
               const BoxConstraints(minWidth: 0, minHeight: 0),
@@ -495,25 +484,24 @@ class _PrimaryBtn extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: ShapeDecoration(
-          color: L.green,
-          shape: ContinuousRectangleBorder(
-            borderRadius: BorderRadius.circular(32),
-          ),
-          shadows: [
+        height: 64,
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
             BoxShadow(
-                color: L.green.withValues(alpha: 0.25),
-                blurRadius: 20,
-                offset: const Offset(0, 8))
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            )
           ],
         ),
         child: Center(
           child: loading
-              ? const AppLoadingIndicator(size: 20)
-              : Text(label,
+              ? const AppLoadingIndicator(size: 24)
+              : Text(label.toUpperCase(),
                   style: AppTypography.titleLarge
-                      .copyWith(fontSize: 16, color: Colors.black)),
+                      .copyWith(fontSize: 14, color: L.bg, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
         ),
       ),
     );

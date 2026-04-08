@@ -21,17 +21,11 @@ class AlertLogCard extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-              color: L.card,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                  color: alert.seen ? L.border : L.error.withValues(alpha: 0.3), width: 1.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ]),
+              boxShadow: AppShadows.neumorphic,
+              border: alert.seen ? null : Border.all(color: L.error.withValues(alpha: 0.3), width: 1.5),
+          ),
           child: Row(children: [
             Container(
               width: 44,
@@ -101,9 +95,9 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
   Widget build(BuildContext context) {
     final L = widget.L;
     return Scaffold(
-      backgroundColor: L.bg,
+      backgroundColor: L.meshBg,
       appBar: AppBar(
-        backgroundColor: L.bg,
+        backgroundColor: L.meshBg,
         elevation: 0,
         leading: IconButton(icon: Icon(Icons.arrow_back_ios_new_rounded, color: L.text, size: 18), onPressed: widget.onBack),
         title: Text('Escalation Protocol', style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 18)),
@@ -131,10 +125,10 @@ class _EscalationDemoViewState extends State<EscalationDemoView> {
                                 const EdgeInsets.symmetric(vertical: 14),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                                color: _step <= 1 ? L.fill : L.card,
-                                borderRadius:
-                                    BorderRadius.circular(16),
-                                border: Border.all(color: L.border)),
+                                color: _step <= 1 ? L.fill : Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: _step <= 1 ? null : AppShadows.neumorphic,
+                            ),
                             child: Text('Previous',
                                 style: AppTypography.labelLarge.copyWith(
                                     fontWeight: FontWeight.w700,
@@ -295,9 +289,9 @@ class AlertDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: L.bg,
+      backgroundColor: L.meshBg,
       appBar: AppBar(
-        backgroundColor: L.bg, elevation: 0, leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: onBack),
+        backgroundColor: L.meshBg, elevation: 0, leading: IconButton(icon: const Icon(Icons.close_rounded), onPressed: onBack),
         title: Text('Critical Alert', style: AppTypography.titleLarge.copyWith(fontSize: 18, fontWeight: FontWeight.w900)),
       ),
       body: SingleChildScrollView(
@@ -308,12 +302,13 @@ class AlertDetailView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                  color: L.card,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: L.error.withValues(alpha: 0.2)),
                   boxShadow: [
-                    BoxShadow(color: L.error.withValues(alpha: 0.05), blurRadius: 30, offset: const Offset(0, 15))
-                  ]
+                    ...AppShadows.neumorphic,
+                    BoxShadow(color: L.error.withValues(alpha: 0.05), blurRadius: 40, offset: const Offset(0, 20))
+                  ],
+                  border: Border.all(color: L.error.withValues(alpha: 0.2), width: 1.5),
               ),
               child: Column(
                 children: [

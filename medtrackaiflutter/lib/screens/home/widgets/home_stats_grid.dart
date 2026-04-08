@@ -52,7 +52,7 @@ class HomeStatsGrid extends StatelessWidget {
               Expanded(
                 flex: 6,
                 child: _BentoMetricCard(
-                  icon: Icons.auto_graph_rounded,
+                  emoji: '📈',
                   iconColor: L.primary,
                   label: 'Daily Progress',
                   value: '${(dosePct * 100).round()}%',
@@ -122,7 +122,7 @@ class HomeStatsGrid extends StatelessWidget {
             children: [
               Expanded(
                 child: _BentoMetricCard(
-                  icon: Icons.inventory_2_rounded,
+                  emoji: '📦',
                   iconColor: const Color(0xFFEF5350),
                   label: 'Inventory',
                   value: '${state.getLowStockCount()}',
@@ -141,7 +141,7 @@ class HomeStatsGrid extends StatelessWidget {
               const SizedBox(width: AppSpacing.p12),
               Expanded(
                 child: _BentoMetricCard(
-                  icon: Icons.wb_sunny_rounded,
+                  emoji: '☀️',
                   iconColor: const Color(0xFFF59E0B),
                   label: 'Mood',
                   value: state.getMoodSummary(
@@ -188,31 +188,15 @@ class HomeStatsGrid extends StatelessWidget {
   }
 
   List<double> _buildStockData(AppState state) {
-    if (state.meds.isEmpty) return [0.8, 0.7, 0.9, 0.6, 0.8, 0.7, 0.85];
-    
-    // For a sparkline of "Health", let's show the average stock % 
-    // This is a simplified "Inventory Health" trend
-    double totalPct = 0;
-    for (var m in state.meds) {
-      if (m.totalCount > 0) {
-        totalPct += (m.count / m.totalCount).clamp(0.0, 1.0);
-      }
-    }
-    final avg = totalPct / state.meds.length;
-    
-    // Honest current-state baseline. 
-    // TODO: Track daily snapshots in AppState to show real historical trend.
-    return [avg, avg, avg, avg, avg, avg, avg];
+    return state.inventoryHistory;
   }
-
-
 }
 
 // ─────────────────────────────────────────────────────────────
 // BENTO METRIC CARD — with sparkline
 // ─────────────────────────────────────────────────────────────
 class _BentoMetricCard extends StatelessWidget {
-  final IconData icon;
+  final String emoji;
   final Color iconColor;
   final String label;
   final String value;
@@ -223,7 +207,7 @@ class _BentoMetricCard extends StatelessWidget {
   final AppThemeColors L;
 
   const _BentoMetricCard({
-    required this.icon,
+    required this.emoji,
     required this.iconColor,
     required this.label,
     required this.value,
@@ -241,9 +225,9 @@ class _BentoMetricCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.p16),
         decoration: BoxDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
-          boxShadow: L.shadowSoft,
+          borderRadius: BorderRadius.circular(AppRadius.squircle),
+          border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
+          boxShadow: AppShadows.neumorphic,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,10 +240,9 @@ class _BentoMetricCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: iconColor.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(AppRadius.s),
-                    boxShadow: AppShadows.glow(iconColor, intensity: 0.05),
                   ),
                   child: Center(
-                    child: Icon(icon, color: iconColor, size: 16),
+                    child: Text(emoji, style: const TextStyle(fontSize: 14)),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.p8),
@@ -358,15 +341,22 @@ class _BentoSmallCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.p12),
         decoration: BoxDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
-          boxShadow: L.shadowSoft,
+          borderRadius: BorderRadius.circular(AppRadius.squircle),
+          border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
+          boxShadow: AppShadows.neumorphic,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 20)),
+            Text(emoji, style: const TextStyle(fontSize: 22))
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scale(
+                  begin: const Offset(1.0, 1.0),
+                  end: const Offset(1.22, 1.22),
+                  duration: 1600.ms,
+                  curve: Curves.easeInOut,
+                ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -413,34 +403,47 @@ class _NextDoseCard extends StatelessWidget {
     final timeLabel = diff <= 60
         ? 'in $diff min'
         : 'at ${dose.sched.h}:${dose.sched.m.toString().padLeft(2, '0')}';
+    // Contextual emoji: urgent ⚡, soon ⏰, scheduled 💊
+    final doseEmoji = diff <= 15 ? '⚡' : (diff <= 60 ? '⏰' : '💊');
+    final pulseMs = diff <= 15 ? 700 : (diff <= 60 ? 1000 : 1600);
 
     return _PressableCard(
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.p16),
         decoration: BoxDecoration(
-          color: L.card2,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(color: L.onPrimary.withValues(alpha: 0.05), width: 1.5),
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(AppRadius.squircle),
           boxShadow: [
-            ...L.shadowSoft,
-            ...AppShadows.glow(L.primary, intensity: 0.1),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.22),
+              blurRadius: 32,
+              offset: const Offset(0, 16),
+              spreadRadius: -8,
+            ),
           ],
         ),
         child: Row(
           children: [
+            // Animated emoji pill
             Container(
-              width: 48,
-              height: 48,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
-                color: L.onPrimary.withValues(alpha: 0.1),
+                color: L.onPrimary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppRadius.m),
               ),
               child: Center(
-                child: Icon(
-                  Icons.medication_liquid_rounded,
-                  color: L.onPrimary,
-                  size: 24,
-                ),
+                child: Text(
+                  doseEmoji,
+                  style: const TextStyle(fontSize: 26),
+                )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scale(
+                      begin: const Offset(1.0, 1.0),
+                      end: const Offset(1.25, 1.25),
+                      duration: Duration(milliseconds: pulseMs),
+                      curve: Curves.easeInOut,
+                    ),
               ),
             ),
             const SizedBox(width: AppSpacing.p16),
@@ -451,7 +454,7 @@ class _NextDoseCard extends StatelessWidget {
                   Text(
                     'NEXT DOSE',
                     style: AppTypography.labelSmall.copyWith(
-                      color: L.onPrimary.withValues(alpha: 0.7),
+                      color: L.onPrimary.withValues(alpha: 0.65),
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.0,
                     ),
@@ -573,7 +576,9 @@ class _PressableCardState extends State<_PressableCard> {
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
-      onTap: () => HapticEngine.light(),
+      onTap: () {
+        HapticEngine.selection();
+      },
       child: AnimatedScale(
         scale: _pressed ? 0.97 : 1.0,
         duration: 150.ms,
@@ -600,7 +605,6 @@ class HeaderActionBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -608,10 +612,9 @@ class HeaderActionBtn extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: backgroundColor ?? L.fill.withValues(alpha: 0.4),
+          color: backgroundColor ?? Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.max),
-          border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
-          boxShadow: AppShadows.subtle,
+          boxShadow: AppShadows.neumorphic,
         ),
         child: Center(child: child),
       ),

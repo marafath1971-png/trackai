@@ -7,24 +7,31 @@ class BiometricService {
 
   static Future<bool> canCheckBiometrics() async {
     try {
-      return await _auth.canCheckBiometrics || await _auth.isDeviceSupported();
+      final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
+      final bool canAuthenticate = canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
+      return canAuthenticate;
     } catch (e) {
+      appLogger.e('Biometric Check Error', error: e);
       return false;
     }
   }
 
   static Future<bool> authenticate() async {
     try {
-      // In local_auth 3.0.1, authenticate is the main method, and it doesn't have AuthenticationOptions.
-      // It takes direct parameters.
-      // ignore: deprecated_member_use
+      final canCheck = await canCheckBiometrics();
+      if (!canCheck) {
+        appLogger.w('Biometrics not available or supported');
+        return false;
+      }
+
       return await _auth.authenticate(
         localizedReason: 'Please authenticate to unlock Med AI',
-        biometricOnly: true,
-        persistAcrossBackgrounding: true,
       );
     } on PlatformException catch (e) {
-      appLogger.e('Biometric Error', error: e);
+      appLogger.e('Biometric Auth Error', error: e);
+      return false;
+    } catch (e) {
+      appLogger.e('Unexpected Biometric Error', error: e);
       return false;
     }
   }

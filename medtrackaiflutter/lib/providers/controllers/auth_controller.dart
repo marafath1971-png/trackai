@@ -167,6 +167,15 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> incrementDosesMarked() async {
+    if (_profile == null) return;
+    _profile = _profile!.copyWith(
+      dosesMarked: (_profile!.dosesMarked) + 1,
+    );
+    await userRepo.saveProfile(_profile!);
+    notifyListeners();
+  }
+
   void setLanguage(String lang) {
     if (_profile == null) return;
     updateProfile(); // Trigger background sync if needed
@@ -174,4 +183,10 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteAccount() async {
+    await AuthService.deleteAccount();
+    _profile = null;
+    _phase = AppPhase.auth;
+    notifyListeners();
+  }
 }

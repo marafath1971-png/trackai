@@ -62,10 +62,10 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
   ];
 
   final List<Map<String, dynamic>> _categories = [
-    {'name': 'Tablet', 'icon': Icons.medication_rounded},
-    {'name': 'Liquid', 'icon': Icons.water_drop_rounded},
-    {'name': 'Spray', 'icon': Icons.air_rounded},
-    {'name': 'Beauty', 'icon': Icons.auto_awesome_rounded},
+    {'name': 'Tablet', 'icon': '💊'},
+    {'name': 'Liquid', 'icon': '🧪'},
+    {'name': 'Spray', 'icon': '🚿'},
+    {'name': 'Beauty', 'icon': '✨'},
   ];
 
   FlashMode _flashMode = FlashMode.off;
@@ -337,8 +337,9 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
               decoration: BoxDecoration(
                 color: L.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
+                border: Border.all(color: L.error.withValues(alpha: 0.1), width: 0.5),
               ),
-              child: Icon(Icons.videocam_off_rounded, color: L.error, size: 32),
+              child: const Center(child: Text('📷', style: TextStyle(fontSize: 32))),
             ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
             const SizedBox(height: 24),
             Text(
@@ -496,11 +497,11 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
   Widget _buildAnalyzingState() {
     final L = context.L;
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: L.bg,
       body: Stack(
         children: [
-          const Positioned.fill(
-            child: ColoredBox(color: Colors.black),
+          Positioned.fill(
+            child: ColoredBox(color: L.bg),
           ),
 
           SafeArea(
@@ -514,7 +515,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                     if (_imageFile != null)
                       _buildPulsingThumbnail(L)
                     else
-                      const Icon(Icons.document_scanner_rounded, color: Colors.white, size: 64),
+                      const Text('🧬', style: TextStyle(fontSize: 64)),
 
                     const SizedBox(height: 64),
 
@@ -530,18 +531,18 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                         key: ValueKey(_scanStep),
                         textAlign: TextAlign.center,
                         style: AppTypography.labelMedium.copyWith(
-                          color: Colors.white,
+                          color: L.text,
                           fontWeight: FontWeight.w900,
-                          letterSpacing: 3.0,
-                          fontSize: 14,
+                          letterSpacing: 2.5,
+                          fontSize: 13,
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'PRECISION SCANNING • VER v3.0',
+                      'PRECISION SCANNING • VER 2.6',
                       style: AppTypography.labelSmall.copyWith(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: L.sub.withValues(alpha: 0.3),
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.5,
                       ),
@@ -562,9 +563,9 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                 Container(width: 4, height: 4, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
                 const SizedBox(width: 12),
                 Text(
-                  'ENCRYPTED ANALYSIS',
+                  'PRO_LINK_ENCRYPTED',
                   style: AppTypography.labelSmall.copyWith(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: L.sub.withValues(alpha: 0.3),
                     fontWeight: FontWeight.w900,
                     letterSpacing: 2.0,
                   ),
@@ -590,7 +591,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: Colors.white.withValues(alpha: glow),
+                color: Colors.black.withValues(alpha: glow),
                 blurRadius: 40,
                 spreadRadius: 2,
               ),
@@ -614,8 +615,8 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                       ],
                     ),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.4),
-                      width: 1,
+                      color: L.border.withValues(alpha: 0.1),
+                      width: 0.5,
                     ),
                   ),
                 ),
@@ -640,9 +641,9 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
           child: Container(
             height: 2,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.L.text,
               boxShadow: [
-                BoxShadow(color: Colors.white.withValues(alpha: 0.8), blurRadius: 10, spreadRadius: 2)
+                BoxShadow(color: context.L.text.withValues(alpha: 0.4), blurRadius: 15, spreadRadius: 2)
               ],
             ),
           ),
@@ -666,21 +667,20 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                 height: 32,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isDone ? Colors.white : Colors.transparent,
+                  color: isDone ? L.text : L.card,
                   border: Border.all(
-                    color: isActive || isDone ? Colors.white : Colors.white12,
-                    width: 1.5,
+                    color: isActive || isDone ? L.text : L.border.withValues(alpha: 0.1),
+                    width: 0.5,
                   ),
                 ),
-
                 child: Center(
                   child: isDone
-                      ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
+                      ? Icon(Icons.check_rounded, size: 16, color: L.bg)
                       : isActive
-                          ? const AppLoadingIndicator(size: 14)
+                          ? AppLoadingIndicator(size: 14, color: L.text)
                           : Text('${i + 1}',
                               style: AppTypography.labelSmall.copyWith(
-                                color: Colors.white38,
+                                color: L.sub.withValues(alpha: 0.3),
                                 fontWeight: FontWeight.w900,
                               )),
                 ),
@@ -690,7 +690,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                   child: Container(
                     height: 2,
                     margin: const EdgeInsets.symmetric(horizontal: 8),
-                    color: isDone ? Colors.white : Colors.white12,
+                    color: isDone ? Colors.black : Colors.black.withValues(alpha: 0.1),
 
                   ),
                 ),
@@ -855,9 +855,15 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
+        color: Colors.black.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -885,9 +891,15 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
+          color: Colors.black.withValues(alpha: 0.65),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 25,
+              offset: const Offset(0, 12),
+            )
+          ],
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -1133,7 +1145,7 @@ class _ResultModalState extends State<_ResultModal> {
               ),
             ),
             const SizedBox(height: 32),
-            const Text('🛡️', style: TextStyle(fontSize: 44)),
+            const Text('✨', style: TextStyle(fontSize: 44)),
             const SizedBox(height: 28),
             Text(
               "Secure Your Data",
@@ -1258,9 +1270,15 @@ class _ResultModalState extends State<_ResultModal> {
         top: 24,
       ),
       decoration: BoxDecoration(
-        color: L.bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+        color: L.meshBg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 40,
+            offset: const Offset(0, -10),
+          )
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1336,7 +1354,7 @@ class _ResultModalState extends State<_ResultModal> {
                       _BentoMetricTile(
                         flex: 2,
                         title: "ID_NAME",
-                        icon: "N",
+                        icon: "📛",
                         child: _buildEditableField(
                           controller: _nameController,
                           fontSize: 22,
@@ -1348,7 +1366,7 @@ class _ResultModalState extends State<_ResultModal> {
                       _BentoMetricTile(
                         flex: 1,
                         title: "ID_BRAND",
-                        icon: "B",
+                        icon: "🏷️",
                         child: _buildEditableField(
                           controller: _brandController,
                           fontSize: 15,
@@ -1360,7 +1378,7 @@ class _ResultModalState extends State<_ResultModal> {
                       _BentoMetricTile(
                         flex: 1,
                         title: "ID_REQD_DOSE",
-                        icon: "D",
+                        icon: "📏",
                         child: _buildEditableField(
                           controller: _doseController,
                           fontSize: 15,
@@ -1372,7 +1390,7 @@ class _ResultModalState extends State<_ResultModal> {
                       _BentoMetricTile(
                         flex: 1,
                         title: "ID_FORM",
-                        icon: "F",
+                        icon: "📦",
                         child: _buildEditableField(
                           controller: _formController,
                           fontSize: 15,
@@ -1384,7 +1402,7 @@ class _ResultModalState extends State<_ResultModal> {
                       _BentoMetricTile(
                         flex: 1,
                         title: "ID_UNIT",
-                        icon: "U",
+                        icon: "⚖️",
                         child: _buildEditableField(
                           controller: _unitController,
                           fontSize: 15,
@@ -1403,21 +1421,21 @@ class _ResultModalState extends State<_ResultModal> {
                   _buildSectionHeader("🏥 PHARMACY & REFILL", L),
                   _buildExpandableCard(
                     title: "Pharmacy Name",
-                    icon: Icons.local_pharmacy_rounded,
+                    emoji: "🏥",
                     controller: _pharmacyNameController,
                     L: L,
                     hint: "e.g. CVS, Walgreens (Optional)",
                   ),
                   _buildExpandableCard(
                     title: "Pharmacy Phone",
-                    icon: Icons.phone_rounded,
+                    emoji: "📞",
                     controller: _pharmacyPhoneController,
                     L: L,
                     hint: "e.g. 555-0123 (Optional)",
                   ),
                   _buildExpandableCard(
                     title: "Rx Number",
-                    icon: Icons.receipt_long_rounded,
+                    emoji: "🆔",
                     controller: _rxNumberController,
                     L: L,
                     hint: "e.g. 1234567-89 (Optional)",
@@ -1433,35 +1451,35 @@ class _ResultModalState extends State<_ResultModal> {
                       L),
                   _buildExpandableCard(
                     title: "Medical Purpose",
-                    icon: Icons.info_outline_rounded,
+                    emoji: "ℹ️",
                     controller: _descController,
                     L: L,
                     accentColor: context.L.text,
                   ),
                   _buildExpandableCard(
                     title: "How to Take",
-                    icon: Icons.menu_book_rounded,
+                    emoji: "📖",
                     controller: _howController,
                     L: L,
                     accentColor: context.L.text,
                   ),
                   _buildExpandableCard(
                     title: "Side Effects",
-                    icon: Icons.error_outline_rounded,
+                    emoji: "🤮",
                     controller: _sideEffectsController,
                     L: L,
                     accentColor: context.L.text,
                   ),
                   _buildExpandableCard(
                     title: "Interactions",
-                    icon: Icons.swap_calls_rounded,
+                    emoji: "🔀",
                     controller: _interactionsController,
                     L: L,
                     accentColor: context.L.text,
                   ),
                   _buildExpandableCard(
                     title: "Warnings",
-                    icon: Icons.warning_amber_rounded,
+                    emoji: "⚠️",
                     controller: _warningsController,
                     L: L,
                     accentColor: context.L.text,
@@ -1470,7 +1488,7 @@ class _ResultModalState extends State<_ResultModal> {
                   // Additional/Personal Notes
                   _buildExpandableCard(
                     title: "Personal Notes",
-                    icon: Icons.note_add_rounded,
+                    emoji: "📝",
                     controller: _additionalController,
                     L: L,
                     accentColor: context.L.text,
@@ -1489,7 +1507,7 @@ class _ResultModalState extends State<_ResultModal> {
                       color: L.card,
                       borderRadius: BorderRadius.circular(24),
                       border:
-                          Border.all(color: L.border.withValues(alpha: 0.5)),
+                          Border.all(color: L.border.withValues(alpha: 0.1), width: 0.5),
                     ),
                     child: Row(
                       children: [
@@ -1623,9 +1641,9 @@ class _ResultModalState extends State<_ResultModal> {
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppShadows.neumorphic,
       ),
       child: Row(
         children: [
@@ -1658,10 +1676,9 @@ class _ResultModalState extends State<_ResultModal> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: L.card,
+          color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1.5),
-          boxShadow: L.shadowSoft,
+          boxShadow: AppShadows.neumorphic,
         ),
         child: Icon(icon, size: 18, color: L.text.withValues(alpha: 0.7)),
       ),
@@ -1671,9 +1688,8 @@ class _ResultModalState extends State<_ResultModal> {
   Widget _buildStatusBadge(bool identified, bool systemBusy) {
     final L = context.L;
     String label = identified ? "VERIFIED" : "MANUAL";
-    IconData icon = identified ? Icons.verified_rounded : Icons.info_rounded;
+    String emoji = identified ? "✅" : "ℹ️";
     Color color = L.text;
-    Color bg = L.text.withValues(alpha: 0.05);
 
     if (systemBusy) {
       label = "SMART_ASSIST";
@@ -1682,20 +1698,21 @@ class _ResultModalState extends State<_ResultModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+        color: L.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 14),
+          Text(emoji, style: const TextStyle(fontSize: 12)),
           const SizedBox(width: 8),
           Text(label,
               style: AppTypography.labelSmall.copyWith(
                 color: color,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
+                fontSize: 10,
               )),
         ],
       ),
@@ -1750,6 +1767,7 @@ class _ResultModalState extends State<_ResultModal> {
       decoration: BoxDecoration(
         color: L.card,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
         image: widget.result.imageUrl != null
             ? DecorationImage(
                 image: NetworkImage(widget.result.imageUrl!),
@@ -1757,13 +1775,11 @@ class _ResultModalState extends State<_ResultModal> {
                 colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.2), BlendMode.darken),
               )
             : null,
-        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
-        boxShadow: L.shadowSoft,
       ),
       child: Stack(
         children: [
           if (widget.result.imageUrl == null)
-            Center(child: Icon(Icons.medication_rounded, size: 64, color: L.text.withValues(alpha: 0.1))),
+            const Center(child: Text('💊', style: TextStyle(fontSize: 64))),
           Positioned(
             bottom: 0,
             left: 0,
@@ -1774,7 +1790,7 @@ class _ResultModalState extends State<_ResultModal> {
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  color: L.bg.withValues(alpha: 0.7),
+                  color: L.bg.withValues(alpha: 0.8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1783,7 +1799,7 @@ class _ResultModalState extends State<_ResultModal> {
                           _buildStatusBadge(widget.result.identified, widget.result.systemBusy),
                           const Spacer(),
                           if (widget.result.confidence == 'high')
-                             const Text("⚡ 98% MATCH", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1, color: Colors.black)),
+                             Text("⚡ 98% MATCH", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1, color: L.text)),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -1814,9 +1830,16 @@ class _ResultModalState extends State<_ResultModal> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isAha ? L.text.withValues(alpha: 0.03) : L.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isAha ? L.text.withValues(alpha: 0.1) : L.border.withValues(alpha: 0.3)),
+        color: L.card,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1860,15 +1883,22 @@ class _ResultModalState extends State<_ResultModal> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accent.withValues(alpha: 0.3), width: 1.5),
+        color: L.card,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          )
+        ],
       ),
       child: Column(
         children: [
           Row(
             children: [
-              Icon(isAntibiotic ? Icons.science_rounded : Icons.warning_rounded, color: accent, size: 20),
+              Text(isAntibiotic ? "🧪" : "⚠️", style: const TextStyle(fontSize: 18)),
               const SizedBox(width: 12),
               Text(label, style: AppTypography.labelMedium.copyWith(color: accent, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
             ],
@@ -1882,7 +1912,7 @@ class _ResultModalState extends State<_ResultModal> {
               decoration: BoxDecoration(color: accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 14, color: accent),
+                  Text("ℹ️", style: TextStyle(fontSize: 12, color: accent)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1902,7 +1932,7 @@ class _ResultModalState extends State<_ResultModal> {
 
   Widget _buildExpandableCard({
     required String title,
-    required IconData icon,
+    required String emoji,
     required TextEditingController controller,
     required AppThemeColors L,
     Color? accentColor,
@@ -1922,21 +1952,28 @@ class _ResultModalState extends State<_ResultModal> {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDengerous ? Colors.redAccent.withValues(alpha: 0.05) : L.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDengerous ? Colors.redAccent.withValues(alpha: 0.2) : L.border.withValues(alpha: 0.1), width: 1),
+        color: L.card,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: itemColor, size: 16),
+              Text(emoji, style: const TextStyle(fontSize: 16)),
               const SizedBox(width: 12),
               Text(
-                "${title.toUpperCase()} $emojiTitle",
+                title.toUpperCase(),
                 style: AppTypography.labelSmall.copyWith(
-                  color: isDengerous ? Colors.redAccent : L.sub,
+                  color: isDengerous ? Colors.redAccent : L.sub.withValues(alpha: 0.6),
                   fontWeight: FontWeight.w900,
                   fontSize: 11,
                   letterSpacing: 1.2,
@@ -1989,9 +2026,9 @@ class _ResultModalState extends State<_ResultModal> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.neumorphic,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2051,9 +2088,9 @@ class _ResultModalState extends State<_ResultModal> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: active ? L.text : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: active ? L.text : L.border.withValues(alpha: 0.1), width: 1),
+          color: active ? L.text : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: active ? null : AppShadows.neumorphic,
         ),
         child: Text(
           label.toUpperCase(),
@@ -2198,9 +2235,9 @@ class _ResultModalState extends State<_ResultModal> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.neumorphic,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2385,10 +2422,14 @@ class _BentoMetricTile extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: L.card,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
           boxShadow: [
-             BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
           ],
         ),
         child: Column(
@@ -2397,7 +2438,7 @@ class _BentoMetricTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(_getIconForTitle(title), style: const TextStyle(fontSize: 12)),
+                Text(icon, style: const TextStyle(fontSize: 14)),
                 const SizedBox(width: 10),
                 Text(
                   title.replaceFirst('ID_', '').toUpperCase(),

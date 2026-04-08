@@ -83,6 +83,15 @@ const List<Map<String, String>> kConditions = [
   {'v': 'None', 'e': '✅'},
 ];
 
+// Pain points / Struggle
+const List<Map<String, String>> kPainPoints = [
+  {'v': 'Forgetting to take doses', 'e': '🤔'},
+  {'v': 'Complex schedules (e.g. alternating days)', 'e': '🗓️'},
+  {'v': 'Running out of pills', 'e': '📉'},
+  {'v': 'Not having data for my doctor', 'e': '📄'},
+  {'v': 'Managing for someone else', 'e': '👥'},
+];
+
 // Med count options
 const List<Map<String, String>> kMedCounts = [
   {'v': '1', 'e': '1️⃣'},

@@ -32,22 +32,9 @@ class TrialCountdownCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: L.card,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isExhausted
-                  ? L.text.withValues(alpha: 0.3)
-                  : L.border.withValues(alpha: 0.5),
-            ),
-            boxShadow: isExhausted
-                ? [
-                    BoxShadow(
-                      color: L.text.withValues(alpha: 0.08),
-                      blurRadius: 30,
-                      spreadRadius: 2,
-                    )
-                  ]
-                : AppShadows.soft,
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppRadius.squircle),
+            boxShadow: AppShadows.neumorphic,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,10 +46,8 @@ class TrialCountdownCard extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: L.text.withValues(alpha: 0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                          color: L.text.withValues(alpha: 0.1)),
                     ),
                     child: Center(
                       child: Icon(Icons.document_scanner_rounded,
@@ -99,18 +84,17 @@ class TrialCountdownCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // CTA pill
+                  // Premium CTA pill
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                    padding:const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
                     decoration: BoxDecoration(
                       color: L.text,
-                      borderRadius: BorderRadius.circular(AppRadius.max),
+                      borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: L.text.withValues(alpha: 0.2),
+                          color: L.text.withValues(alpha: 0.25),
                           blurRadius: 20,
-                          offset: const Offset(0, 4),
+                          offset: const Offset(0, 8),
                         )
                       ],
                     ),
@@ -118,53 +102,43 @@ class TrialCountdownCard extends StatelessWidget {
                       'GO PRO',
                       style: AppTypography.labelMedium.copyWith(
                         color: L.bg,
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 0.8,
+                        letterSpacing: 1.2,
                       ),
                     ),
                   )
                       .animate(onPlay: (c) => c.repeat(reverse: true))
-                      .scaleXY(
-                          begin: 1.0,
-                          end: 1.04,
-                          duration: 1800.ms,
+                      .shimmer(duration: 3.seconds, color: Colors.white.withValues(alpha: 0.1))
+                      .scale(
+                          begin: const Offset(1, 1),
+                          end: const Offset(1.03, 1.03),
+                          duration: 2.seconds,
                           curve: Curves.easeInOut),
                 ],
               ),
 
               const SizedBox(height: 18),
 
-              // ── Scan counter dots ────────────────────────────────────
+              // ── Precision Segmented Indicators ───────────────────────────
               Row(
-                children: List.generate(3, (i) {
-                  final used = i < scansUsed;
+                children: List.generate(40, (i) {
+                  final segmentThreshold = i / 40;
+                  final scanThreshold = scansUsed / 3;
+                  final used = segmentThreshold < scanThreshold;
+                  
                   return Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(right: i < 2 ? 6 : 0),
-                      child: AnimatedContainer(
-                        duration: 600.ms,
-                        curve: Curves.easeOutQuart,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: used
-                              ? (isExhausted
-                                  ? L.error.withValues(alpha: 0.7)
-                                  : L.text)
-                              : L.fill.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(4),
-                          boxShadow: used && !isExhausted
-                              ? [
-                                  BoxShadow(
-                                    color: L.text
-                                        .withValues(alpha: 0.15),
-                                    blurRadius: 8,
-                                  )
-                                ]
-                              : null,
-                        ),
+                    child: Container(
+                      height: 4,
+                      margin: const EdgeInsets.symmetric(horizontal: 0.4),
+                      decoration: BoxDecoration(
+                        color: used
+                            ? (isExhausted ? L.error : L.text)
+                            : L.fill.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(0.5),
                       ),
-                    ),
+                    ).animate(target: used ? 1 : 0)
+                     .shimmer(duration: 2.seconds, color: Colors.white.withValues(alpha: 0.1)),
                   );
                 }),
               ),

@@ -55,7 +55,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
               ),
               const SizedBox(height: 40),
               Center(
-                child: Text('Med AI · Secure. Private. Simple.',
+                child: Text('MedAI · Secure. Private. Simple.',
                     style: AppTypography.bodySmall.copyWith(
                         fontWeight: FontWeight.w700,
                         color: L.sub.withValues(alpha: 0.6))),

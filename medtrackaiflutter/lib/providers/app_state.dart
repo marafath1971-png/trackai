@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -16,6 +18,9 @@ import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
 import '../services/link_service.dart';
 import '../services/purchases_service.dart';
+import '../services/performance_service.dart';
+import '../services/dynamic_icon_service.dart';
+import '../services/export_service.dart';
 
 import '../core/utils/logger.dart';
 import '../core/utils/haptic_engine.dart';
@@ -26,6 +31,8 @@ import 'controllers/medication_controller.dart';
 import 'controllers/wellness_controller.dart';
 import 'controllers/social_controller.dart';
 import 'controllers/health_controller.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../services/review_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ══════════════════════════════════════════════
@@ -48,7 +55,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   bool _isDisposed = false;
   AppLifecycleState _lifecycleState = AppLifecycleState.resumed;
 
-  final LinkService _linkService = LinkService();
+  final LinkService _linkService;
   final AudioPlayer _audioPlayer;
   StreamSubscription? _notifSub;
 
@@ -57,6 +64,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   String? toastType;
   bool lowStockBannerDismissed = false;
   bool isLocked = false;
+  String? pendingCelebrationMedName;
 
   AppState({
     required this.medRepo,
@@ -64,7 +72,9 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     required this.symptomRepo,
     required SharedPreferences prefs,
     AudioPlayer? audioPlayer,
-  }) : _audioPlayer = audioPlayer ?? AudioPlayer() {
+    LinkService? linkService,
+  }) : _audioPlayer = audioPlayer ?? AudioPlayer(),
+       _linkService = linkService ?? LinkService() {
     // Controller Initialization
     auth = AuthController(userRepo: userRepo);
     med = MedicationController(medRepo: medRepo);
@@ -113,6 +123,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   Map<String, List<DoseEntry>> get history => med.history;
   Map<String, bool> get takenToday => med.takenToday;
   StreakData get streakData => med.streakData;
+  List<double> get inventoryHistory => med.inventoryHistory;
   
   List<Caregiver> get caregivers => social.caregivers;
   List<Map<String, dynamic>> get monitoredPatients => social.monitoredPatients;
@@ -131,30 +142,37 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
   // ── Lifecycle ──────────────────────────────────────────────────────
   Future<void> loadFromStorage() async {
-    await NotificationService.refreshTimeZone();
-    try {
-      await auth.loadProfile();
-      AnalyticsService.setUserId(AuthService.uid);
+    return PerformanceService.measure('app_load_trace', () async {
+      await NotificationService.refreshTimeZone();
+      try {
+        await auth.loadProfile();
+        AnalyticsService.setUserId(AuthService.uid);
 
-      await Future.wait([
-        med.loadData(),
-        wellness.loadData(),
-        social.loadData(),
-      ]);
+        await Future.wait([
+          med.loadData(),
+          wellness.loadData(),
+          social.loadData(),
+        ]);
 
-      if (AuthService.uid != null) {
-        _syncUserProfileFromAuth();
-        _initPushNotifications();
+        if (AuthService.uid != null) {
+          _syncUserProfileFromAuth();
+          _initPushNotifications();
+          
+          // Apply saved app icon on start
+          if (profile?.appIcon != null && profile?.appIcon != 'default') {
+            await DynamicIconService.setIcon(profile!.appIcon);
+          }
+        }
+
+        _syncPendingActions();
+        safeNotifyListeners();
+      } catch (e, stack) {
+        appLogger.e('[AppState] Critical load failure', error: e, stackTrace: stack);
+        FirebaseCrashlytics.instance.recordError(e, stack);
+        auth.phase = AppPhase.onboarding;
+        safeNotifyListeners();
       }
-
-      _syncPendingActions();
-      safeNotifyListeners();
-    } catch (e, stack) {
-      appLogger.e('[AppState] Critical load failure', error: e, stackTrace: stack);
-      FirebaseCrashlytics.instance.recordError(e, stack);
-      auth.phase = AppPhase.onboarding;
-      safeNotifyListeners();
-    }
+    });
   }
 
   // ── Medication Proxies ─────────────────────────────────────────────
@@ -164,9 +182,23 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   List<Map<String, dynamic>> getTrendData() => med.getTrendData();
 
   Future<void> toggleDose(DoseItem dose) async {
-    await med.toggleDose(dose, todayStr());
-    safeNotifyListeners();
-    _updateNotifications();
+    return PerformanceService.measure('toggle_dose_trace', () async {
+      final key = dose.key;
+      final wasTaken = takenToday[key] ?? false;
+      
+      await med.toggleDose(dose, todayStr());
+      
+      if (!wasTaken) {
+        // Success: Trigger delighter and increment growth counter
+        await auth.incrementDosesMarked();
+        pendingCelebrationMedName = dose.med.name;
+        toast = 'Dose logged';
+        toastType = 'success';
+      }
+      
+      safeNotifyListeners();
+      _updateNotifications();
+    });
   }
   
   Future<void> takeDose(int medId, int idx) async {
@@ -241,7 +273,10 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void toggleDarkMode() => auth.toggleDarkMode();
   void setLanguage(String lang) => auth.setLanguage(lang);
   Future<void> updateAccentColor(String color) => auth.updateAccentColor(color);
-  Future<void> updateAppIcon(String icon) => auth.updateAppIcon(icon);
+  Future<void> updateAppIcon(String icon) async {
+    await DynamicIconService.setIcon(icon == 'default' ? null : icon);
+    await auth.updateAppIcon(icon);
+  }
   Future<void> updateReminderSound(String sound) => auth.updateReminderSound(sound);
   void toggleBiometricLock(bool v) => auth.toggleBiometricLock(v);
 
@@ -252,6 +287,51 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void lockApp() {
     isLocked = true;
     notifyListeners();
+  }
+
+  void clearCelebration() {
+    pendingCelebrationMedName = null;
+    notifyListeners();
+  }
+
+  // ── LAUNCH READINESS: SUPPORT & LEGAL ───────────────────────
+  
+  Future<void> openPrivacyPolicy() async {
+    final url = Uri.parse('https://medtrack.ai/privacy');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> openTermsOfService() async {
+    final url = Uri.parse('https://medtrack.ai/terms');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> contactSupport() async {
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'support@medtrack.ai',
+      query: encodeQueryParameters(<String, String>{
+        'subject': 'MedAI Support Inquiry',
+        'body': 'User ID: ${AuthService.uid}\nApp Version: 1.0.0+1\n\nIssue Description:',
+      }),
+    );
+    if (await canLaunchUrl(emailLaunchUri)) {
+      await launchUrl(emailLaunchUri);
+    }
+  }
+
+  Future<void> requestReview() => ReviewService.requestReview();
+  Future<void> openStoreReview() => ReviewService.openStoreReview();
+
+  String? encodeQueryParameters(Map<String, String> params) {
+    return params.entries
+        .map((MapEntry<String, String> e) =>
+            '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+        .join('&');
   }
 
   // ── Wellness & AI Proxies ──────────────────────────────────────────
@@ -356,8 +436,51 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   
   List<Medicine> getRefillForecast() => [];
   Future<void> refillMedication(int id) async {}
-  String exportDataCSV() => "";
-  Future<void> deleteAllData() async {}
+  // ── CLINICAL DATA EXPORT ───────────────────────────────────────────
+
+  /// Generates and shares a professional PDF Adherence Report
+  Future<void> exportDataPDF() async {
+    await ExportService.exportAdherenceReport(this);
+  }
+
+  /// Generates and shares a CSV file representing medication history
+  Future<void> exportDataCSV() async {
+    final buffer = StringBuffer();
+    buffer.writeln('Date,MedicineID,MedicineName,Time,Status');
+
+    history.forEach((date, doses) {
+      for (var dose in doses) {
+        final med = meds.where((m) => m.id == dose.medId).firstOrNull;
+        final status =
+            dose.taken ? 'Taken' : (dose.skipped ? 'Skipped' : 'Missed');
+        buffer.writeln(
+            '$date,${dose.medId},${med?.name ?? "Unknown"},${dose.time},$status');
+      }
+    });
+
+    final csv = buffer.toString();
+    final output = await getTemporaryDirectory();
+    final file = File('${output.path}/med_history.csv');
+    await file.writeAsString(csv);
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path)],
+        subject: 'MedAI Data Export (CSV)',
+      ),
+    );
+  }
+  Future<void> deleteAllData() async {
+    HapticEngine.selection();
+    await auth.logout();
+    showToast('All local data cleared');
+  }
+
+  Future<void> deleteAccount() async {
+    HapticEngine.selection();
+    await auth.deleteAccount();
+    showToast('Account deleted permanently', type: 'error');
+  }
   void executeStepAction(String step, BuildContext context) => wellness.executeStepAction(step);
 
   // ── WELLNESS & SYMPTOMS ──────────────────────────────────────────

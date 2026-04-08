@@ -64,55 +64,56 @@ class AppTypography {
   static TextStyle get displayLarge => GoogleFonts.outfit(
         fontSize: 64,
         fontWeight: FontWeight.w900,
-        letterSpacing: -3.5,
+        letterSpacing: -4.5,
         height: 1.0,
       );
   static TextStyle get displayMedium => GoogleFonts.outfit(
         fontSize: 44,
         fontWeight: FontWeight.w800,
-        letterSpacing: -2.0,
+        letterSpacing: -3.0,
         height: 1.1,
       );
   static TextStyle get displaySmall => GoogleFonts.outfit(
         fontSize: 34,
         fontWeight: FontWeight.w800,
-        letterSpacing: -1.5,
+        letterSpacing: -2.0,
         height: 1.2,
       );
   static TextStyle get headlineLarge => GoogleFonts.outfit(
         fontSize: 26,
         fontWeight: FontWeight.w800,
-        letterSpacing: -0.8,
+        letterSpacing: -1.2,
       );
   static TextStyle get headlineMedium => GoogleFonts.outfit(
         fontSize: 22,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.5,
+        letterSpacing: -0.8,
       );
   static TextStyle get headlineSmall => GoogleFonts.outfit(
         fontSize: 18,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.3,
+        letterSpacing: -0.5,
       );
   static TextStyle get titleLarge => GoogleFonts.outfit(
         fontSize: 18,
         fontWeight: FontWeight.w800,
+        letterSpacing: -0.4,
       );
   static TextStyle get titleMedium => GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.4,
+        letterSpacing: -0.6,
       );
   static TextStyle get bodyLarge => GoogleFonts.inter(
         fontSize: 17,
         fontWeight: FontWeight.w400,
-        letterSpacing: -0.4,
+        letterSpacing: -0.5,
       );
   static TextStyle get bodyMedium => GoogleFonts.inter(
         fontSize: 15,
         fontWeight: FontWeight.w400,
         height: 1.5,
-        letterSpacing: -0.2,
+        letterSpacing: -0.3,
       );
   static TextStyle get labelLarge => GoogleFonts.inter(
         fontSize: 14,
@@ -121,19 +122,19 @@ class AppTypography {
       );
   static TextStyle get labelMedium => GoogleFonts.inter(
         fontSize: 12,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.2,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1.5,
       );
   static TextStyle get labelSmall => GoogleFonts.inter(
         fontSize: 10,
         fontWeight: FontWeight.w900,
-        letterSpacing: 1.0,
+        letterSpacing: 2.0,
       );
   static TextStyle get bodySmall => GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w500,
         height: 1.4,
-        letterSpacing: -0.1,
+        letterSpacing: 0.2, // increased slightly to counteract small size
       );
 }
 
@@ -229,6 +230,22 @@ class AppShadows {
           offset: const Offset(0, 4),
         ),
       ];
+      
+  /// Neumorphic Light Mode shadow from reference
+  static List<BoxShadow> get neumorphic => [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 40,
+          offset: const Offset(0, 15),
+          spreadRadius: -10,
+        ),
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.02),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+          spreadRadius: 0,
+        ),
+      ];
 }
 
 class AppGradients {
@@ -238,6 +255,15 @@ class AppGradients {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
+
+  static LinearGradient glass([Color? color]) => LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      (color ?? Colors.white).withValues(alpha: 0.1),
+      (color ?? Colors.white).withValues(alpha: 0.02),
+    ],
+  );
 
   /// Subtle neutral tint for card backgrounds in light mode
   static LinearGradient get lightCard => const LinearGradient(
@@ -277,6 +303,13 @@ class AppGradients {
   /// Dark card gradient — premium night surface
   static LinearGradient get darkCard => const LinearGradient(
         colors: [Color(0xFF111111), Color(0xFF000000)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+
+  /// Action Red FAB — matching the user's reference image
+  static LinearGradient get actionRed => const LinearGradient(
+        colors: [Color(0xFFFF5E5E), Color(0xFFE5004F)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );

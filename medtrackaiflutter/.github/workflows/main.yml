@@ -1,4 +1,4 @@
-name: Flutter Build & Test
+name: MedTrack AI CI/CD
 
 on:
   push:
@@ -8,30 +8,38 @@ on:
 
 jobs:
   build:
-    name: Build & Test
+    name: Build & Quality Check
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v3
-      - uses: subosito/flutter-action@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.24.0'
           channel: 'stable'
+          cache: true # Built-in caching for Flutter SDK and Pub Cache
           
       - name: Install Dependencies
         run: flutter pub get
         
+      - name: Verify Formatting
+        run: flutter format --set-exit-if-changed .
+        
       - name: Static Analysis
-        run: flutter analyze
+        run: flutter analyze --fatal-infos --fatal-warnings
         
       - name: Run Unit Tests
         run: flutter test --coverage
         
-      - name: Build Android App Bundle
-        run: flutter build appbundle --release
+      - name: Build Android Release (AAB)
+        run: flutter build appbundle --release --obfuscate --split-debug-info=./symbols
         
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: release-aab
+          name: medtrack-ai-v1.0.0
           path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 7

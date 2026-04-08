@@ -24,7 +24,7 @@ class SettingsSection extends StatelessWidget {
                       fontSize: 10,
                       color: L.sub.withValues(alpha: 0.6))),
               const SizedBox(width: 10),
-              Expanded(child: Divider(color: L.border.withValues(alpha: 0.1), thickness: 1)),
+              Expanded(child: Divider(color: L.border.withValues(alpha: 0.1), thickness: 0.5)),
             ],
           ),
         ),
@@ -33,8 +33,8 @@ class SettingsSection extends StatelessWidget {
         decoration: BoxDecoration(
             color: L.card,
             borderRadius: BorderRadius.circular(24),
-            border:
-                Border.all(color: L.border.withValues(alpha: 0.3), width: 1.0)),
+            border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
+            boxShadow: AppShadows.neumorphic),
         child: child,
       ),
       const SizedBox(height: 28),
@@ -86,7 +86,7 @@ class SettingsModalRow extends StatelessWidget {
           border: border
               ? Border(
                   bottom: BorderSide(
-                      color: L.border.withValues(alpha: 0.2), width: 1.0))
+                      color: L.border.withValues(alpha: 0.15), width: 0.5))
               : null,
         ),
         child: Row(children: [
@@ -96,7 +96,7 @@ class SettingsModalRow extends StatelessWidget {
             decoration: BoxDecoration(
                 color: bg.withValues(alpha: 0.08), 
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: bg.withValues(alpha: 0.15), width: 1)),
+                border: Border.all(color: bg.withValues(alpha: 0.1), width: 0.5)),
             child: Center(
                 child: icon is String
                     ? Text(icon as String,
@@ -154,7 +154,7 @@ class SettingsEditField extends StatelessWidget {
       decoration: BoxDecoration(
           color: L.card,
           border: border
-              ? Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.2), width: 1.0))
+              ? Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.07), width: 0.5))
               : null),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label.toUpperCase(),
@@ -215,7 +215,7 @@ class SettingsSelectRow extends StatelessWidget {
               bottomRight: last ? const Radius.circular(24) : Radius.zero,
             ),
             border: border
-                ? Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.2), width: 1.0))
+                ? Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.15), width: 0.5))
                 : null),
         child:
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -226,7 +226,7 @@ class SettingsSelectRow extends StatelessWidget {
                 overflow: TextOverflow.ellipsis),
           ),
           if (isSel)
-            Icon(Icons.check_circle_rounded, color: L.text, size: 20),
+            const Text('✅', style: TextStyle(fontSize: 16)),
         ]),
       ),
     );
@@ -253,15 +253,8 @@ class SettingsStatCard extends StatelessWidget {
       decoration: BoxDecoration(
           color: L.card,
           borderRadius: BorderRadius.circular(24),
-          border:
-              Border.all(color: L.border.withValues(alpha: 0.3), width: 1.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ]),
+          border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
+          boxShadow: AppShadows.neumorphic),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

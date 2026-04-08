@@ -42,7 +42,7 @@ class RingChart extends StatelessWidget {
           painter: _RingPainter(
               percent: percent.clamp(0, 1),
               color: color,
-              bg: L.fill,
+              bg: Colors.black.withValues(alpha: 0.05),
               strokeWidth: strokeWidth),
         ),
         Column(mainAxisSize: MainAxisSize.min, children: [
@@ -137,23 +137,18 @@ class AppToggle extends StatelessWidget {
         onChanged(!value);
       },
       child: AnimatedContainer(
-        duration: 400.ms,
-        curve: Curves.easeOutQuart,
+        duration: 500.ms,
+        curve: Curves.elasticOut,
         width: 52,
         height: 30,
         decoration: BoxDecoration(
-          color: value ? L.text : L.fill,
+          color: value ? L.text : L.fill.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-            color: value ? L.text : L.border.withValues(alpha: 0.1),
-            width: 1.0,
-          ),
-          boxShadow: value ? AppShadows.glow(L.text, intensity: 0.15) : null,
         ),
         child: Stack(children: [
           AnimatedAlign(
-            duration: 400.ms,
-            curve: Curves.easeOutQuart,
+            duration: 500.ms,
+            curve: Curves.elasticOut,
             alignment: value ? Alignment.centerRight : Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.all(3),
@@ -161,15 +156,14 @@ class AppToggle extends StatelessWidget {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: value ? L.bg : L.text.withValues(alpha: 0.8),
+                  color: Colors.white,
                   shape: BoxShape.circle,
                   boxShadow: [
-                    if (!value)
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      )
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: value ? 0.2 : 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
                   ],
                 ),
               ),
@@ -192,6 +186,7 @@ class GlassCard extends StatelessWidget {
   final double? height;
   final BorderRadius? borderRadius;
   final bool showBorder;
+  final Color? tintColor;
 
   const GlassCard({
     super.key,
@@ -201,32 +196,60 @@ class GlassCard extends StatelessWidget {
     this.height,
     this.borderRadius,
     this.showBorder = true,
+    this.tintColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final L = context.L;
     final r = borderRadius ?? AppRadius.roundSquircle;
-    
+
     return ClipPath(
       clipper: ShapeBorderClipper(
         shape: ContinuousRectangleBorder(borderRadius: r),
       ),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           width: width,
           height: height,
           padding: padding ?? const EdgeInsets.all(20),
           decoration: ShapeDecoration(
-            color: L.glass,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                (tintColor ?? Colors.white).withValues(alpha: 0.14),
+                (tintColor ?? Colors.white).withValues(alpha: 0.04),
+              ],
+            ),
             shape: ContinuousRectangleBorder(
               borderRadius: r,
-              side: showBorder 
-                ? BorderSide(color: L.glassBorder, width: 1.5)
-                : BorderSide.none,
+              side: showBorder
+                  ? BorderSide(
+                      color: L.glassBorder.withValues(alpha: 0.12),
+                      width: 0.5,
+                    )
+                  : BorderSide.none,
             ),
-            shadows: AppShadows.glass,
+            shadows: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 48,
+                offset: const Offset(0, 24),
+                spreadRadius: -12,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.35),
+                blurRadius: 1,
+                offset: const Offset(0, -0.5),
+              ),
+            ],
           ),
           child: child,
         ),
@@ -296,28 +319,62 @@ class SquircleCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final Color? color;
-  final List<BoxShadow>? shadow;
+  final List<BoxShadow>? boxShadow;
+  final bool showBorder;
+  final double? borderRadius;
+  final double? radius;
+  final double? borderWidth;
 
   const SquircleCard({
     super.key,
     required this.child,
     this.padding,
     this.color,
-    this.shadow,
+    this.boxShadow,
+    this.showBorder = true,
+    this.borderRadius,
+    this.radius,
+    this.borderWidth,
   });
 
   @override
   Widget build(BuildContext context) {
     final L = context.L;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final r = radius ?? borderRadius ?? AppRadius.squircle;
+    final bw = borderWidth ?? 0.5;
+
     return Container(
       padding: padding ?? const EdgeInsets.all(20),
-      decoration: ShapeDecoration(
-        color: color ?? L.card,
-        shape: ContinuousRectangleBorder(
-          borderRadius: AppRadius.roundSquircle,
-          side: BorderSide(color: L.border.withValues(alpha: 0.1), width: 1),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            (color ?? L.card).withValues(alpha: isDark ? 0.95 : 1.0),
+            (color ?? L.card).withValues(alpha: isDark ? 0.88 : 0.97),
+          ],
         ),
-        shadows: shadow ?? AppShadows.soft,
+        borderRadius: BorderRadius.circular(r),
+        border: showBorder
+            ? Border.all(
+                color: L.border.withValues(alpha: isDark ? 0.12 : 0.07),
+                width: bw,
+              )
+            : null,
+        boxShadow: boxShadow ?? [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.06),
+            blurRadius: 40,
+            offset: const Offset(0, 16),
+            spreadRadius: -8,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: child,
     );
@@ -367,20 +424,20 @@ class AppToast extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    final IconData icon;
+    final String emoji;
 
     switch (type) {
       case 'error':
-        icon = Icons.error_rounded;
+        emoji = '🚨';
         break;
       case 'warning':
-        icon = Icons.warning_rounded;
+        emoji = '⚠️';
         break;
       case 'info':
-        icon = Icons.info_rounded;
+        emoji = 'ℹ️';
         break;
       default:
-        icon = Icons.check_circle_rounded;
+        emoji = '✅';
     }
 
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
@@ -396,16 +453,15 @@ class AppToast extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: L.text, size: 18),
-              const SizedBox(width: 12),
+              Text(emoji, style: const TextStyle(fontSize: 16)),
+              const SizedBox(width: 10),
               Flexible(
                 child: Text(
-                  message.toUpperCase(),
-                  style: AppTypography.labelSmall.copyWith(
+                  message,
+                  style: AppTypography.bodyMedium.copyWith(
                     color: L.text,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.0,
-                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
                   ),
                 ),
               ),
@@ -500,21 +556,24 @@ class _SkeletonBoxState extends State<SkeletonBox>
 
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
     return AnimatedBuilder(
         animation: _anim,
         builder: (_, __) => Container(
               width: widget.width,
               height: widget.height,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(widget.radius),
-                gradient: LinearGradient(
-                  colors: [L.fill, L.border, L.fill],
-                  stops: [0, _anim.value, 1],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-              ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(widget.radius),
+        gradient: LinearGradient(
+          colors: [
+            context.L.card.withValues(alpha: 0.5),
+            context.L.card,
+            context.L.card.withValues(alpha: 0.5),
+          ],
+          stops: [0, _anim.value, 1],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+      ),
             ));
   }
 }
@@ -545,8 +604,8 @@ class SettingsRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: L.border, width: 1.0)),
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide.none),
         ),
         child: Row(children: [
           leading,
@@ -685,13 +744,13 @@ class LightInput extends StatelessWidget {
               const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide(color: L.border, width: 1.0)),
+              borderSide: BorderSide(color: L.border.withValues(alpha: 0.1), width: 0.5)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide(color: L.border, width: 1.0)),
+              borderSide: BorderSide(color: L.border.withValues(alpha: 0.1), width: 0.5)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide(color: L.text, width: 1.0)),
+              borderSide: BorderSide(color: L.text.withValues(alpha: 0.2), width: 0.5)),
         ),
       ),
     ]);
@@ -826,26 +885,35 @@ class _DoseCardState extends State<DoseCard> {
   Widget build(BuildContext context) {
     final L = context.L;
     final medColor = hexToColor(widget.med.color);
+    final isDone = widget.taken;
 
     return Dismissible(
       key: ValueKey('dose_${widget.sched.id}_${widget.taken}'),
-      direction: widget.taken ? DismissDirection.none : DismissDirection.startToEnd,
+      direction: isDone ? DismissDirection.none : DismissDirection.startToEnd,
       confirmDismiss: (dir) async {
         if (dir == DismissDirection.startToEnd) {
           HapticEngine.doseTaken();
-          Future.delayed(const Duration(milliseconds: 200), () {
-            widget.onTake();
-          });
+          Future.delayed(const Duration(milliseconds: 180), widget.onTake);
         }
         return false;
       },
       background: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 28),
         alignment: Alignment.centerLeft,
         decoration: BoxDecoration(
-            gradient: AppGradients.main, borderRadius: BorderRadius.circular(24)),
-        child: const Icon(Icons.check_rounded, color: Colors.white, size: 24),
+          color: L.success.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: L.success.withValues(alpha: 0.2), width: 0.5),
+        ),
+        child: Row(
+          children: [
+            const Text('✅', style: TextStyle(fontSize: 16)),
+            const SizedBox(width: 10),
+            Text('Mark taken',
+                style: AppTypography.labelMedium.copyWith(
+                  color: L.success, fontWeight: FontWeight.w700, fontSize: 13)),
+          ],
+        ),
       ),
       child: GestureDetector(
         onTapDown: (_) => setState(() => _pressed = true),
@@ -853,97 +921,100 @@ class _DoseCardState extends State<DoseCard> {
         onTapCancel: () => setState(() => _pressed = false),
         onTap: widget.onTap,
         child: AnimatedScale(
-          scale: _pressed ? 0.98 : 1.0,
+          scale: _pressed ? 0.985 : 1.0,
           duration: 100.ms,
-          child: SquircleCard(
-            padding: EdgeInsets.zero,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: isDone ? L.card.withValues(alpha: 0.6) : L.card,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+              boxShadow: widget.isNext && !isDone
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 30,
+                        offset: const Offset(0, 12),
+                        spreadRadius: -5,
+                      ),
+                      ...AppShadows.neumorphic,
+                    ]
+                  : AppShadows.neumorphic,
+            ),
             child: Row(
               children: [
+                // ── Colored icon container ──
                 Container(
-                  width: 6,
-                  height: 72,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: widget.taken ? medColor.withValues(alpha: 0.2) : medColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      bottomLeft: Radius.circular(32),
-                    ),
+                    color: isDone
+                        ? medColor.withValues(alpha: 0.07)
+                        : medColor.withValues(alpha: 0.13),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                ),
+                  child: Center(
+                    child: isDone
+                        ? const Text('✅', style: TextStyle(fontSize: 16))
+                        : const Text('💊', style: TextStyle(fontSize: 18)),
+                  ),
+                ).animate(target: isDone ? 1 : 0)
+                 .scale(begin: const Offset(1.0, 1.0), end: const Offset(1.2, 1.2), duration: 200.ms, curve: Curves.elasticOut)
+                 .then()
+                 .scale(begin: const Offset(1.2, 1.2), end: const Offset(1.0, 1.0), duration: 200.ms),
+                const SizedBox(width: 14),
+                // ── Med name + time ──
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    child: Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              fmtTime(widget.sched.h, widget.sched.m, context),
-                              style: AppTypography.titleMedium.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                                color: widget.taken ? L.sub.withValues(alpha: 0.3) : L.text,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            Text(
-                              widget.sched.label.toUpperCase(),
-                              style: AppTypography.labelSmall.copyWith(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                color: L.sub.withValues(alpha: 0.4),
-                                decoration: widget.taken ? TextDecoration.lineThrough : null,
-                                letterSpacing: 0.2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.med.name,
+                        style: AppTypography.labelLarge.copyWith(
+                          color: isDone ? L.text.withValues(alpha: 0.3) : L.text,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          letterSpacing: -0.3,
+                          decoration: isDone ? TextDecoration.lineThrough : null,
+                          decorationColor: L.text.withValues(alpha: 0.2),
                         ),
-                        const SizedBox(width: 14),
-                        Container(width: 1, height: 24, color: L.border.withValues(alpha: 0.08)),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                widget.med.name,
-                                style: AppTypography.labelLarge.copyWith(
-                                  color: widget.taken ? L.text.withValues(alpha: 0.4) : L.text,
-                                  fontWeight: FontWeight.w900,
-                                  decoration: widget.taken ? TextDecoration.lineThrough : null,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${widget.med.name} · ${widget.med.dose}',
-                                style: AppTypography.labelSmall.copyWith(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w900,
-                                  color: L.sub.withValues(alpha: 0.4),
-                                  decoration: widget.taken ? TextDecoration.lineThrough : null,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Text(
+                            fmtTime(widget.sched.h, widget.sched.m, context),
+                            style: AppTypography.labelSmall.copyWith(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isDone
+                                  ? L.sub.withValues(alpha: 0.25)
+                                  : widget.overdue
+                                      ? L.error.withValues(alpha: 0.8)
+                                      : L.sub.withValues(alpha: 0.55),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        GestureDetector(
-                          onTap: widget.taken ? null : () => widget.onTake(),
-                          child: _buildCta(L),
-                        ),
-                      ],
-                    ),
+                          if (widget.med.dose.isNotEmpty) ...[  
+                            Text(' · ',
+                                style: AppTypography.labelSmall.copyWith(
+                                    color: L.sub.withValues(alpha: 0.25),
+                                    fontSize: 12)),
+                            Text(widget.med.dose,
+                                style: AppTypography.labelSmall.copyWith(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: L.sub.withValues(alpha: 0.4))),
+                          ],
+                        ],
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(width: 12),
+                _buildCta(L, medColor),
               ],
             ),
           ),
@@ -952,38 +1023,73 @@ class _DoseCardState extends State<DoseCard> {
     );
   }
 
-  Widget _buildCta(AppThemeColors L) {
+  Widget _buildCta(AppThemeColors L, Color medColor) {
     if (widget.taken) {
       return Container(
-        width: 32,
-        height: 32,
+        width: 34,
+        height: 34,
         decoration: BoxDecoration(
-          color: L.text.withValues(alpha: 0.05),
+          color: L.success.withValues(alpha: 0.08),
           shape: BoxShape.circle,
         ),
-        child: Icon(Icons.check_rounded, color: L.text.withValues(alpha: 0.3), size: 16),
+        child: Icon(Icons.check_rounded,
+            color: L.success.withValues(alpha: 0.55), size: 16),
       );
     }
     if (widget.overdue) {
-      return StatusBadge(label: 'LATE', color: L.error);
+      return GestureDetector(
+        onTap: widget.onTake,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: L.error.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: L.error.withValues(alpha: 0.2), width: 1),
+          ),
+          child: Text('LATE',
+              style: AppTypography.labelSmall.copyWith(
+                  color: L.error,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  letterSpacing: 0.5)),
+        ),
+      );
     }
     if (widget.isNext) {
-      return StatusBadge(label: 'NOW', color: L.primary, glow: true);
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: L.fill,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        'TAKE',
-        style: AppTypography.labelSmall.copyWith(
-          color: L.text.withValues(alpha: 0.6),
-          fontWeight: FontWeight.w900,
-          fontSize: 10,
-          letterSpacing: 0.5,
+      return GestureDetector(
+        onTap: widget.onTake,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+          decoration: BoxDecoration(
+            color: L.text,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                  color: L.text.withValues(alpha: 0.18),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4))
+            ],
+          ),
+          child: Text('Take',
+              style: AppTypography.labelMedium.copyWith(
+                  color: L.bg,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                  letterSpacing: 0)),
         ),
+      );
+    }
+    return GestureDetector(
+      onTap: widget.onTake,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: L.fill.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(Icons.add_rounded,
+            size: 20, color: L.text.withValues(alpha: 0.5)),
       ),
     );
   }
@@ -1011,9 +1117,9 @@ class StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
         boxShadow: glow ? [
           BoxShadow(
-            color: color.withValues(alpha: 0.4),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
           )
         ] : null,
       ),

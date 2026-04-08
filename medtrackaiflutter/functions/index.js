@@ -6,7 +6,10 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
-setGlobalOptions({ region: 'us-central1' });
+setGlobalOptions({ 
+    region: 'us-central1', 
+    enforceAppCheck: true 
+});
 
 // ── Scan Medicine via Claude Vision ──────────────────────────────────
 exports.scanMedicine = onCall({ secrets: ['ANTHROPIC_API_KEY'] }, async (request) => {

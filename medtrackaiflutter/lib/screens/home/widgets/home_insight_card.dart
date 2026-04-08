@@ -57,13 +57,10 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Container(
-        decoration: ShapeDecoration(
-          color: L.card,
-          shape: ContinuousRectangleBorder(
-            borderRadius: BorderRadius.circular(32),
-            side: BorderSide(color: L.border.withValues(alpha: 0.05), width: 1.5),
-          ),
-          shadows: L.shadowSoft,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: AppShadows.neumorphic,
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
@@ -83,10 +80,8 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: L.text.withValues(alpha: 0.03),
+                                color: Colors.black.withValues(alpha: 0.03),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1),
-                                boxShadow: AppShadows.subtle,
                               ),
                               child: Icon(Icons.auto_awesome_rounded,
                                   color: L.text, size: 18),
@@ -163,13 +158,9 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 8),
-                                decoration: ShapeDecoration(
-                                  color: L.text.withValues(alpha: 0.05),
-                                  shape: ContinuousRectangleBorder(
-                                    borderRadius: BorderRadius.circular(32),
-                                    side: BorderSide(color: L.text.withValues(alpha: 0.03)),
-                                  ),
-                                  shadows: AppShadows.subtle,
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -269,13 +260,9 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                                                     const EdgeInsets.symmetric(
                                                         horizontal: 10,
                                                         vertical: 6),
-                                                  decoration: ShapeDecoration(
-                                                    color: L.text.withValues(alpha: 0.02),
-                                                    shape: ContinuousRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(16),
-                                                      side: BorderSide(color: L.border.withValues(alpha: 0.03)),
-                                                    ),
-                                                    shadows: AppShadows.subtle,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black.withValues(alpha: 0.02),
+                                                    borderRadius: BorderRadius.circular(16),
                                                   ),
                                                 child: Row(
                                                   mainAxisSize:
@@ -394,18 +381,15 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 12),
-                          decoration: ShapeDecoration(
+                          decoration: BoxDecoration(
                             color: L.secondary,
-                            shape: ContinuousRectangleBorder(
-                              borderRadius: BorderRadius.circular(32),
-                            ),
-                            shadows: [
+                            borderRadius: BorderRadius.circular(32),
+                            boxShadow: [
                               BoxShadow(
-                                color: L.secondary.withValues(alpha: 0.3),
-                                blurRadius: 25,
-                                offset: const Offset(0, 8),
+                                color: L.secondary.withValues(alpha: 0.4),
+                                blurRadius: 30,
+                                offset: const Offset(0, 15),
                               ),
-                              ...L.shadowSoft,
                             ],
                           ),
                           child: const Text(

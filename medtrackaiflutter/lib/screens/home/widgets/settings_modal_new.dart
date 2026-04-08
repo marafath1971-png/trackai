@@ -30,17 +30,17 @@ class _SettingsModalState extends State<SettingsModal> {
     final size = MediaQuery.of(context).size;
 
     final tabs = [
-      {'id': 'profile', 'label': s.settingsProfile.toUpperCase(), 'icon': Icons.person_rounded},
-      {'id': 'stats', 'label': s.settingsStats.toUpperCase(), 'icon': Icons.bar_chart_rounded},
-      {'id': 'app', 'label': s.settingsApp.toUpperCase(), 'icon': Icons.settings_rounded},
-      {'id': 'data', 'label': s.settingsData.toUpperCase(), 'icon': Icons.storage_rounded},
-      {'id': 'global', 'label': s.settingsGlobal.toUpperCase(), 'icon': Icons.public_rounded},
+      {'id': 'profile', 'label': s.settingsProfile.toUpperCase(), 'icon': '👤'},
+      {'id': 'stats', 'label': s.settingsStats.toUpperCase(), 'icon': '📈'},
+      {'id': 'app', 'label': s.settingsApp.toUpperCase(), 'icon': '📱'},
+      {'id': 'data', 'label': s.settingsData.toUpperCase(), 'icon': '💾'},
+      {'id': 'global', 'label': s.settingsGlobal.toUpperCase(), 'icon': '🌐'},
     ];
 
     return GestureDetector(
       onTap: widget.onClose,
       child: Container(
-        color: Colors.black.withValues(alpha: 0.7), // Deeper backdrop for premium focus
+        color: Colors.black.withValues(alpha: 0.4), // Softer backdrop
         child: Align(
           alignment: Alignment.bottomCenter,
           child: GestureDetector(
@@ -50,16 +50,10 @@ class _SettingsModalState extends State<SettingsModal> {
               width: size.width,
               constraints: const BoxConstraints(maxWidth: 430),
               decoration: BoxDecoration(
-                  color: L.bg,
+                  color: L.meshBg,
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(32)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 40,
-                      offset: const Offset(0, -10),
-                    )
-                  ]),
+                  boxShadow: AppShadows.neumorphic),
               child: Column(children: [
                 const SizedBox(height: 12),
                 Container(
@@ -135,15 +129,16 @@ class _SettingsModalState extends State<SettingsModal> {
                                 horizontal: 18, vertical: 0),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                                color: isAct ? L.text : Colors.transparent,
+                                color: isAct ? L.text : L.card.withValues(alpha: 0.5),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: isAct ? L.text : L.border.withValues(alpha: 0.1),
-                                    width: 1.0)),
+                                    color: isAct ? L.text : L.border.withValues(alpha: 0.08),
+                                    width: 0.5)),
                             child: Row(children: [
-                              Icon(t['icon'] as IconData, 
-                                size: 14, 
-                                color: isAct ? L.bg : L.text.withValues(alpha: 0.4)),
+                              Text(t['icon'] as String, 
+                                style: const TextStyle(fontSize: 14))
+                                .animate(target: isAct ? 1 : 0)
+                                .scale(begin: const Offset(1.0, 1.0), end: const Offset(1.2, 1.2), duration: 200.ms),
                               const SizedBox(width: 8),
                               Text(t['label'] as String,
                                   style: AppTypography.labelSmall.copyWith(

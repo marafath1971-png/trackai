@@ -164,7 +164,7 @@ class NotificationService {
       }
 
       await _plugin.zonedSchedule(
-        id: notifId,
+        id: notifId.remainder(0x7FFFFFFF),
         title: title,
         body: body,
         scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
@@ -175,7 +175,7 @@ class NotificationService {
       );
     } catch (e) {
       await _plugin.show(
-        id: notifId,
+        id: notifId.remainder(0x7FFFFFFF),
         title: '💊 ${med.name}',
         body: '${med.dose} · ${sched.label}',
         notificationDetails: details,
@@ -252,7 +252,7 @@ class NotificationService {
     const details =
         NotificationDetails(android: androidDetails, iOS: iosDetails);
     await _plugin.show(
-      id: med.id + 100000,
+      id: (med.id + 100000).remainder(0x7FFFFFFF),
       title: title ?? '💊 Refill Required',
       body:
           body ?? 'Your supply of ${med.name} is low (${med.count} remaining).',
@@ -321,7 +321,7 @@ class NotificationService {
     final details =
         NotificationDetails(android: androidDetails, iOS: iosDetails);
     await _plugin.zonedSchedule(
-      id: id,
+      id: id.remainder(0x7FFFFFFF),
       title: title,
       body: body,
       scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),

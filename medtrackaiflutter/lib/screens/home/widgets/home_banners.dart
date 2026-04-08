@@ -108,10 +108,9 @@ class HomeLowStockBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: L.card,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(color: L.red.withValues(alpha: 0.05), width: 1.5),
-          boxShadow: L.shadowSoft,
+          boxShadow: AppShadows.neumorphic,
         ),
         child: Row(
           children: [

@@ -77,6 +77,7 @@ class NotificationService {
     required bool enableVibration,
     required bool isTakenToday,
     bool isShabbatMode = false,
+    String? profileName,
   }) async {
     bool useSound = enableSound;
     bool useVibration = enableVibration;
@@ -94,7 +95,8 @@ class NotificationService {
     final androidDetails = AndroidNotificationDetails(
       'med_reminders_v2', // New channel for elevated priority
       'Medication Alarms',
-      channelDescription: 'High-priority persistent reminders for medication adherence',
+      channelDescription:
+          'High-priority persistent reminders for medication adherence',
       importance: useSound ? Importance.max : Importance.low,
       priority: useSound ? Priority.max : Priority.low,
       fullScreenIntent: true,
@@ -156,7 +158,9 @@ class NotificationService {
 
     try {
       final payload = '${med.id}|${sched.h}|${sched.m}|${sched.label}';
-      final title = '💊 Time to take ${med.name}';
+      
+      final prefix = profileName != null ? '$profileName: ' : '';
+      final title = '💊 ${prefix}Time to take ${med.name}';
 
       String body = '${med.dose} · ${sched.label}';
       if (sched.ritual != Ritual.none) {
@@ -213,14 +217,16 @@ class NotificationService {
   static Future<void> cancelAll() => _plugin.cancelAll();
   static Future<void> cancel(int id) => _plugin.cancel(id: id);
 
-  static Future<void> scheduleAll(List<Medicine> meds) async {
-    await cancelAll();
+  static Future<void> scheduleAll(List<Medicine> meds, {String? profileName}) async {
     for (var med in meds) {
       for (int i = 0; i < med.schedule.length; i++) {
         final sched = med.schedule[i];
         if (!sched.enabled) continue;
         for (var day in sched.days) {
-          final notifId = med.id * 100 + i * 10 + day;
+          // Unique ID across profiles: hash the profile name into the ID base
+          final profileHash = profileName?.hashCode ?? 0;
+          final notifId = (profileHash.abs() % 10000) * 10000 + med.id * 100 + i * 10 + day;
+          
           await scheduleWeeklyReminder(
             med: med,
             sched: sched,
@@ -228,7 +234,8 @@ class NotificationService {
             notifId: notifId,
             enableSound: true,
             enableVibration: true,
-            isTakenToday: false, // Default for bulk refresh
+            isTakenToday: false,
+            profileName: profileName,
           );
         }
       }

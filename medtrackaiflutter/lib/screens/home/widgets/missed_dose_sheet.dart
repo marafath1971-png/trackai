@@ -43,9 +43,14 @@ class MissedDoseProtocolSheet extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
         boxShadow: [
-           BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 40, offset: const Offset(0, -10), spreadRadius: -10),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 40,
+              offset: const Offset(0, -10),
+              spreadRadius: -10),
         ],
       ),
       child: Padding(
@@ -265,7 +270,9 @@ class _ActionBtn extends StatelessWidget {
           color: outlined ? Colors.transparent : color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(AppRadius.max),
           border: Border.all(
-              color: outlined ? L.border.withValues(alpha: 0.2) : color.withValues(alpha: 0.15),
+              color: outlined
+                  ? L.border.withValues(alpha: 0.2)
+                  : color.withValues(alpha: 0.15),
               width: 1.5),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [

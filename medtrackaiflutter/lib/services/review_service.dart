@@ -13,12 +13,13 @@ class ReviewService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final lastPromptStr = prefs.getString(_lastPromptKey);
-      
+
       if (lastPromptStr != null) {
         final lastPrompt = DateTime.parse(lastPromptStr);
         final diff = DateTime.now().difference(lastPrompt).inDays;
         if (diff < _cooldownDays) {
-          appLogger.i("[ReviewService] Skipped: Cooldown active ($diff days passed, needs $_cooldownDays).");
+          appLogger.i(
+              "[ReviewService] Skipped: Cooldown active ($diff days passed, needs $_cooldownDays).");
           return;
         }
       }
@@ -28,7 +29,8 @@ class ReviewService {
         await prefs.setString(_lastPromptKey, DateTime.now().toIso8601String());
         appLogger.i("[ReviewService] In-app review requested successfully.");
       } else {
-        appLogger.w("[ReviewService] In-app review is not available on this device.");
+        appLogger.w(
+            "[ReviewService] In-app review is not available on this device.");
       }
     } catch (e) {
       appLogger.e("[ReviewService] Error requesting in-app review: $e");

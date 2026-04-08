@@ -12,8 +12,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'widgets/home_header.dart';
 import 'widgets/streak_modal.dart';
 import 'widgets/settings_modal_new.dart';
+import 'widgets/profile_selector_ribbon.dart';
+import 'widgets/voice_assistant_overlay.dart';
 import '../medicine/medicine_detail_screen.dart';
-
 
 class HomeTab extends StatefulWidget {
   final VoidCallback onScan;
@@ -75,179 +76,197 @@ class _HomeTabState extends State<HomeTab> {
     final dosePct = doses.isNotEmpty ? takenCount / doses.length : 0.0;
 
     final L = context.L;
-    
+
     final mainContent = Scaffold(
-        backgroundColor: L.meshBg, // Neumorphic: meshBg texture foundation
-        body: Stack(
-      children: [
+      backgroundColor: L.meshBg, // Neumorphic: meshBg texture foundation
+      body: Stack(
+        children: [
           RefreshIndicator(
-          onRefresh: () async {
-            HapticEngine.selection();
-            await context.read<AppState>().loadFromStorage();
-          },
-          displacement: 110,
-          color: L.text,
-          backgroundColor: Colors.white,
-          child: Scrollbar(
-            controller: _scrollController,
-            child: CustomScrollView(
+            onRefresh: () async {
+              HapticEngine.selection();
+              await context.read<AppState>().loadFromStorage();
+            },
+            displacement: 110,
+            color: L.text,
+            backgroundColor: Colors.white,
+            child: Scrollbar(
               controller: _scrollController,
-              key: const PageStorageKey('home_scroll'),
-              physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics()),
-              slivers: [
-                // -- TOP SPACER --
-                SliverToBoxAdapter(
-                  child: SizedBox(height: MediaQuery.of(context).padding.top + 76),
-                ),
-
-                // --- WEEK STRIP ---
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
-                  sliver: SliverToBoxAdapter(
-                    child: HomeWeekStrip(
-                      state: context.read<AppState>(),
-                    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.05, end: 0, curve: Curves.easeOutCubic),
+              child: CustomScrollView(
+                controller: _scrollController,
+                key: const PageStorageKey('home_scroll'),
+                physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics()),
+                slivers: [
+                  // -- TOP SPACER --
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                        height: MediaQuery.of(context).padding.top + 76),
                   ),
-                ),
 
-                // --- FAST TRACKING BENTO (3 stat cards) ---
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  sliver: SliverToBoxAdapter(
-                    child: _FastTrackingBento(
-                      doses: doses,
-                      takenCount: takenCount,
-                      remaining: remaining,
-                      dosePct: dosePct,
-                      streak: streak,
-                    )
+                  // --- FAMILY PROFILE RIBBON ---
+                  SliverToBoxAdapter(
+                    child: const ProfileSelectorRibbon()
                         .animate()
-                        .fadeIn(duration: 700.ms, delay: 100.ms)
-                        .slideY(begin: 0.04, end: 0, curve: Curves.easeOutExpo),
+                        .fadeIn(duration: 500.ms)
+                        .scale(
+                            begin: const Offset(0.98, 0.98),
+                            end: const Offset(1, 1),
+                            curve: Curves.easeOutCubic),
                   ),
-                ),
 
-                // --- ADHERENCE SCORE CARD ---
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  sliver: SliverToBoxAdapter(
-                    child: _AdherenceScoreCard(
-                      dosePct: dosePct,
-                      doses: doses,
-                      takenCount: takenCount,
-                    )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 150.ms)
-                        .slideY(begin: 0.04, end: 0, curve: Curves.easeOutExpo),
-                  ),
-                ),
-
-                // --- NEXT DOSE CAROUSEL ---
-                if (doses.isNotEmpty)
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  sliver: SliverToBoxAdapter(
-                    child: _NextDoseCarousel(
-                      doses: doses,
-                      takenToday: takenToday,
-                      state: context.read<AppState>(),
-                      onView: (med) => setState(() {
-                        _viewingMed = med;
-                        _startInEditMode = false;
-                      }),
-                    )
-                        .animate()
-                        .fadeIn(duration: 700.ms, delay: 200.ms)
-                        .slideY(begin: 0.04, end: 0, curve: Curves.easeOutExpo),
-                  ),
-                ),
-
-                // --- MEDICINE LIST ---
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.screenPadding),
-                  sliver: SliverToBoxAdapter(
-                    child: Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: HomeMedsHeader(
-                          key: _medsHeaderKey,
-                          onAdd: widget.onScan,
-                        )),
-                  ),
-                ),
-                if (meds.isEmpty)
+                  // --- WEEK STRIP ---
                   SliverPadding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.screenPadding),
+                    padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
+                    sliver: SliverToBoxAdapter(
+                      child: HomeWeekStrip(
+                        state: context.read<AppState>(),
+                      ).animate().fadeIn(duration: 600.ms).slideY(
+                          begin: 0.05, end: 0, curve: Curves.easeOutCubic),
+                    ),
+                  ),
+
+                  // --- FAST TRACKING BENTO (3 stat cards) ---
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    sliver: SliverToBoxAdapter(
+                      child: _FastTrackingBento(
+                        doses: doses,
+                        takenCount: takenCount,
+                        remaining: remaining,
+                        dosePct: dosePct,
+                        streak: streak,
+                      )
+                          .animate()
+                          .fadeIn(duration: 700.ms, delay: 100.ms)
+                          .slideY(
+                              begin: 0.04, end: 0, curve: Curves.easeOutExpo),
+                    ),
+                  ),
+
+                  // --- ADHERENCE SCORE CARD ---
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    sliver: SliverToBoxAdapter(
+                      child: _AdherenceScoreCard(
+                        dosePct: dosePct,
+                        doses: doses,
+                        takenCount: takenCount,
+                      )
+                          .animate()
+                          .fadeIn(duration: 600.ms, delay: 150.ms)
+                          .slideY(
+                              begin: 0.04, end: 0, curve: Curves.easeOutExpo),
+                    ),
+                  ),
+
+                  // --- NEXT DOSE CAROUSEL ---
+                  if (doses.isNotEmpty)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       sliver: SliverToBoxAdapter(
-                          child: HomeMedsEmptyState(
-                        key: _medsEmptyKey,
-                        onAdd: widget.onScan,
-                      )))
-                else
+                        child: _NextDoseCarousel(
+                          doses: doses,
+                          takenToday: takenToday,
+                          state: context.read<AppState>(),
+                          onView: (med) => setState(() {
+                            _viewingMed = med;
+                            _startInEditMode = false;
+                          }),
+                        )
+                            .animate()
+                            .fadeIn(duration: 700.ms, delay: 200.ms)
+                            .slideY(
+                                begin: 0.04, end: 0, curve: Curves.easeOutExpo),
+                      ),
+                    ),
+
+                  // --- MEDICINE LIST ---
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.screenPadding),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final med = meds[index];
-                          return MedCard(
-                            med: med,
-                            onView: () => setState(() {
-                              _viewingMed = med;
-                              _startInEditMode = false;
-                            }),
-                            onEdit: () => setState(() {
-                              _viewingMed = med;
-                              _startInEditMode = true;
-                            }),
-                          );
-                        },
-                        childCount: meds.length,
-                      ),
+                    sliver: SliverToBoxAdapter(
+                      child: Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: HomeMedsHeader(
+                            key: _medsHeaderKey,
+                            onAdd: widget.onScan,
+                          )),
                     ),
                   ),
-                const SliverToBoxAdapter(child: SizedBox(height: 180)),
-              ],
+                  if (meds.isEmpty)
+                    SliverPadding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.screenPadding),
+                        sliver: SliverToBoxAdapter(
+                            child: HomeMedsEmptyState(
+                          key: _medsEmptyKey,
+                          onAdd: widget.onScan,
+                        )))
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.screenPadding),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final med = meds[index];
+                            return MedCard(
+                              med: med,
+                              onView: () => setState(() {
+                                _viewingMed = med;
+                                _startInEditMode = false;
+                              }),
+                              onEdit: () => setState(() {
+                                _viewingMed = med;
+                                _startInEditMode = true;
+                              }),
+                            );
+                          },
+                          childCount: meds.length,
+                        ),
+                      ),
+                    ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 180)),
+                ],
+              ),
             ),
           ),
-        ),
 
-        // --- FIXED HEADER ---
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: HomeHeader(
-            state: context.read<AppState>(),
-            streak: streak,
-            scrollOffset: _scrollOffset,
-            onTap: _scrollToTop,
-            onOpenStreak: () => setState(() => _showStreak = true),
-            onOpenSettings: () => setState(() => _showSettings = true),
-          ),
-        ),
-
-        _buildOverlay(
-            _showStreak,
-            'streak',
-            StreakModal(
+          // --- FIXED HEADER ---
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: HomeHeader(
+              state: context.read<AppState>(),
               streak: streak,
-              history: context.select<AppState, Map<String, List<DoseEntry>>>(
-                  (s) => s.history),
-              streakData:
-                  context.select<AppState, StreakData>((s) => s.streakData),
-              onClose: () => setState(() => _showStreak = false),
-              onFreeze: () => context.read<AppState>().useStreakFreeze(),
-            )),
-        _buildOverlay(
-            _showSettings,
-            'settings',
-            SettingsModal(
-              onClose: () => setState(() => _showSettings = false),
-            )),
+              scrollOffset: _scrollOffset,
+              onTap: _scrollToTop,
+              onOpenStreak: () => setState(() => _showStreak = true),
+              onOpenSettings: () => setState(() => _showSettings = true),
+            ),
+          ),
+
+          _buildOverlay(
+              _showStreak,
+              'streak',
+              StreakModal(
+                streak: streak,
+                history: context.select<AppState, Map<String, List<DoseEntry>>>(
+                    (s) => s.history),
+                streakData:
+                    context.select<AppState, StreakData>((s) => s.streakData),
+                onClose: () => setState(() => _showStreak = false),
+                onFreeze: () => context.read<AppState>().useStreakFreeze(),
+              )),
+          _buildOverlay(
+              _showSettings,
+              'settings',
+              SettingsModal(
+                onClose: () => setState(() => _showSettings = false),
+              )),
+          
+          const VoiceAssistantOverlay(),
         ],
       ),
     );
@@ -290,7 +309,6 @@ class _HomeTabState extends State<HomeTab> {
           : const SizedBox.shrink(),
     );
   }
-
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -319,7 +337,8 @@ class _FastTrackingBento extends StatelessWidget {
 
     return Row(
       children: [
-        Expanded(child: _TrackCard(
+        Expanded(
+            child: _TrackCard(
           emoji: '💊',
           topValue: noDoses ? '--' : '$takenCount',
           topUnit: 'taken',
@@ -329,7 +348,8 @@ class _FastTrackingBento extends StatelessWidget {
           ringTrack: const Color(0xFFEDE9FE),
         )),
         const SizedBox(width: 10),
-        Expanded(child: _TrackCard(
+        Expanded(
+            child: _TrackCard(
           emoji: '⏳',
           topValue: noDoses ? '--' : '$skipped',
           topUnit: 'left',
@@ -339,7 +359,8 @@ class _FastTrackingBento extends StatelessWidget {
           ringTrack: const Color(0xFFFCE7F3),
         )),
         const SizedBox(width: 10),
-        Expanded(child: _TrackCard(
+        Expanded(
+            child: _TrackCard(
           emoji: streakEmoji,
           topValue: '$streak',
           topUnit: 'd',
@@ -375,17 +396,21 @@ class _TrackCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
-        boxShadow: AppShadows.neumorphic,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return BouncingButton(
+      onTap: () {
+        HapticEngine.selection();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+        decoration: BoxDecoration(
+          color: L.card,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: L.border.withValues(alpha: 0.15), width: 1.5),
+          boxShadow: AppShadows.glow(ringColor, intensity: 0.12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // ── Animated emoji ──
           Text(emoji, style: const TextStyle(fontSize: 22))
               .animate(onPlay: (c) => c.repeat(reverse: true))
@@ -457,7 +482,7 @@ class _TrackCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 }
 
@@ -465,15 +490,24 @@ class _MiniRingPainter extends CustomPainter {
   final double pct;
   final Color color;
   final Color track;
-  _MiniRingPainter({required this.pct, required this.color, required this.track});
+  _MiniRingPainter(
+      {required this.pct, required this.color, required this.track});
 
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final cy = size.height / 2;
     final r = (size.width - 7) / 2;
-    final trackPaint = Paint()..color = track..strokeWidth = 7..style = PaintingStyle.stroke..strokeCap = StrokeCap.round;
-    final fgPaint = Paint()..color = color..strokeWidth = 7..style = PaintingStyle.stroke..strokeCap = StrokeCap.round;
+    final trackPaint = Paint()
+      ..color = track
+      ..strokeWidth = 7
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final fgPaint = Paint()
+      ..color = color
+      ..strokeWidth = 7
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
     canvas.drawCircle(Offset(cx, cy), r, trackPaint);
     if (pct > 0) {
       canvas.drawArc(
@@ -509,11 +543,15 @@ class _AdherenceScoreCard extends StatelessWidget {
     final L = context.L;
     final score = doses.isEmpty ? 0 : (dosePct * 10).round();
     final noDoses = doses.isEmpty;
-    final moodEmoji = noDoses ? '💊'
-        : dosePct == 1.0 ? '🎯'
-        : dosePct >= 0.8 ? '😊'
-        : dosePct >= 0.5 ? '😐'
-        : '😔';
+    final moodEmoji = noDoses
+        ? '💊'
+        : dosePct == 1.0
+            ? '🎯'
+            : dosePct >= 0.8
+                ? '😊'
+                : dosePct >= 0.5
+                    ? '😐'
+                    : '😔';
 
     final msg = noDoses
         ? 'Add your medications to start tracking adherence and get AI insights.'
@@ -525,17 +563,19 @@ class _AdherenceScoreCard extends StatelessWidget {
                     ? "You're making progress. Take your remaining doses for full adherence."
                     : "Your adherence is low today. Focus on your scheduled doses to improve.";
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
-        boxShadow: AppShadows.neumorphic,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return BouncingButton(
+      onTap: () => HapticEngine.selection(),
+      child: Container(
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: L.card,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: L.border.withValues(alpha: 0.15), width: 1.5),
+          boxShadow: AppShadows.glow(L.success, intensity: dosePct > 0.8 ? 0.1 : 0.05),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -560,7 +600,8 @@ class _AdherenceScoreCard extends StatelessWidget {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: L.text.withValues(alpha: 0.07),
                   borderRadius: BorderRadius.circular(12),
@@ -599,7 +640,10 @@ class _AdherenceScoreCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: dosePct >= 0.8
-                                ? [const Color(0xFFD4F544), const Color(0xFFE8F000)]
+                                ? [
+                                    const Color(0xFFD4F544),
+                                    const Color(0xFFE8F000)
+                                  ]
                                 : dosePct >= 0.5
                                     ? [Colors.orange.shade300, Colors.orange]
                                     : [Colors.red.shade300, Colors.red],
@@ -624,7 +668,7 @@ class _AdherenceScoreCard extends StatelessWidget {
               )),
         ],
       ),
-    );
+    ));
   }
 }
 
@@ -648,7 +692,8 @@ class _NextDoseCarousel extends StatelessWidget {
   Widget build(BuildContext context) {
     // Find upcoming (untaken) doses, fall back to all
     final upcoming = doses.where((d) => takenToday[d.key] != true).toList();
-    final toShow = upcoming.isEmpty ? doses.take(3).toList() : upcoming.take(3).toList();
+    final toShow =
+        upcoming.isEmpty ? doses.take(3).toList() : upcoming.take(3).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -662,19 +707,20 @@ class _NextDoseCarousel extends StatelessWidget {
                   style: AppTypography.labelMedium.copyWith(
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
-                    color: Colors.black,
+                    color: context.L.text,
                     letterSpacing: -0.2,
                   )),
               if (upcoming.isEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
+                    color: context.L.greenLight,
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Text('All done ✓',
                       style: AppTypography.labelSmall.copyWith(
-                        color: const Color(0xFF166534),
+                        color: context.L.green,
                         fontWeight: FontWeight.w700,
                         fontSize: 11,
                       )),
@@ -684,7 +730,8 @@ class _NextDoseCarousel extends StatelessWidget {
         ),
         ...toShow.map((d) {
           final isTaken = takenToday[d.key] == true;
-          final timeStr = '${d.sched.h.toString().padLeft(2, '0')}:${d.sched.m.toString().padLeft(2, '0')}';
+          final timeStr =
+              '${d.sched.h.toString().padLeft(2, '0')}:${d.sched.m.toString().padLeft(2, '0')}';
           return Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: BouncingButton(
@@ -692,13 +739,11 @@ class _NextDoseCarousel extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.L.card,
                   borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 14, spreadRadius: -2, offset: const Offset(0, 4)),
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 4, offset: const Offset(0, 1)),
-                  ],
-                  border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                  boxShadow: context.L.shadowSoft,
+                  border: Border.all(
+                      color: context.L.border.withValues(alpha: 0.5)),
                 ),
                 child: Row(
                   children: [
@@ -707,13 +752,15 @@ class _NextDoseCarousel extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: isTaken ? const Color(0xFFDCFCE7) : const Color(0xFFF5F5F5),
+                        color: isTaken ? context.L.greenLight : context.L.fill,
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Center(
                         child: Icon(
-                          isTaken ? Icons.check_rounded : Icons.medication_rounded,
-                          color: isTaken ? const Color(0xFF16A34A) : Colors.black.withValues(alpha: 0.6),
+                          isTaken
+                              ? Icons.check_rounded
+                              : Icons.medication_rounded,
+                          color: isTaken ? context.L.green : context.L.sub,
                           size: 22,
                         ),
                       ),
@@ -727,27 +774,29 @@ class _NextDoseCarousel extends StatelessWidget {
                           Text(d.med.name,
                               style: AppTypography.labelMedium.copyWith(
                                 fontWeight: FontWeight.w700,
-                                color: Colors.black,
+                                color: context.L.text,
                                 fontSize: 14,
                               )),
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              Icon(Icons.medication_liquid_outlined, size: 12, color: Colors.black.withValues(alpha: 0.4)),
+                              Icon(Icons.medication_liquid_outlined,
+                                  size: 12, color: context.L.sub),
                               const SizedBox(width: 4),
                               Text(d.med.dose,
                                   style: AppTypography.labelSmall.copyWith(
                                     fontSize: 11,
-                                    color: Colors.black.withValues(alpha: 0.45),
+                                    color: context.L.sub,
                                     fontWeight: FontWeight.w500,
                                   )),
                               const SizedBox(width: 10),
-                              Icon(Icons.schedule_outlined, size: 12, color: Colors.black.withValues(alpha: 0.4)),
+                              Icon(Icons.schedule_outlined,
+                                  size: 12, color: context.L.sub),
                               const SizedBox(width: 4),
                               Text(timeStr,
                                   style: AppTypography.labelSmall.copyWith(
                                     fontSize: 11,
-                                    color: Colors.black.withValues(alpha: 0.45),
+                                    color: context.L.sub,
                                     fontWeight: FontWeight.w500,
                                   )),
                             ],
@@ -757,16 +806,17 @@ class _NextDoseCarousel extends StatelessWidget {
                     ),
                     // Time badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: isTaken ? const Color(0xFFDCFCE7) : Colors.black,
+                        color: isTaken ? context.L.greenLight : context.L.text,
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(
                         isTaken ? 'Taken' : timeStr,
                         style: AppTypography.labelSmall.copyWith(
                           fontSize: 11,
-                          color: isTaken ? const Color(0xFF16A34A) : Colors.white,
+                          color: isTaken ? context.L.green : context.L.bg,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -781,8 +831,6 @@ class _NextDoseCarousel extends StatelessWidget {
     );
   }
 }
-
-
 
 // ─────────────────────────────────────────────────────────────
 // ANIMATED RING PAINTER — CustomPainter arc (kept for possible reuse)
@@ -816,7 +864,8 @@ class _AnimatedRingState extends State<_AnimatedRing>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1200));
     _anim = Tween<double>(begin: 0, end: widget.percent)
         .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutExpo));
     _ctrl.forward();
@@ -884,7 +933,9 @@ class _RingPainter extends CustomPainter {
     // Track
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
-      0, 2 * 3.14159265358979323846, false,
+      0,
+      2 * 3.14159265358979323846,
+      false,
       Paint()
         ..color = trackColor
         ..strokeWidth = strokeWidth
@@ -896,7 +947,9 @@ class _RingPainter extends CustomPainter {
       // Progress arc
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
-        startAngle, sweepAngle, false,
+        startAngle,
+        sweepAngle,
+        false,
         Paint()
           ..color = color
           ..strokeWidth = strokeWidth
@@ -910,7 +963,6 @@ class _RingPainter extends CustomPainter {
   bool shouldRepaint(_RingPainter old) =>
       old.percent != percent || old.color != color;
 }
-
 
 // ─────────────────────────────────────────────────────────────
 // DOSE GROUP — grouped timeline section

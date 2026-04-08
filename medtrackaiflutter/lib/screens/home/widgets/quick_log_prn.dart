@@ -67,8 +67,7 @@ class _QuickLogPrnDoseState extends State<QuickLogPrnDose> {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(
-                  child: Icon(Icons.flash_on_rounded,
-                      color: L.text, size: 22),
+                  child: Icon(Icons.flash_on_rounded, color: L.text, size: 22),
                 ),
               ),
               const SizedBox(width: 16),
@@ -87,7 +86,8 @@ class _QuickLogPrnDoseState extends State<QuickLogPrnDose> {
                     ),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.04),
                         borderRadius: BorderRadius.circular(8),
@@ -184,106 +184,114 @@ class _PrnPickerSheet extends StatelessWidget {
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: meds.map((med) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: BouncingButton(
-                    onTap: () {
-                      HapticEngine.success();
-                      final now = DateTime.now();
-                      final timeStr = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-                      state.logPrnDose(med.id, 'PRN', timeStr);
-                      Navigator.pop(context);
+                children: meds
+                    .map((med) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: BouncingButton(
+                            onTap: () {
+                              HapticEngine.success();
+                              final now = DateTime.now();
+                              final timeStr =
+                                  "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+                              state.logPrnDose(med.id, 'PRN', timeStr);
+                              Navigator.pop(context);
 
-                      // Show confirmation toast
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          backgroundColor: L.text,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
-                          content: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: L.bg.withValues(alpha: 0.2),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(Icons.check_rounded,
-                                    color: L.bg, size: 16),
-                              ),
-                              const SizedBox(width: 12),
-                              Text('Logged ${med.name} dose',
-                                  style: AppTypography.titleMedium.copyWith(
-                                      color: L.bg,
-                                      fontWeight: FontWeight.w800)),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: AppShadows.neumorphic,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: Color(int.parse(
-                                  med.color.replaceFirst('#', '0xFF'))),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  med.name,
-                                  style: AppTypography.titleMedium.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                    color: L.text,
-                                    letterSpacing: -0.5,
+                              // Show confirmation toast
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  backgroundColor: L.text,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16)),
+                                  content: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: L.bg.withValues(alpha: 0.2),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(Icons.check_rounded,
+                                            color: L.bg, size: 16),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text('Logged ${med.name} dose',
+                                          style: AppTypography.titleMedium
+                                              .copyWith(
+                                                  color: L.bg,
+                                                  fontWeight: FontWeight.w800)),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  med.dose,
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: L.sub,
-                                    fontWeight: FontWeight.w600,
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: AppShadows.neumorphic,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 14,
+                                    height: 14,
+                                    decoration: BoxDecoration(
+                                      color: Color(int.parse(
+                                          med.color.replaceFirst('#', '0xFF'))),
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: L.text.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              'LOG',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: L.text,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          med.name,
+                                          style: AppTypography.titleMedium
+                                              .copyWith(
+                                            fontWeight: FontWeight.w900,
+                                            color: L.text,
+                                            letterSpacing: -0.5,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          med.dose,
+                                          style:
+                                              AppTypography.bodySmall.copyWith(
+                                            color: L.sub,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: L.text.withValues(alpha: 0.05),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      'LOG',
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: L.text,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )).toList(),
+                        ))
+                    .toList(),
               ),
             ),
           ),

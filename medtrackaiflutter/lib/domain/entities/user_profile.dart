@@ -1,3 +1,6 @@
+import 'caregiver.dart';
+import 'managed_profile.dart';
+
 class UserProfile {
   final String name;
   final String age;
@@ -44,6 +47,8 @@ class UserProfile {
   final bool amoledMode; // KR: pure black AMOLED display
   final DateTime? lastNudgeAt;
   final int nudgeCount;
+  final List<Caregiver> caregiverContacts;
+  final List<ManagedProfile> familyMembers;
 
   UserProfile({
     this.name = '',
@@ -90,6 +95,8 @@ class UserProfile {
     this.amoledMode = false,
     this.lastNudgeAt,
     this.nudgeCount = 0,
+    this.caregiverContacts = const [],
+    this.familyMembers = const [],
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
@@ -137,6 +144,8 @@ class UserProfile {
         'amoledMode': amoledMode,
         'lastNudgeAt': lastNudgeAt?.toIso8601String(),
         'nudgeCount': nudgeCount,
+        'caregiverContacts': caregiverContacts.map((c) => c.toJson()).toList(),
+        'familyMembers': familyMembers.map((m) => m.toJson()).toList(),
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> j) => UserProfile(
@@ -190,6 +199,12 @@ class UserProfile {
         lastNudgeAt:
             j['lastNudgeAt'] != null ? DateTime.parse(j['lastNudgeAt']) : null,
         nudgeCount: j['nudgeCount'] ?? 0,
+        caregiverContacts: (j['caregiverContacts'] as List? ?? [])
+            .map((c) => Caregiver.fromJson(c))
+            .toList(),
+        familyMembers: (j['familyMembers'] as List? ?? [])
+            .map((m) => ManagedProfile.fromJson(m))
+            .toList(),
       );
 
   UserProfile copyWith({
@@ -235,6 +250,8 @@ class UserProfile {
     bool? amoledMode,
     DateTime? lastNudgeAt,
     int? nudgeCount,
+    List<Caregiver>? caregiverContacts,
+    List<ManagedProfile>? familyMembers,
   }) =>
       UserProfile(
         name: name ?? this.name,
@@ -281,5 +298,7 @@ class UserProfile {
         amoledMode: amoledMode ?? this.amoledMode,
         lastNudgeAt: lastNudgeAt ?? this.lastNudgeAt,
         nudgeCount: nudgeCount ?? this.nudgeCount,
+        caregiverContacts: caregiverContacts ?? this.caregiverContacts,
+        familyMembers: familyMembers ?? this.familyMembers,
       );
 }

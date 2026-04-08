@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
@@ -17,6 +18,7 @@ class LockScreen extends StatefulWidget {
 
 class _LockScreenState extends State<LockScreen> {
   bool _isAuthenticating = false;
+  bool _showRecoveryButton = false;
   String? _errorMessage;
 
   @override
@@ -28,29 +30,52 @@ class _LockScreenState extends State<LockScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    if (mounted) {
+       // Check if timer was initialized
+    }
+    super.dispose();
+  }
+
   Future<void> _authenticate() async {
     if (!mounted) return;
     setState(() {
       _isAuthenticating = true;
+      _showRecoveryButton = false;
       _errorMessage = null;
+    });
+
+    // Start a recovery timer. If authentication doesn't finish in 5s, show the button.
+    final timer = Timer(const Duration(seconds: 5), () {
+      if (mounted && _isAuthenticating) {
+        setState(() => _showRecoveryButton = true);
+      }
     });
 
     try {
       final success = await BiometricService.authenticate();
+      timer.cancel();
       if (mounted) {
-        setState(() => _isAuthenticating = false);
+        setState(() {
+          _isAuthenticating = false;
+          _showRecoveryButton = false;
+        });
         if (success) {
           HapticEngine.success();
           context.read<AppState>().unlockApp();
         } else {
           HapticEngine.error();
-          setState(() => _errorMessage = 'Authentication failed. Please try again.');
+          setState(
+              () => _errorMessage = 'Authentication failed. Please try again.');
         }
       }
     } catch (e) {
+      timer.cancel();
       if (mounted) {
         setState(() {
           _isAuthenticating = false;
+          _showRecoveryButton = false;
           _errorMessage = 'An error occurred during authentication.';
         });
       }
@@ -92,13 +117,15 @@ class _LockScreenState extends State<LockScreen> {
                       shape: BoxShape.circle,
                     ),
                     child: Center(
-                      child: _isAuthenticating 
-                        ? const AppLoadingIndicator(size: 32)
-                        : Icon(
-                            _errorMessage != null ? Icons.error_outline_rounded : Icons.lock_person_rounded,
-                            color: _errorMessage != null ? L.error : L.text,
-                            size: 40,
-                          ),
+                      child: _isAuthenticating
+                          ? const AppLoadingIndicator(size: 32)
+                          : Icon(
+                              _errorMessage != null
+                                  ? Icons.error_outline_rounded
+                                  : Icons.lock_person_rounded,
+                              color: _errorMessage != null ? L.error : L.text,
+                              size: 40,
+                            ),
                     ),
                   ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
                   const SizedBox(height: 24),
@@ -112,7 +139,8 @@ class _LockScreenState extends State<LockScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    _errorMessage ?? 'Please authenticate to access your sensitive health data and medication history.',
+                    _errorMessage ??
+                        'Please authenticate to access your sensitive health data and medication history.',
                     textAlign: TextAlign.center,
                     style: AppTypography.bodySmall.copyWith(
                       color: _errorMessage != null ? L.error : L.sub,
@@ -121,7 +149,7 @@ class _LockScreenState extends State<LockScreen> {
                     ),
                   ).animate().fadeIn(delay: 200.ms),
                   const SizedBox(height: 32),
-                  if (!_isAuthenticating)
+                  if (!_isAuthenticating || _showRecoveryButton)
                     BouncingButton(
                       onTap: () {
                         HapticEngine.selection();
@@ -143,7 +171,7 @@ class _LockScreenState extends State<LockScreen> {
                         ),
                         child: Center(
                           child: Text(
-                            _errorMessage != null ? 'TRY AGAIN' : 'UNLOCK NOW',
+                            _isAuthenticating ? 'MANUAL RETRY' : (_errorMessage != null ? 'TRY AGAIN' : 'UNLOCK NOW'),
                             style: AppTypography.labelLarge.copyWith(
                               fontWeight: FontWeight.w900,
                               color: L.bg,

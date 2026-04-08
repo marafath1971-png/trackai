@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../providers/app_state.dart';
@@ -25,7 +23,7 @@ class HomeStatsGrid extends StatelessWidget {
   });
 
   @override
-    Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     final L = context.L;
     final adherence = (state.getAdherenceScore() * 100).round();
     final streak = state.getStreak();
@@ -61,10 +59,8 @@ class HomeStatsGrid extends StatelessWidget {
                   sparklineData: _buildWeeklyData(state),
                   sparklineColor: L.primary,
                   L: L,
-                )
-                    .animate()
-                    .fadeIn(duration: 600.ms)
-                    .scale(begin: const Offset(0.98, 0.98), curve: Curves.easeOutBack),
+                ).animate().fadeIn(duration: 600.ms).scale(
+                    begin: const Offset(0.98, 0.98), curve: Curves.easeOutBack),
               ),
               const SizedBox(width: AppSpacing.p12),
               // Secondary Stats Stacked
@@ -127,8 +123,8 @@ class HomeStatsGrid extends StatelessWidget {
                   label: 'Inventory',
                   value: '${state.getLowStockCount()}',
                   unit: 'low',
-                  sublabel: state.getLowStockCount() == 0 
-                      ? 'Stocks healthy' 
+                  sublabel: state.getLowStockCount() == 0
+                      ? 'Stocks healthy'
                       : '${state.getLowStockCount()} refill needed',
                   sparklineData: _buildStockData(state),
                   sparklineColor: const Color(0xFFEF5350),
@@ -226,7 +222,8 @@ class _BentoMetricCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: L.card,
           borderRadius: BorderRadius.circular(AppRadius.squircle),
-          border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
+          border:
+              Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
           boxShadow: AppShadows.neumorphic,
         ),
         child: Column(
@@ -342,7 +339,8 @@ class _BentoSmallCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: L.card,
           borderRadius: BorderRadius.circular(AppRadius.squircle),
-          border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
+          border:
+              Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
           boxShadow: AppShadows.neumorphic,
         ),
         child: Column(
@@ -373,7 +371,7 @@ class _BentoSmallCard extends StatelessWidget {
                   style: AppTypography.labelSmall.copyWith(
                     color: L.sub.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w900,
-                    fontSize: 10,  // Standardized for micro-labels
+                    fontSize: 10, // Standardized for micro-labels
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -436,9 +434,7 @@ class _NextDoseCard extends StatelessWidget {
                 child: Text(
                   doseEmoji,
                   style: const TextStyle(fontSize: 26),
-                )
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .scale(
+                ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
                       begin: const Offset(1.0, 1.0),
                       end: const Offset(1.25, 1.25),
                       duration: Duration(milliseconds: pulseMs),
@@ -533,7 +529,8 @@ class _SparklinePainter extends CustomPainter {
         fillPath.lineTo(x, y);
       } else {
         final prevX = (i - 1) * w;
-        final prevY = size.height - (data[i-1].clamp(0,1)*(size.height-8)+4);
+        final prevY =
+            size.height - (data[i - 1].clamp(0, 1) * (size.height - 8) + 4);
         final cpX = (prevX + x) / 2;
         path.cubicTo(cpX, prevY, cpX, y, x, y);
         fillPath.cubicTo(cpX, prevY, cpX, y, x, y);
@@ -553,7 +550,8 @@ class _SparklinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SparklinePainter old) => old.data != data || old.color != color;
+  bool shouldRepaint(_SparklinePainter old) =>
+      old.data != data || old.color != color;
 }
 
 // ─────────────────────────────────────────────────────────────

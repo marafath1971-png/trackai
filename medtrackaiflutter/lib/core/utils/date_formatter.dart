@@ -10,10 +10,12 @@ int dayIdx() => DateTime.now().weekday % 7; // 0=Sun...6=Sat
 
 String fmtTime(int h, int m, [BuildContext? context]) {
   final date = DateTime(2026, 1, 1, h, m);
-  // Using context to get the current locale if available, else system default
-  return DateFormat.jm(
-          context != null ? Localizations.localeOf(context).toString() : null)
-      .format(date);
+  final locale =
+      context != null ? Localizations.localeOf(context).toString() : null;
+  if (context != null && MediaQuery.of(context).alwaysUse24HourFormat) {
+    return DateFormat.Hm(locale).format(date);
+  }
+  return DateFormat.jm(locale).format(date);
 }
 
 String fmtCurrency(double amount, [BuildContext? context]) {

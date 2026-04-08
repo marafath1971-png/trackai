@@ -73,9 +73,9 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>This app requires FaceID to secure your medical data and medication history.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Med AI requires access to your health data to sync vitals and provide personalized medical insights.</string>
+	<string>MedAI requires access to your health data to sync vitals and provide personalized medical insights.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Med AI uses your health data to track your wellness progress alongside your medication adherence.</string>
+	<string>MedAI uses your health data to track your wellness progress alongside your medication adherence.</string>
 	<key>CFBundleIcons</key>
 	<dict>
 		<key>CFBundleAlternateIcons</key>

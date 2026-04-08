@@ -106,7 +106,10 @@ class ScheduleEntry {
       };
 
   factory ScheduleEntry.fromJson(Map<String, dynamic> j) => ScheduleEntry(
-        id: j['id'] ?? (j['label'] ?? 'Morning') + (j['h'] ?? 8).toString() + (j['m'] ?? 0).toString(),
+        id: j['id'] ??
+            (j['label'] ?? 'Morning') +
+                (j['h'] ?? 8).toString() +
+                (j['m'] ?? 0).toString(),
         h: j['h'] ?? 8,
         m: j['m'] ?? 0,
         label: j['label'] ?? 'Morning',
@@ -180,7 +183,8 @@ class DoseEntry {
         takenAt: j['takenAt'],
       );
 
-  DoseEntry copyWith({String? scheduleId, bool? taken, bool? skipped, String? takenAt}) =>
+  DoseEntry copyWith(
+          {String? scheduleId, bool? taken, bool? skipped, String? takenAt}) =>
       DoseEntry(
         medId: medId,
         scheduleId: scheduleId ?? this.scheduleId,
@@ -279,6 +283,7 @@ class Medicine {
   final bool isSachet;
   final String? repeatPrescriptionDueDate;
   final AISafetyProfile? aiSafetyProfile;
+  final bool isCritical;
 
   Medicine({
     required this.id,
@@ -308,6 +313,7 @@ class Medicine {
     this.isSachet = false,
     this.repeatPrescriptionDueDate,
     this.aiSafetyProfile,
+    this.isCritical = false,
   });
 
   factory Medicine.empty() => Medicine(
@@ -368,6 +374,7 @@ class Medicine {
         'isSachet': isSachet,
         'repeatPrescriptionDueDate': repeatPrescriptionDueDate,
         'aiSafetyProfile': aiSafetyProfile?.toJson(),
+        'isCritical': isCritical,
       };
 
   factory Medicine.fromJson(Map<String, dynamic> j) => Medicine(
@@ -404,6 +411,7 @@ class Medicine {
         aiSafetyProfile: j['aiSafetyProfile'] != null
             ? AISafetyProfile.fromJson(j['aiSafetyProfile'])
             : null,
+        isCritical: j['isCritical'] ?? false,
       );
 
   Medicine copyWith({
@@ -431,6 +439,7 @@ class Medicine {
     bool? isSachet,
     String? repeatPrescriptionDueDate,
     AISafetyProfile? aiSafetyProfile,
+    bool? isCritical,
   }) =>
       Medicine(
         id: id,
@@ -461,5 +470,6 @@ class Medicine {
         repeatPrescriptionDueDate:
             repeatPrescriptionDueDate ?? this.repeatPrescriptionDueDate,
         aiSafetyProfile: aiSafetyProfile ?? this.aiSafetyProfile,
+        isCritical: isCritical ?? this.isCritical,
       );
 }

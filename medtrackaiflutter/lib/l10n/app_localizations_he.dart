@@ -9,7 +9,7 @@ class AppLocalizationsHe extends AppLocalizations {
   AppLocalizationsHe([String locale = 'he']) : super(locale);
 
   @override
-  String get appTitle => 'Med AI';
+  String get appTitle => 'MedAI';
 
   @override
   String get greetingHero => 'גיבור';
@@ -452,7 +452,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get appVersionLabel => 'App Version';
 
   @override
-  String get appVersionValue => '1.0.0';
+  String get appVersionValue => '1.0.0+1';
 
   @override
   String get analysisFailed => 'הניתוח נכשל';

@@ -58,9 +58,17 @@ void main() {
       expect(RefillHelper.calculateExhaustionDate(noSchedMed), isNull);
     });
 
-    test('calculateExhaustionDate returns null if all schedules are disabled (PRN)', () {
+    test(
+        'calculateExhaustionDate returns null if all schedules are disabled (PRN)',
+        () {
       final prnMed = testMed.copyWith(schedule: [
-        ScheduleEntry(id: 'prn_test', h: 8, m: 0, label: 'Morning', days: [1, 2, 3, 4, 5, 6, 0], enabled: false),
+        ScheduleEntry(
+            id: 'prn_test',
+            h: 8,
+            m: 0,
+            label: 'Morning',
+            days: [1, 2, 3, 4, 5, 6, 0],
+            enabled: false),
       ]);
       expect(RefillHelper.calculateExhaustionDate(prnMed), isNull);
     });
@@ -70,12 +78,25 @@ void main() {
       expect(RefillHelper.calculateExhaustionDate(zeroCountMed), isNull);
     });
 
-    test('calculateExhaustionDate correctly handles multiple doses per day', () {
+    test('calculateExhaustionDate correctly handles multiple doses per day',
+        () {
       final multiDoseMed = testMed.copyWith(
         count: 10,
         schedule: [
-          ScheduleEntry(id: '1', h: 8, m: 0, label: 'Morning', days: [1, 2, 3, 4, 5, 6, 0], enabled: true),
-          ScheduleEntry(id: '2', h: 20, m: 0, label: 'Evening', days: [1, 2, 3, 4, 5, 6, 0], enabled: true),
+          ScheduleEntry(
+              id: '1',
+              h: 8,
+              m: 0,
+              label: 'Morning',
+              days: [1, 2, 3, 4, 5, 6, 0],
+              enabled: true),
+          ScheduleEntry(
+              id: '2',
+              h: 20,
+              m: 0,
+              label: 'Evening',
+              days: [1, 2, 3, 4, 5, 6, 0],
+              enabled: true),
         ],
       );
       final date = RefillHelper.calculateExhaustionDate(multiDoseMed);
@@ -85,12 +106,16 @@ void main() {
       expect(diff, closeTo(5, 1)); // Allowing small variance for time-of-day
     });
 
-    test('getExhaustionStatus returns "Runs out today" when exhausted today', () {
+    test('getExhaustionStatus returns "Runs out today" when exhausted today',
+        () {
       final exhaustedMed = testMed.copyWith(
         count: 1, // 1 pill left, 1 dose per day
       );
       final status = RefillHelper.getExhaustionStatus(exhaustedMed);
-      expect(status, anyOf('Runs out today', 'Runs out tomorrow')); // Depends on exact time of test execution
+      expect(
+          status,
+          anyOf('Runs out today',
+              'Runs out tomorrow')); // Depends on exact time of test execution
     });
   });
 }

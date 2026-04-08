@@ -100,7 +100,7 @@ class MedicalDisclaimerModal extends StatelessWidget {
               _DisclaimerItem(
                 icon: Icons.medical_services_rounded,
                 text:
-                    'Med AI is a medication tracking and information tool. It does not provide medical diagnoses or treatment recommendations.',
+                    'MedAI is a medication tracking and information tool. It does not provide medical diagnoses or treatment recommendations.',
                 L: L,
                 delay: 200,
               ),

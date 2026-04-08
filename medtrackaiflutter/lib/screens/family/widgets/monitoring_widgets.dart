@@ -68,16 +68,20 @@ class PatientCard extends StatelessWidget {
             final dateKey = DateTime.now().toIso8601String().substring(0, 10);
             final entries = history[dateKey] ?? [];
             final medsSnapshot = medSnap.data ?? [];
-            
+
             // Calculate effective progress for the day
             final sysExpected = medsSnapshot
-                .where((m) => m.schedule.any((s) => s.enabled && s.days.contains(DateTime.now().weekday % 7)))
+                .where((m) => m.schedule.any((s) =>
+                    s.enabled && s.days.contains(DateTime.now().weekday % 7)))
                 .length;
             final taken = entries.where((e) => e.taken).length;
-            final adherence = sysExpected == 0 ? 1.0 : (taken / sysExpected).clamp(0.0, 1.0);
-            final color = adherence >= 0.85 
-                ? const Color(0xFF10B981) 
-                : adherence >= 0.65 ? const Color(0xFFF59E0B) : const Color(0xFFEF4444);
+            final adherence =
+                sysExpected == 0 ? 1.0 : (taken / sysExpected).clamp(0.0, 1.0);
+            final color = adherence >= 0.85
+                ? const Color(0xFF10B981)
+                : adherence >= 0.65
+                    ? const Color(0xFFF59E0B)
+                    : const Color(0xFFEF4444);
 
             return BouncingButton(
               onTap: onTap,
@@ -99,12 +103,18 @@ class PatientCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
-                              colors: [color.withValues(alpha: 0.8), color.withValues(alpha: 0.1)],
+                              colors: [
+                                color.withValues(alpha: 0.8),
+                                color.withValues(alpha: 0.1)
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             boxShadow: [
-                              BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 16, spreadRadius: 0)
+                              BoxShadow(
+                                  color: color.withValues(alpha: 0.4),
+                                  blurRadius: 16,
+                                  spreadRadius: 0)
                             ],
                           ),
                           child: Padding(
@@ -167,7 +177,7 @@ class PatientCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 14),
-                    
+
                     // Adherence Progress Bar (Flat Cal Style)
                     Row(
                       children: [
@@ -236,7 +246,9 @@ class WeeklyAdherenceChart extends StatelessWidget {
           .where((m) => m.schedule
               .any((s) => s.enabled && s.days.contains(date.weekday % 7)))
           .length;
-      double score = sysExpected == 0 ? (doses.isNotEmpty ? 1.0 : 0.0) : (doses.where((d) => d.taken).length / sysExpected).clamp(0.0, 1.0);
+      double score = sysExpected == 0
+          ? (doses.isNotEmpty ? 1.0 : 0.0)
+          : (doses.where((d) => d.taken).length / sysExpected).clamp(0.0, 1.0);
       weekData['$i-$dayLabel'] = score;
     }
 
@@ -247,9 +259,7 @@ class WeeklyAdherenceChart extends StatelessWidget {
           children: [
             Text('Weekly Adherence',
                 style: AppTypography.titleLarge.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: L.text)),
+                    fontSize: 16, fontWeight: FontWeight.w800, color: L.text)),
             const Spacer(),
             Text('Last 7 Days',
                 style: AppTypography.labelSmall.copyWith(
@@ -266,9 +276,11 @@ class WeeklyAdherenceChart extends StatelessWidget {
           children: weekData.entries.map((e) {
             final pct = e.value;
             final height = 15.0 + (pct * 55.0);
-            final color = pct >= 0.85 
-                ? const Color(0xFF10B981) 
-                : pct >= 0.6 ? const Color(0xFFF59E0B) : const Color(0xFFEF4444);
+            final color = pct >= 0.85
+                ? const Color(0xFF10B981)
+                : pct >= 0.6
+                    ? const Color(0xFFF59E0B)
+                    : const Color(0xFFEF4444);
 
             return Column(
               children: [
@@ -278,7 +290,8 @@ class WeeklyAdherenceChart extends StatelessWidget {
                   height: height,
                   decoration: BoxDecoration(
                     color: pct == 0.0 ? L.fill : color,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(6)),
                     boxShadow: [
                       if (pct > 0.0)
                         BoxShadow(
@@ -292,7 +305,9 @@ class WeeklyAdherenceChart extends StatelessWidget {
                 const SizedBox(height: AppSpacing.p12),
                 Text(e.key.split('-')[1],
                     style: AppTypography.labelSmall.copyWith(
-                        color: L.sub, fontWeight: FontWeight.w700, fontSize: 10)),
+                        color: L.sub,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10)),
               ],
             );
           }).toList(),
@@ -361,32 +376,61 @@ class PaywallScreen extends StatelessWidget {
   const PaywallScreen({super.key, required this.onBack, required this.L});
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: L.bg,
-    appBar: AppBar(
-      backgroundColor: L.bg, elevation: 0,
-      leading: IconButton(icon: Icon(Icons.arrow_back_ios_new_rounded, color: L.text), onPressed: onBack),
-    ),
-    body: Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(width: 80, height: 80, decoration: BoxDecoration(color: L.secondary.withValues(alpha: 0.1), shape: BoxShape.circle), child: Center(child: Icon(Icons.lock_person_rounded, color: L.secondary, size: 40))),
-            const SizedBox(height: 24),
-            Text('Pro Feature', style: AppTypography.displayLarge.copyWith(fontSize: 24, color: L.text, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 12),
-            Text('Remote monitoring requires a Pro subscription.', textAlign: TextAlign.center, style: AppTypography.bodySmall.copyWith(fontSize: 15, color: L.sub, height: 1.5)),
-            const SizedBox(height: 32),
-            BouncingButton(
-              onTap: () => PaywallSheet.show(context),
-              child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 16), alignment: Alignment.center, decoration: BoxDecoration(color: L.primary, borderRadius: BorderRadius.circular(20)), child: Text('Upgrade to Pro', style: AppTypography.labelLarge.copyWith(color: L.onPrimary, fontSize: 15, fontWeight: FontWeight.w800))),
-            ),
-          ],
+        backgroundColor: L.bg,
+        appBar: AppBar(
+          backgroundColor: L.bg,
+          elevation: 0,
+          leading: IconButton(
+              icon: Icon(Icons.arrow_back_ios_new_rounded, color: L.text),
+              onPressed: onBack),
         ),
-      ),
-    ),
-  );
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                        color: L.secondary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle),
+                    child: Center(
+                        child: Icon(Icons.lock_person_rounded,
+                            color: L.secondary, size: 40))),
+                const SizedBox(height: 24),
+                Text('Pro Feature',
+                    style: AppTypography.displayLarge.copyWith(
+                        fontSize: 24,
+                        color: L.text,
+                        fontWeight: FontWeight.w900)),
+                const SizedBox(height: 12),
+                Text('Remote monitoring requires a Pro subscription.',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodySmall
+                        .copyWith(fontSize: 15, color: L.sub, height: 1.5)),
+                const SizedBox(height: 32),
+                BouncingButton(
+                  onTap: () => PaywallSheet.show(context),
+                  child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                          color: L.primary,
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Text('Upgrade to Pro',
+                          style: AppTypography.labelLarge.copyWith(
+                              color: L.onPrimary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800))),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 }
 
 class InsightsContent extends StatelessWidget {
@@ -414,7 +458,7 @@ class InsightsContent extends StatelessWidget {
     state.fetchProtectorInsight(cg, meds, history);
     final dateKey = DateTime.now().toIso8601String().substring(0, 10);
     final historyEntries = history[dateKey] ?? [];
-    
+
     return Scaffold(
       backgroundColor: L.meshBg,
       body: CustomScrollView(
@@ -424,9 +468,14 @@ class InsightsContent extends StatelessWidget {
             backgroundColor: L.meshBg,
             elevation: 0,
             pinned: true,
-            leading: IconButton(icon: Icon(Icons.arrow_back_ios_new_rounded, color: L.text, size: 18), onPressed: onBack),
+            leading: IconButton(
+                icon: Icon(Icons.arrow_back_ios_new_rounded,
+                    color: L.text, size: 18),
+                onPressed: onBack),
             centerTitle: true,
-            title: Text(cg.name, style: AppTypography.titleLarge.copyWith(fontSize: 18, fontWeight: FontWeight.w800, color: L.text)),
+            title: Text(cg.name,
+                style: AppTypography.titleLarge.copyWith(
+                    fontSize: 18, fontWeight: FontWeight.w800, color: L.text)),
           ),
           SliverToBoxAdapter(
             child: Padding(
@@ -447,47 +496,83 @@ class InsightsContent extends StatelessWidget {
                         Row(
                           children: [
                             Container(
-                              width: 60, height: 60,
-                              decoration: BoxDecoration(color: L.fill, shape: BoxShape.circle),
-                              child: Center(child: Text(cg.avatar, style: const TextStyle(fontSize: 30))),
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                  color: L.fill, shape: BoxShape.circle),
+                              child: Center(
+                                  child: Text(cg.avatar,
+                                      style: const TextStyle(fontSize: 30))),
                             ),
                             const SizedBox(width: 16),
-                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text(cg.name, style: AppTypography.headlineMedium.copyWith(fontSize: 22, fontWeight: FontWeight.w900, color: L.text)),
-                              Text('${cg.relation} · Monitoring Active', style: AppTypography.bodySmall.copyWith(color: L.sub, fontWeight: FontWeight.w500)),
-                            ])),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  Text(cg.name,
+                                      style: AppTypography.headlineMedium
+                                          .copyWith(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.w900,
+                                              color: L.text)),
+                                  Text('${cg.relation} · Monitoring Active',
+                                      style: AppTypography.bodySmall.copyWith(
+                                          color: L.sub,
+                                          fontWeight: FontWeight.w500)),
+                                ])),
                           ],
                         ),
                         const SizedBox(height: 24),
                         Row(
                           children: [
-                            Expanded(child: _CompactStat(label: 'Adherence', value: meds.isEmpty ? '100%' : '${((historyEntries.where((e) => e.taken).length / (historyEntries.length.clamp(1, 1000))) * 100).toInt()}%', color: const Color(0xFF10B981), L: L)),
+                            Expanded(
+                                child: _CompactStat(
+                                    label: 'Adherence',
+                                    value: meds.isEmpty
+                                        ? '100%'
+                                        : '${((historyEntries.where((e) => e.taken).length / (historyEntries.length.clamp(1, 1000))) * 100).toInt()}%',
+                                    color: const Color(0xFF10B981),
+                                    L: L)),
                             const SizedBox(width: 12),
-                            Expanded(child: _CompactStat(label: 'Streak', value: '$streak days', color: const Color(0xFFF97316), L: L)),
+                            Expanded(
+                                child: _CompactStat(
+                                    label: 'Streak',
+                                    value: '$streak days',
+                                    color: const Color(0xFFF97316),
+                                    L: L)),
                           ],
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   BouncingButton(
                     onTap: () => state.nudgePatient(cg.patientUid),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(color: L.text, borderRadius: BorderRadius.circular(16)),
-                      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 18),
-                        const SizedBox(width: 10),
-                        Text('Nudge ${cg.name}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-                      ]),
+                      decoration: BoxDecoration(
+                          color: L.text,
+                          borderRadius: BorderRadius.circular(16)),
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.notifications_active_rounded,
+                                color: Colors.white, size: 18),
+                            const SizedBox(width: 10),
+                            Text('Nudge ${cg.name}',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800)),
+                          ]),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -495,9 +580,10 @@ class InsightsContent extends StatelessWidget {
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: AppShadows.neumorphic,
                     ),
-                    child: WeeklyAdherenceChart(meds: meds, history: history, L: L),
+                    child: WeeklyAdherenceChart(
+                        meds: meds, history: history, L: L),
                   ),
-                  
+
                   const SizedBox(height: 20),
                   AIProtectorCard(cg: cg, state: state),
                   const SizedBox(height: 40),
@@ -515,15 +601,25 @@ class _CompactStat extends StatelessWidget {
   final String label, value;
   final Color color;
   final AppThemeColors L;
-  const _CompactStat({required this.label, required this.value, required this.color, required this.L});
+  const _CompactStat(
+      {required this.label,
+      required this.value,
+      required this.color,
+      required this.L});
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(color: L.fill.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(16)),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: AppTypography.labelSmall.copyWith(color: L.sub, fontWeight: FontWeight.w600, fontSize: 11)),
-      const SizedBox(height: 4),
-      Text(value, style: AppTypography.titleLarge.copyWith(color: color, fontWeight: FontWeight.w900, fontSize: 18)),
-    ]),
-  );
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+            color: L.fill.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(16)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label,
+              style: AppTypography.labelSmall.copyWith(
+                  color: L.sub, fontWeight: FontWeight.w600, fontSize: 11)),
+          const SizedBox(height: 4),
+          Text(value,
+              style: AppTypography.titleLarge.copyWith(
+                  color: color, fontWeight: FontWeight.w900, fontSize: 18)),
+        ]),
+      );
 }

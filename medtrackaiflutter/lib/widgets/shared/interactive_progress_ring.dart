@@ -31,7 +31,8 @@ class InteractiveProgressRing extends StatelessWidget {
         decoration: BoxDecoration(
           color: L.card,
           borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
+          border:
+              Border.all(color: L.border.withValues(alpha: 0.05), width: 1.5),
           boxShadow: L.shadowSoft,
         ),
         child: Row(
@@ -46,7 +47,8 @@ class InteractiveProgressRing extends StatelessWidget {
                     value: progress,
                     strokeWidth: 10,
                     backgroundColor: L.border.withValues(alpha: 0.2),
-                    valueColor: AlwaysStoppedAnimation<Color>(color ?? L.secondary),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(color ?? L.secondary),
                     strokeCap: StrokeCap.round,
                   ),
                   if (child != null) child!,
@@ -66,7 +68,9 @@ class InteractiveProgressRing extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(valueText!,
                         style: AppTypography.titleLarge.copyWith(
-                            color: L.text, fontWeight: FontWeight.w900, fontSize: 18)),
+                            color: L.text,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 18)),
                   ],
                 ],
               ),

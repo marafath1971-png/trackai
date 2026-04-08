@@ -302,7 +302,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                   ShareService.shareAchievement(
                     title: 'New Medicine Scanned! ⚡',
                     subtitle:
-                        'I just used Med AI to verify ${med.name}. Magic! ✨',
+                        'I just used MedAI to verify ${med.name}. Magic! ✨',
                     emoji: '🧬',
                   );
 
@@ -337,9 +337,11 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
               decoration: BoxDecoration(
                 color: L.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
-                border: Border.all(color: L.error.withValues(alpha: 0.1), width: 0.5),
+                border: Border.all(
+                    color: L.error.withValues(alpha: 0.1), width: 0.5),
               ),
-              child: const Center(child: Text('📷', style: TextStyle(fontSize: 32))),
+              child: const Center(
+                  child: Text('📷', style: TextStyle(fontSize: 32))),
             ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
             const SizedBox(height: 24),
             Text(
@@ -442,7 +444,6 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
             ),
           ).animate().scale(begin: const Offset(0.95, 0.95), duration: 600.ms),
 
-
           Positioned(
             top: MediaQuery.of(context).padding.top + 16,
             left: 0,
@@ -474,7 +475,8 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
             alignment: Alignment.bottomCenter,
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 64), // Lowered from 160 to follow user request
+                padding: const EdgeInsets.only(
+                    bottom: 64), // Lowered from 160 to follow user request
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -503,7 +505,6 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
           Positioned.fill(
             child: ColoredBox(color: L.bg),
           ),
-
           SafeArea(
             child: Center(
               child: Padding(
@@ -521,7 +522,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
 
                     // ── Progress & Steps ──
                     _buildStepIndicator(L),
-                    
+
                     const SizedBox(height: 48),
 
                     AnimatedSwitcher(
@@ -552,7 +553,6 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
               ),
             ),
           ),
-
           Positioned(
             bottom: 64,
             left: 0,
@@ -560,7 +560,11 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(width: 4, height: 4, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+                Container(
+                    width: 4,
+                    height: 4,
+                    decoration: const BoxDecoration(
+                        color: Colors.white, shape: BoxShape.circle)),
                 const SizedBox(width: 12),
                 Text(
                   'PRO_LINK_ENCRYPTED',
@@ -577,7 +581,6 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
       ),
     );
   }
-
 
   Widget _buildPulsingThumbnail(AppThemeColors L) {
     return AnimatedBuilder(
@@ -597,7 +600,6 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
               ),
             ],
           ),
-
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.xl),
             child: Stack(
@@ -620,7 +622,6 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
-
                 _buildScanningEffect(),
               ],
             ),
@@ -643,7 +644,10 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
             decoration: BoxDecoration(
               color: context.L.text,
               boxShadow: [
-                BoxShadow(color: context.L.text.withValues(alpha: 0.4), blurRadius: 15, spreadRadius: 2)
+                BoxShadow(
+                    color: context.L.text.withValues(alpha: 0.4),
+                    blurRadius: 15,
+                    spreadRadius: 2)
               ],
             ),
           ),
@@ -669,7 +673,9 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                   shape: BoxShape.circle,
                   color: isDone ? L.text : L.card,
                   border: Border.all(
-                    color: isActive || isDone ? L.text : L.border.withValues(alpha: 0.1),
+                    color: isActive || isDone
+                        ? L.text
+                        : L.border.withValues(alpha: 0.1),
                     width: 0.5,
                   ),
                 ),
@@ -690,8 +696,9 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                   child: Container(
                     height: 2,
                     margin: const EdgeInsets.symmetric(horizontal: 8),
-                    color: isDone ? Colors.black : Colors.black.withValues(alpha: 0.1),
-
+                    color: isDone
+                        ? Colors.black
+                        : Colors.black.withValues(alpha: 0.1),
                   ),
                 ),
             ],
@@ -700,9 +707,6 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
       }),
     );
   }
-
-
-
 
   Widget _buildScanningLine() {
     return AnimatedBuilder(
@@ -723,20 +727,22 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
   }
 
   Widget _buildProTabletAnimation() {
+    final color = context.isDark ? context.L.secondary : Colors.white;
     return Stack(
       children: [
         Positioned(
-          top: _scanLineController.value * (MediaQuery.of(context).size.width * 0.7),
+          top: _scanLineController.value *
+              (MediaQuery.of(context).size.width * 0.7),
           left: 0,
           right: 0,
           child: Center(
             child: Container(
-              height: 1.5,
+              height: 2.5,
               width: MediaQuery.of(context).size.width * 0.7,
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: color,
                 boxShadow: [
-                  BoxShadow(color: Colors.white, blurRadius: 10, spreadRadius: 1)
+                  BoxShadow(color: color, blurRadius: 15, spreadRadius: 3)
                 ],
               ),
             ),
@@ -745,7 +751,6 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
       ],
     );
   }
-
 
   Widget _buildLiquidAnimation() {
     return Center(
@@ -837,9 +842,8 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
         decoration: BoxDecoration(
           color: isActive ? Colors.white : Colors.black.withValues(alpha: 0.5),
           shape: BoxShape.circle,
-          border: Border.all(
-              color: Colors.white.withValues(alpha: 0.2),
-              width: 1),
+          border:
+              Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
         ),
         child:
             Icon(icon, color: isActive ? Colors.black : Colors.white, size: 22),
@@ -869,7 +873,8 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
         mainAxisSize: MainAxisSize.min,
         children: [
           isPremium
-              ? const Icon(Icons.verified_rounded, color: Colors.white, size: 14)
+              ? const Icon(Icons.verified_rounded,
+                  color: Colors.white, size: 14)
               : const Text("✨", style: TextStyle(fontSize: 12)),
           const SizedBox(width: 10),
           Text(
@@ -925,14 +930,19 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                       Icon(
                         cat['icon'],
                         size: 16,
-                        color: isSelected ? Colors.black : Colors.white.withValues(alpha: 0.5),
+                        color: isSelected
+                            ? Colors.black
+                            : Colors.white.withValues(alpha: 0.5),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         cat['name'].toUpperCase(),
                         style: AppTypography.labelMedium.copyWith(
-                          color: isSelected ? Colors.black : Colors.white.withValues(alpha: 0.5),
-                          fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                          color: isSelected
+                              ? Colors.black
+                              : Colors.white.withValues(alpha: 0.5),
+                          fontWeight:
+                              isSelected ? FontWeight.w900 : FontWeight.w700,
                           fontSize: 11,
                           letterSpacing: 1.0,
                         ),
@@ -1168,7 +1178,6 @@ class _ResultModalState extends State<_ResultModal> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-
             const SizedBox(height: 40),
             BouncingButton(
               onTap: () async {
@@ -1247,7 +1256,8 @@ class _ResultModalState extends State<_ResultModal> {
             Expanded(
                 child: Text(
               "Everything is editable. Tap to correct details.",
-              style: AppTypography.labelMedium.copyWith(color: context.L.bg, fontWeight: FontWeight.w700),
+              style: AppTypography.labelMedium
+                  .copyWith(color: context.L.bg, fontWeight: FontWeight.w700),
             )),
           ],
         ),
@@ -1258,7 +1268,6 @@ class _ResultModalState extends State<_ResultModal> {
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -1292,58 +1301,59 @@ class _ResultModalState extends State<_ResultModal> {
               borderRadius: BorderRadius.circular(10),
             ),
           ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.result.systemBusy)
+                    _buildSmartAssistBanner(L)
+                        .animate()
+                        .fadeIn(duration: 600.ms)
+                        .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuart),
 
-                const SizedBox(height: 24),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (widget.result.systemBusy)
-                          _buildSmartAssistBanner(L)
-                              .animate()
-                              .fadeIn(duration: 600.ms)
-                              .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuart),
+                  // ── 1. Hero Magic Section ──────────────────
+                  _buildHeroSection(L).animate().fadeIn(duration: 600.ms).scale(
+                      begin: const Offset(0.95, 0.95),
+                      curve: Curves.easeOutQuart),
 
-                        // ── 1. Hero Magic Section ──────────────────
-                        _buildHeroSection(L)
-                            .animate()
-                            .fadeIn(duration: 600.ms)
-                            .scale(begin: const Offset(0.95, 0.95), curve: Curves.easeOutQuart),
+                  const SizedBox(height: 20),
 
-                        const SizedBox(height: 20),
+                  // ── 2. Safety Analytics (The "Aha" Moment) ──────────────────
+                  _buildSafetyAdvisory(L)
+                      .animate()
+                      .fadeIn(delay: 200.ms, duration: 600.ms)
+                      .slideX(begin: 0.1),
 
-                        // ── 2. Safety Analytics (The "Aha" Moment) ──────────────────
-                        _buildSafetyAdvisory(L)
-                            .animate()
-                            .fadeIn(delay: 200.ms, duration: 600.ms)
-                            .slideX(begin: 0.1),
+                  const SizedBox(height: 12),
 
-                        const SizedBox(height: 12),
+                  _buildMagicSummary(L)
+                      .animate()
+                      .fadeIn(delay: 400.ms, duration: 600.ms)
+                      .slideX(begin: -0.1),
 
-                        _buildMagicSummary(L)
-                            .animate()
-                            .fadeIn(delay: 400.ms, duration: 600.ms)
-                            .slideX(begin: -0.1),
+                  const SizedBox(height: 32),
 
-                        const SizedBox(height: 32),
+                  // ── 3. Quick Actions ──────────────────
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      _buildHeaderAction(Icons.share_rounded, () {
+                        HapticEngine.selection();
+                        ShareService.shareAchievement(
+                            title: 'AI Scan Result',
+                            subtitle: 'Checking ${_nameController.text}');
+                      }, L),
+                      const SizedBox(width: 8),
+                      _buildHeaderAction(
+                          Icons.help_outline_rounded, _showReviewHelp, L),
+                    ],
+                  ),
 
-                        // ── 3. Quick Actions ──────────────────
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            _buildHeaderAction(Icons.share_rounded, () {
-                               HapticEngine.selection();
-                               ShareService.shareAchievement(title: 'AI Scan Result', subtitle: 'Checking ${_nameController.text}');
-                            }, L),
-                            const SizedBox(width: 8),
-                            _buildHeaderAction(Icons.help_outline_rounded, _showReviewHelp, L),
-                          ],
-                        ),
-
-                        const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
                   const SizedBox(height: 20),
 
@@ -1413,7 +1423,6 @@ class _ResultModalState extends State<_ResultModal> {
                       ),
                     ],
                   ),
-
 
                   const SizedBox(height: 32),
 
@@ -1506,8 +1515,8 @@ class _ResultModalState extends State<_ResultModal> {
                     decoration: BoxDecoration(
                       color: L.card,
                       borderRadius: BorderRadius.circular(24),
-                      border:
-                          Border.all(color: L.border.withValues(alpha: 0.1), width: 0.5),
+                      border: Border.all(
+                          color: L.border.withValues(alpha: 0.1), width: 0.5),
                     ),
                     child: Row(
                       children: [
@@ -1631,11 +1640,6 @@ class _ResultModalState extends State<_ResultModal> {
     );
   }
 
-
-
-
-
-
   Widget _buildSmartAssistBanner(AppThemeColors L) {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
@@ -1649,7 +1653,8 @@ class _ResultModalState extends State<_ResultModal> {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: L.text.withValues(alpha: 0.05), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+                color: L.text.withValues(alpha: 0.05), shape: BoxShape.circle),
             child: Text("✨", style: AppTypography.bodyLarge),
           ),
           const SizedBox(width: 16),
@@ -1658,10 +1663,14 @@ class _ResultModalState extends State<_ResultModal> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("SMART ASSIST ACTIVE",
-                  style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                    style: AppTypography.labelSmall.copyWith(
+                        color: L.text,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2)),
                 const SizedBox(height: 4),
                 Text("Verify detected details below.",
-                  style: AppTypography.bodySmall.copyWith(color: L.sub, fontWeight: FontWeight.w600)),
+                    style: AppTypography.bodySmall
+                        .copyWith(color: L.sub, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -1670,7 +1679,8 @@ class _ResultModalState extends State<_ResultModal> {
     );
   }
 
-  Widget _buildHeaderAction(IconData icon, VoidCallback onTap, AppThemeColors L) {
+  Widget _buildHeaderAction(
+      IconData icon, VoidCallback onTap, AppThemeColors L) {
     return BouncingButton(
       onTap: onTap,
       child: Container(
@@ -1719,8 +1729,6 @@ class _ResultModalState extends State<_ResultModal> {
     );
   }
 
-
-
   Widget _buildEditableField({
     required TextEditingController controller,
     required double fontSize,
@@ -1738,14 +1746,14 @@ class _ResultModalState extends State<_ResultModal> {
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: AppTypography.bodyLarge.copyWith(color: L.text.withValues(alpha: 0.2)),
+        hintStyle: AppTypography.bodyLarge
+            .copyWith(color: L.text.withValues(alpha: 0.2)),
         border: InputBorder.none,
         isDense: true,
         contentPadding: EdgeInsets.zero,
       ),
     );
   }
-
 
   Widget _buildSectionHeader(String title, AppThemeColors L) {
     return Text(
@@ -1772,7 +1780,8 @@ class _ResultModalState extends State<_ResultModal> {
             ? DecorationImage(
                 image: NetworkImage(widget.result.imageUrl!),
                 fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.2), BlendMode.darken),
+                colorFilter: ColorFilter.mode(
+                    Colors.black.withValues(alpha: 0.2), BlendMode.darken),
               )
             : null,
       ),
@@ -1785,21 +1794,29 @@ class _ResultModalState extends State<_ResultModal> {
             left: 0,
             right: 0,
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(24)),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   color: L.bg.withValues(alpha: 0.8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          _buildStatusBadge(widget.result.identified, widget.result.systemBusy),
+                          _buildStatusBadge(widget.result.identified,
+                              widget.result.systemBusy),
                           const Spacer(),
                           if (widget.result.confidence == 'high')
-                             Text("⚡ 98% MATCH", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1, color: L.text)),
+                            Text("⚡ 98% MATCH",
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1,
+                                    color: L.text)),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -1823,9 +1840,13 @@ class _ResultModalState extends State<_ResultModal> {
 
   Widget _buildMagicSummary(AppThemeColors L) {
     String summary = widget.result.ahaMoment ?? widget.result.description;
-    if (summary.isEmpty) summary = "Detected ${widget.result.name} ${widget.result.dose}. Tap to refine medical purpose.";
-    
-    final bool isAha = widget.result.ahaMoment != null && widget.result.ahaMoment!.isNotEmpty;
+    if (summary.isEmpty) {
+      summary =
+          "Detected ${widget.result.name} ${widget.result.dose}. Tap to refine medical purpose.";
+    }
+
+    final bool isAha =
+        widget.result.ahaMoment != null && widget.result.ahaMoment!.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1846,19 +1867,26 @@ class _ResultModalState extends State<_ResultModal> {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: L.text.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child: Text(isAha ? "💡" : "✨", style: const TextStyle(fontSize: 16)),
+            decoration: BoxDecoration(
+                color: L.text.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child:
+                Text(isAha ? "💡" : "✨", style: const TextStyle(fontSize: 16)),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(isAha ? "AHA DISCOVERY" : "AI INSIGHT", style: AppTypography.labelSmall.copyWith(color: L.text, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                Text(isAha ? "AHA DISCOVERY" : "AI INSIGHT",
+                    style: AppTypography.labelSmall.copyWith(
+                        color: L.text,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2)),
                 const SizedBox(height: 6),
                 Text(
                   summary,
-                  style: AppTypography.bodyMedium.copyWith(color: L.text, fontWeight: FontWeight.w700, height: 1.4),
+                  style: AppTypography.bodyMedium.copyWith(
+                      color: L.text, fontWeight: FontWeight.w700, height: 1.4),
                 ),
               ],
             ),
@@ -1870,13 +1898,16 @@ class _ResultModalState extends State<_ResultModal> {
 
   Widget _buildSafetyAdvisory(AppThemeColors L) {
     final isAntibiotic = widget.result.isAntibiotic;
-    final hasWarning = widget.result.warnings.isNotEmpty || widget.result.sideEffects.contains('severe') || widget.result.sideEffects.contains('danger');
-    
+    final hasWarning = widget.result.warnings.isNotEmpty ||
+        widget.result.sideEffects.contains('severe') ||
+        widget.result.sideEffects.contains('danger');
+
     if (!isAntibiotic && !hasWarning) return const SizedBox();
 
     final Color accent = isAntibiotic ? Colors.orangeAccent : Colors.redAccent;
-    final String label = isAntibiotic ? "ANTIBIOTIC COURSE" : "MEDICAL ADVISORY";
-    final String msg = isAntibiotic 
+    final String label =
+        isAntibiotic ? "ANTIBIOTIC COURSE" : "MEDICAL ADVISORY";
+    final String msg = isAntibiotic
         ? "Finish the entire course as prescribed. Do not skip doses."
         : "Safety concerns detected. Review warnings before finalize.";
 
@@ -1898,18 +1929,29 @@ class _ResultModalState extends State<_ResultModal> {
         children: [
           Row(
             children: [
-              Text(isAntibiotic ? "🧪" : "⚠️", style: const TextStyle(fontSize: 18)),
+              Text(isAntibiotic ? "🧪" : "⚠️",
+                  style: const TextStyle(fontSize: 18)),
               const SizedBox(width: 12),
-              Text(label, style: AppTypography.labelMedium.copyWith(color: accent, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+              Text(label,
+                  style: AppTypography.labelMedium.copyWith(
+                      color: accent,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5)),
             ],
           ),
           const SizedBox(height: 12),
-          Text(msg, style: AppTypography.bodySmall.copyWith(color: L.text.withValues(alpha: 0.8), fontWeight: FontWeight.w700, height: 1.4)),
+          Text(msg,
+              style: AppTypography.bodySmall.copyWith(
+                  color: L.text.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w700,
+                  height: 1.4)),
           if (isAntibiotic) ...[
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(color: accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8)),
               child: Row(
                 children: [
                   Text("ℹ️", style: TextStyle(fontSize: 12, color: accent)),
@@ -1917,8 +1959,8 @@ class _ResultModalState extends State<_ResultModal> {
                   Expanded(
                     child: Text(
                       "Completion is vital for effectiveness.",
-                      style: AppTypography.labelSmall.copyWith(
-                          color: accent, fontWeight: FontWeight.w800),
+                      style: AppTypography.labelSmall
+                          .copyWith(color: accent, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ],
@@ -1938,16 +1980,13 @@ class _ResultModalState extends State<_ResultModal> {
     Color? accentColor,
     String? hint,
   }) {
-    if (controller.text.isEmpty && title != "Personal Notes") return const SizedBox();
+    if (controller.text.isEmpty && title != "Personal Notes") {
+      return const SizedBox();
+    }
 
-    final bool isDengerous = title == "Side Effects" || title == "Warnings" || title == "Interactions";
-    final Color itemColor = isDengerous ? Colors.redAccent.withValues(alpha: 0.7) : L.text;
-    
-    String emojiTitle = "";
-    if (title == "Side Effects") emojiTitle = "🤢";
-    if (title == "Warnings") emojiTitle = "⚠️";
-    if (title == "Interactions") emojiTitle = "💊";
-
+    final bool isDengerous = title == "Side Effects" ||
+        title == "Warnings" ||
+        title == "Interactions";
     return Container(
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(20),
@@ -1973,7 +2012,9 @@ class _ResultModalState extends State<_ResultModal> {
               Text(
                 title.toUpperCase(),
                 style: AppTypography.labelSmall.copyWith(
-                  color: isDengerous ? Colors.redAccent : L.sub.withValues(alpha: 0.6),
+                  color: isDengerous
+                      ? Colors.redAccent
+                      : L.sub.withValues(alpha: 0.6),
                   fontWeight: FontWeight.w900,
                   fontSize: 11,
                   letterSpacing: 1.2,
@@ -1982,7 +2023,8 @@ class _ResultModalState extends State<_ResultModal> {
               const Spacer(),
               if (isDengerous)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.redAccent,
                     borderRadius: BorderRadius.circular(4),
@@ -2010,7 +2052,8 @@ class _ResultModalState extends State<_ResultModal> {
             ),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: AppTypography.bodySmall.copyWith(color: L.sub.withValues(alpha: 0.3)),
+              hintStyle: AppTypography.bodySmall
+                  .copyWith(color: L.sub.withValues(alpha: 0.3)),
               border: InputBorder.none,
               isDense: true,
               contentPadding: EdgeInsets.zero,
@@ -2020,7 +2063,6 @@ class _ResultModalState extends State<_ResultModal> {
       ),
     );
   }
-
 
   Widget _buildInventorySelector(AppThemeColors L) {
     return Container(
@@ -2164,11 +2206,12 @@ class _ResultModalState extends State<_ResultModal> {
           },
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 18),
-          decoration: BoxDecoration(
-            color: L.card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
-          ),
+            decoration: BoxDecoration(
+              color: L.card,
+              borderRadius: BorderRadius.circular(12),
+              border:
+                  Border.all(color: L.border.withValues(alpha: 0.1), width: 1),
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -2359,7 +2402,8 @@ class _ResultModalState extends State<_ResultModal> {
         decoration: BoxDecoration(
           color: context.L.bg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border.all(color: context.L.border.withValues(alpha: 0.1), width: 1),
+          border: Border.all(
+              color: context.L.border.withValues(alpha: 0.1), width: 1),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -2399,6 +2443,7 @@ class _ResultModalState extends State<_ResultModal> {
     );
   }
 }
+
 class _BentoMetricTile extends StatelessWidget {
   final String title;
   final String icon;
@@ -2423,7 +2468,8 @@ class _BentoMetricTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: L.card,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+          border:
+              Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -2457,15 +2503,6 @@ class _BentoMetricTile extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _getIconForTitle(String t) {
-    if (t.contains('NAME')) return "🏷️";
-    if (t.contains('BRAND')) return "🏢";
-    if (t.contains('DOSE')) return "⚖️";
-    if (t.contains('FORM')) return "💊";
-    if (t.contains('UNIT')) return "📦";
-    return icon;
   }
 }
 
@@ -2532,28 +2569,33 @@ class _ProScanFramePainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     const double len = 20.0;
-    
+
     // Top Left
     canvas.drawLine(const Offset(0, 0), const Offset(0, len), paint);
     canvas.drawLine(const Offset(0, 0), const Offset(len, 0), paint);
-    
+
     // Top Right
     canvas.drawLine(Offset(size.width, 0), Offset(size.width - len, 0), paint);
     canvas.drawLine(Offset(size.width, 0), Offset(size.width, len), paint);
-    
+
     // Bottom Left
-    canvas.drawLine(Offset(0, size.height), Offset(0, size.height - len), paint);
+    canvas.drawLine(
+        Offset(0, size.height), Offset(0, size.height - len), paint);
     canvas.drawLine(Offset(0, size.height), Offset(len, size.height), paint);
-    
+
     // Bottom Right
-    canvas.drawLine(Offset(size.width, size.height), Offset(size.width - len, size.height), paint);
-    canvas.drawLine(Offset(size.width, size.height), Offset(size.width, size.height - len), paint);
+    canvas.drawLine(Offset(size.width, size.height),
+        Offset(size.width - len, size.height), paint);
+    canvas.drawLine(Offset(size.width, size.height),
+        Offset(size.width, size.height - len), paint);
 
     // Center Crosshair
     const double crossLen = 6.0;
     final center = Offset(size.width / 2, size.height / 2);
-    canvas.drawLine(Offset(center.dx - crossLen, center.dy), Offset(center.dx + crossLen, center.dy), paint);
-    canvas.drawLine(Offset(center.dx, center.dy - crossLen), Offset(center.dx, center.dy + crossLen), paint);
+    canvas.drawLine(Offset(center.dx - crossLen, center.dy),
+        Offset(center.dx + crossLen, center.dy), paint);
+    canvas.drawLine(Offset(center.dx, center.dy - crossLen),
+        Offset(center.dx, center.dy + crossLen), paint);
   }
 
   @override
@@ -2584,9 +2626,10 @@ class ScanFramePainter extends CustomPainter {
     final rectPaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.1)
       ..style = PaintingStyle.fill;
-    
+
     canvas.drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height), const Radius.circular(32)), 
+        RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height),
+            const Radius.circular(32)),
         rectPaint);
 
     switch (category) {
@@ -2604,26 +2647,27 @@ class ScanFramePainter extends CustomPainter {
     }
   }
 
-  void _paintTabletFrame(Canvas canvas, Size size, Paint paint, Paint glowPaint) {
+  void _paintTabletFrame(
+      Canvas canvas, Size size, Paint paint, Paint glowPaint) {
     const cornerSize = 40.0;
     const padding = 20.0;
     final path = Path();
-    
+
     // Top Left
     path.moveTo(padding, padding + cornerSize);
     path.lineTo(padding, padding);
     path.lineTo(padding + cornerSize, padding);
-    
+
     // Top Right
     path.moveTo(size.width - padding - cornerSize, padding);
     path.lineTo(size.width - padding, padding);
     path.lineTo(size.width - padding, padding + cornerSize);
-    
+
     // Bottom Left
     path.moveTo(padding, size.height - padding - cornerSize);
     path.lineTo(padding, size.height - padding);
     path.lineTo(padding + cornerSize, size.height - padding);
-    
+
     // Bottom Right
     path.moveTo(size.width - padding - cornerSize, size.height - padding);
     path.lineTo(size.width - padding, size.height - padding);
@@ -2633,12 +2677,16 @@ class ScanFramePainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _paintLiquidFrame(Canvas canvas, Size size, Paint paint, Paint glowPaint) {
-    canvas.drawCircle(Offset(size.width / 2, size.height / 2), size.width / 2.5, glowPaint);
-    canvas.drawCircle(Offset(size.width / 2, size.height / 2), size.width / 2.5, paint);
+  void _paintLiquidFrame(
+      Canvas canvas, Size size, Paint paint, Paint glowPaint) {
+    canvas.drawCircle(
+        Offset(size.width / 2, size.height / 2), size.width / 2.5, glowPaint);
+    canvas.drawCircle(
+        Offset(size.width / 2, size.height / 2), size.width / 2.5, paint);
   }
 
-  void _paintSprayFrame(Canvas canvas, Size size, Paint paint, Paint glowPaint) {
+  void _paintSprayFrame(
+      Canvas canvas, Size size, Paint paint, Paint glowPaint) {
     final center = Offset(size.width / 2, size.height / 2);
     const armSize = 30.0;
     const gap = 30.0;
@@ -2657,12 +2705,15 @@ class ScanFramePainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _paintBeautyFrame(Canvas canvas, Size size, Paint paint, Paint glowPaint) {
+  void _paintBeautyFrame(
+      Canvas canvas, Size size, Paint paint, Paint glowPaint) {
     final path = Path();
     const inset = 40.0;
     path.moveTo(size.width / 2, inset);
-    path.quadraticBezierTo(size.width - inset, inset, size.width - inset, size.height / 2);
-    path.quadraticBezierTo(size.width - inset, size.height - inset, size.width / 2, size.height - inset);
+    path.quadraticBezierTo(
+        size.width - inset, inset, size.width - inset, size.height / 2);
+    path.quadraticBezierTo(size.width - inset, size.height - inset,
+        size.width / 2, size.height - inset);
     path.quadraticBezierTo(inset, size.height - inset, inset, size.height / 2);
     path.quadraticBezierTo(inset, inset, size.width / 2, inset);
 
@@ -2671,8 +2722,6 @@ class ScanFramePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant ScanFramePainter oldDelegate) => oldDelegate.category != category;
+  bool shouldRepaint(covariant ScanFramePainter oldDelegate) =>
+      oldDelegate.category != category;
 }
-
-
-

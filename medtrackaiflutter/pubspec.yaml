@@ -89,6 +89,9 @@ dependencies:
   url_launcher: ^6.3.2
   app_links: ^6.1.1
   confetti: ^0.7.0
+  live_activities: ^2.4.3
+  speech_to_text: ^7.3.0
+  flutter_tts: ^4.2.5
 
 dev_dependencies:
   flutter_test:

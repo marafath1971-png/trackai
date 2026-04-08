@@ -7,14 +7,14 @@ import '../../core/utils/logger.dart';
 class HealthController extends ChangeNotifier {
   final SharedPreferences _prefs;
   final Health _health = Health();
-  
+
   bool _isConnected = false;
   bool _isSyncing = false;
-  
+
   double _steps = 0;
   double _heartRate = 0;
   String _sleepStatus = 'No data';
-  
+
   HealthController(this._prefs) {
     _isConnected = _prefs.getBool('health_connected') ?? false;
     if (_isConnected) {
@@ -54,7 +54,7 @@ class HealthController extends ChangeNotifier {
         _types,
         permissions: _permissions,
       );
-      
+
       if (requested) {
         _isConnected = true;
         await _prefs.setBool('health_connected', true);
@@ -80,10 +80,10 @@ class HealthController extends ChangeNotifier {
 
   Future<void> syncData() async {
     if (!_isConnected || _isSyncing) return;
-    
+
     _isSyncing = true;
     notifyListeners();
- 
+
     try {
       final now = DateTime.now();
       final yesterday = now.subtract(const Duration(hours: 24));

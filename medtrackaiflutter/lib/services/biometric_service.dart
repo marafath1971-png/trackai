@@ -8,7 +8,8 @@ class BiometricService {
   static Future<bool> canCheckBiometrics() async {
     try {
       final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
-      final bool canAuthenticate = canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
+      final bool canAuthenticate =
+          canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
       return canAuthenticate;
     } catch (e) {
       appLogger.e('Biometric Check Error', error: e);
@@ -25,7 +26,9 @@ class BiometricService {
       }
 
       return await _auth.authenticate(
-        localizedReason: 'Please authenticate to unlock Med AI',
+        localizedReason: 'Please authenticate to unlock MedAI',
+        biometricOnly: false,
+        persistAcrossBackgrounding: true,
       );
     } on PlatformException catch (e) {
       appLogger.e('Biometric Auth Error', error: e);

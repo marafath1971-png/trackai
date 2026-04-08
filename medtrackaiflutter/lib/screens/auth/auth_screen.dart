@@ -166,7 +166,10 @@ class _AuthScreenState extends State<AuthScreen> {
                   RichText(
                       text: TextSpan(
                     style: AppTypography.displayLarge.copyWith(
-                        fontSize: 32, color: L.text, letterSpacing: -1.0, fontWeight: FontWeight.w900),
+                        fontSize: 32,
+                        color: L.text,
+                        letterSpacing: -1.0,
+                        fontWeight: FontWeight.w900),
                     children: [
                       TextSpan(
                           text: _isSignUp
@@ -174,12 +177,16 @@ class _AuthScreenState extends State<AuthScreen> {
                               : 'Welcome\nback to '),
                       TextSpan(
                           text: 'Med ',
-                          style: AppTypography.displayLarge
-                              .copyWith(fontSize: 32, color: L.text, fontWeight: FontWeight.w900)),
+                          style: AppTypography.displayLarge.copyWith(
+                              fontSize: 32,
+                              color: L.text,
+                              fontWeight: FontWeight.w900)),
                       TextSpan(
                           text: 'Ai',
-                          style: AppTypography.displayLarge
-                              .copyWith(fontSize: 32, color: L.success, fontWeight: FontWeight.w900)),
+                          style: AppTypography.displayLarge.copyWith(
+                              fontSize: 32,
+                              color: L.success,
+                              fontWeight: FontWeight.w900)),
                     ],
                   )),
                   const SizedBox(height: 8),
@@ -449,11 +456,12 @@ class _AuthField extends StatelessWidget {
         controller: controller,
         obscureText: obscure,
         keyboardType: keyboardType,
-        style: AppTypography.bodyLarge.copyWith(fontSize: 15, color: L.text, fontWeight: FontWeight.w600),
+        style: AppTypography.bodyLarge
+            .copyWith(fontSize: 15, color: L.text, fontWeight: FontWeight.w600),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle:
-              AppTypography.bodySmall.copyWith(fontSize: 14, color: L.sub, fontWeight: FontWeight.w600),
+          labelStyle: AppTypography.bodySmall.copyWith(
+              fontSize: 14, color: L.sub, fontWeight: FontWeight.w600),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -500,8 +508,11 @@ class _PrimaryBtn extends StatelessWidget {
           child: loading
               ? const AppLoadingIndicator(size: 24)
               : Text(label.toUpperCase(),
-                  style: AppTypography.titleLarge
-                      .copyWith(fontSize: 14, color: L.bg, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                  style: AppTypography.titleLarge.copyWith(
+                      fontSize: 14,
+                      color: L.bg,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5)),
         ),
       ),
     );

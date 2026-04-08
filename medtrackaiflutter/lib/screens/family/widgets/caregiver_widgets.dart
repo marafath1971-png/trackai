@@ -27,7 +27,7 @@ class _CaregiverCardState extends State<CaregiverCard> {
     final L = widget.L;
     final isActive = cg.status == 'active';
     final medColor = hexToColor(cg.color);
-    
+
     return BouncingButton(
       onTap: widget.onDashboard,
       child: Container(
@@ -46,15 +46,25 @@ class _CaregiverCardState extends State<CaregiverCard> {
               height: 52,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: isActive ? LinearGradient(
-                  colors: [medColor.withValues(alpha: 0.8), medColor.withValues(alpha: 0.1)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ) : null,
+                gradient: isActive
+                    ? LinearGradient(
+                        colors: [
+                          medColor.withValues(alpha: 0.8),
+                          medColor.withValues(alpha: 0.1)
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
                 border: isActive ? null : Border.all(color: L.border),
-                boxShadow: isActive ? [
-                  BoxShadow(color: medColor.withValues(alpha: 0.4), blurRadius: 16, spreadRadius: 0)
-                ] : null,
+                boxShadow: isActive
+                    ? [
+                        BoxShadow(
+                            color: medColor.withValues(alpha: 0.4),
+                            blurRadius: 16,
+                            spreadRadius: 0)
+                      ]
+                    : null,
               ),
               child: Padding(
                 padding: EdgeInsets.all(isActive ? 2.0 : 0.0),
@@ -79,7 +89,7 @@ class _CaregiverCardState extends State<CaregiverCard> {
               ),
             ),
             const Spacer(),
-            
+
             // Name & Relation
             Row(
               children: [
@@ -113,18 +123,25 @@ class _CaregiverCardState extends State<CaregiverCard> {
                           if (isActive) ...[
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: L.success.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: L.success.withValues(alpha: 0.2)),
+                                border: Border.all(
+                                    color: L.success.withValues(alpha: 0.2)),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.inventory_2_rounded, size: 8, color: L.success),
+                                  Icon(Icons.inventory_2_rounded,
+                                      size: 8, color: L.success),
                                   const SizedBox(width: 4),
-                                  Text('REFILL COORDINATOR', style: AppTypography.labelSmall.copyWith(fontSize: 10, color: L.success, fontWeight: FontWeight.w900)),
+                                  Text('REFILL COORDINATOR',
+                                      style: AppTypography.labelSmall.copyWith(
+                                          fontSize: 10,
+                                          color: L.success,
+                                          fontWeight: FontWeight.w900)),
                                 ],
                               ),
                             ),
@@ -146,9 +163,9 @@ class _CaregiverCardState extends State<CaregiverCard> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 14),
-            
+
             // Latest Activity Snippet (Cal AI Ticker)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -158,7 +175,8 @@ class _CaregiverCardState extends State<CaregiverCard> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.radar_rounded, size: 12, color: isActive ? L.success : L.warning),
+                  Icon(Icons.radar_rounded,
+                      size: 12, color: isActive ? L.success : L.warning),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -173,9 +191,9 @@ class _CaregiverCardState extends State<CaregiverCard> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Industrial Status Bar
             Container(
               height: 2,

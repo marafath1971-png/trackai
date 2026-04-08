@@ -129,7 +129,8 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
                     setState(() => _selectedDate =
                         _selectedDate.subtract(const Duration(days: 1)));
                   },
-                  icon: Icon(Icons.chevron_left_rounded, color: L.sub, size: 28),
+                  icon:
+                      Icon(Icons.chevron_left_rounded, color: L.sub, size: 28),
                 ),
                 Column(
                   children: [
@@ -144,8 +145,11 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
                           letterSpacing: 1.0),
                     ),
                     Text(_getWeekdayName(_selectedDate.weekday).toUpperCase(),
-                        style: AppTypography.labelSmall
-                            .copyWith(color: L.sub, fontSize: 9, letterSpacing: 0.5, fontWeight: FontWeight.w700)),
+                        style: AppTypography.labelSmall.copyWith(
+                            color: L.sub,
+                            fontSize: 9,
+                            letterSpacing: 0.5,
+                            fontWeight: FontWeight.w700)),
                   ],
                 ),
                 IconButton(
@@ -206,8 +210,8 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
                       ),
                       if (completion == 1.0)
                         Icon(Icons.star_rounded, color: L.success, size: 24)
-                          .animate(onPlay: (c) => c.repeat())
-                          .shimmer(duration: 2.seconds)
+                            .animate(onPlay: (c) => c.repeat())
+                            .shimmer(duration: 2.seconds)
                       else
                         Text(
                           '${(completion * 100).round()}%',
@@ -226,7 +230,9 @@ class _DailyLogSheetState extends State<DailyLogSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        completion == 1.0 ? 'Perfect Day! 🌟' : 'Daily Completion',
+                        completion == 1.0
+                            ? 'Perfect Day! 🌟'
+                            : 'Daily Completion',
                         style: AppTypography.labelSmall.copyWith(
                           color: completion == 1.0 ? L.success : L.sub,
                           fontSize: 10,
@@ -432,7 +438,9 @@ class _DoseLogRow extends StatelessWidget {
             ),
             child: Center(
               child: Icon(
-                taken ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                taken
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
                 size: 22,
                 color: accentColor,
               ),
@@ -458,11 +466,13 @@ class _DoseLogRow extends StatelessWidget {
                     ),
                     if (isPrnBadge)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
                           color: L.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(AppRadius.max),
-                          border: Border.all(color: L.primary.withValues(alpha: 0.2)),
+                          border: Border.all(
+                              color: L.primary.withValues(alpha: 0.2)),
                         ),
                         child: Text(
                           'PRN',
@@ -498,7 +508,8 @@ class _DoseLogRow extends StatelessWidget {
                   color: L.error.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.delete_outline_rounded, size: 16, color: L.error),
+                child: Icon(Icons.delete_outline_rounded,
+                    size: 16, color: L.error),
               ),
             ),
           if (isPrnBadge && onUndo != null) const SizedBox(width: 8),

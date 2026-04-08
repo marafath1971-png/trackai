@@ -43,7 +43,8 @@ class _ModernToggleState extends State<ModernToggle> {
             AnimatedAlign(
               duration: 300.ms,
               curve: Curves.easeOutBack,
-              alignment: widget.value ? Alignment.centerRight : Alignment.centerLeft,
+              alignment:
+                  widget.value ? Alignment.centerRight : Alignment.centerLeft,
               child: Padding(
                 padding: const EdgeInsets.all(3),
                 child: Container(
@@ -60,8 +61,10 @@ class _ModernToggleState extends State<ModernToggle> {
                       ),
                     ],
                   ),
-                ).animate(target: widget.value ? 1 : 0)
-                  .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), curve: Curves.easeOutBack),
+                ).animate(target: widget.value ? 1 : 0).scale(
+                    begin: const Offset(0.9, 0.9),
+                    end: const Offset(1, 1),
+                    curve: Curves.easeOutBack),
               ),
             ),
           ],
@@ -100,7 +103,8 @@ class GlassToggle extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
               color: value ? Colors.black : Colors.white.withValues(alpha: 0.1),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+              border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2), width: 1.5),
             ),
             child: Stack(
               children: [
@@ -114,11 +118,15 @@ class GlassToggle extends StatelessWidget {
                     height: 24,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: value ? Colors.white : Colors.black.withValues(alpha: 0.9),
+                      color: value
+                          ? Colors.white
+                          : Colors.black.withValues(alpha: 0.9),
                       boxShadow: AppShadows.soft,
                     ),
-                  ).animate(target: value ? 1 : 0)
-                   .shimmer(delay: 200.ms, duration: 800.ms, color: Colors.white.withValues(alpha: 0.1)),
+                  ).animate(target: value ? 1 : 0).shimmer(
+                      delay: 200.ms,
+                      duration: 800.ms,
+                      color: Colors.white.withValues(alpha: 0.1)),
                 ),
               ],
             ),

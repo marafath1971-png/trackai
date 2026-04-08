@@ -453,7 +453,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appVersionLabel => 'App Version';
 
   @override
-  String get appVersionValue => '1.0.0';
+  String get appVersionValue => '1.0.0+1';
 
   @override
   String get analysisFailed => 'فشل التحليل';

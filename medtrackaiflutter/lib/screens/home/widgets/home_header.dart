@@ -41,10 +41,12 @@ class HomeHeader extends StatelessWidget {
           curve: Curves.easeOutCubic,
           // Neumorphic: pure white header that fades in on scroll
           decoration: BoxDecoration(
-            color: L.card.withValues(alpha: (0.5 + (scrollOffset / 100).clamp(0, 0.5))),
+            color: L.card
+                .withValues(alpha: (0.5 + (scrollOffset / 100).clamp(0, 0.5))),
             border: Border(
               bottom: BorderSide(
-                color: L.text.withValues(alpha: (scrollOffset / 200).clamp(0, 0.04)),
+                color: L.text
+                    .withValues(alpha: (scrollOffset / 200).clamp(0, 0.04)),
                 width: 0.5,
               ),
             ),
@@ -73,7 +75,8 @@ class HomeHeader extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Center(
-                                child: Text('💊', style: TextStyle(fontSize: 18)),
+                                child:
+                                    Text('💊', style: TextStyle(fontSize: 18)),
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -94,6 +97,8 @@ class HomeHeader extends StatelessWidget {
                       ).animate().fadeIn(duration: 400.ms),
                       const Spacer(),
                       _StreakBtn(streak: streak, onTap: onOpenStreak),
+                      const SizedBox(width: 8),
+                      _IconBtn(icon: '🎙️', onTap: state.activateVoiceAssistant, L: L),
                       const SizedBox(width: 8),
                       _IconBtn(icon: '⚙️', onTap: onOpenSettings, L: L),
                     ],
@@ -135,7 +140,8 @@ class HomeWeekStrip extends StatelessWidget {
           final isT = k == todayStr();
           final isFuture = d.isAfter(DateTime.now());
           final ds = state.history[k] ?? [];
-          final rate = ds.isEmpty ? 0.0 : ds.where((x) => x.taken).length / ds.length;
+          final rate =
+              ds.isEmpty ? 0.0 : ds.where((x) => x.taken).length / ds.length;
 
           Color bgColor;
           Color textColor;
@@ -177,14 +183,21 @@ class HomeWeekStrip extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: bgColor,
                   shape: BoxShape.circle,
-                  border: isT ? null : Border.all(
-                    color: isFuture
-                        ? L.border.withValues(alpha: 0.06)
-                        : L.border.withValues(alpha: 0.08),
-                    width: 0.5,
-                  ),
+                  border: isT
+                      ? null
+                      : Border.all(
+                          color: isFuture
+                              ? L.border.withValues(alpha: 0.06)
+                              : L.border.withValues(alpha: 0.08),
+                          width: 0.5,
+                        ),
                   boxShadow: isT
-                      ? [BoxShadow(color: L.text.withValues(alpha: 0.12), blurRadius: 10, offset: const Offset(0, 4))]
+                      ? [
+                          BoxShadow(
+                              color: L.text.withValues(alpha: 0.12),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4))
+                        ]
                       : null,
                 ),
                 child: Center(
@@ -199,7 +212,10 @@ class HomeWeekStrip extends StatelessWidget {
                 ),
               ),
             ],
-          ).animate(delay: Duration(milliseconds: i * 40)).fadeIn().slideY(begin: 0.15, end: 0);
+          )
+              .animate(delay: Duration(milliseconds: i * 40))
+              .fadeIn()
+              .slideY(begin: 0.15, end: 0);
         }),
       ),
     );
@@ -221,10 +237,14 @@ class _StreakBtn extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(10, 6, 14, 6),
         decoration: BoxDecoration(
-          color: hasStreak ? const Color(0xFFFFF7ED) : L.fill.withValues(alpha: 0.6),
+          color: hasStreak
+              ? const Color(0xFFFFF7ED)
+              : L.fill.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(40),
           border: Border.all(
-            color: hasStreak ? const Color(0xFFFED7AA) : L.border.withValues(alpha: 0.1),
+            color: hasStreak
+                ? const Color(0xFFFED7AA)
+                : L.border.withValues(alpha: 0.1),
             width: 0.5,
           ),
         ),
@@ -234,19 +254,20 @@ class _StreakBtn extends StatelessWidget {
             Text(
               hasStreak ? '🔥' : '🧊',
               style: const TextStyle(fontSize: 15),
-            ).animate(onPlay: (c) => c.repeat(reverse: true))
-             .scale(
-               begin: const Offset(1.0, 1.0),
-               end: const Offset(1.22, 1.22),
-               duration: 1500.ms,
-               curve: Curves.easeInOut,
-             ),
+            ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                  begin: const Offset(1.0, 1.0),
+                  end: const Offset(1.22, 1.22),
+                  duration: 1500.ms,
+                  curve: Curves.easeInOut,
+                ),
             const SizedBox(width: 5),
             Text(
               hasStreak ? '$streak' : '0',
               style: AppTypography.labelLarge.copyWith(
                 fontWeight: FontWeight.w800,
-                color: hasStreak ? const Color(0xFFC2410C) : L.sub.withValues(alpha: 0.5),
+                color: hasStreak
+                    ? const Color(0xFFC2410C)
+                    : L.sub.withValues(alpha: 0.5),
                 fontSize: 14,
                 letterSpacing: -0.3,
                 height: 1,
@@ -294,12 +315,17 @@ class _AnimatedGreeting extends StatelessWidget {
   Widget build(BuildContext context) {
     final L = context.L;
     final hour = DateTime.now().hour;
-    final greeting = hour < 12 ? '🌅 Good morning'
-        : hour < 17 ? '☀️ Good afternoon'
-        : hour < 21 ? '🌆 Good evening'
-        : '🌙 Good night';
-    final firstName = (state.profile?.name ?? '').split(' ').first;
-    final label = firstName.isNotEmpty ? '$greeting, $firstName!' : '$greeting!';
+    final greeting = hour < 12
+        ? '🌅 Good morning'
+        : hour < 17
+            ? '☀️ Good afternoon'
+            : hour < 21
+                ? '🌆 Good evening'
+                : '🌙 Good night';
+    final activeName = state.activeProfile?.name ?? state.profile?.name ?? '';
+    final firstName = activeName.split(' ').first;
+    final label =
+        firstName.isNotEmpty ? '$greeting, $firstName!' : '$greeting!';
 
     return Text(
       label,

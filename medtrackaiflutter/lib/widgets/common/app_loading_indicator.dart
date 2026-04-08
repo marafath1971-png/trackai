@@ -45,7 +45,7 @@ class AppLoadingIndicator extends StatelessWidget {
                   duration: 1500.ms,
                   curve: Curves.easeInOut,
                 ),
-            
+
             // ── Outer Spinning Arc
             SizedBox(
               width: size * 1.2,
@@ -65,7 +65,8 @@ class AppLoadingIndicator extends StatelessWidget {
               height: size,
               fit: BoxFit.contain,
             )
-                .animate(onPlay: (controller) => controller.repeat(reverse: true))
+                .animate(
+                    onPlay: (controller) => controller.repeat(reverse: true))
                 .scale(
                   begin: const Offset(0.95, 0.95),
                   end: const Offset(1.05, 1.05),
@@ -73,7 +74,7 @@ class AppLoadingIndicator extends StatelessWidget {
                   curve: Curves.easeInOutSine,
                 )
                 .shimmer(
-                    duration: 3000.ms, 
+                    duration: 3000.ms,
                     color: Colors.white.withValues(alpha: 0.2)),
           ],
         ),

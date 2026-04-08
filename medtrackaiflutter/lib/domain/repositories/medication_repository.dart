@@ -4,19 +4,19 @@ import '../entities/entities.dart';
 import '../../core/utils/result.dart';
 
 abstract class IMedicationRepository {
-  Future<List<Medicine>> getMedicines();
-  Future<void> addMedicine(Medicine med);
-  Future<void> updateMedicine(Medicine med);
-  Future<void> deleteMedicine(int id);
+  Future<List<Medicine>> getMedicines({String? profileId});
+  Future<void> addMedicine(Medicine med, {String? profileId});
+  Future<void> updateMedicine(Medicine med, {String? profileId});
+  Future<void> deleteMedicine(int id, {String? profileId});
 
   Future<String?> uploadMedicineImage(File imageFile);
 
-  Future<Map<String, List<DoseEntry>>> getHistory();
+  Future<Map<String, List<DoseEntry>>> getHistory({String? profileId});
   Future<void> saveHistory(Map<String, List<DoseEntry>> history,
-      {String? onlyDateKey});
+      {String? onlyDateKey, String? profileId});
 
-  Future<Map<String, bool>> getTakenToday();
-  Future<void> saveTakenToday(Map<String, bool> takenToday);
+  Future<Map<String, bool>> getTakenToday({String? profileId});
+  Future<void> saveTakenToday(Map<String, bool> takenToday, {String? profileId});
 
   Future<List<Map<String, dynamic>>> getPendingActions();
   Future<void> savePendingActions(List<Map<String, dynamic>> actions);

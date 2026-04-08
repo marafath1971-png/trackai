@@ -105,8 +105,8 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                                         color: L.green.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(4),
                                         border: Border.all(
-                                            color: L.green
-                                                .withValues(alpha: 0.3),
+                                            color:
+                                                L.green.withValues(alpha: 0.3),
                                             width: 0.5),
                                       ),
                                       child: Text(
@@ -119,9 +119,18 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                                           letterSpacing: 0.3,
                                         ),
                                       ),
-                                    ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-                                     .shimmer(duration: 2.seconds, color: L.green.withValues(alpha: 0.2))
-                                     .scale(begin: const Offset(1, 1), end: const Offset(1.05, 1.05), duration: 1.seconds),
+                                    )
+                                        .animate(
+                                            onPlay: (controller) => controller
+                                                .repeat(reverse: true))
+                                        .shimmer(
+                                            duration: 2.seconds,
+                                            color:
+                                                L.green.withValues(alpha: 0.2))
+                                        .scale(
+                                            begin: const Offset(1, 1),
+                                            end: const Offset(1.05, 1.05),
+                                            duration: 1.seconds),
                                   ],
                                   if (!isPremium) ...[
                                     const SizedBox(width: 8),
@@ -260,10 +269,12 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
                                                     const EdgeInsets.symmetric(
                                                         horizontal: 10,
                                                         vertical: 6),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.black.withValues(alpha: 0.02),
-                                                    borderRadius: BorderRadius.circular(16),
-                                                  ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.02),
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                ),
                                                 child: Row(
                                                   mainAxisSize:
                                                       MainAxisSize.min,
@@ -409,9 +420,10 @@ class _HomeInsightCardState extends State<HomeInsightCard> {
           ],
         ),
       ),
-    ).animate(target: state.hasNewDataForAI ? 1 : 0)
-     .shimmer(duration: 3.seconds, color: L.text.withValues(alpha: 0.05))
-     .fade()
-     .slideY(begin: 0.05, end: 0);
+    )
+        .animate(target: state.hasNewDataForAI ? 1 : 0)
+        .shimmer(duration: 3.seconds, color: L.text.withValues(alpha: 0.05))
+        .fade()
+        .slideY(begin: 0.05, end: 0);
   }
 }

@@ -6,14 +6,16 @@ class DynamicIconService {
   /// iconName can be: null (default), 'blue', 'dark', 'gold'
   static Future<void> setIcon(String? iconName) async {
     try {
-      final bool isSupported = await FlutterDynamicIconPlus.supportsAlternateIcons;
+      final bool isSupported =
+          await FlutterDynamicIconPlus.supportsAlternateIcons;
       if (!isSupported) {
         appLogger.w('🏷️ Dynamic Icons not supported on this device');
         return;
       }
 
       // Check current icon
-      final String? currentIcon = await FlutterDynamicIconPlus.alternateIconName;
+      final String? currentIcon =
+          await FlutterDynamicIconPlus.alternateIconName;
       if (currentIcon == iconName) return;
 
       // Set new icon

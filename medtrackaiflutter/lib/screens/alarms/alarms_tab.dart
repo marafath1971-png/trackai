@@ -54,7 +54,8 @@ class _AlarmsTabState extends State<AlarmsTab> {
     });
   }
 
-  void _showMedPicker(BuildContext context, List<Medicine> meds, AppThemeColors L) {
+  void _showMedPicker(
+      BuildContext context, List<Medicine> meds, AppThemeColors L) {
     HapticEngine.selection();
     showModalBottomSheet(
       context: context,
@@ -73,15 +74,17 @@ class _AlarmsTabState extends State<AlarmsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final allSchedules = context.select<AppState, List<ScheduledMed>>(
-        (s) => s.getAllSchedules());
+    final allSchedules = context
+        .select<AppState, List<ScheduledMed>>((s) => s.getAllSchedules());
     final meds = context.select<AppState, List<Medicine>>((s) => s.meds);
     final L = context.L;
     final activeCount = allSchedules.where((x) => x.sched.enabled).length;
 
     final activeSchedules = allSchedules.where((x) => x.sched.enabled).toList()
-      ..sort((a, b) => (a.sched.h * 60 + a.sched.m).compareTo(b.sched.h * 60 + b.sched.m));
-    final inactiveSchedules = allSchedules.where((x) => !x.sched.enabled).toList();
+      ..sort((a, b) =>
+          (a.sched.h * 60 + a.sched.m).compareTo(b.sched.h * 60 + b.sched.m));
+    final inactiveSchedules =
+        allSchedules.where((x) => !x.sched.enabled).toList();
 
     final now = DateTime.now();
     final nowM = now.hour * 60 + now.minute;
@@ -105,10 +108,12 @@ class _AlarmsTabState extends State<AlarmsTab> {
             backgroundColor: L.meshBg,
             child: CustomScrollView(
               controller: _scrollController,
-              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+              physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics()),
               slivers: [
                 SliverToBoxAdapter(
-                  child: SizedBox(height: 110 + MediaQuery.of(context).padding.top),
+                  child: SizedBox(
+                      height: 110 + MediaQuery.of(context).padding.top),
                 ),
 
                 // ── NEXT DOSE HERO ──
@@ -119,7 +124,8 @@ class _AlarmsTabState extends State<AlarmsTab> {
                       child: _NextDoseHero(sch: nextDose, L: L)
                           .animate()
                           .fadeIn(duration: 700.ms)
-                          .slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic),
+                          .slideY(
+                              begin: 0.08, end: 0, curve: Curves.easeOutCubic),
                     ),
                   ),
 
@@ -140,7 +146,10 @@ class _AlarmsTabState extends State<AlarmsTab> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Expanded(child: Container(height: 0.5, color: L.border.withValues(alpha: 0.1))),
+                          Expanded(
+                              child: Container(
+                                  height: 0.5,
+                                  color: L.border.withValues(alpha: 0.1))),
                           const SizedBox(width: 12),
                           _CountPill(count: activeCount, L: L),
                         ],
@@ -165,31 +174,42 @@ class _AlarmsTabState extends State<AlarmsTab> {
                               sch: sch,
                               L: L,
                               isNext: isNext,
-                              onToggle: () => context.read<AppState>().toggleSchedule(sch.med.id, sch.idx),
+                              onToggle: () => context
+                                  .read<AppState>()
+                                  .toggleSchedule(sch.med.id, sch.idx),
                               onRemove: () {
                                 HapticEngine.heavyImpact();
                                 final state = context.read<AppState>();
                                 final removedSch = sch;
-                                
+
                                 state.removeSchedule(sch.med.id, sch.idx);
 
                                 ScaffoldMessenger.of(context).clearSnackBars();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Alarm for ${sch.med.name} removed'),
+                                    content: Text(
+                                        'Alarm for ${sch.med.name} removed'),
                                     duration: const Duration(seconds: 3),
                                     action: SnackBarAction(
                                       label: 'UNDO',
                                       textColor: L.primary,
                                       onPressed: () {
-                                        state.addSchedule(removedSch.med.id, removedSch.sched);
+                                        state.addSchedule(removedSch.med.id,
+                                            removedSch.sched);
                                       },
                                     ),
                                   ),
                                 );
                               },
-                              onEdit: () => _showAddAlarmSheet(context, sch.med, idx: sch.idx),
-                            ).animate(delay: (idx * 60).ms).fadeIn(duration: 500.ms).slideX(begin: 0.04, end: 0, curve: Curves.easeOutCubic),
+                              onEdit: () => _showAddAlarmSheet(context, sch.med,
+                                  idx: sch.idx),
+                            )
+                                .animate(delay: (idx * 60).ms)
+                                .fadeIn(duration: 500.ms)
+                                .slideX(
+                                    begin: 0.04,
+                                    end: 0,
+                                    curve: Curves.easeOutCubic),
                           );
                         },
                         childCount: activeSchedules.length,
@@ -205,7 +225,9 @@ class _AlarmsTabState extends State<AlarmsTab> {
                       child: _EmptyAlarmsState(
                         L: L,
                         hasMeds: meds.isNotEmpty,
-                        onSetFirst: meds.isNotEmpty ? () => _showMedPicker(context, meds, L) : null,
+                        onSetFirst: meds.isNotEmpty
+                            ? () => _showMedPicker(context, meds, L)
+                            : null,
                       ).animate().fadeIn(duration: 600.ms),
                     ),
                   ),
@@ -227,7 +249,10 @@ class _AlarmsTabState extends State<AlarmsTab> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Expanded(child: Container(height: 0.5, color: L.border.withValues(alpha: 0.1))),
+                          Expanded(
+                              child: Container(
+                                  height: 0.5,
+                                  color: L.border.withValues(alpha: 0.1))),
                         ],
                       ),
                     ),
@@ -244,30 +269,35 @@ class _AlarmsTabState extends State<AlarmsTab> {
                               sch: sch,
                               L: L,
                               isNext: false,
-                              onToggle: () => context.read<AppState>().toggleSchedule(sch.med.id, sch.idx),
+                              onToggle: () => context
+                                  .read<AppState>()
+                                  .toggleSchedule(sch.med.id, sch.idx),
                               onRemove: () {
                                 HapticEngine.heavyImpact();
                                 final state = context.read<AppState>();
                                 final removedSch = sch;
-                                
+
                                 state.removeSchedule(sch.med.id, sch.idx);
 
                                 ScaffoldMessenger.of(context).clearSnackBars();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Alarm for ${sch.med.name} removed'),
+                                    content: Text(
+                                        'Alarm for ${sch.med.name} removed'),
                                     duration: const Duration(seconds: 3),
                                     action: SnackBarAction(
                                       label: 'UNDO',
                                       textColor: L.primary,
                                       onPressed: () {
-                                        state.addSchedule(removedSch.med.id, removedSch.sched);
+                                        state.addSchedule(removedSch.med.id,
+                                            removedSch.sched);
                                       },
                                     ),
                                   ),
                                 );
                               },
-                              onEdit: () => _showAddAlarmSheet(context, sch.med, idx: sch.idx),
+                              onEdit: () => _showAddAlarmSheet(context, sch.med,
+                                  idx: sch.idx),
                             ).animate(delay: (idx * 50).ms).fadeIn(),
                           );
                         },
@@ -278,11 +308,16 @@ class _AlarmsTabState extends State<AlarmsTab> {
                 ],
 
                 // ── QUICK ADD FROM MEDS (only when no active alarms) ──
-                if (meds.isNotEmpty && activeSchedules.isEmpty && inactiveSchedules.isEmpty)
+                if (meds.isNotEmpty &&
+                    activeSchedules.isEmpty &&
+                    inactiveSchedules.isEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 32, 20, 0),
-                      child: _QuickAddSection(meds: meds, L: L, onAdd: (med) => _showAddAlarmSheet(context, med)),
+                      child: _QuickAddSection(
+                          meds: meds,
+                          L: L,
+                          onAdd: (med) => _showAddAlarmSheet(context, med)),
                     ),
                   ),
 
@@ -321,7 +356,9 @@ class _AlarmsTabState extends State<AlarmsTab> {
                   _showMedPicker(context, meds, L);
                 } else {
                   HapticEngine.selection();
-                  context.read<AppState>().showToast('Add a medicine from the Home tab first');
+                  context
+                      .read<AppState>()
+                      .showToast('Add a medicine from the Home tab first');
                 }
               },
             ),
@@ -340,7 +377,11 @@ class _AlarmsHeader extends StatelessWidget {
   final int activeCount;
   final AppThemeColors L;
   final VoidCallback? onAdd;
-  const _AlarmsHeader({required this.isScrolled, required this.activeCount, required this.L, this.onAdd});
+  const _AlarmsHeader(
+      {required this.isScrolled,
+      required this.activeCount,
+      required this.L,
+      this.onAdd});
 
   @override
   Widget build(BuildContext context) {
@@ -352,10 +393,14 @@ class _AlarmsHeader extends StatelessWidget {
           duration: 300.ms,
           padding: EdgeInsets.fromLTRB(28, topPad + 18, 20, 18),
           decoration: BoxDecoration(
-            color: isScrolled ? L.meshBg.withValues(alpha: 0.85) : Colors.transparent,
+            color: isScrolled
+                ? L.meshBg.withValues(alpha: 0.85)
+                : Colors.transparent,
             border: Border(
               bottom: BorderSide(
-                color: isScrolled ? L.border.withValues(alpha: 0.1) : Colors.transparent,
+                color: isScrolled
+                    ? L.border.withValues(alpha: 0.1)
+                    : Colors.transparent,
                 width: 0.5,
               ),
             ),
@@ -400,10 +445,14 @@ class _AlarmsHeader extends StatelessWidget {
                       color: L.text,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
-                        BoxShadow(color: L.text.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 6))
+                        BoxShadow(
+                            color: L.text.withValues(alpha: 0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 6))
                       ],
                     ),
-                    child: const Center(child: Text('➕', style: TextStyle(fontSize: 22))),
+                    child: const Center(
+                        child: Text('➕', style: TextStyle(fontSize: 22))),
                   ),
                 ),
             ],
@@ -508,7 +557,8 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: L.fill.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(100),
@@ -519,9 +569,12 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                       Container(
                         width: 6,
                         height: 6,
-                        decoration: BoxDecoration(color: L.text, shape: BoxShape.circle),
-                      ).animate(onPlay: (c) => c.repeat(reverse: true))
-                          .scale(duration: 1500.ms, begin: const Offset(0.8, 0.8), end: const Offset(1.4, 1.4)),
+                        decoration: BoxDecoration(
+                            color: L.text, shape: BoxShape.circle),
+                      ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                          duration: 1500.ms,
+                          begin: const Offset(0.8, 0.8),
+                          end: const Offset(1.4, 1.4)),
                       const SizedBox(width: 8),
                       Text(
                         'UPCOMING DOSE',
@@ -545,9 +598,7 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                 ),
               ],
             ),
-
             const SizedBox(height: 28),
-
             if (_recorded)
               Container(
                 height: 140,
@@ -642,14 +693,14 @@ class _NextDoseHeroState extends State<_NextDoseHero> {
                   ),
                 ],
               ),
-
             const SizedBox(height: 32),
-
             if (!_recorded)
               _SwipeToConfirm(
                 onConfirmed: () {
                   HapticEngine.success();
-                  context.read<AppState>().takeDose(widget.sch.med.id, widget.sch.idx);
+                  context
+                      .read<AppState>()
+                      .takeDose(widget.sch.med.id, widget.sch.idx);
                   setState(() => _recorded = true);
                   Future.delayed(3.seconds, () {
                     if (mounted) setState(() => _recorded = false);
@@ -689,8 +740,9 @@ class _AlarmCard extends StatelessWidget {
     final med = sch.med;
     final s = sch.sched;
     final isEnabled = s.enabled;
-    final taken = context.select<AppState, bool>((st) => st.takenToday['${med.id}-${s.label}'] ?? false);
-    
+    final taken = context.select<AppState, bool>(
+        (st) => st.takenToday['${med.id}-${s.label}'] ?? false);
+
     final now = DateTime.now();
     final nowM = now.hour * 60 + now.minute;
     final schM = s.h * 60 + s.m;
@@ -722,7 +774,8 @@ class _AlarmCard extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: isEnabled ? L.text : L.fill,
                   borderRadius: BorderRadius.circular(16),
@@ -746,7 +799,9 @@ class _AlarmCard extends StatelessWidget {
                       style: AppTypography.labelSmall.copyWith(
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
-                        color: isEnabled ? L.bg.withValues(alpha: 0.6) : L.sub.withValues(alpha: 0.3),
+                        color: isEnabled
+                            ? L.bg.withValues(alpha: 0.6)
+                            : L.sub.withValues(alpha: 0.3),
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -766,7 +821,9 @@ class _AlarmCard extends StatelessWidget {
                             style: AppTypography.titleMedium.copyWith(
                               fontSize: 17,
                               fontWeight: FontWeight.w900,
-                              color: isEnabled ? L.text : L.sub.withValues(alpha: 0.5),
+                              color: isEnabled
+                                  ? L.text
+                                  : L.sub.withValues(alpha: 0.5),
                               letterSpacing: -0.5,
                             ),
                             maxLines: 1,
@@ -774,11 +831,18 @@ class _AlarmCard extends StatelessWidget {
                           ),
                         ),
                         if (taken)
-                          _StatusChip(label: '\u2705 Taken', color: L.success, L: L)
+                          _StatusChip(
+                              label: '\u2705 Taken', color: L.success, L: L)
                         else if (isOverdue)
-                          _StatusChip(label: '\u26a0\ufe0f Missed', color: L.error, L: L)
+                          _StatusChip(
+                              label: '\u26a0\ufe0f Missed',
+                              color: L.error,
+                              L: L)
                         else if (isEnabled)
-                          _StatusChip(label: '\u23f0 Soon', color: L.text.withValues(alpha: 0.6), L: L),
+                          _StatusChip(
+                              label: '\u23f0 Soon',
+                              color: L.text.withValues(alpha: 0.6),
+                              L: L),
                       ],
                     ),
                     const SizedBox(height: 2),
@@ -851,7 +915,8 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
               Center(
                 child: AnimatedOpacity(
                   duration: 150.ms,
-                  opacity: _confirmed ? 0 : (1.0 - progress * 1.6).clamp(0, 1.0),
+                  opacity:
+                      _confirmed ? 0 : (1.0 - progress * 1.6).clamp(0, 1.0),
                   child: Text(
                     'Slide to record dose →',
                     style: AppTypography.labelMedium.copyWith(
@@ -872,7 +937,8 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
                       fontSize: 13,
                       letterSpacing: 0.5,
                     ),
-                  ).animate().fadeIn(duration: 300.ms).scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1)),
+                  ).animate().fadeIn(duration: 300.ms).scale(
+                      begin: const Offset(0.95, 0.95), end: const Offset(1, 1)),
                 ),
               if (!_confirmed)
                 Positioned(
@@ -909,8 +975,13 @@ class _SwipeToConfirmState extends State<_SwipeToConfirm> {
                           ),
                         ],
                       ),
-                      child: Center(
-                        child: const Center(child: Text('→', style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.w900))),
+                      child: const Center(
+                        child: Center(
+                            child: Text('→',
+                                style: TextStyle(
+                                    fontSize: 24,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900))),
                       ),
                     ),
                   ),
@@ -930,7 +1001,8 @@ class _EmptyAlarmsState extends StatelessWidget {
   final AppThemeColors L;
   final bool hasMeds;
   final VoidCallback? onSetFirst;
-  const _EmptyAlarmsState({required this.L, required this.hasMeds, this.onSetFirst});
+  const _EmptyAlarmsState(
+      {required this.L, required this.hasMeds, this.onSetFirst});
 
   @override
   Widget build(BuildContext context) {
@@ -957,7 +1029,8 @@ class _EmptyAlarmsState extends StatelessWidget {
                 style: TextStyle(fontSize: 40),
               ),
             ),
-          ).animate().slideY(begin: 0.2, end: 0, curve: Curves.easeOutBack, duration: 600.ms),
+          ).animate().slideY(
+              begin: 0.2, end: 0, curve: Curves.easeOutBack, duration: 600.ms),
           const SizedBox(height: 24),
           Text(
             'No reminders yet',
@@ -985,7 +1058,8 @@ class _EmptyAlarmsState extends StatelessWidget {
             BouncingButton(
               onTap: onSetFirst!,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                 decoration: BoxDecoration(
                   color: L.text,
                   borderRadius: BorderRadius.circular(100),
@@ -1013,7 +1087,8 @@ class _QuickAddSection extends StatelessWidget {
   final List<Medicine> meds;
   final AppThemeColors L;
   final void Function(Medicine) onAdd;
-  const _QuickAddSection({required this.meds, required this.L, required this.onAdd});
+  const _QuickAddSection(
+      {required this.meds, required this.L, required this.onAdd});
 
   @override
   Widget build(BuildContext context) {
@@ -1021,17 +1096,26 @@ class _QuickAddSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(children: [
-          Text('YOUR MEDICINES', style: AppTypography.labelSmall.copyWith(
-            color: L.sub.withValues(alpha: 0.5), fontWeight: FontWeight.w900, letterSpacing: 2.0, fontSize: 10)),
+          Text('YOUR MEDICINES',
+              style: AppTypography.labelSmall.copyWith(
+                  color: L.sub.withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2.0,
+                  fontSize: 10)),
           const SizedBox(width: 12),
-          Expanded(child: Container(height: 0.5, color: L.border.withValues(alpha: 0.1))),
+          Expanded(
+              child: Container(
+                  height: 0.5, color: L.border.withValues(alpha: 0.1))),
         ]),
         const SizedBox(height: 16),
         ...meds.asMap().entries.map((e) => Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: _MedAlarmTile(med: e.value, L: L, onAdd: () => onAdd(e.value))
-              .animate(delay: (e.key * 60).ms).fadeIn(duration: 400.ms).slideX(begin: 0.05, end: 0),
-        )),
+              padding: const EdgeInsets.only(bottom: 10),
+              child:
+                  _MedAlarmTile(med: e.value, L: L, onAdd: () => onAdd(e.value))
+                      .animate(delay: (e.key * 60).ms)
+                      .fadeIn(duration: 400.ms)
+                      .slideX(begin: 0.05, end: 0),
+            )),
       ],
     );
   }
@@ -1041,7 +1125,8 @@ class _MedAlarmTile extends StatelessWidget {
   final Medicine med;
   final AppThemeColors L;
   final VoidCallback onAdd;
-  const _MedAlarmTile({required this.med, required this.L, required this.onAdd});
+  const _MedAlarmTile(
+      {required this.med, required this.L, required this.onAdd});
 
   @override
   Widget build(BuildContext context) {
@@ -1065,8 +1150,10 @@ class _MedAlarmTile extends StatelessWidget {
           ),
         ),
         title: Text(med.name,
-            style: AppTypography.titleMedium
-                .copyWith(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+            style: AppTypography.titleMedium.copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5)),
         subtitle: Text('Needs schedule'.toUpperCase(),
             style: AppTypography.labelSmall.copyWith(
                 color: L.sub.withValues(alpha: 0.4),
@@ -1084,7 +1171,8 @@ class _StatusChip extends StatelessWidget {
   final String label;
   final Color color;
   final AppThemeColors L;
-  const _StatusChip({required this.label, required this.color, required this.L});
+  const _StatusChip(
+      {required this.label, required this.color, required this.L});
 
   @override
   Widget build(BuildContext context) {
@@ -1114,7 +1202,8 @@ class _MedPickerSheet extends StatelessWidget {
   final List<Medicine> meds;
   final AppThemeColors L;
   final void Function(Medicine) onPick;
-  const _MedPickerSheet({required this.meds, required this.L, required this.onPick});
+  const _MedPickerSheet(
+      {required this.meds, required this.L, required this.onPick});
 
   @override
   Widget build(BuildContext context) {
@@ -1150,7 +1239,8 @@ class _MedPickerSheet extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.55),
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.55),
             child: ListView.separated(
               shrinkWrap: true,
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
@@ -1175,19 +1265,26 @@ class _MedPickerSheet extends StatelessWidget {
                           color: L.text.withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(11),
                         ),
-                        child: const Center(child: Text('💊', style: TextStyle(fontSize: 14))),
+                        child: const Center(
+                            child: Text('💊', style: TextStyle(fontSize: 14))),
                       ),
                       const SizedBox(width: 14),
-                      Expanded(child: Column(
+                      Expanded(
+                          child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(med.name, style: AppTypography.labelLarge.copyWith(
-                            color: L.text, fontWeight: FontWeight.w900)),
-                          Text(med.dose.toUpperCase(), style: AppTypography.labelSmall.copyWith(
-                            color: L.sub.withValues(alpha: 0.5), fontSize: 11, letterSpacing: 0.5)),
+                          Text(med.name,
+                              style: AppTypography.labelLarge.copyWith(
+                                  color: L.text, fontWeight: FontWeight.w900)),
+                          Text(med.dose.toUpperCase(),
+                              style: AppTypography.labelSmall.copyWith(
+                                  color: L.sub.withValues(alpha: 0.5),
+                                  fontSize: 11,
+                                  letterSpacing: 0.5)),
                         ],
                       )),
-                      Icon(Icons.chevron_right_rounded, color: L.sub.withValues(alpha: 0.3), size: 20),
+                      Icon(Icons.chevron_right_rounded,
+                          color: L.sub.withValues(alpha: 0.3), size: 20),
                     ]),
                   ),
                 );
@@ -1207,7 +1304,11 @@ class _AddAlarmSheet extends StatefulWidget {
   final Medicine med;
   final int? scheduleIndex;
   final VoidCallback onClose;
-  const _AddAlarmSheet({super.key, required this.med, this.scheduleIndex, required this.onClose});
+  const _AddAlarmSheet(
+      {super.key,
+      required this.med,
+      this.scheduleIndex,
+      required this.onClose});
 
   @override
   State<_AddAlarmSheet> createState() => _AddAlarmSheetState();
@@ -1220,7 +1321,8 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.scheduleIndex != null && widget.scheduleIndex! < widget.med.schedule.length) {
+    if (widget.scheduleIndex != null &&
+        widget.scheduleIndex! < widget.med.schedule.length) {
       final s = widget.med.schedule[widget.scheduleIndex!];
       _time = TimeOfDay(hour: s.h, minute: s.m);
       _label = s.label;
@@ -1230,7 +1332,13 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
     }
   }
 
-  static const List<String> _quickLabels = ['Morning', 'Afternoon', 'Evening', 'Night', 'Daily Dose'];
+  static const List<String> _quickLabels = [
+    'Morning',
+    'Afternoon',
+    'Evening',
+    'Night',
+    'Daily Dose'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -1256,16 +1364,21 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                   color: L.text.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Center(child: Text('💊', style: TextStyle(fontSize: 12))),
+                child: const Center(
+                    child: Text('💊', style: TextStyle(fontSize: 12))),
               ),
               const SizedBox(width: 12),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(widget.med.name,
-                    style: AppTypography.labelLarge.copyWith(color: L.text, fontWeight: FontWeight.w900)),
-                Text(widget.med.dose.toUpperCase(),
-                    style: AppTypography.labelSmall.copyWith(
-                        color: L.sub.withValues(alpha: 0.5), fontSize: 11)),
-              ])),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text(widget.med.name,
+                        style: AppTypography.labelLarge.copyWith(
+                            color: L.text, fontWeight: FontWeight.w900)),
+                    Text(widget.med.dose.toUpperCase(),
+                        style: AppTypography.labelSmall.copyWith(
+                            color: L.sub.withValues(alpha: 0.5), fontSize: 11)),
+                  ])),
             ]),
           ),
 
@@ -1280,8 +1393,12 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
           const SizedBox(height: 24),
 
           // ── Quick label chips ──
-          Text('LABEL', style: AppTypography.labelSmall.copyWith(
-            color: L.sub.withValues(alpha: 0.5), fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 10)),
+          Text('LABEL',
+              style: AppTypography.labelSmall.copyWith(
+                  color: L.sub.withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                  fontSize: 10)),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -1295,12 +1412,14 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                 },
                 child: AnimatedContainer(
                   duration: 200.ms,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
                     color: selected ? L.text : L.fill.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(100),
                     border: Border.all(
-                      color: selected ? L.text : L.border.withValues(alpha: 0.1),
+                      color:
+                          selected ? L.text : L.border.withValues(alpha: 0.1),
                     ),
                   ),
                   child: Text(
@@ -1324,29 +1443,30 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
               HapticEngine.success();
               if (widget.scheduleIndex != null) {
                 context.read<AppState>().updateSchedule(
-                  widget.med.id,
-                  widget.scheduleIndex!,
-                  ScheduleEntry(
-                    id: widget.med.schedule[widget.scheduleIndex!].id,
-                    h: _time.hour,
-                    m: _time.minute,
-                    label: _label,
-                    days: widget.med.schedule[widget.scheduleIndex!].days,
-                    enabled: widget.med.schedule[widget.scheduleIndex!].enabled,
-                  ),
-                );
+                      widget.med.id,
+                      widget.scheduleIndex!,
+                      ScheduleEntry(
+                        id: widget.med.schedule[widget.scheduleIndex!].id,
+                        h: _time.hour,
+                        m: _time.minute,
+                        label: _label,
+                        days: widget.med.schedule[widget.scheduleIndex!].days,
+                        enabled:
+                            widget.med.schedule[widget.scheduleIndex!].enabled,
+                      ),
+                    );
               } else {
                 context.read<AppState>().addSchedule(
-                  widget.med.id,
-                  ScheduleEntry(
-                    id: 'alarm_${DateTime.now().millisecondsSinceEpoch}',
-                    h: _time.hour,
-                    m: _time.minute,
-                    label: _label,
-                    days: const [1, 2, 3, 4, 5, 6, 0],
-                    enabled: true,
-                  ),
-                );
+                      widget.med.id,
+                      ScheduleEntry(
+                        id: 'alarm_${DateTime.now().millisecondsSinceEpoch}',
+                        h: _time.hour,
+                        m: _time.minute,
+                        label: _label,
+                        days: const [1, 2, 3, 4, 5, 6, 0],
+                        enabled: true,
+                      ),
+                    );
               }
               widget.onClose();
             },
@@ -1359,7 +1479,9 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
               ),
               child: Center(
                 child: Text(
-                  widget.scheduleIndex != null ? 'SAVE CHANGES' : 'ADD REMINDER',
+                  widget.scheduleIndex != null
+                      ? 'SAVE CHANGES'
+                      : 'ADD REMINDER',
                   style: AppTypography.titleMedium.copyWith(
                     color: L.bg,
                     fontWeight: FontWeight.w900,

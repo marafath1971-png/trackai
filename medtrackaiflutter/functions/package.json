@@ -1,6 +1,6 @@
 {
   "name": "functions",
-  "description": "Med AI Cloud Functions",
+  "description": "MedAI Cloud Functions",
   "scripts": {
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",

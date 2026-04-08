@@ -6,7 +6,7 @@ import '../../core/utils/logger.dart';
 
 class AuthController extends ChangeNotifier {
   final IUserRepository userRepo;
-  
+
   AppPhase _phase = AppPhase.loading;
   UserProfile? _profile;
   bool _isLocked = false;
@@ -35,7 +35,7 @@ class AuthController extends ChangeNotifier {
 
   String get language => _language;
   bool get darkMode => _profile?.amoledMode ?? false;
-  
+
   bool get isPurchasing => _isPurchasing;
   set isPurchasing(bool v) {
     _isPurchasing = v;
@@ -70,7 +70,6 @@ class AuthController extends ChangeNotifier {
     );
     await saveProfile(updated);
   }
-
 
   Future<void> saveProfile(UserProfile p) async {
     _profile = p;
@@ -116,7 +115,11 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateProfile({String? name, String? accentColor, bool? amoledMode, bool? biometricEnabled}) async {
+  Future<void> updateProfile(
+      {String? name,
+      String? accentColor,
+      bool? amoledMode,
+      bool? biometricEnabled}) async {
     if (_profile == null) return;
     _profile = _profile!.copyWith(
       name: name ?? _profile!.name,
@@ -153,13 +156,15 @@ class AuthController extends ChangeNotifier {
     if (user != null) await loadProfile();
   }
 
-  Future<void> updateAccentColor(String color) => updateProfile(accentColor: color);
+  Future<void> updateAccentColor(String color) =>
+      updateProfile(accentColor: color);
   Future<void> updateAppIcon(String icon) async {
     if (_profile == null) return;
     _profile = _profile!.copyWith(appIcon: icon);
     await userRepo.saveProfile(_profile!);
     notifyListeners();
   }
+
   Future<void> updateReminderSound(String sound) async {
     if (_profile == null) return;
     _profile = _profile!.copyWith(reminderSound: sound);

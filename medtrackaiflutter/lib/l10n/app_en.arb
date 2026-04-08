@@ -189,7 +189,7 @@
   "termsOfService": "Terms of Service",
   "termsOfServiceSubtitle": "Rules for using MedAI",
   "appVersionLabel": "App Version",
-  "appVersionValue": "1.0.0",
+  "appVersionValue": "1.0.0+1",
   "analysisFailed": "Analysis Failed",
   "somethingWentWrong": "Something went wrong. Please try again.",
   "retry": "Retry"

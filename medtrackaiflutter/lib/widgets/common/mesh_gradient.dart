@@ -90,8 +90,9 @@ class _MeshGradientState extends State<MeshGradient>
           return CustomPaint(
             painter: MeshGradientPainter(
               baseColor: widget.colors.first,
-              accentColor:
-                  widget.colors.length > 1 ? widget.colors[1] : widget.colors.first,
+              accentColor: widget.colors.length > 1
+                  ? widget.colors[1]
+                  : widget.colors.first,
               animationValue: _controller.value,
             ),
             child: widget.child,

@@ -27,7 +27,8 @@ class StorageService {
           throw FirebaseException(
             plugin: 'firebase_storage',
             code: 'deadline-exceeded',
-            message: 'Image upload timed out after 15 seconds. Please check your network connection.',
+            message:
+                'Image upload timed out after 15 seconds. Please check your network connection.',
           );
         },
       );

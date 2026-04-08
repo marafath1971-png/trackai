@@ -165,7 +165,7 @@ class ShareAchievementCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Med AI',
+                      'MedAI',
                       style: AppTypography.labelSmall.copyWith(
                         color: L.onBg.withValues(alpha: 0.4),
                         fontSize: 12,

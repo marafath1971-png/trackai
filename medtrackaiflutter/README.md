@@ -1,15 +1,15 @@
-# 💊 Med AI: Your Premium Health Companion (V2 Masterpiece)
+# 💊 MedAI: Your Premium Health Companion (V2 Masterpiece)
 
-![Med AI Banner](assets/images/home_logo.png)
+![MedAI Banner](assets/images/home_logo.png)
 
-Med AI is a state-of-the-art Flutter application designed to revolutionize medication management through cutting-edge AI scanning, biometric security, and ultra-premium UI/UX.
+MedAI is a state-of-the-art Flutter application designed to revolutionize medication management through cutting-edge AI scanning, biometric security, and ultra-premium UI/UX.
 
 ## 🚀 Version 2.0 Highlights
 
 The "Masterpiece" update brings unprecedented personalization and security to your health journey.
 
 ### 🌍 Global UX Adaptation
-Med AI is built for developed markets worldwide (US, UK, Canada, Australia, Japan, South Korea, Singapore):
+MedAI is built for developed markets worldwide (US, UK, Canada, Australia, Japan, South Korea, Singapore):
 - **Dynamic Inventory Tracking**: Differentiated visualizations for pills, blister packs, patches, and specific units.
 - **Meal-Based Rituals**: Support for "With Lunch", "Before Sleep" tracking deeply ingrained in East Asian adherence models.
 - **Advanced Pharmacy Tracking**: Built-in 1-Tap Pharmacy Dialing for low-stock medications, and dedicated Rx Number fields to streamline North American pharmacy workflows.
@@ -29,7 +29,7 @@ Our proprietary AI scanning engine identifies medications with precision, provid
 
 ## 🎨 Design Philosophy
 
-Med AI follows a **Premium Dark/Light** aesthetic:
+MedAI follows a **Premium Dark/Light** aesthetic:
 - **Primary Color**: Vibrant Lime Green (`#D9FF66`)
 - **Typography**: Inter & Figtree for maximum readability.
 - **Glassmorphism**: Subtle, elegant layers using advanced blur effects.
@@ -71,4 +71,4 @@ Detailed implementation logs and verification results can be found in the `brain
 - [Task Audit](file:///Users/arafathossain/.gemini/antigravity/brain/8367e94f-fb77-4d8f-b003-6511d09819ce/task.md)
 
 ---
-*Built with ❤️ by the Med AI Team.*
+*Built with ❤️ by the MedAI Team.*

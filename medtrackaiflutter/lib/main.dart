@@ -71,7 +71,7 @@ void main() async {
   final localDataSource = LocalDataSource(prefs);
   final firestoreDataSource = FirestoreDataSource();
   final storageService = StorageService();
-  
+
   final medRepo = MedicationRepositoryImpl(
       localDataSource, firestoreDataSource, storageService);
   final userRepo = UserRepositoryImpl(localDataSource, firestoreDataSource);
@@ -107,13 +107,15 @@ class MedAIApp extends StatelessWidget {
     final darkTheme = AppTheme.dark(accentHex: accentHex, isAmoled: amoled);
     final language =
         context.select<AppState, String>((state) => state.language);
+    final isDarkMode =
+        context.select<AppState, bool>((state) => state.darkMode);
 
     return MaterialApp(
-      title: 'Med AI',
+      title: 'MedAI',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
       darkTheme: darkTheme,
-      themeMode: ThemeMode.light, // Locked to Cal AI Light Mode Aesthetic
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       locale: Locale(language),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -214,7 +216,7 @@ class _SplashLoading extends StatelessWidget {
             .fadeIn(duration: 800.ms, curve: Curves.easeOut)
             .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0)),
         const SizedBox(height: 24),
-        Text('Med AI',
+        Text('MedAI',
                 style: AppTypography.displayLarge.copyWith(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,

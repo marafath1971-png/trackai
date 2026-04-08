@@ -111,7 +111,7 @@ abstract class AppLocalizations {
   /// The title of the application
   ///
   /// In en, this message translates to:
-  /// **'Med AI'**
+  /// **'MedAI'**
   String get appTitle;
 
   /// No description provided for @greetingHero.
@@ -933,7 +933,7 @@ abstract class AppLocalizations {
   /// No description provided for @appVersionValue.
   ///
   /// In en, this message translates to:
-  /// **'1.0.0'**
+  /// **'1.0.0+1'**
   String get appVersionValue;
 
   /// No description provided for @analysisFailed.

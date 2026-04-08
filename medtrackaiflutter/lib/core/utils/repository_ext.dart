@@ -4,10 +4,10 @@ import 'package:firebase_core/firebase_core.dart';
 import '../errors/exceptions.dart' as e;
 import 'logger.dart';
 
-/// Extension on Future to provide a hardened 15s timeout and 
+/// Extension on Future to provide a hardened 15s timeout and
 /// automatic mapping of lower-level errors to domain-specific AppExceptions.
-/// 
-/// Usage: 
+///
+/// Usage:
 /// final result = await firestore.getDocs().withHardenedTimeout();
 
 extension FutureHardening<T> on Future<T> {
@@ -18,7 +18,8 @@ extension FutureHardening<T> on Future<T> {
     try {
       return await timeout(duration);
     } on TimeoutException {
-      appLogger.e('[Hardening] Timeout reached for ${taskName ?? "unspecified task"}');
+      appLogger.e(
+          '[Hardening] Timeout reached for ${taskName ?? "unspecified task"}');
       throw const e.TimeoutException();
     } on SocketException catch (err) {
       appLogger.e('[Hardening] Network issue: ${err.message}');
@@ -40,7 +41,8 @@ extension FutureHardening<T> on Future<T> {
       case 'unauthenticated':
         return const e.AuthException();
       case 'unavailable':
-        return const e.NetworkException('Firebase services are currently unavailable. 🌐');
+        return const e.NetworkException(
+            'Firebase services are currently unavailable. 🌐');
       case 'deadline-exceeded':
         return const e.TimeoutException();
       default:

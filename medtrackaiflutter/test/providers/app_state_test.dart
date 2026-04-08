@@ -9,14 +9,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:medai/services/link_service.dart';
 
 class MockMedicationRepository extends Mock implements IMedicationRepository {}
+
 class MockUserRepository extends Mock implements IUserRepository {}
+
 class MockSymptomRepository extends Mock implements SymptomRepository {}
+
 class MockAudioPlayer extends Mock implements AudioPlayer {}
+
 class MockSharedPreferences extends Mock implements SharedPreferences {}
+
 class MockLinkService extends Mock implements LinkService {}
 
 class FakeUserProfile extends Fake implements UserProfile {}
+
 class FakeMedicine extends Fake implements Medicine {}
+
 class FakeStreakData extends Fake implements StreakData {}
 
 void main() {
@@ -43,19 +50,26 @@ void main() {
     mockPrefs = MockSharedPreferences();
 
     // Default mock behavior
-    when(() => mockUserRepo.getCaregiversStream()).thenAnswer((_) => Stream.value([]));
-    when(() => mockUserRepo.getMonitoringPatientsStream()).thenAnswer((_) => Stream.value([]));
-    when(() => mockUserRepo.getProfileStream()).thenAnswer((_) => Stream.value(null));
-    when(() => mockUserRepo.getCaregivers()).thenAnswer((_) => Future.value([]));
-    when(() => mockUserRepo.getDarkMode()).thenAnswer((_) => Future.value(false));
+    when(() => mockUserRepo.getCaregiversStream())
+        .thenAnswer((_) => Stream.value([]));
+    when(() => mockUserRepo.getMonitoringPatientsStream())
+        .thenAnswer((_) => Stream.value([]));
+    when(() => mockUserRepo.getProfileStream())
+        .thenAnswer((_) => Stream.value(null));
+    when(() => mockUserRepo.getCaregivers())
+        .thenAnswer((_) => Future.value([]));
+    when(() => mockUserRepo.getDarkMode())
+        .thenAnswer((_) => Future.value(false));
 
     when(() => mockMedRepo.getMedicines()).thenAnswer((_) => Future.value([]));
     when(() => mockMedRepo.getHistory()).thenAnswer((_) => Future.value({}));
     when(() => mockMedRepo.getTakenToday()).thenAnswer((_) => Future.value({}));
-    when(() => mockMedRepo.getPrefs()).thenAnswer((_) => Future.value(mockPrefs));
+    when(() => mockMedRepo.getPrefs())
+        .thenAnswer((_) => Future.value(mockPrefs));
 
-    when(() => mockSymptomRepo.getSymptoms()).thenAnswer((_) => Future.value([]));
-    
+    when(() => mockSymptomRepo.getSymptoms())
+        .thenAnswer((_) => Future.value([]));
+
     when(() => mockPrefs.getBool(any())).thenReturn(false);
     when(() => mockPrefs.getInt(any())).thenReturn(0);
     when(() => mockPrefs.getString(any())).thenReturn(null);
@@ -98,13 +112,19 @@ void main() {
         totalCount: 30,
         courseStartDate: '2024-01-01',
         schedule: [
-          ScheduleEntry(id: '1', h: 8, m: 0, label: 'Morning', days: [0, 1, 2, 3, 4, 5, 6])
+          ScheduleEntry(
+              id: '1',
+              h: 8,
+              m: 0,
+              label: 'Morning',
+              days: [0, 1, 2, 3, 4, 5, 6])
         ],
       );
 
       // Mock repo returns
-      when(() => mockMedRepo.getMedicines()).thenAnswer((_) => Future.value([med]));
-      
+      when(() => mockMedRepo.getMedicines())
+          .thenAnswer((_) => Future.value([med]));
+
       await appState.med.loadData();
       expect(appState.getAdherenceScore(), 1.0); // No history yet, defaults 1.0
 
@@ -113,15 +133,18 @@ void main() {
       final Map<String, List<DoseEntry>> fullHistory = {};
       for (int i = 1; i <= 3; i++) {
         final d = now.subtract(Duration(days: i));
-        final k = "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-        fullHistory[k] = [DoseEntry(medId: 1, label: 'Morning', time: '08:00', taken: true)];
+        final k =
+            "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+        fullHistory[k] = [
+          DoseEntry(medId: 1, label: 'Morning', time: '08:00', taken: true)
+        ];
       }
 
-      when(() => mockMedRepo.getHistory()).thenAnswer((_) => Future.value(fullHistory));
+      when(() => mockMedRepo.getHistory())
+          .thenAnswer((_) => Future.value(fullHistory));
       await appState.med.loadData();
-      
+
       expect(appState.med.getStreak(), 3);
     });
-
   });
 }

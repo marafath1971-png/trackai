@@ -10,7 +10,6 @@ import '../../../settings/privacy_policy_screen.dart';
 import '../../../../widgets/common/paywall_sheet.dart';
 import 'settings_shared.dart';
 
-
 class AppTab extends StatefulWidget {
   final AppState state;
   final AppThemeColors L;
@@ -108,7 +107,6 @@ class _AppTabState extends State<AppTab> {
                   last: e.key == _leadOpts.length - 1,
                   border: e.key < _leadOpts.length - 1);
             }).toList())),
-
         SettingsSection(
             title: 'Health & Wellness',
             child: SettingsModalRow(
@@ -119,7 +117,8 @@ class _AppTabState extends State<AppTab> {
                     ? 'Synced with ${defaultTargetPlatform == TargetPlatform.iOS ? 'Apple Health' : 'Health Connect'}'
                     : 'Sync vitals and activity data',
                 right: AppToggle(
-                    value: context.select<AppState, bool>((s) => s.health.isConnected),
+                    value: context
+                        .select<AppState, bool>((s) => s.health.isConnected),
                     onChanged: (v) {
                       final s = context.read<AppState>();
                       if (v) {
@@ -154,16 +153,20 @@ class _AppTabState extends State<AppTab> {
               decoration: BoxDecoration(
                 color: L.card,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+                border: Border.all(
+                    color: L.border.withValues(alpha: 0.08), width: 0.5),
                 boxShadow: AppShadows.neumorphic,
               ),
               child: Column(children: [
                 Text('Enjoying MedAI?',
-                    style: AppTypography.titleLarge
-                        .copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 18)),
+                    style: AppTypography.titleLarge.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: L.text,
+                        fontSize: 18)),
                 const SizedBox(height: 6),
                 Text('Your feedback helps us improve for everyone.',
-                    style: AppTypography.bodySmall.copyWith(color: L.sub, fontWeight: FontWeight.w600)),
+                    style: AppTypography.bodySmall
+                        .copyWith(color: L.sub, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -195,12 +198,14 @@ class _AppTabState extends State<AppTab> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                        color: L.text,
-                        borderRadius: BorderRadius.circular(16)),
+                        color: L.text, borderRadius: BorderRadius.circular(16)),
                     child: Center(
                       child: Text('SHARE WITH FRIENDS',
                           style: AppTypography.labelLarge.copyWith(
-                              fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1.0, color: L.bg)),
+                              fontWeight: FontWeight.w900,
+                              fontSize: 11,
+                              letterSpacing: 1.0,
+                              color: L.bg)),
                     ),
                   ),
                 ),

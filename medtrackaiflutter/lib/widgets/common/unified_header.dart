@@ -51,7 +51,7 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final L = context.L;
     final topPad = MediaQuery.of(context).padding.top;
-    
+
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
@@ -59,10 +59,13 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
           duration: 250.ms,
           padding: EdgeInsets.fromLTRB(20, topPad + 12, 20, 16),
           decoration: BoxDecoration(
-            color: (backgroundColor ?? L.meshBg).withValues(alpha: isScrolled || blurred ? 0.8 : 0.0),
+            color: (backgroundColor ?? L.meshBg)
+                .withValues(alpha: isScrolled || blurred ? 0.8 : 0.0),
             border: Border(
               bottom: BorderSide(
-                color: (isScrolled || blurred) ? L.border.withValues(alpha: 0.08) : Colors.transparent,
+                color: (isScrolled || blurred)
+                    ? L.border.withValues(alpha: 0.08)
+                    : Colors.transparent,
                 width: 0.5,
               ),
             ),
@@ -75,14 +78,14 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
                 if (showBack) ...[
                   BouncingButton(
                     onTap: onBack ?? () => Navigator.maybePop(context),
-                    child: Icon(Icons.arrow_back_ios_new_rounded, color: L.text, size: 20),
+                    child: Icon(Icons.arrow_back_ios_new_rounded,
+                        color: L.text, size: 20),
                   ),
                   const SizedBox(width: 20),
                 ] else if (leading != null) ...[
                   leading!,
                   const SizedBox(width: 20),
                 ],
-                
                 Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -102,28 +105,30 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
                             ),
                           ),
                         if (title != null || titleWidget != null)
-                          titleWidget ?? Text(
-                            title!,
-                            style: AppTypography.headlineMedium.copyWith(
-                              color: L.text,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 26,
-                              height: 1.1,
-                              letterSpacing: -1.0,
-                            ),
-                          ),
+                          titleWidget ??
+                              Text(
+                                title!,
+                                style: AppTypography.headlineMedium.copyWith(
+                                  color: L.text,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 26,
+                                  height: 1.1,
+                                  letterSpacing: -1.0,
+                                ),
+                              ),
                       ],
                     ],
                   ),
                 ),
-
                 if (actions != null)
                   Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: actions!.map((a) => Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: a,
-                    )).toList(),
+                    children: actions!
+                        .map((a) => Padding(
+                              padding: const EdgeInsets.only(left: 12),
+                              child: a,
+                            ))
+                        .toList(),
                   ),
               ],
             ),
@@ -160,16 +165,15 @@ class UnifiedHeader extends StatelessWidget implements PreferredSizeWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: L.text,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: L.text.withValues(alpha: 0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                )
-              ]
-            ),
+                color: L.text,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: L.text.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  )
+                ]),
             child: Text(
               'PRO',
               style: AppTypography.labelSmall.copyWith(

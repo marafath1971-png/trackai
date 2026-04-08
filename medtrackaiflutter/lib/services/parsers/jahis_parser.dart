@@ -25,7 +25,7 @@ class JahisParser {
           // ── Frequency to Multi-Ritual Mapping (Enhanced) ───────────
           final frequency = parts[4];
           final List<Ritual> rituals = _parseJapaneseRituals(frequency);
-          
+
           // If no match, default to Breakfast or Daily
           if (rituals.isEmpty) rituals.add(Ritual.withBreakfast);
 
@@ -40,14 +40,16 @@ class JahisParser {
             totalCount: totalCount,
             courseStartDate: DateTime.now().toIso8601String(),
             unit: unit,
-            schedule: rituals.map((ritual) => ScheduleEntry(
-              id: 'jahis_${idCounter++}',
-              h: _getHourForRitual(ritual),
-              m: 0,
-              label: _getLabelForRitual(ritual),
-              days: [1, 2, 3, 4, 5, 6, 0],
-              ritual: ritual,
-            )).toList(),
+            schedule: rituals
+                .map((ritual) => ScheduleEntry(
+                      id: 'jahis_${idCounter++}',
+                      h: _getHourForRitual(ritual),
+                      m: 0,
+                      label: _getLabelForRitual(ritual),
+                      days: [1, 2, 3, 4, 5, 6, 0],
+                      ritual: ritual,
+                    ))
+                .toList(),
           ));
         }
       }
@@ -69,11 +71,12 @@ class JahisParser {
     if (frequency.contains('夕')) {
       results.add(isBeforeMeal ? Ritual.beforeDinner : Ritual.withDinner);
     }
-    
+
     // Group 2: All Meals
     if (frequency.contains('毎食') || frequency.contains('1日3回')) {
       if (results.isEmpty) {
-        results.add(isBeforeMeal ? Ritual.beforeBreakfast : Ritual.withBreakfast);
+        results
+            .add(isBeforeMeal ? Ritual.beforeBreakfast : Ritual.withBreakfast);
         results.add(isBeforeMeal ? Ritual.beforeLunch : Ritual.withLunch);
         results.add(isBeforeMeal ? Ritual.beforeDinner : Ritual.withDinner);
       }
@@ -83,7 +86,7 @@ class JahisParser {
     if (frequency.contains('就寝')) {
       results.add(Ritual.beforeSleep);
     }
-    
+
     // Group 4: Waking
     if (frequency.contains('起床')) {
       results.add(Ritual.onWaking);
@@ -106,18 +109,30 @@ class JahisParser {
 
   static int _getHourForRitual(Ritual ritual) {
     switch (ritual) {
-      case Ritual.beforeBreakfast: return 7;
-      case Ritual.withBreakfast: return 8;
-      case Ritual.afterBreakfast: return 9;
-      case Ritual.beforeLunch: return 11;
-      case Ritual.withLunch: return 12;
-      case Ritual.afterLunch: return 13;
-      case Ritual.beforeDinner: return 18;
-      case Ritual.withDinner: return 19;
-      case Ritual.afterDinner: return 20;
-      case Ritual.beforeSleep: return 22;
-      case Ritual.onWaking: return 6;
-      default: return 9;
+      case Ritual.beforeBreakfast:
+        return 7;
+      case Ritual.withBreakfast:
+        return 8;
+      case Ritual.afterBreakfast:
+        return 9;
+      case Ritual.beforeLunch:
+        return 11;
+      case Ritual.withLunch:
+        return 12;
+      case Ritual.afterLunch:
+        return 13;
+      case Ritual.beforeDinner:
+        return 18;
+      case Ritual.withDinner:
+        return 19;
+      case Ritual.afterDinner:
+        return 20;
+      case Ritual.beforeSleep:
+        return 22;
+      case Ritual.onWaking:
+        return 6;
+      default:
+        return 9;
     }
   }
 

@@ -78,7 +78,7 @@ class _PaywallSheetState extends State<PaywallSheet> {
           const SizedBox(height: 24),
 
           Text(
-            'Med AI Pro',
+            'MedAI Pro',
             style: AppTypography.displayLarge.copyWith(
               fontSize: 28,
               fontWeight: FontWeight.w900,
@@ -146,7 +146,8 @@ class _PaywallSheetState extends State<PaywallSheet> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: AppShadows.neumorphic,
-                  border: isSel ? Border.all(color: Colors.black, width: 2) : null,
+                  border:
+                      isSel ? Border.all(color: Colors.black, width: 2) : null,
                 ),
                 child: Row(
                   children: [

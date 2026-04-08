@@ -86,7 +86,8 @@ class TrialCountdownCard extends StatelessWidget {
                   ),
                   // Premium CTA pill
                   Container(
-                    padding:const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 11),
                     decoration: BoxDecoration(
                       color: L.text,
                       borderRadius: BorderRadius.circular(16),
@@ -109,7 +110,9 @@ class TrialCountdownCard extends StatelessWidget {
                     ),
                   )
                       .animate(onPlay: (c) => c.repeat(reverse: true))
-                      .shimmer(duration: 3.seconds, color: Colors.white.withValues(alpha: 0.1))
+                      .shimmer(
+                          duration: 3.seconds,
+                          color: Colors.white.withValues(alpha: 0.1))
                       .scale(
                           begin: const Offset(1, 1),
                           end: const Offset(1.03, 1.03),
@@ -126,7 +129,7 @@ class TrialCountdownCard extends StatelessWidget {
                   final segmentThreshold = i / 40;
                   final scanThreshold = scansUsed / 3;
                   final used = segmentThreshold < scanThreshold;
-                  
+
                   return Expanded(
                     child: Container(
                       height: 4,
@@ -137,8 +140,9 @@ class TrialCountdownCard extends StatelessWidget {
                             : L.fill.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(0.5),
                       ),
-                    ).animate(target: used ? 1 : 0)
-                     .shimmer(duration: 2.seconds, color: Colors.white.withValues(alpha: 0.1)),
+                    ).animate(target: used ? 1 : 0).shimmer(
+                        duration: 2.seconds,
+                        color: Colors.white.withValues(alpha: 0.1)),
                   );
                 }),
               ),
@@ -151,13 +155,11 @@ class TrialCountdownCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: L.text.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: L.text.withValues(alpha: 0.08)),
+                    border: Border.all(color: L.text.withValues(alpha: 0.08)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.star_rounded,
-                          color: L.text, size: 16),
+                      Icon(Icons.star_rounded, color: L.text, size: 16),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(

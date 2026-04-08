@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/app_state.dart';
 import '../../widgets/shared/shared_widgets.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/common/unified_header.dart';
 import '../../widgets/modals/trend_drilldown_sheet.dart';
 import '../../core/utils/haptic_engine.dart';
 import '../../services/report_service.dart';
@@ -14,6 +13,8 @@ import '../../widgets/common/shimmer_loader.dart';
 import '../../widgets/modals/daily_log_sheet.dart';
 import '../home/widgets/streak_modal.dart';
 import 'widgets/dashboard_widgets.dart';
+import '../home/widgets/voice_assistant_overlay.dart';
+import '../../services/voice_service.dart';
 
 class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key});
@@ -24,6 +25,7 @@ class DashboardTab extends StatefulWidget {
 
 class _DashboardTabState extends State<DashboardTab> {
   bool _isScrolled = false;
+  bool _showVoiceAssistant = false;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -33,6 +35,7 @@ class _DashboardTabState extends State<DashboardTab> {
     // Refresh insights when entering the tab
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppState>().fetchHealthInsights();
+      VoiceService.init();
     });
   }
 
@@ -130,7 +133,14 @@ class _DashboardTabState extends State<DashboardTab> {
                         ),
                       ],
                     ),
-                  ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuart),
+                  )
+                      .animate()
+                      .fadeIn(duration: 600.ms)
+                      .slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuart),
+                  const SizedBox(height: 16),
+
+                  // --- BIOMETRIC BENTO (Task 1) ---
+                  _buildBiometricBento(context, state, L, s),
                   const SizedBox(height: 32),
 
                   // --- TIMELINE PILL SELECTOR ---
@@ -141,7 +151,10 @@ class _DashboardTabState extends State<DashboardTab> {
                       onSelect: (idx) {},
                       L: L,
                     ),
-                  ).animate(delay: 100.ms).fadeIn(duration: 600.ms).slideX(begin: 0.1, end: 0),
+                  )
+                      .animate(delay: 100.ms)
+                      .fadeIn(duration: 600.ms)
+                      .slideX(begin: 0.1, end: 0),
 
                   // --- 30-DAY ADHERENCE TREND ---
                   Padding(
@@ -152,12 +165,14 @@ class _DashboardTabState extends State<DashboardTab> {
                         AdherenceTrendChart(trendData: trendData, L: L)
                             .animate(delay: 150.ms)
                             .fadeIn(duration: 600.ms)
-                            .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
+                            .slideY(
+                                begin: 0.1, end: 0, curve: Curves.easeOutExpo),
                         const SizedBox(height: 24),
                         InventoryStatusCard(meds: meds, L: L)
                             .animate(delay: 200.ms)
                             .fadeIn(duration: 600.ms)
-                            .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
+                            .slideY(
+                                begin: 0.1, end: 0, curve: Curves.easeOutExpo),
                       ],
                     ),
                   ),
@@ -225,6 +240,10 @@ class _DashboardTabState extends State<DashboardTab> {
                             meds: state.meds,
                             symptoms: state.symptoms,
                             history: state.history,
+                            avgHeartRate: state.healthHeartRate,
+                            avgSteps: state.healthSteps,
+                            currentStreak: streak,
+                            trendData: trendData,
                           );
                         },
                         scaleFactor: 0.95,
@@ -246,10 +265,36 @@ class _DashboardTabState extends State<DashboardTab> {
                         ),
                       ),
                     ),
-                      )
+                  )
                       .animate(delay: 100.ms)
                       .fadeIn(duration: 600.ms)
                       .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
+
+                  const SizedBox(height: 16),
+
+                  // --- EXPORT CSV BUTTON ---
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenPadding),
+                    child: TextButton(
+                      onPressed: () {
+                        HapticEngine.selection();
+                        final state = context.read<AppState>();
+                        ReportService.generateAndShareCSV(
+                          meds: state.meds,
+                          history: state.history,
+                        );
+                      },
+                      child: Text('EXPORT DATA AS CSV',
+                          style: AppTypography.labelSmall.copyWith(
+                              color: L.sub,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.0)),
+                    ),
+                  )
+                      .animate(delay: 150.ms)
+                      .fadeIn(duration: 600.ms)
+                      .slideY(begin: 0.1, end: 0),
 
                   const SizedBox(height: AppSpacing.xxl),
 
@@ -262,7 +307,9 @@ class _DashboardTabState extends State<DashboardTab> {
                       decoration: BoxDecoration(
                         color: L.card,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: L.border.withValues(alpha: 0.07), width: 0.5),
+                        border: Border.all(
+                            color: L.border.withValues(alpha: 0.07),
+                            width: 0.5),
                         boxShadow: AppShadows.neumorphic,
                       ),
                       child: Row(
@@ -285,51 +332,65 @@ class _DashboardTabState extends State<DashboardTab> {
                       .fadeIn(duration: 600.ms)
                       .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
 
-                  const SizedBox(height: 180), // Expanded clear area for the FAB
+                  const SizedBox(
+                      height: 180), // Expanded clear area for the FAB
                 ],
               ),
             ),
           ),
         ),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: UnifiedHeader(
-            isScrolled: _isScrolled,
-            title: 'Progress',
-            subtitle: "You're making progress - keep pushing!",
-            // Custom coloring for neumorphic light
+        if (_showVoiceAssistant)
+          VoiceAssistantOverlay(
+            onDismiss: () => setState(() => _showVoiceAssistant = false),
           ),
-        ),
       ]),
-      floatingActionButton: Container(
-        height: 64,
-        width: 64,
-        decoration: BoxDecoration(
-          color: L.text,
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 0.5),
-          boxShadow: [
-            BoxShadow(
-              color: L.text.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            )
-          ],
-        ),
-        child: FloatingActionButton(
-          onPressed: () => DailyLogSheet.show(context),
-          backgroundColor: Colors.transparent,
-          highlightElevation: 0,
-          elevation: 0,
-          child: const Center(child: Text('➕', style: TextStyle(color: Colors.white, fontSize: 24))),
-        ),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!_showVoiceAssistant) 
+            FloatingActionButton(
+              onPressed: () {
+                HapticEngine.selection();
+                setState(() => _showVoiceAssistant = true);
+              },
+              backgroundColor: L.secondary,
+              mini: true,
+              child: const Icon(Icons.mic_rounded, color: Colors.white),
+            ).animate().slideY(begin: 1, end: 0, curve: Curves.easeOutExpo),
+          const SizedBox(height: 12),
+          Container(
+            height: 64,
+            width: 64,
+            decoration: BoxDecoration(
+              color: L.text,
+              shape: BoxShape.circle,
+              border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.1), width: 0.5),
+              boxShadow: [
+                BoxShadow(
+                  color: L.text.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
+            ),
+            child: FloatingActionButton(
+              onPressed: () => DailyLogSheet.show(context),
+              backgroundColor: Colors.transparent,
+              highlightElevation: 0,
+              elevation: 0,
+              child: const Center(
+                  child: Text('➕',
+                      style: TextStyle(color: Colors.white, fontSize: 24))),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  void _showTrendDrilldown(BuildContext context, AppState state, AppThemeColors L) {
+  void _showTrendDrilldown(
+      BuildContext context, AppState state, AppThemeColors L) {
     HapticEngine.selection();
     showModalBottomSheet(
       context: context,
@@ -339,8 +400,9 @@ class _DashboardTabState extends State<DashboardTab> {
     );
   }
 
-  Widget _buildSummaryCard(BuildContext context, String label, double numValue, String suffix,
-      String emoji, Color color, {VoidCallback? onTap}) {
+  Widget _buildSummaryCard(BuildContext context, String label, double numValue,
+      String suffix, String emoji, Color color,
+      {VoidCallback? onTap}) {
     final L = context.L;
     return Expanded(
       child: BouncingButton(
@@ -351,7 +413,8 @@ class _DashboardTabState extends State<DashboardTab> {
           decoration: BoxDecoration(
             color: L.card,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+            border:
+                Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.03),
@@ -393,7 +456,9 @@ class _DashboardTabState extends State<DashboardTab> {
                 },
               ),
               const SizedBox(height: 8),
-              Text('Goal 100%', style: AppTypography.labelSmall.copyWith(color: L.sub, fontSize: 10)),
+              Text('Goal 100%',
+                  style: AppTypography.labelSmall
+                      .copyWith(color: L.sub, fontSize: 10)),
             ],
           ),
         ),
@@ -417,7 +482,8 @@ class _DashboardTabState extends State<DashboardTab> {
           decoration: BoxDecoration(
             color: L.card,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+            border:
+                Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.02),
@@ -457,9 +523,160 @@ class _DashboardTabState extends State<DashboardTab> {
               ],
             ),
           ),
-        ).animate(onPlay: (c) => c.repeat()).shimmer(
-            duration: 2000.ms, color: L.text.withValues(alpha: 0.05)),
+        )
+            .animate(onPlay: (c) => c.repeat())
+            .shimmer(duration: 2000.ms, color: L.text.withValues(alpha: 0.05)),
       ],
+    );
+  }
+
+  Widget _buildBiometricBento(BuildContext context, AppState state,
+      AppThemeColors L, AppLocalizations s) {
+    final connected = state.healthConnected;
+    final steps = state.healthSteps;
+    final hr = state.healthHeartRate;
+    final syncing = state.healthSyncing;
+
+    if (!connected) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: BouncingButton(
+          onTap: () async {
+            HapticEngine.selection();
+            final ok = await state.connectHealth();
+            if (ok) state.syncHealthData();
+          },
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: L.card,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                  color: L.border.withValues(alpha: 0.08), width: 0.5),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4)),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                      color: L.secondary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle),
+                  child: const Center(
+                      child: Text('🫀', style: TextStyle(fontSize: 22))),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('CONNECT HEALTH DATA',
+                          style: AppTypography.labelSmall.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: L.secondary,
+                              letterSpacing: 1.0)),
+                      const SizedBox(height: 4),
+                      Text('Sync vitals to see how meds affect your heart.',
+                          style: AppTypography.bodySmall.copyWith(
+                              color: L.sub, fontSize: 12, height: 1.3)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: L.sub, size: 20),
+              ],
+            ),
+          ),
+        ),
+      ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.1, end: 0);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: _buildBentoCard(
+              context,
+              'STEPS',
+              '${steps.toInt()}',
+              '👞',
+              L.secondary,
+              syncing: syncing,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: _buildBentoCard(
+              context,
+              'BPM',
+              '${hr.toInt()}',
+              '❤️',
+              L.error,
+              syncing: syncing,
+            ),
+          ),
+        ],
+      ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.1, end: 0),
+    );
+  }
+
+  Widget _buildBentoCard(
+      BuildContext context, String label, String value, String emoji, Color? c,
+      {bool syncing = false}) {
+    final L = context.L;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      decoration: BoxDecoration(
+        color: L.card,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.015),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 18)),
+              if (syncing)
+                SizedBox(
+                  width: 10,
+                  height: 10,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(L.sub),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(value,
+              style: AppTypography.displayLarge.copyWith(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: L.text,
+                  letterSpacing: -1.0)),
+          const SizedBox(height: 4),
+          Text(label,
+              style: AppTypography.labelSmall.copyWith(
+                  color: L.sub, fontWeight: FontWeight.w900, fontSize: 10)),
+        ],
+      ),
     );
   }
 }
@@ -467,4 +684,3 @@ class _DashboardTabState extends State<DashboardTab> {
 // ------------------------------------------------------------------
 // DASHBOARD QUICK ACTIONS
 // ------------------------------------------------------------------
-

@@ -57,8 +57,11 @@ class RingChart extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Text(sub.toUpperCase(),
-                  style: AppTypography.labelSmall
-                      .copyWith(fontSize: size * 0.08, color: L.sub, letterSpacing: 0.5, fontWeight: FontWeight.w900),
+                  style: AppTypography.labelSmall.copyWith(
+                      fontSize: size * 0.08,
+                      color: L.sub,
+                      letterSpacing: 0.5,
+                      fontWeight: FontWeight.w900),
                   textAlign: TextAlign.center),
             ),
         ]),
@@ -98,7 +101,7 @@ class _RingPainter extends CustomPainter {
       false,
       bgPaint,
     );
-    
+
     // Foreground
     if (percent > 0) {
       final fgPaint = Paint()
@@ -362,19 +365,20 @@ class SquircleCard extends StatelessWidget {
                 width: bw,
               )
             : null,
-        boxShadow: boxShadow ?? [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.06),
-            blurRadius: 40,
-            offset: const Offset(0, 16),
-            spreadRadius: -8,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        boxShadow: boxShadow ??
+            [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.06),
+                blurRadius: 40,
+                offset: const Offset(0, 16),
+                spreadRadius: -8,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
       ),
       child: child,
     );
@@ -441,7 +445,7 @@ class AppToast extends StatelessWidget {
     }
 
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
-    
+
     return Positioned(
       bottom: bottomPadding + 120,
       left: 24,
@@ -468,9 +472,14 @@ class AppToast extends StatelessWidget {
             ],
           ),
         ),
-      ).animate().fadeIn(duration: 400.ms)
-       .slideY(begin: 0.5, end: 0, curve: Curves.easeOutQuart)
-       .shimmer(delay: 600.ms, duration: 1200.ms, color: Colors.white.withValues(alpha: 0.1)),
+      )
+          .animate()
+          .fadeIn(duration: 400.ms)
+          .slideY(begin: 0.5, end: 0, curve: Curves.easeOutQuart)
+          .shimmer(
+              delay: 600.ms,
+              duration: 1200.ms,
+              color: Colors.white.withValues(alpha: 0.1)),
     );
   }
 }
@@ -502,7 +511,10 @@ class SyncStatusBanner extends StatelessWidget {
               color: isSyncing ? L.warning : L.success,
               shape: BoxShape.circle,
             ),
-          ).animate(onPlay: isSyncing ? (c) => c.repeat(reverse: true) : null).fade(duration: 500.ms),
+          )
+              .animate(
+                  onPlay: isSyncing ? (c) => c.repeat(reverse: true) : null)
+              .fade(duration: 500.ms),
           const SizedBox(width: 8),
           Text(
             isSyncing ? 'SYNCING_CLOUD' : 'CLOUD_STABLE',
@@ -561,19 +573,19 @@ class _SkeletonBoxState extends State<SkeletonBox>
         builder: (_, __) => Container(
               width: widget.width,
               height: widget.height,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(widget.radius),
-        gradient: LinearGradient(
-          colors: [
-            context.L.card.withValues(alpha: 0.5),
-            context.L.card,
-            context.L.card.withValues(alpha: 0.5),
-          ],
-          stops: [0, _anim.value, 1],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(widget.radius),
+                gradient: LinearGradient(
+                  colors: [
+                    context.L.card.withValues(alpha: 0.5),
+                    context.L.card,
+                    context.L.card.withValues(alpha: 0.5),
+                  ],
+                  stops: [0, _anim.value, 1],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+              ),
             ));
   }
 }
@@ -744,13 +756,16 @@ class LightInput extends StatelessWidget {
               const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide(color: L.border.withValues(alpha: 0.1), width: 0.5)),
+              borderSide: BorderSide(
+                  color: L.border.withValues(alpha: 0.1), width: 0.5)),
           enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide(color: L.border.withValues(alpha: 0.1), width: 0.5)),
+              borderSide: BorderSide(
+                  color: L.border.withValues(alpha: 0.1), width: 0.5)),
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide(color: L.text.withValues(alpha: 0.2), width: 0.5)),
+              borderSide:
+                  BorderSide(color: L.text.withValues(alpha: 0.2), width: 0.5)),
         ),
       ),
     ]);
@@ -840,7 +855,7 @@ class MedImage extends StatelessWidget {
     }
 
     final radius = borderRadius ?? AppRadius.squircle;
-    
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: image,
@@ -903,7 +918,8 @@ class _DoseCardState extends State<DoseCard> {
         decoration: BoxDecoration(
           color: L.success.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: L.success.withValues(alpha: 0.2), width: 0.5),
+          border:
+              Border.all(color: L.success.withValues(alpha: 0.2), width: 0.5),
         ),
         child: Row(
           children: [
@@ -911,7 +927,9 @@ class _DoseCardState extends State<DoseCard> {
             const SizedBox(width: 10),
             Text('Mark taken',
                 style: AppTypography.labelMedium.copyWith(
-                  color: L.success, fontWeight: FontWeight.w700, fontSize: 13)),
+                    color: L.success,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13)),
           ],
         ),
       ),
@@ -928,7 +946,8 @@ class _DoseCardState extends State<DoseCard> {
             decoration: BoxDecoration(
               color: isDone ? L.card.withValues(alpha: 0.6) : L.card,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+              border: Border.all(
+                  color: L.border.withValues(alpha: 0.08), width: 0.5),
               boxShadow: widget.isNext && !isDone
                   ? [
                       BoxShadow(
@@ -958,10 +977,18 @@ class _DoseCardState extends State<DoseCard> {
                         ? const Text('✅', style: TextStyle(fontSize: 16))
                         : const Text('💊', style: TextStyle(fontSize: 18)),
                   ),
-                ).animate(target: isDone ? 1 : 0)
-                 .scale(begin: const Offset(1.0, 1.0), end: const Offset(1.2, 1.2), duration: 200.ms, curve: Curves.elasticOut)
-                 .then()
-                 .scale(begin: const Offset(1.2, 1.2), end: const Offset(1.0, 1.0), duration: 200.ms),
+                )
+                    .animate(target: isDone ? 1 : 0)
+                    .scale(
+                        begin: const Offset(1.0, 1.0),
+                        end: const Offset(1.2, 1.2),
+                        duration: 200.ms,
+                        curve: Curves.elasticOut)
+                    .then()
+                    .scale(
+                        begin: const Offset(1.2, 1.2),
+                        end: const Offset(1.0, 1.0),
+                        duration: 200.ms),
                 const SizedBox(width: 14),
                 // ── Med name + time ──
                 Expanded(
@@ -972,11 +999,13 @@ class _DoseCardState extends State<DoseCard> {
                       Text(
                         widget.med.name,
                         style: AppTypography.labelLarge.copyWith(
-                          color: isDone ? L.text.withValues(alpha: 0.3) : L.text,
+                          color:
+                              isDone ? L.text.withValues(alpha: 0.3) : L.text,
                           fontWeight: FontWeight.w800,
                           fontSize: 15,
                           letterSpacing: -0.3,
-                          decoration: isDone ? TextDecoration.lineThrough : null,
+                          decoration:
+                              isDone ? TextDecoration.lineThrough : null,
                           decorationColor: L.text.withValues(alpha: 0.2),
                         ),
                         maxLines: 1,
@@ -997,7 +1026,7 @@ class _DoseCardState extends State<DoseCard> {
                                       : L.sub.withValues(alpha: 0.55),
                             ),
                           ),
-                          if (widget.med.dose.isNotEmpty) ...[  
+                          if (widget.med.dose.isNotEmpty) ...[
                             Text(' · ',
                                 style: AppTypography.labelSmall.copyWith(
                                     color: L.sub.withValues(alpha: 0.25),
@@ -1115,13 +1144,15 @@ class StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(100),
-        boxShadow: glow ? [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          )
-        ] : null,
+        boxShadow: glow
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 6),
+                )
+              ]
+            : null,
       ),
       child: Text(
         label,

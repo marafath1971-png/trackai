@@ -88,7 +88,7 @@ class _AIProtectorCardState extends State<AIProtectorCard>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Med AI Protector Advisor',
+                      Text('MedAI Protector Advisor',
                           style: AppTypography.titleLarge.copyWith(
                               fontSize: 14,
                               fontWeight: FontWeight.w900,

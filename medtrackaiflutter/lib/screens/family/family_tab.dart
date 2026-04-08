@@ -279,7 +279,9 @@ class HubView extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: L.meshBg,
-                border: Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.1), width: 0.5)),
+                border: Border(
+                    bottom: BorderSide(
+                        color: L.border.withValues(alpha: 0.1), width: 0.5)),
               ),
             ),
           ),
@@ -308,10 +310,13 @@ class HubView extends StatelessWidget {
                           fontWeight: FontWeight.w900,
                           letterSpacing: -1.0,
                         ),
-                      ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
-                      
+                      )
+                          .animate()
+                          .fadeIn(duration: 400.ms)
+                          .slideY(begin: 0.1, end: 0),
+
                       const SizedBox(height: 20),
-                      
+
                       // Circle Snapshot Bento (High-Fidelity)
                       Row(
                         children: [
@@ -338,7 +343,7 @@ class HubView extends StatelessWidget {
                       ).animate(delay: 200.ms).fadeIn(),
 
                       const SizedBox(height: 24),
-                      
+
                       Row(
                         children: [
                           Container(
@@ -378,32 +383,45 @@ class HubView extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: L.error,
                               borderRadius: AppRadius.roundL,
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+                              border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  width: 1.5),
                               boxShadow: [
-                                BoxShadow(color: L.error.withValues(alpha: 0.5), blurRadius: 24, offset: const Offset(0, 10))
+                                BoxShadow(
+                                    color: L.error.withValues(alpha: 0.5),
+                                    blurRadius: 24,
+                                    offset: const Offset(0, 10))
                               ],
                             ),
                             child: Row(
                               children: [
                                 const Text('⚠️', style: TextStyle(fontSize: 24))
-                                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                                    .scale(begin: const Offset(1.0, 1.0), end: const Offset(1.2, 1.2), duration: 600.ms),
+                                    .animate(
+                                        onPlay: (c) => c.repeat(reverse: true))
+                                    .scale(
+                                        begin: const Offset(1.0, 1.0),
+                                        end: const Offset(1.2, 1.2),
+                                        duration: 600.ms),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'URGENT MONITORING',
-                                        style: AppTypography.labelSmall.copyWith(
-                                          color: Colors.white.withValues(alpha: 0.8),
+                                        style:
+                                            AppTypography.labelSmall.copyWith(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.8),
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 1.5,
                                         ),
                                       ),
                                       Text(
                                         '$unseenCount missed medication alerts',
-                                        style: AppTypography.titleMedium.copyWith(
+                                        style:
+                                            AppTypography.titleMedium.copyWith(
                                           color: Colors.white,
                                           fontWeight: FontWeight.w900,
                                           fontSize: 15,
@@ -412,12 +430,19 @@ class HubView extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                const Text('→', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
+                                const Text('→',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w900)),
                               ],
                             ),
                           ),
-                        ).animate(onPlay: (c) => c.repeat(reverse: true))
-                         .shimmer(duration: 1500.ms, color: Colors.white.withValues(alpha: 0.2)),
+                        )
+                            .animate(onPlay: (c) => c.repeat(reverse: true))
+                            .shimmer(
+                                duration: 1500.ms,
+                                color: Colors.white.withValues(alpha: 0.2)),
 
                       // CONTENT BASED ON PIVOT
                       if (pivot == 1) ...[
@@ -449,12 +474,117 @@ class HubView extends StatelessWidget {
                                   ));
                                 },
                               ).animate().fadeIn(
-                                  delay: (100 + index * 50).ms, duration: 500.ms);
+                                  delay: (100 + index * 50).ms,
+                                  duration: 500.ms);
                             },
                           ),
                         ],
                       ] else ...[
                         // ACCOUNT SECURITY / MY CAREGIVERS
+                        if (state.profile?.familyMembers.isNotEmpty ?? false) ...[
+                          Text('Managing',
+                              style: AppTypography.titleLarge.copyWith(
+                                color: L.text,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                                letterSpacing: -0.3,
+                              )),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 70,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: state.profile!.familyMembers.length,
+                              itemBuilder: (context, index) {
+                                final member = state.profile!.familyMembers[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    HapticEngine.selection();
+                                    state.switchProfile(member);
+                                    state.showToast('Switched to ${member.name}');
+                                  },
+                                  onLongPress: () {
+                                    HapticEngine.alertWarning();
+                                    showDialog(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Remove Profile?'),
+                                        content: Text('This will stop all reminders for ${member.name}. History for this member will be preserved in the cloud.'),
+                                        actions: [
+                                          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                                          TextButton(
+                                            onPressed: () {
+                                              state.removeFamilyMember(member.id);
+                                              Navigator.pop(ctx);
+                                            },
+                                            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 140,
+                                    margin: const EdgeInsets.only(right: 12),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: L.card,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: member.isCritical 
+                                            ? Colors.red.withValues(alpha: 0.3) 
+                                            : L.border.withValues(alpha: 0.1),
+                                        width: member.isCritical ? 1.5 : 1.0,
+                                      ),
+                                      boxShadow: L.shadowSoft,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Stack(
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            Text(member.avatar, style: const TextStyle(fontSize: 18)),
+                                            if (member.isCritical)
+                                              Positioned(
+                                                top: -4,
+                                                right: -4,
+                                                child: Container(
+                                                  width: 8,
+                                                  height: 8,
+                                                  decoration: const BoxDecoration(
+                                                    color: Colors.red,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                                                  begin: const Offset(1, 1),
+                                                  end: const Offset(1.2, 1.2),
+                                                  duration: 1.seconds,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            member.name,
+                                            style: AppTypography.labelSmall.copyWith(
+                                              color: L.text,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+
                         if (state.caregivers.isEmpty)
                           _buildEmptyState(L, onAddCg)
                               .animate()
@@ -520,7 +650,8 @@ class HubView extends StatelessWidget {
             left: 0,
             right: 0,
             child: _FamilyHeader(
-              scrollOffset: scrollController.hasClients ? scrollController.offset : 0,
+              scrollOffset:
+                  scrollController.hasClients ? scrollController.offset : 0,
               isActive: activeCount > 0 || state.monitoredPatients.isNotEmpty,
               L: L,
               onAdd: onAddCg,
@@ -537,12 +668,15 @@ class HubView extends StatelessWidget {
                 onPressed: onAddCg,
                 backgroundColor: L.text,
                 elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: AppRadius.roundM),
-                icon: const Text('➕', style: TextStyle(color: Colors.white, fontSize: 14)),
+                shape: RoundedRectangleBorder(borderRadius: AppRadius.roundM),
+                icon: const Text('➕',
+                    style: TextStyle(color: Colors.white, fontSize: 14)),
                 label: const Text('Add Guardian',
                     style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5)),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                        letterSpacing: 0.5)),
               ),
             ).animate().scale(delay: 400.ms, curve: Curves.easeOutBack),
     );
@@ -679,13 +813,19 @@ class _FamilyHeader extends StatelessWidget {
                             width: 10,
                             height: 10,
                             decoration: BoxDecoration(
-                              color: L.success,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(color: L.success.withValues(alpha: 0.5), blurRadius: 8)
-                              ]
-                            ),
-                          ).animate(onPlay: (c) => c.repeat(reverse: true)).fade(begin: 0.3, end: 1.0, duration: 1.seconds).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2)),
+                                color: L.success,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: L.success.withValues(alpha: 0.5),
+                                      blurRadius: 8)
+                                ]),
+                          )
+                              .animate(onPlay: (c) => c.repeat(reverse: true))
+                              .fade(begin: 0.3, end: 1.0, duration: 1.seconds)
+                              .scale(
+                                  begin: const Offset(0.8, 0.8),
+                                  end: const Offset(1.2, 1.2)),
                         ]
                       ],
                     ),
@@ -701,8 +841,9 @@ class _FamilyHeader extends StatelessWidget {
                     color: L.fill,
                     borderRadius: AppRadius.roundS,
                   ),
-                  child: Center(
-                      child: const Center(child: Text('🤳', style: TextStyle(fontSize: 20)))),
+                  child: const Center(
+                      child: Center(
+                          child: Text('🤳', style: TextStyle(fontSize: 20)))),
                 ),
               ),
               const SizedBox(width: 10),
@@ -715,11 +856,15 @@ class _FamilyHeader extends StatelessWidget {
                     color: L.text,
                     borderRadius: AppRadius.roundS,
                     boxShadow: [
-                      BoxShadow(color: L.text.withValues(alpha: 0.15), blurRadius: 16, offset: const Offset(0, 4))
+                      BoxShadow(
+                          color: L.text.withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4))
                     ],
                   ),
-                  child: Center(
-                      child: const Center(child: Text('➕', style: TextStyle(fontSize: 20)))),
+                  child: const Center(
+                      child: Center(
+                          child: Text('➕', style: TextStyle(fontSize: 20)))),
                 ),
               ),
             ],
@@ -736,42 +881,59 @@ class _CircleStatBento extends StatelessWidget {
   final Color? iconColor;
   final AppThemeColors L;
   final bool glow;
-  const _CircleStatBento({required this.label, required this.value, required this.emoji, this.iconColor, required this.L, this.glow = false});
+  const _CircleStatBento(
+      {required this.label,
+      required this.value,
+      required this.emoji,
+      this.iconColor,
+      required this.L,
+      this.glow = false});
   @override
   Widget build(BuildContext context) => SquircleCard(
-    padding: const EdgeInsets.all(20),
-    radius: 24,
-    borderWidth: 0.5,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+        padding: const EdgeInsets.all(20),
+        radius: 24,
+        borderWidth: 0.5,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: (iconColor ?? L.primary).withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Text(emoji, style: TextStyle(fontSize: 12, color: iconColor ?? L.primary)),
-            ).animate(target: glow ? 1 : 0, onPlay: (c) => c.repeat(reverse: true)).scale(begin: const Offset(1.0, 1.0), end: const Offset(1.2, 1.2), curve: Curves.easeInOut),
-            const SizedBox(width: 10),
-            Text(label, style: AppTypography.labelSmall.copyWith(
-              color: L.sub.withValues(alpha: 0.4), 
-              fontWeight: FontWeight.w900, 
-              fontSize: 10, 
-              letterSpacing: 1.0)),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: (iconColor ?? L.primary).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(emoji,
+                      style: TextStyle(
+                          fontSize: 12, color: iconColor ?? L.primary)),
+                )
+                    .animate(
+                        target: glow ? 1 : 0,
+                        onPlay: (c) => c.repeat(reverse: true))
+                    .scale(
+                        begin: const Offset(1.0, 1.0),
+                        end: const Offset(1.2, 1.2),
+                        curve: Curves.easeInOut),
+                const SizedBox(width: 10),
+                Text(label,
+                    style: AppTypography.labelSmall.copyWith(
+                        color: L.sub.withValues(alpha: 0.4),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 10,
+                        letterSpacing: 1.0)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(value,
+                style: AppTypography.displaySmall.copyWith(
+                  color: L.text,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 22,
+                  letterSpacing: -0.5,
+                  height: 1.0,
+                )),
           ],
         ),
-        const SizedBox(height: 16),
-        Text(value, style: AppTypography.displaySmall.copyWith(
-          color: L.text, 
-          fontWeight: FontWeight.w900, 
-          fontSize: 22, 
-          letterSpacing: -0.5,
-          height: 1.0,
-        )),
-      ],
-    ),
-  );
+      );
 }

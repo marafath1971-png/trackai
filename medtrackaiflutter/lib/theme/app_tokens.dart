@@ -230,7 +230,7 @@ class AppShadows {
           offset: const Offset(0, 4),
         ),
       ];
-      
+
   /// Neumorphic Light Mode shadow from reference
   static List<BoxShadow> get neumorphic => [
         BoxShadow(
@@ -257,13 +257,13 @@ class AppGradients {
       );
 
   static LinearGradient glass([Color? color]) => LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      (color ?? Colors.white).withValues(alpha: 0.1),
-      (color ?? Colors.white).withValues(alpha: 0.02),
-    ],
-  );
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          (color ?? Colors.white).withValues(alpha: 0.1),
+          (color ?? Colors.white).withValues(alpha: 0.02),
+        ],
+      );
 
   /// Subtle neutral tint for card backgrounds in light mode
   static LinearGradient get lightCard => const LinearGradient(

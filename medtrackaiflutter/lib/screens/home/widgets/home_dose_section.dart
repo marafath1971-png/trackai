@@ -33,8 +33,9 @@ class _HomeDoseSectionState extends State<HomeDoseSection> {
           );
       final taken = relevantDose != null;
       final now = TimeOfDay.now();
-      final overdue = !taken && (s.h < now.hour || (s.h == now.hour && s.m < now.minute));
-      
+      final overdue =
+          !taken && (s.h < now.hour || (s.h == now.hour && s.m < now.minute));
+
       return _DoseCardData(
         med: widget.med,
         sched: s,
@@ -66,7 +67,9 @@ class _HomeDoseSectionState extends State<HomeDoseSection> {
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(child: Container(height: 0.5, color: L.border.withValues(alpha: 0.1))),
+            Expanded(
+                child: Container(
+                    height: 0.5, color: L.border.withValues(alpha: 0.1))),
           ],
         ),
         const SizedBox(height: 16),
@@ -82,7 +85,10 @@ class _HomeDoseSectionState extends State<HomeDoseSection> {
               onTake: () => _markTaken(context, e.value),
               onSnooze: () => _snooze(context, e.value),
               onTap: () => _showMedDetail(context),
-            ).animate(delay: (e.key * 80).ms).fadeIn(duration: 400.ms).slideX(begin: 0.05, end: 0),
+            )
+                .animate(delay: (e.key * 80).ms)
+                .fadeIn(duration: 400.ms)
+                .slideX(begin: 0.05, end: 0),
           );
         }),
       ],
@@ -90,15 +96,14 @@ class _HomeDoseSectionState extends State<HomeDoseSection> {
   }
 
   void _markTaken(BuildContext context, _DoseCardData d) {
-    final doseItem = DoseItem(med: d.med, sched: d.sched, key: '${d.med.id}_${d.sched.id}');
+    final doseItem =
+        DoseItem(med: d.med, sched: d.sched, key: '${d.med.id}_${d.sched.id}');
     context.read<AppState>().recordDose(doseItem);
   }
 
-  void _snooze(BuildContext context, _DoseCardData d) {
-  }
+  void _snooze(BuildContext context, _DoseCardData d) {}
 
-  void _showMedDetail(BuildContext context) {
-  }
+  void _showMedDetail(BuildContext context) {}
 }
 
 class _DoseCardData {

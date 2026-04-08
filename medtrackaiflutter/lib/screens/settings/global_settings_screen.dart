@@ -6,6 +6,7 @@ import '../../theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/shared/shared_widgets.dart';
 import '../../core/utils/haptic_engine.dart';
+import '../../models/constants.dart';
 
 // ══════════════════════════════════════════════════════════════════════
 // GLOBAL SETTINGS SCREEN (Cal AI Industrial Authority Refined)
@@ -21,33 +22,14 @@ class GlobalSettingsScreen extends StatefulWidget {
 class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
   late UserProfile _profile;
 
+  // Using global kCountries and local _languages
   static const List<Map<String, String>> _languages = [
     {'code': 'en', 'label': 'English', 'flag': '🇺🇸'},
     {'code': 'es', 'label': 'Español (Spanish)', 'flag': '🇪🇸'},
     {'code': 'fr', 'label': 'Français (French)', 'flag': '🇫🇷'},
     {'code': 'ja', 'label': '日本語 (Japanese)', 'flag': '🇯🇵'},
     {'code': 'ko', 'label': '한국어 (Korean)', 'flag': '🇰🇷'},
-    {'code': 'zh', 'label': '中文 (Chinese)', 'flag': '🇨🇳'},
-    {'code': 'he', 'label': 'עברית (Hebrew)', 'flag': '🇮🇱'},
     {'code': 'ms', 'label': 'Bahasa Melayu', 'flag': '🇲🇾'},
-  ];
-
-  static const List<Map<String, String>> _countries = [
-    {'code': 'US', 'label': 'United States', 'flag': '🇺🇸'},
-    {'code': 'GB', 'label': 'United Kingdom', 'flag': '🇬🇧'},
-    {'code': 'CA', 'label': 'Canada', 'flag': '🇨🇦'},
-    {'code': 'ES', 'label': 'Spain', 'flag': '🇪🇸'},
-    {'code': 'MX', 'label': 'Mexico', 'flag': '🇲🇽'},
-    {'code': 'CO', 'label': 'Colombia', 'flag': '🇨🇴'},
-    {'code': 'AR', 'label': 'Argentina', 'flag': '🇦🇷'},
-    {'code': 'CL', 'label': 'Chile', 'flag': '🇨🇱'},
-    {'code': 'AU', 'label': 'Australia', 'flag': '🇦🇺'},
-    {'code': 'JP', 'label': 'Japan', 'flag': '🇯🇵'},
-    {'code': 'KR', 'label': 'South Korea', 'flag': '🇰🇷'},
-    {'code': 'SG', 'label': 'Singapore', 'flag': '🇸🇬'},
-    {'code': 'IL', 'label': 'Israel', 'flag': '🇮🇱'},
-    {'code': 'MY', 'label': 'Malaysia', 'flag': '🇲🇾'},
-    {'code': 'AE', 'label': 'United Arab Emirates', 'flag': '🇦🇪'},
   ];
 
   @override
@@ -78,114 +60,137 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
             padding: EdgeInsets.fromLTRB(20, topPad + 110, 20, 120),
             physics: const BouncingScrollPhysics(),
             children: [
-                  
-                  // ── LOCALIZATION BLOCK ───────────────────────
-                  _IndustrialSection(
-                    label: 'LOCALIZATION',
-                    icon: '🌍',
+              // ── LOCALIZATION BLOCK ───────────────────────
+              _IndustrialSection(
+                label: 'LOCALIZATION',
+                icon: '🌍',
+                L: L,
+                children: [
+                  _PickerTile(
+                    label: 'Country',
+                    value: kCountries.firstWhere(
+                        (c) => c['c'] == _profile.country,
+                        orElse: () => kCountries[0])['v']!,
+                    flag: kCountries.firstWhere(
+                        (c) => c['c'] == _profile.country,
+                        orElse: () => kCountries[0])['e']!,
+                    onTap: () async {
+                      final res = await showModalBottomSheet<String>(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => _PickerSheet(
+                            title: 'Select Country',
+                            items: kCountries
+                                .map((c) => {
+                                      'code': c['c']!,
+                                      'label': c['v']!,
+                                      'flag': c['e']!
+                                    })
+                                .toList(),
+                            selectedCode: _profile.country),
+                      );
+                      if (!mounted || res == null) return;
+                      _save(_profile.copyWith(country: res));
+                    },
                     L: L,
-                    children: [
-                      _PickerTile(
-                        label: 'Country',
-                        value: _countries.firstWhere((c) => c['code'] == _profile.country, orElse: () => _countries[0])['label']!,
-                        flag: _countries.firstWhere((c) => c['code'] == _profile.country, orElse: () => _countries[0])['flag']!,
-                        onTap: () async {
-                          final res = await showModalBottomSheet<String>(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => _PickerSheet(title: 'Select Country', items: _countries, selectedCode: _profile.country),
-                          );
-                          if (!mounted || res == null) return;
-                          _save(_profile.copyWith(country: res));
-                        },
-                        L: L,
-                      ),
-                      _PickerTile(
-                        label: 'Language',
-                        value: _languages.firstWhere((l) => l['code'] == _profile.preferredLanguage, orElse: () => _languages[0])['label']!,
-                        flag: _languages.firstWhere((l) => l['code'] == _profile.preferredLanguage, orElse: () => _languages[0])['flag']!,
-                        onTap: () async {
-                          final res = await showModalBottomSheet<String>(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => _PickerSheet(title: 'Select Language', items: _languages, selectedCode: _profile.preferredLanguage),
-                          );
-                          if (!mounted || res == null) return;
-                          _save(_profile.copyWith(preferredLanguage: res));
-                        },
-                        L: L,
-                        isLast: true,
-                      ),
-                    ],
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // ── CLINICAL MODES BLOCK ─────────────────────
-                  _IndustrialSection(
-                    label: 'CLINICAL MODES',
-                    icon: '🔬',
+                  _PickerTile(
+                    label: 'Language',
+                    value: _languages.firstWhere(
+                        (l) => l['code'] == _profile.preferredLanguage,
+                        orElse: () => _languages[0])['label']!,
+                    flag: _languages.firstWhere(
+                        (l) => l['code'] == _profile.preferredLanguage,
+                        orElse: () => _languages[0])['flag']!,
+                    onTap: () async {
+                      final res = await showModalBottomSheet<String>(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => _PickerSheet(
+                            title: 'Select Language',
+                            items: _languages,
+                            selectedCode: _profile.preferredLanguage),
+                      );
+                      if (!mounted || res == null) return;
+                      _save(_profile.copyWith(preferredLanguage: res));
+                    },
                     L: L,
-                    children: [
-                      _ToggleTile(
-                        title: s.showGenericNames,
-                        subtitle: s.showGenericNamesSubtitle,
-                        value: _profile.showGenericNames,
-                        onChanged: (v) => _save(_profile.copyWith(showGenericNames: v)),
-                        L: L,
-                      ),
-                      _ToggleTile(
-                        title: s.shabbatMode,
-                        subtitle: s.shabbatModeSubtitle,
-                        value: _profile.shabbatMode,
-                        onChanged: (v) => _save(_profile.copyWith(shabbatMode: v)),
-                        L: L,
-                      ),
-                      _ToggleTile(
-                        title: 'Diabetes Metrics',
-                        subtitle: 'Synchronize blood glucose logs',
-                        value: _profile.diabetesMode,
-                        onChanged: (v) => _save(_profile.copyWith(diabetesMode: v)),
-                        L: L,
-                      ),
-                      _ToggleTile(
-                        title: 'Hypertension Tracking',
-                        subtitle: 'Synchronize systolic/diastolic logs',
-                        value: _profile.hypertensionMode,
-                        onChanged: (v) => _save(_profile.copyWith(hypertensionMode: v)),
-                        L: L,
-                        isLast: true,
-                      ),
-                    ],
+                    isLast: true,
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // ── DISPLAY ARCHITECTURE BLOCK ───────────────
-                  _IndustrialSection(
-                    label: 'DISPLAY ARCHITECTURE',
-                    icon: '🎨',
-                    L: L,
-                    children: [
-                      _ToggleTile(
-                        title: 'Amoled Optimization',
-                        subtitle: 'Pure Black interface for power efficiency',
-                        value: _profile.amoledMode,
-                        onChanged: (v) => _save(_profile.copyWith(amoledMode: v)),
-                        L: L,
-                        isLast: true,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 120),
                 ],
               ),
 
+              const SizedBox(height: 24),
+
+              // ── CLINICAL MODES BLOCK ─────────────────────
+              _IndustrialSection(
+                label: 'CLINICAL MODES',
+                icon: '🔬',
+                L: L,
+                children: [
+                  _ToggleTile(
+                    title: s.showGenericNames,
+                    subtitle: s.showGenericNamesSubtitle,
+                    value: _profile.showGenericNames,
+                    onChanged: (v) =>
+                        _save(_profile.copyWith(showGenericNames: v)),
+                    L: L,
+                  ),
+                  _ToggleTile(
+                    title: s.shabbatMode,
+                    subtitle: s.shabbatModeSubtitle,
+                    value: _profile.shabbatMode,
+                    onChanged: (v) => _save(_profile.copyWith(shabbatMode: v)),
+                    L: L,
+                  ),
+                  _ToggleTile(
+                    title: 'Diabetes Metrics',
+                    subtitle: 'Synchronize blood glucose logs',
+                    value: _profile.diabetesMode,
+                    onChanged: (v) => _save(_profile.copyWith(diabetesMode: v)),
+                    L: L,
+                  ),
+                  _ToggleTile(
+                    title: 'Hypertension Tracking',
+                    subtitle: 'Synchronize systolic/diastolic logs',
+                    value: _profile.hypertensionMode,
+                    onChanged: (v) =>
+                        _save(_profile.copyWith(hypertensionMode: v)),
+                    L: L,
+                    isLast: true,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── DISPLAY ARCHITECTURE BLOCK ───────────────
+              _IndustrialSection(
+                label: 'DISPLAY ARCHITECTURE',
+                icon: '🎨',
+                L: L,
+                children: [
+                  _ToggleTile(
+                    title: 'Amoled Optimization',
+                    subtitle: 'Pure Black interface for power efficiency',
+                    value: _profile.amoledMode,
+                    onChanged: (v) => _save(_profile.copyWith(amoledMode: v)),
+                    L: L,
+                    isLast: true,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 120),
+            ],
+          ),
+
           // ── PREMIUM GLASS HEADER ──
           Positioned(
-            top: 0, left: 0, right: 0,
+            top: 0,
+            left: 0,
+            right: 0,
             child: ClipRRect(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
@@ -193,13 +198,20 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
                   padding: EdgeInsets.fromLTRB(24, topPad + 12, 20, 16),
                   decoration: BoxDecoration(
                     color: L.bg.withValues(alpha: 0.8),
-                    border: Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.08), width: 0.5)),
+                    border: Border(
+                        bottom: BorderSide(
+                            color: L.border.withValues(alpha: 0.08),
+                            width: 0.5)),
                   ),
                   child: Row(
                     children: [
                       BouncingButton(
                         onTap: () => Navigator.pop(context),
-                        child: Text('←', style: TextStyle(color: L.text, fontSize: 24, fontWeight: FontWeight.w900)),
+                        child: Text('←',
+                            style: TextStyle(
+                                color: L.text,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900)),
                       ),
                       const SizedBox(width: 20),
                       Expanded(
@@ -246,7 +258,11 @@ class _IndustrialSection extends StatelessWidget {
   final String icon;
   final List<Widget> children;
   final AppThemeColors L;
-  const _IndustrialSection({required this.label, required this.icon, required this.children, required this.L});
+  const _IndustrialSection(
+      {required this.label,
+      required this.icon,
+      required this.children,
+      required this.L});
 
   @override
   Widget build(BuildContext context) {
@@ -258,11 +274,12 @@ class _IndustrialSection extends StatelessWidget {
           child: Row(children: [
             Text(icon, style: const TextStyle(fontSize: 14)),
             const SizedBox(width: 10),
-            Text(label, style: AppTypography.labelSmall.copyWith(
-              color: L.text.withValues(alpha: 0.4), 
-              fontWeight: FontWeight.w900, 
-              letterSpacing: 2.0, 
-              fontSize: 10)),
+            Text(label,
+                style: AppTypography.labelSmall.copyWith(
+                    color: L.text.withValues(alpha: 0.4),
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2.0,
+                    fontSize: 10)),
           ]),
         ),
         SquircleCard(
@@ -280,27 +297,41 @@ class _ToggleTile extends StatelessWidget {
   final ValueChanged<bool> onChanged;
   final AppThemeColors L;
   final bool isLast;
-  const _ToggleTile({required this.title, required this.subtitle, required this.value, required this.onChanged, required this.L, this.isLast = false});
+  const _ToggleTile(
+      {required this.title,
+      required this.subtitle,
+      required this.value,
+      required this.onChanged,
+      required this.L,
+      this.isLast = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.05), width: 0.5))),
+      decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : Border(
+                  bottom: BorderSide(
+                      color: L.border.withValues(alpha: 0.05), width: 0.5))),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        title: Text(title, style: AppTypography.labelLarge.copyWith(
-          color: L.text, 
-          fontWeight: FontWeight.w900, 
-          fontSize: 16,
-          letterSpacing: -0.3,
-        )),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        title: Text(title,
+            style: AppTypography.labelLarge.copyWith(
+              color: L.text,
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
+              letterSpacing: -0.3,
+            )),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Text(subtitle, style: AppTypography.bodySmall.copyWith(
-            color: L.text.withValues(alpha: 0.5), 
-            fontWeight: FontWeight.w500, 
-            height: 1.4, 
-            fontSize: 12)),
+          child: Text(subtitle,
+              style: AppTypography.bodySmall.copyWith(
+                  color: L.text.withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
+                  fontSize: 12)),
         ),
         trailing: AppToggle(
           value: value,
@@ -319,22 +350,44 @@ class _PickerTile extends StatelessWidget {
   final VoidCallback onTap;
   final AppThemeColors L;
   final bool isLast;
-  const _PickerTile({required this.label, required this.value, required this.flag, required this.onTap, required this.L, this.isLast = false});
+  const _PickerTile(
+      {required this.label,
+      required this.value,
+      required this.flag,
+      required this.onTap,
+      required this.L,
+      this.isLast = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(border: isLast ? null : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.05), width: 0.5))),
+      decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : Border(
+                  bottom: BorderSide(
+                      color: L.border.withValues(alpha: 0.05), width: 0.5))),
       child: ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        title: Text(label, style: AppTypography.labelLarge.copyWith(color: L.text, fontWeight: FontWeight.w900, fontSize: 15)),
+        title: Text(label,
+            style: AppTypography.labelLarge.copyWith(
+                color: L.text, fontWeight: FontWeight.w900, fontSize: 15)),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('$flag $value', style: AppTypography.bodySmall.copyWith(color: L.text.withValues(alpha: 0.8), fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: -0.2)),
+            Text('$flag $value',
+                style: AppTypography.bodySmall.copyWith(
+                    color: L.text.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                    letterSpacing: -0.2)),
             const SizedBox(width: 10),
-            Text('→', style: TextStyle(color: L.sub.withValues(alpha: 0.3), fontSize: 18, fontWeight: FontWeight.w900)),
+            Text('→',
+                style: TextStyle(
+                    color: L.sub.withValues(alpha: 0.3),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900)),
           ],
         ),
       ),
@@ -346,41 +399,70 @@ class _PickerSheet extends StatelessWidget {
   final String title;
   final List<Map<String, String>> items;
   final String selectedCode;
-  const _PickerSheet({required this.title, required this.items, required this.selectedCode});
+  const _PickerSheet(
+      {required this.title, required this.items, required this.selectedCode});
 
   @override
   Widget build(BuildContext context) {
     final L = context.L;
     return Container(
-      decoration: BoxDecoration(color: L.bg, borderRadius: const BorderRadius.vertical(top: Radius.circular(32))),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 12),
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: L.border.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 24),
-          Text(title, style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.w900, color: L.text, fontSize: 18)),
-          const SizedBox(height: 24),
-          Flexible(
-            child: ListView.builder(
-              shrinkWrap: true,
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 48),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                final isSelected = item['code'] == selectedCode;
-                return ListTile(
-                  onTap: () {
-                    HapticEngine.selection();
-                    Navigator.pop(context, item['code']);
-                  },
-                  title: Text(item['label']!.toUpperCase(), style: AppTypography.labelLarge.copyWith(fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700, color: isSelected ? L.text : L.sub.withValues(alpha: 0.5), fontSize: 14, letterSpacing: 0.5)),
-                  trailing: isSelected ? Text('✓', style: TextStyle(color: L.text, fontSize: 18, fontWeight: FontWeight.w900)) : null,
-                );
-              },
+      constraints:
+          BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+      decoration: BoxDecoration(
+          color: L.bg,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32))),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: L.border.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 24),
+            Text(title,
+                style: AppTypography.titleLarge.copyWith(
+                    fontWeight: FontWeight.w900, color: L.text, fontSize: 18)),
+            const SizedBox(height: 24),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 48),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  final isSelected = item['code'] == selectedCode;
+                  return ListTile(
+                    onTap: () {
+                      HapticEngine.selection();
+                      Navigator.pop(context, item['code']);
+                    },
+                    title: Text(item['label']!.toUpperCase(),
+                        style: AppTypography.labelLarge.copyWith(
+                            fontWeight:
+                                isSelected ? FontWeight.w900 : FontWeight.w700,
+                            color: isSelected
+                                ? L.text
+                                : L.sub.withValues(alpha: 0.5),
+                            fontSize: 14,
+                            letterSpacing: 0.5)),
+                    trailing: isSelected
+                        ? Text('✓',
+                            style: TextStyle(
+                                color: L.text,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900))
+                        : null,
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -186,7 +186,8 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
               if (isDanger) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: L.error,
                     borderRadius: BorderRadius.circular(4),
@@ -223,7 +224,8 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
                       style: AppTypography.bodySmall.copyWith(
                         color: isDanger ? L.text : L.sub,
                         height: 1.5,
-                        fontWeight: isDanger ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight:
+                            isDanger ? FontWeight.w700 : FontWeight.w500,
                       ),
                     ),
                   ),

@@ -10,7 +10,7 @@ import '../../core/utils/haptic_engine.dart';
 
 class SocialController extends ChangeNotifier {
   final IUserRepository userRepo;
-  
+
   List<Caregiver> _caregivers = [];
   List<Map<String, dynamic>> _monitoredPatients = [];
   List<MissedAlert> _missedAlerts = [];
@@ -69,7 +69,8 @@ class SocialController extends ChangeNotifier {
     });
   }
 
-  Future<String> createInvite(Caregiver cg, String? patientName, String? patientAvatar) async {
+  Future<String> createInvite(
+      Caregiver cg, String? patientName, String? patientAvatar) async {
     final uid = AuthService.uid;
     if (uid == null) return '';
     try {
@@ -81,7 +82,9 @@ class SocialController extends ChangeNotifier {
       );
 
       if (code.isNotEmpty) {
-        _caregivers = _caregivers.map((c) => c.id == cg.id ? c.copyWith(inviteCode: code) : c).toList();
+        _caregivers = _caregivers
+            .map((c) => c.id == cg.id ? c.copyWith(inviteCode: code) : c)
+            .toList();
         await userRepo.saveCaregivers(_caregivers);
         notifyListeners();
       }
@@ -141,8 +144,8 @@ class SocialController extends ChangeNotifier {
     HapticEngine.selection();
   }
 
-  Future<void> fetchProtectorInsight(
-      Caregiver cg, List<Medicine> meds, Map<String, List<DoseEntry>> history) async {
+  Future<void> fetchProtectorInsight(Caregiver cg, List<Medicine> meds,
+      Map<String, List<DoseEntry>> history) async {
     final insight = await GeminiService.getProtectorInsight(
       patientName: 'Member',
       meds: meds,
@@ -153,6 +156,20 @@ class SocialController extends ChangeNotifier {
   }
 
   Future<void> joinCareTeam(String code) => joinCaregiver(code);
+
+  /// Task Phase 2.4: Caregiver Telemetry Alert
+  Future<void> notifyCaregiversOfMissedDose(Medicine med) async {
+    appLogger.e('[Social] CRITICAL ALERT: Missed dose of ${med.name}');
+    final uid = AuthService.uid;
+    if (uid == null) return;
+
+    // Simulate sending telemetry to active caregivers
+    for (var cg in _caregivers.where((c) => c.status == 'active')) {
+      appLogger.i('[Social] Pushing alert to caregiver: ${cg.name}');
+      // In a real app, we would send a FCM message or call a Cloud Function
+      // CircleService.sendCriticalAlert(uid, med.name, cg.id);
+    }
+  }
 
   @override
   void dispose() {

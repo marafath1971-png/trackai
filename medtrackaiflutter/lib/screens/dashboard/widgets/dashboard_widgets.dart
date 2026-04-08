@@ -52,7 +52,8 @@ class _TimelinePillSelectorState extends State<TimelinePillSelector> {
                     duration: const Duration(milliseconds: 260),
                     curve: Curves.easeOutCubic,
                     margin: const EdgeInsets.only(right: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: isSelected ? L.card : Colors.transparent,
                       borderRadius: BorderRadius.circular(18),
@@ -70,8 +71,10 @@ class _TimelinePillSelectorState extends State<TimelinePillSelector> {
                     child: Text(
                       tabs[index],
                       style: AppTypography.labelLarge.copyWith(
-                        color: isSelected ? L.text : L.sub.withValues(alpha: 0.6),
-                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                        color:
+                            isSelected ? L.text : L.sub.withValues(alpha: 0.6),
+                        fontWeight:
+                            isSelected ? FontWeight.w800 : FontWeight.w500,
                         fontSize: 12,
                       ),
                     ),
@@ -120,7 +123,8 @@ class LatencyHeatmap extends StatelessWidget {
               children: List.generate(7, (i) {
                 final date = DateTime.now().subtract(Duration(days: 6 - i));
                 final dateStr = date.toIso8601String().substring(0, 10);
-                final dayLatency = latencyData.where((e) => e['date'] == dateStr).toList();
+                final dayLatency =
+                    latencyData.where((e) => e['date'] == dateStr).toList();
 
                 return Expanded(
                   child: Column(
@@ -134,7 +138,11 @@ class LatencyHeatmap extends StatelessWidget {
                               width: 0.5,
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [Colors.transparent, L.border.withValues(alpha: 0.1), Colors.transparent],
+                                  colors: [
+                                    Colors.transparent,
+                                    L.border.withValues(alpha: 0.1),
+                                    Colors.transparent
+                                  ],
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                 ),
@@ -142,8 +150,11 @@ class LatencyHeatmap extends StatelessWidget {
                             ),
                             ...dayLatency.map((d) {
                               final latency = (d['latency'] as int?) ?? 0;
-                              final color = latency.abs() < 15 ? L.text : (latency.abs() < 60 ? L.sub : L.error);
-                              final bottomPos = ((latency + 60) / 120 * 100).clamp(0.0, 100.0);
+                              final color = latency.abs() < 15
+                                  ? L.text
+                                  : (latency.abs() < 60 ? L.sub : L.error);
+                              final bottomPos = ((latency + 60) / 120 * 100)
+                                  .clamp(0.0, 100.0);
 
                               return Positioned(
                                 bottom: bottomPos,
@@ -154,15 +165,21 @@ class LatencyHeatmap extends StatelessWidget {
                                     color: color,
                                     shape: BoxShape.circle,
                                     boxShadow: [
-                                      BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8, spreadRadius: 1),
+                                      BoxShadow(
+                                          color: color.withValues(alpha: 0.3),
+                                          blurRadius: 8,
+                                          spreadRadius: 1),
                                     ],
                                   ),
-                                ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
-                                  begin: const Offset(1, 1),
-                                  end: const Offset(1.2, 1.2),
-                                  duration: 1500.ms,
-                                  delay: (i * 100).ms,
-                                ),
+                                )
+                                    .animate(
+                                        onPlay: (c) => c.repeat(reverse: true))
+                                    .scale(
+                                      begin: const Offset(1, 1),
+                                      end: const Offset(1.2, 1.2),
+                                      duration: 1500.ms,
+                                      delay: (i * 100).ms,
+                                    ),
                               );
                             }),
                           ],
@@ -170,8 +187,19 @@ class LatencyHeatmap extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][date.weekday % 7],
-                        style: AppTypography.labelSmall.copyWith(fontSize: 11, color: L.sub, fontWeight: FontWeight.w900),
+                        [
+                          'SUN',
+                          'MON',
+                          'TUE',
+                          'WED',
+                          'THU',
+                          'FRI',
+                          'SAT'
+                        ][date.weekday % 7],
+                        style: AppTypography.labelSmall.copyWith(
+                            fontSize: 11,
+                            color: L.sub,
+                            fontWeight: FontWeight.w900),
                       ),
                     ],
                   ),
@@ -189,23 +217,30 @@ class LatencyHeatmap extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('TIMING_CONSISTENCY',
-            style: AppTypography.labelSmall.copyWith(fontSize: 10, color: L.sub, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
+            style: AppTypography.labelSmall.copyWith(
+                fontSize: 10,
+                color: L.sub,
+                letterSpacing: 1.5,
+                fontWeight: FontWeight.w900)),
         const SizedBox(height: 16),
         SizedBox(
           height: 140,
           child: Container(
             decoration: ShapeDecoration(
               color: Colors.white,
-              shape: ContinuousRectangleBorder(borderRadius: BorderRadius.circular(48)),
+              shape: ContinuousRectangleBorder(
+                  borderRadius: BorderRadius.circular(48)),
               shadows: AppShadows.neumorphic,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.history_rounded, color: L.sub.withValues(alpha: 0.2), size: 28),
+                Icon(Icons.history_rounded,
+                    color: L.sub.withValues(alpha: 0.2), size: 28),
                 const SizedBox(height: 16),
                 Text('Log doses to see timing patterns',
-                    style: AppTypography.bodySmall.copyWith(color: L.sub, fontWeight: FontWeight.w700)),
+                    style: AppTypography.bodySmall
+                        .copyWith(color: L.sub, fontWeight: FontWeight.w700)),
               ],
             ),
           ),
@@ -242,16 +277,23 @@ class HealthCoachCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text('AI_MEDICAL_BRIEFING',
                     style: AppTypography.labelSmall.copyWith(
-                        fontSize: 10, color: L.purple, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
+                        fontSize: 10,
+                        color: L.purple,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w900)),
               ],
             ),
-            BouncingButton(onTap: onRetry, child: const Text('🔄', style: TextStyle(fontSize: 14))),
+            BouncingButton(
+                onTap: onRetry,
+                child: const Text('🔄', style: TextStyle(fontSize: 14))),
           ],
         ),
         const SizedBox(height: 16),
         ...insights.map((ins) {
           final cat = ins.category.toLowerCase();
-          final color = (cat.contains('safe') || cat.contains('warn')) ? L.error : (cat.contains('adh') ? L.text : L.purple);
+          final color = (cat.contains('safe') || cat.contains('warn'))
+              ? L.error
+              : (cat.contains('adh') ? L.text : L.purple);
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -261,37 +303,61 @@ class HealthCoachCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Row(
+                  Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
-                        child: Text(cat.toUpperCase(), style: AppTypography.labelSmall.copyWith(color: color, fontSize: 11, fontWeight: FontWeight.w900)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4)),
+                        child: Text(cat.toUpperCase(),
+                            style: AppTypography.labelSmall.copyWith(
+                                color: color,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900)),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(ins.title, style: AppTypography.titleMedium.copyWith(color: L.text, fontWeight: FontWeight.w900)),
+                        child: Text(ins.title,
+                            style: AppTypography.titleMedium.copyWith(
+                                color: L.text, fontWeight: FontWeight.w900)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
                   SmoothingText(
                     text: ins.body,
-                    style: AppTypography.bodySmall.copyWith(color: L.sub, fontSize: 13, height: 1.5, fontWeight: FontWeight.w500),
+                    style: AppTypography.bodySmall.copyWith(
+                        color: L.sub,
+                        fontSize: 13,
+                        height: 1.5,
+                        fontWeight: FontWeight.w500),
                   ),
                   if (ins.steps.isNotEmpty) ...[
                     const SizedBox(height: 20),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: ins.steps.map((step) => BouncingButton(
-                        onTap: () => context.read<AppState>().executeStepAction(step, context),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(color: L.text.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8)),
-                          child: Text(step, style: AppTypography.labelSmall.copyWith(color: L.text, fontSize: 10, fontWeight: FontWeight.w900)),
-                        ),
-                      )).toList(),
+                      children: ins.steps
+                          .map((step) => BouncingButton(
+                                onTap: () => context
+                                    .read<AppState>()
+                                    .executeStepAction(step, context),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                      color: L.text.withValues(alpha: 0.05),
+                                      borderRadius: BorderRadius.circular(8)),
+                                  child: Text(step,
+                                      style: AppTypography.labelSmall.copyWith(
+                                          color: L.text,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w900)),
+                                ),
+                              ))
+                          .toList(),
                     ),
                   ],
                 ],
@@ -317,7 +383,10 @@ class HealthCoachCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text('AI MEDICAL BRIEFING',
                       style: AppTypography.labelLarge.copyWith(
-                          fontSize: 10, color: L.purple, letterSpacing: 1.5, fontWeight: FontWeight.w900)),
+                          fontSize: 10,
+                          color: L.purple,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.w900)),
                 ],
               ),
             ),
@@ -375,7 +444,8 @@ class AdherenceTrendChart extends StatelessWidget {
   final List<Map<String, dynamic>> trendData;
   final AppThemeColors L;
 
-  const AdherenceTrendChart({super.key, required this.trendData, required this.L});
+  const AdherenceTrendChart(
+      {super.key, required this.trendData, required this.L});
 
   @override
   Widget build(BuildContext context) {
@@ -416,7 +486,8 @@ class AdherenceTrendChart extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: L.text.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(12),
@@ -448,7 +519,9 @@ class AdherenceTrendChart extends StatelessWidget {
                     ? L.fill
                     : (val >= 0.8
                         ? L.text
-                        : (val >= 0.4 ? L.sub.withValues(alpha: 0.6) : L.error));
+                        : (val >= 0.4
+                            ? L.sub.withValues(alpha: 0.6)
+                            : L.error));
 
                 return Expanded(
                   child: Padding(
@@ -474,9 +547,7 @@ class AdherenceTrendChart extends StatelessWidget {
                             bottom: Radius.circular(2),
                           ),
                         ),
-                      )
-                          .animate(delay: (i * 20).ms)
-                          .scaleY(
+                      ).animate(delay: (i * 20).ms).scaleY(
                             begin: 0.0,
                             end: 1.0,
                             duration: 700.ms,
@@ -525,7 +596,8 @@ class AdherenceTrendChart extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.stacked_bar_chart_rounded, color: L.sub.withValues(alpha: 0.2), size: 32),
+            Icon(Icons.stacked_bar_chart_rounded,
+                color: L.sub.withValues(alpha: 0.2), size: 32),
             const SizedBox(height: 16),
             Text(
               'Trend data generating...',
@@ -540,7 +612,6 @@ class AdherenceTrendChart extends StatelessWidget {
     );
   }
 }
-
 
 class InventoryStatusCard extends StatelessWidget {
   final List<Medicine> meds;
@@ -577,7 +648,8 @@ class InventoryStatusCard extends StatelessWidget {
               final color = isLow ? L.error : L.text;
               final pct = (med.count / 30).clamp(0.01, 1.0);
               return Padding(
-                padding: EdgeInsets.only(bottom: i == trackedMeds.length - 1 ? 0 : 16),
+                padding: EdgeInsets.only(
+                    bottom: i == trackedMeds.length - 1 ? 0 : 16),
                 child: Row(
                   children: [
                     Expanded(
@@ -625,7 +697,8 @@ class _HighFidelityBar extends StatelessWidget {
   final double pct;
   final Color color;
   final AppThemeColors L;
-  const _HighFidelityBar({required this.pct, required this.color, required this.L});
+  const _HighFidelityBar(
+      {required this.pct, required this.color, required this.L});
 
   @override
   Widget build(BuildContext context) {

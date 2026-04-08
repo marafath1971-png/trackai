@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../widgets/shared/shared_widgets.dart';
 import '../core/utils/haptic_engine.dart';
 import 'home/home_tab.dart';
+import 'home/widgets/streak_modal.dart';
 import 'scan/scan_tab.dart';
 import 'alarms/alarms_tab.dart';
 import 'family/family_tab.dart';
@@ -44,8 +45,19 @@ class _AppShellState extends State<AppShell>
     context.read<AppState>().addListener(_handleCelebration);
   }
 
-  void _handleCelebration() {
+  void _handleCelebration() async {
     final state = context.read<AppState>();
+
+    // First Priority: Streak Milestones
+    final milestone = state.pendingMilestoneAnimation;
+    if (milestone != null) {
+      state.clearMilestone();
+      HapticEngine.heavyImpact();
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (mounted) StreakModal.show(context, state);
+      return;
+    }
+
     final medName = state.pendingCelebrationMedName;
     if (medName != null) {
       state.clearCelebration();
@@ -76,14 +88,18 @@ class _AppShellState extends State<AppShell>
   Widget build(BuildContext context) {
     final L = context.L;
     final isDark = context.select<AppState, bool>((s) => s.darkMode);
-    final unseenAlerts = context.select<AppState, int>((s) => s.unseenAlertsCount);
-    final lowMeds = context.select<AppState, List<Medicine>>((s) => s.getLowMeds());
+    final unseenAlerts =
+        context.select<AppState, int>((s) => s.unseenAlertsCount);
+    final lowMeds =
+        context.select<AppState, List<Medicine>>((s) => s.getLowMeds());
     final isLocked = context.select<AppState, bool>((s) => s.isLocked);
     final toast = context.select<AppState, String?>((s) => s.toast);
     final toastType = context.select<AppState, String?>((s) => s.toastType);
-    final bannerDismissed = context.select<AppState, bool>((s) => s.lowStockBannerDismissed);
+    final bannerDismissed =
+        context.select<AppState, bool>((s) => s.lowStockBannerDismissed);
     final isSyncing = context.select<AppState, bool>((s) => s.isMutating);
-    final lastSynced = context.select<AppState, DateTime?>((s) => s.lastSyncedAt);
+    final lastSynced =
+        context.select<AppState, DateTime?>((s) => s.lastSyncedAt);
 
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
@@ -159,17 +175,16 @@ class _AppShellState extends State<AppShell>
                           HapticEngine.medium();
                           context.read<AppState>().dismissLowStockBanner();
                         },
-                      )
-                          .animate()
-                          .fadeIn(duration: 500.ms)
-                          .slideY(begin: -0.2, end: 0, curve: Curves.easeOutBack),
+                      ).animate().fadeIn(duration: 500.ms).slideY(
+                          begin: -0.2, end: 0, curve: Curves.easeOutBack),
                     ),
 
                   // ── Sync indicator ──
                   Positioned(
                     bottom: 110 + bottomPadding,
                     right: 20,
-                    child: SyncStatusBanner(isSyncing: isSyncing, lastSynced: lastSynced)
+                    child: SyncStatusBanner(
+                            isSyncing: isSyncing, lastSynced: lastSynced)
                         .animate(target: isSyncing ? 1 : 0)
                         .fadeIn(duration: 300.ms)
                         .scale(begin: const Offset(0.8, 0.8))
@@ -206,10 +221,14 @@ class _AppShellState extends State<AppShell>
           onScan: _openScan,
           onSwitchTab: (i) => setState(() => _tab = i),
         );
-      case 1: return const AlarmsTab();
-      case 2: return const DashboardTab();
-      case 3: return const FamilyTab();
-      default: return const SizedBox.shrink();
+      case 1:
+        return const AlarmsTab();
+      case 2:
+        return const DashboardTab();
+      case 3:
+        return const FamilyTab();
+      default:
+        return const SizedBox.shrink();
     }
   }
 
@@ -217,8 +236,18 @@ class _AppShellState extends State<AppShell>
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final isDark = context.select<AppState, bool>((s) => s.darkMode);
     const labels = ['Home', 'Alarms', 'Health', 'Circle'];
-    const activeIcons = [Icons.home_rounded, Icons.notifications_rounded, Icons.bar_chart_rounded, Icons.people_rounded];
-    const inactiveIcons = [Icons.home_outlined, Icons.notifications_outlined, Icons.bar_chart_outlined, Icons.people_outline_rounded];
+    const activeIcons = [
+      Icons.home_rounded,
+      Icons.notifications_rounded,
+      Icons.bar_chart_rounded,
+      Icons.people_rounded
+    ];
+    const inactiveIcons = [
+      Icons.home_outlined,
+      Icons.notifications_outlined,
+      Icons.bar_chart_outlined,
+      Icons.people_outline_rounded
+    ];
     final badges = [0, unseenAlerts, 0, 0];
 
     return Padding(
@@ -235,7 +264,8 @@ class _AppShellState extends State<AppShell>
                 child: Container(
                   height: 68,
                   decoration: BoxDecoration(
-                    color: (isDark ? const Color(0xFF1C1C1E) : Colors.white).withValues(alpha: isDark ? 0.88 : 0.95),
+                    color: (isDark ? const Color(0xFF1C1C1E) : Colors.white)
+                        .withValues(alpha: isDark ? 0.88 : 0.95),
                     borderRadius: BorderRadius.circular(28),
                     border: Border.all(
                       color: L.border.withValues(alpha: isDark ? 0.12 : 0.07),
@@ -265,10 +295,16 @@ class _AppShellState extends State<AppShell>
                           ),
                           // Nav items
                           Row(
-                            children: List.generate(4, (i) => _buildNavItem(
-                              i, activeIcons[i], inactiveIcons[i],
-                              labels[i], L, badges[i],
-                            )),
+                            children: List.generate(
+                                4,
+                                (i) => _buildNavItem(
+                                      i,
+                                      activeIcons[i],
+                                      inactiveIcons[i],
+                                      labels[i],
+                                      L,
+                                      badges[i],
+                                    )),
                           ),
                         ],
                       );
@@ -426,9 +462,8 @@ class _MedScanFAB extends StatelessWidget {
           child: const Center(
             child: Text('✨', style: TextStyle(fontSize: 28)),
           ),
-        )
-        .animate(onPlay: (c) => c.repeat(reverse: true))
-        .shimmer(duration: 3.seconds, color: Colors.white.withValues(alpha: 0.10)),
+        ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(
+            duration: 3.seconds, color: Colors.white.withValues(alpha: 0.10)),
       ),
     );
   }
@@ -440,7 +475,8 @@ class _MedScanFAB extends StatelessWidget {
 class LowStockBanner extends StatelessWidget {
   final List<Medicine> meds;
   final VoidCallback onDismiss;
-  const LowStockBanner({super.key, required this.meds, required this.onDismiss});
+  const LowStockBanner(
+      {super.key, required this.meds, required this.onDismiss});
 
   @override
   Widget build(BuildContext context) {
@@ -470,7 +506,8 @@ class LowStockBanner extends StatelessWidget {
               color: L.error.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Center(child: Text('📦', style: TextStyle(fontSize: 14))),
+            child:
+                const Center(child: Text('📦', style: TextStyle(fontSize: 14))),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -504,10 +541,14 @@ class LowStockBanner extends StatelessWidget {
           GestureDetector(
             onTap: onDismiss,
             behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.all(6),
-            child: const Text('✕', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.grey)),
-          ),
+            child: const Padding(
+              padding: EdgeInsets.all(6),
+              child: Text('✕',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.grey)),
+            ),
           ),
         ],
       ),

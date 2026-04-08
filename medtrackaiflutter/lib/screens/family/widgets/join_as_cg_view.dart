@@ -139,7 +139,9 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: AppShadows.neumorphic,
-                              border: _error != null ? Border.all(color: L.red, width: 1.5) : null),
+                              border: _error != null
+                                  ? Border.all(color: L.red, width: 1.5)
+                                  : null),
                           child: TextField(
                             controller: _codeCtrl,
                             style: AppTypography.displayLarge.copyWith(
@@ -175,9 +177,11 @@ class _JoinAsCaregiverViewState extends State<JoinAsCaregiverView> {
                                     const EdgeInsets.symmetric(vertical: 17),
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                    color: _isChecking ? L.greenLight : L.green,
-                                    borderRadius: BorderRadius.circular(24),
-                                    boxShadow: _isChecking ? null : AppShadows.neumorphic,
+                                  color: _isChecking ? L.greenLight : L.green,
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: _isChecking
+                                      ? null
+                                      : AppShadows.neumorphic,
                                 ),
                                 child: _isChecking
                                     ? const AppLoadingIndicator(size: 20)

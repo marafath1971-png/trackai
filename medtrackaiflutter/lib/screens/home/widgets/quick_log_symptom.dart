@@ -27,7 +27,8 @@ class QuickLogSymptom extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+          padding:
+              const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -44,7 +45,8 @@ class QuickLogSymptom extends StatelessWidget {
                   DailyLogSheet.show(context);
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: ShapeDecoration(
                     color: L.text.withValues(alpha: 0.05),
                     shape: ContinuousRectangleBorder(
@@ -121,7 +123,8 @@ class _SymptomButtonState extends State<_SymptomButton> {
         decoration: BoxDecoration(
           color: widget.L.card,
           borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(color: widget.L.border.withValues(alpha: 0.08), width: 0.5),
+          border: Border.all(
+              color: widget.L.border.withValues(alpha: 0.08), width: 0.5),
           boxShadow: AppShadows.neumorphic,
         ),
         child: Column(
@@ -133,10 +136,13 @@ class _SymptomButtonState extends State<_SymptomButton> {
                 color: Colors.black.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(widget.emoji, 
-                style: const TextStyle(fontSize: 24))
-                .animate(onPlay: (c) => c.repeat(reverse: true))
-                .scale(begin: const Offset(1, 1), end: const Offset(1.2, 1.2), duration: 2.seconds, curve: Curves.easeInOut),
+              child: Text(widget.emoji, style: const TextStyle(fontSize: 24))
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scale(
+                      begin: const Offset(1, 1),
+                      end: const Offset(1.2, 1.2),
+                      duration: 2.seconds,
+                      curve: Curves.easeInOut),
             ),
             const SizedBox(height: 14),
             Text(widget.name.toUpperCase(),
@@ -149,8 +155,11 @@ class _SymptomButtonState extends State<_SymptomButton> {
           ],
         ),
       ),
-    ).animate(onPlay: (c) => c.repeat(reverse: true))
-     .scale(begin: const Offset(1, 1), end: const Offset(0.98, 0.98), duration: 2.seconds, curve: Curves.easeInOut);
+    ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+        begin: const Offset(1, 1),
+        end: const Offset(0.98, 0.98),
+        duration: 2.seconds,
+        curve: Curves.easeInOut);
   }
 
   void _showSeverityPicker(BuildContext context) {
@@ -193,7 +202,8 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
       decoration: ShapeDecoration(
         color: widget.L.bg,
         shape: const ContinuousRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
+            borderRadius:
+                BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -220,7 +230,7 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
             style: AppTypography.labelLarge.copyWith(color: widget.L.sub),
           ),
           const SizedBox(height: 48),
-          
+
           // --- Premium Segmented Severity Selector ---
           Column(
             children: [
@@ -232,7 +242,7 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
                     final isSelected = _severity.round() == value;
                     final isLeading = index == 0;
                     final isTrailing = index == 9;
-                    
+
                     return Expanded(
                       child: GestureDetector(
                         onTap: () {
@@ -246,11 +256,13 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
                             left: isLeading ? 0 : 0,
                           ),
                           decoration: BoxDecoration(
-                            color: isSelected 
-                                ? widget.L.text 
+                            color: isSelected
+                                ? widget.L.text
                                 : widget.L.card.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: widget.L.border.withValues(alpha: 0.08), width: 0.5),
+                            border: Border.all(
+                                color: widget.L.border.withValues(alpha: 0.08),
+                                width: 0.5),
                           ),
                           child: Center(
                             child: Text(
@@ -272,9 +284,21 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('MILD', style: AppTypography.labelSmall.copyWith(color: widget.L.sub, fontSize: 9, letterSpacing: 1.0)),
-                  Text('MODERATE', style: AppTypography.labelSmall.copyWith(color: widget.L.sub, fontSize: 9, letterSpacing: 1.0)),
-                  Text('SEVERE', style: AppTypography.labelSmall.copyWith(color: widget.L.sub, fontSize: 9, letterSpacing: 1.0)),
+                  Text('MILD',
+                      style: AppTypography.labelSmall.copyWith(
+                          color: widget.L.sub,
+                          fontSize: 9,
+                          letterSpacing: 1.0)),
+                  Text('MODERATE',
+                      style: AppTypography.labelSmall.copyWith(
+                          color: widget.L.sub,
+                          fontSize: 9,
+                          letterSpacing: 1.0)),
+                  Text('SEVERE',
+                      style: AppTypography.labelSmall.copyWith(
+                          color: widget.L.sub,
+                          fontSize: 9,
+                          letterSpacing: 1.0)),
                 ],
               ),
             ],
@@ -304,92 +328,99 @@ class _SeverityBottomSheetState extends State<_SeverityBottomSheet> {
                     decoration: BoxDecoration(
                       color: widget.L.card.withValues(alpha: 0.95),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: widget.L.purple.withValues(alpha: 0.2), width: 0.5),
+                      border: Border.all(
+                          color: widget.L.purple.withValues(alpha: 0.2),
+                          width: 0.5),
                       boxShadow: AppShadows.neumorphic,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
                       children: [
-                        Icon(Icons.auto_awesome_rounded,
-                            color: widget.L.purple, size: 16),
-                        const SizedBox(width: 8),
-                        Text('AI CLINICAL INSIGHT',
-                            style: AppTypography.labelLarge.copyWith(
-                                color: widget.L.purple,
+                        Row(
+                          children: [
+                            Icon(Icons.auto_awesome_rounded,
+                                color: widget.L.purple, size: 16),
+                            const SizedBox(width: 8),
+                            Text('AI CLINICAL INSIGHT',
+                                style: AppTypography.labelLarge.copyWith(
+                                    color: widget.L.purple,
+                                    fontSize: 10,
+                                    letterSpacing: 0.5)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(analysis.body,
+                            style: AppTypography.bodySmall.copyWith(
+                                color: widget.L.text,
+                                height: 1.5,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600)),
+                        if (analysis.steps.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: analysis.steps
+                                .map((step) => GestureDetector(
+                                      onTap: () => state.executeStepAction(
+                                          step, context),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 6),
+                                        decoration: ShapeDecoration(
+                                          color: widget.L.purple
+                                              .withValues(alpha: 0.1),
+                                          shape: ContinuousRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            side: BorderSide(
+                                                color: widget.L.purple
+                                                    .withValues(alpha: 0.2)),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.bolt_rounded,
+                                                color: widget.L.purple,
+                                                size: 10),
+                                            const SizedBox(width: 4),
+                                            Text(step,
+                                                style: AppTypography.labelMedium
+                                                    .copyWith(
+                                                        color: widget.L.purple,
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w800)),
+                                          ],
+                                        ),
+                                      ),
+                                    ))
+                                .toList(),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        Text(analysis.title,
+                            style: AppTypography.labelSmall.copyWith(
+                                color: widget.L.sub,
                                 fontSize: 10,
-                                letterSpacing: 0.5)),
+                                fontStyle: FontStyle.italic)),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text('Got it',
+                                style: AppTypography.titleMedium.copyWith(
+                                    color: widget.L.secondary,
+                                    fontWeight: FontWeight.w900)),
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Text(analysis.body,
-                        style: AppTypography.bodySmall.copyWith(
-                            color: widget.L.text,
-                            height: 1.5,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600)),
-                    if (analysis.steps.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: analysis.steps
-                            .map((step) => GestureDetector(
-                                  onTap: () =>
-                                      state.executeStepAction(step, context),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 6),
-                                    decoration: ShapeDecoration(
-                                      color: widget.L.purple.withValues(alpha: 0.1),
-                                      shape: ContinuousRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                        side: BorderSide(color: widget.L.purple.withValues(alpha: 0.2)),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.bolt_rounded,
-                                            color: widget.L.purple, size: 10),
-                                        const SizedBox(width: 4),
-                                        Text(step,
-                                            style: AppTypography.labelMedium
-                                                .copyWith(
-                                                    color: widget.L.purple,
-                                                    fontSize: 11,
-                                                    fontWeight:
-                                                        FontWeight.w800)),
-                                      ],
-                                    ),
-                                  ),
-                                ))
-                            .toList(),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    Text(analysis.title,
-                        style: AppTypography.labelSmall.copyWith(
-                            color: widget.L.sub,
-                            fontSize: 10,
-                            fontStyle: FontStyle.italic)),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text('Got it',
-                            style: AppTypography.titleMedium.copyWith(
-                                color: widget.L.secondary,
-                                fontWeight: FontWeight.w900)),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95));
+              ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95));
             }
 
             return SizedBox(

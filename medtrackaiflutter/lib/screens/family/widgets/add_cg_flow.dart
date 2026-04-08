@@ -111,18 +111,24 @@ class AddCgStep1 extends StatelessWidget {
                                         width: 44,
                                         height: 44,
                                         decoration: BoxDecoration(
-                                            color: avatar == a
-                                                ? L.text
-                                                : Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(24),
-                                            boxShadow: avatar == a ? null : AppShadows.neumorphic,
+                                          color: avatar == a
+                                              ? L.text
+                                              : Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(24),
+                                          boxShadow: avatar == a
+                                              ? null
+                                              : AppShadows.neumorphic,
                                         ),
                                         child: Center(
                                             child: Text(a,
                                                 style: AppTypography
                                                     .headlineLarge
-                                                    .copyWith(fontSize: 22, color: avatar == a ? L.bg : null)))),
+                                                    .copyWith(
+                                                        fontSize: 22,
+                                                        color: avatar == a
+                                                            ? L.bg
+                                                            : null)))),
                                   ))
                               .toList()),
                       const SizedBox(height: 20),
@@ -185,11 +191,14 @@ class AddCgStep1 extends StatelessWidget {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 13, vertical: 7),
                                         decoration: BoxDecoration(
-                                            color:
-                                                relation == r ? L.text : Colors.white,
+                                            color: relation == r
+                                                ? L.text
+                                                : Colors.white,
                                             borderRadius:
                                                 BorderRadius.circular(99),
-                                            boxShadow: relation == r ? null : AppShadows.neumorphic,
+                                            boxShadow: relation == r
+                                                ? null
+                                                : AppShadows.neumorphic,
                                             border: relation == r
                                                 ? Border.all(color: L.text)
                                                 : null),
@@ -281,11 +290,13 @@ class AddCgStep1 extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(vertical: 17),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                  color: nameCtrl.text.trim().isEmpty
-                                      ? L.fill.withValues(alpha: 0.1)
-                                      : L.text,
-                                  borderRadius: BorderRadius.circular(32),
-                                  boxShadow: nameCtrl.text.trim().isEmpty ? null : AppShadows.neumorphic,
+                                color: nameCtrl.text.trim().isEmpty
+                                    ? L.fill.withValues(alpha: 0.1)
+                                    : L.text,
+                                borderRadius: BorderRadius.circular(32),
+                                boxShadow: nameCtrl.text.trim().isEmpty
+                                    ? null
+                                    : AppShadows.neumorphic,
                               ),
                               child: Text('GENERATE QR CODE →',
                                   style: AppTypography.labelLarge.copyWith(
@@ -312,23 +323,25 @@ class DelayBtn extends StatelessWidget {
       required this.L});
   @override
   Widget build(BuildContext context) => Expanded(
-          child: GestureDetector(
-        onTap: () => onTap(delay),
-        child: AnimatedContainer(
+      child: GestureDetector(
+          onTap: () => onTap(delay),
+          child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-                color: current == delay ? L.text : Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: current == delay ? null : AppShadows.neumorphic,
+              color: current == delay ? L.text : Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: current == delay ? null : AppShadows.neumorphic,
             ),
             child: Text(label,
                 style: AppTypography.labelLarge.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
-                    color: current == delay ? L.bg : L.sub.withValues(alpha: 0.6))),
-      )));
+                    color: current == delay
+                        ? L.bg
+                        : L.sub.withValues(alpha: 0.6))),
+          )));
 }
 
 class AddCgStep2 extends StatefulWidget {
@@ -426,9 +439,9 @@ class _AddCgStep2State extends State<AddCgStep2> {
                             horizontal: 18, vertical: 16),
                         margin: const EdgeInsets.only(bottom: 20),
                         decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: AppShadows.neumorphic,
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: AppShadows.neumorphic,
                         ),
                         child: Row(children: [
                           Container(
@@ -466,16 +479,16 @@ class _AddCgStep2State extends State<AddCgStep2> {
                           child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(28),
-                            boxShadow: [
-                              ...AppShadows.neumorphic,
-                              BoxShadow(
-                                  color: L.green.withValues(alpha: 0.15),
-                                  blurRadius: 30,
-                                  spreadRadius: -10,
-                                  offset: const Offset(0, 15)),
-                            ],
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            ...AppShadows.neumorphic,
+                            BoxShadow(
+                                color: L.green.withValues(alpha: 0.15),
+                                blurRadius: 30,
+                                spreadRadius: -10,
+                                offset: const Offset(0, 15)),
+                          ],
                         ),
                         child: QrImageView(
                           data: widget
@@ -505,9 +518,9 @@ class _AddCgStep2State extends State<AddCgStep2> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 24, vertical: 12),
                         decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: AppShadows.neumorphic,
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: AppShadows.neumorphic,
                         ),
                         child: Text(cg.inviteCode ?? '------',
                             style: AppTypography.displayLarge.copyWith(
@@ -530,9 +543,9 @@ class _AddCgStep2State extends State<AddCgStep2> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 10),
                             decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: AppShadows.neumorphic,
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: AppShadows.neumorphic,
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -554,9 +567,9 @@ class _AddCgStep2State extends State<AddCgStep2> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 20),
                         decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: AppShadows.neumorphic,
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: AppShadows.neumorphic,
                         ),
                         child: Column(
                           children: [
@@ -609,7 +622,9 @@ class HowItWorksRow extends StatelessWidget {
       decoration: BoxDecoration(
           border: isLast
               ? null
-              : Border(bottom: BorderSide(color: L.border.withValues(alpha: 0.1), width: 1))),
+              : Border(
+                  bottom: BorderSide(
+                      color: L.border.withValues(alpha: 0.1), width: 1))),
       child: Row(children: [
         SizedBox(
             width: 24,
@@ -654,9 +669,9 @@ class AddCgStep3 extends StatelessWidget {
                         padding: const EdgeInsets.all(16),
                         margin: const EdgeInsets.only(bottom: 24),
                         decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: AppShadows.neumorphic,
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: AppShadows.neumorphic,
                         ),
                         child: Row(children: [
                           Container(
@@ -707,9 +722,9 @@ class AddCgStep3 extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: AppShadows.neumorphic,
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: AppShadows.neumorphic,
                         ),
                         child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -743,9 +758,9 @@ class AddCgStep3 extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(vertical: 17),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                  color: L.text,
-                                  borderRadius: BorderRadius.circular(24),
-                                  boxShadow: AppShadows.neumorphic,
+                                color: L.text,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: AppShadows.neumorphic,
                               ),
                               child: Text('Done',
                                   style: AppTypography.labelLarge.copyWith(

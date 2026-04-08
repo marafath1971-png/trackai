@@ -49,7 +49,8 @@ class DoseCelebrationModal extends StatelessWidget {
               curve: Curves.easeOutCubic,
               builder: (context, value, _) {
                 final dist = 60 + value * 100;
-                final dx = dist * (0.6 + (i % 3) * 0.2) * (angle < 3.14 ? 1 : -1);
+                final dx =
+                    dist * (0.6 + (i % 3) * 0.2) * (angle < 3.14 ? 1 : -1);
                 final dy = -(dist * (0.5 + (i % 5) * 0.1));
                 final color = [
                   L.text,
@@ -66,7 +67,8 @@ class DoseCelebrationModal extends StatelessWidget {
                       height: 7 + (i % 3) * 2.0,
                       decoration: BoxDecoration(
                         color: color,
-                        shape: i % 3 == 0 ? BoxShape.circle : BoxShape.rectangle,
+                        shape:
+                            i % 3 == 0 ? BoxShape.circle : BoxShape.rectangle,
                         borderRadius:
                             i % 3 != 0 ? BorderRadius.circular(2) : null,
                       ),
@@ -83,7 +85,8 @@ class DoseCelebrationModal extends StatelessWidget {
             decoration: BoxDecoration(
               color: L.card,
               borderRadius: BorderRadius.circular(36),
-              border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+              border:
+                  Border.all(color: AppColors.success.withValues(alpha: 0.2)),
               boxShadow: [
                 BoxShadow(
                   color: AppColors.success.withValues(alpha: 0.12),
@@ -111,17 +114,13 @@ class DoseCelebrationModal extends StatelessWidget {
                       Icons.check_circle_rounded,
                       color: AppColors.success,
                       size: 52,
-                    )
-                        .animate(onPlay: (c) => c.repeat(reverse: true))
-                        .scaleXY(
-                            begin: 1.0,
-                            end: 1.08,
-                            duration: 900.ms,
-                            curve: Curves.easeInOut),
+                    ).animate(onPlay: (c) => c.repeat(reverse: true)).scaleXY(
+                        begin: 1.0,
+                        end: 1.08,
+                        duration: 900.ms,
+                        curve: Curves.easeInOut),
                   ),
-                )
-                    .animate()
-                    .scale(duration: 600.ms, curve: Curves.elasticOut),
+                ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
 
                 const SizedBox(height: 24),
 
@@ -261,18 +260,13 @@ class DoseCelebrationModal extends StatelessWidget {
                     ),
                   ],
                 ).animate().scale(
-                    delay: 700.ms,
-                    duration: 400.ms,
-                    curve: Curves.elasticOut),
+                    delay: 700.ms, duration: 400.ms, curve: Curves.elasticOut),
               ],
             ),
-          )
-              .animate()
-              .fadeIn(duration: 300.ms)
-              .scale(
-                  begin: const Offset(0.85, 0.85),
-                  curve: Curves.easeOutBack,
-                  duration: 450.ms),
+          ).animate().fadeIn(duration: 300.ms).scale(
+              begin: const Offset(0.85, 0.85),
+              curve: Curves.easeOutBack,
+              duration: 450.ms),
         ],
       ),
     );

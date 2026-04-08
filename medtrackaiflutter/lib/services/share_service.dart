@@ -10,7 +10,7 @@ import '../core/utils/logger.dart';
 class ShareService {
   // ── App Store URLs (replace with real ones before launch) ──
   static const String _appStoreUrl =
-      'https://apps.apple.com/app/med-ai/id000000000';
+      'https://apps.apple.com/app/medai/id000000000';
   static const String _playStoreUrl =
       'https://play.google.com/store/apps/details?id=com.medai.app';
 
@@ -34,11 +34,11 @@ class ShareService {
   static Future<void> shareReferral(String referralCode,
       {String? userName}) async {
     final name = userName ?? 'Someone';
-    final message = '$name uses Med AI to never miss a dose.\n\n'
+    final message = '$name uses MedAI to never miss a dose.\n\n'
         'Try it free with code: $referralCode\n'
         '14-day premium trial included!\n\n'
         '$downloadUrl';
-    await shareText(message, subject: 'Join me on Med AI');
+    await shareText(message, subject: 'Join me on MedAI');
   }
 
   /// Share an achievement milestone (streak, adherence, etc.)
@@ -50,7 +50,7 @@ class ShareService {
     final emojiStr = emoji ?? '🏆';
     final message = '$emojiStr $title\n'
         '$subtitle\n\n'
-        'Track your medications with Med AI\n'
+        'Track your medications with MedAI\n'
         '$downloadUrl';
     await shareText(message, subject: title);
   }
@@ -85,7 +85,7 @@ class ShareService {
     await shareAchievement(
       title: '$streakDays-Day Streak!',
       subtitle:
-          '$tier tier achieved! I\'m taking my medications consistently with Med AI.',
+          '$tier tier achieved! I\'m taking my medications consistently with MedAI.',
       emoji: emoji,
     );
   }
@@ -139,8 +139,9 @@ class ShareService {
 
       // ignore: deprecated_member_use
       await Share.share(
-        text ?? 'Check out my achievement on Med AI! $downloadUrl',
-        subject: subject ?? 'My Med AI Achievement',
+        text ?? 'Check out my achievement on MedAI! $downloadUrl',
+        subject: subject ?? 'My MedAI Achievement',
+
         // In share_plus 10+, files are shared via shareXFiles
       );
       if (text == null && [XFile(file.path)].isNotEmpty) {

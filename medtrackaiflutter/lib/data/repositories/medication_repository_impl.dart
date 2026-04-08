@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 import '../../domain/entities/entities.dart';
 import '../../domain/repositories/medication_repository.dart';
 import '../datasources/local_prefs_datasource.dart';
@@ -27,39 +27,43 @@ class MedicationRepositoryImpl implements IMedicationRepository {
   String? get _uid => AuthService.uid;
   bool get _hasAuth => _uid != null;
 
-  @override
-  Future<String?> uploadMedicineImage(File imageFile) async {
-    if (!_hasAuth) return null;
-    return await storageService.uploadMedicineImage(_uid!, imageFile).withHardenedTimeout(taskName: 'uploadMedicineImage');
+  String _key(String base, String? profileId) {
+    if (profileId == null) return base;
+    return 'p_${profileId}_$base';
   }
 
   // ── Medicines ──────────────────────────────────────────────────────
   @override
-  Future<List<Medicine>> getMedicines() async {
+  Future<List<Medicine>> getMedicines({String? profileId}) async {
+    final key = _key('meds', profileId);
     // 1. Load local meds
-    final j = localDataSource.getJson('meds', decrypt: true);
+    final j = localDataSource.getJson(key, decrypt: true);
     final List<Medicine> localMeds =
         j == null ? [] : (j as List).map((m) => Medicine.fromJson(m)).toList();
 
     // 2. If authenticated, fetch cloud and merge
     if (_hasAuth) {
       try {
-        final cloudMeds = await firestoreDataSource.getMedicines(_uid!).withHardenedTimeout(taskName: 'getMedicines');
+        final cloudMeds = await firestoreDataSource
+            .getMedicines(_uid!, profileId: profileId)
+            .withHardenedTimeout(taskName: 'getMedicines');
 
-        // Merge strategy: If local has meds that cloud doesn't, we assume they were created offline and push them.
+        // Merge strategy
         final cloudIds = cloudMeds.map((m) => m.id).toSet();
         final List<Medicine> toPush =
             localMeds.where((m) => !cloudIds.contains(m.id)).toList();
 
         for (var m in toPush) {
-          firestoreDataSource.saveMedicine(_uid!, m).withHardenedTimeout(taskName: 'saveMedicine').catchError((_) {});
+          firestoreDataSource
+              .saveMedicine(_uid!, m, profileId: profileId)
+              .withHardenedTimeout(taskName: 'saveMedicine')
+              .catchError((_) {});
           cloudMeds.add(m);
         }
 
         if (cloudMeds.isNotEmpty) {
-          // Cache the merged list
           await localDataSource.setJson(
-              'meds', cloudMeds.map((m) => m.toJson()).toList(),
+              key, cloudMeds.map((m) => m.toJson()).toList(),
               encrypt: true);
         }
         return cloudMeds;
@@ -72,69 +76,73 @@ class MedicationRepositoryImpl implements IMedicationRepository {
   }
 
   @override
-  Future<void> addMedicine(Medicine med) async {
-    final meds = await getMedicines();
+  Future<void> addMedicine(Medicine med, {String? profileId}) async {
+    final meds = await getMedicines(profileId: profileId);
+    final key = _key('meds', profileId);
     meds.add(med);
-    await localDataSource.setJson('meds', meds.map((m) => m.toJson()).toList(),
+    await localDataSource.setJson(key, meds.map((m) => m.toJson()).toList(),
         encrypt: true);
     if (_hasAuth) {
-      firestoreDataSource.saveMedicine(_uid!, med).withHardenedTimeout(taskName: 'saveMedicine').catchError((_) {});
+      firestoreDataSource
+          .saveMedicine(_uid!, med, profileId: profileId)
+          .withHardenedTimeout(taskName: 'saveMedicine')
+          .catchError((_) {});
     }
   }
 
   @override
-  Future<void> updateMedicine(Medicine med) async {
-    final meds = await getMedicines();
+  Future<void> updateMedicine(Medicine med, {String? profileId}) async {
+    final meds = await getMedicines(profileId: profileId);
+    final key = _key('meds', profileId);
     final idx = meds.indexWhere((m) => m.id == med.id);
     if (idx != -1) {
       meds[idx] = med;
       await localDataSource
-          .setJson('meds', meds.map((m) => m.toJson()).toList(), encrypt: true);
+          .setJson(key, meds.map((m) => m.toJson()).toList(), encrypt: true);
       if (_hasAuth) {
-        firestoreDataSource.saveMedicine(_uid!, med).withHardenedTimeout(taskName: 'updateMedicine').catchError((_) {});
+        firestoreDataSource
+            .saveMedicine(_uid!, med, profileId: profileId)
+            .withHardenedTimeout(taskName: 'updateMedicine')
+            .catchError((_) {});
       }
     }
   }
 
   @override
-  Future<void> deleteMedicine(int id) async {
-    final meds = await getMedicines();
+  Future<void> deleteMedicine(int id, {String? profileId}) async {
+    final meds = await getMedicines(profileId: profileId);
+    final key = _key('meds', profileId);
     meds.removeWhere((m) => m.id == id);
-    await localDataSource.setJson('meds', meds.map((m) => m.toJson()).toList(),
+    await localDataSource.setJson(key, meds.map((m) => m.toJson()).toList(),
         encrypt: true);
     if (_hasAuth) {
-      firestoreDataSource.deleteMedicine(_uid!, id).catchError((_) {});
+      firestoreDataSource.deleteMedicine(_uid!, id, profileId: profileId).catchError((_) {});
     }
   }
 
   // ── History ────────────────────────────────────────────────────────
   @override
-  Future<Map<String, List<DoseEntry>>> getHistory() async {
-    // 1. Load local history (always load first for speed).
-    final Map<String, List<DoseEntry>> local = _loadLocalHistory();
+  Future<Map<String, List<DoseEntry>>> getHistory({String? profileId}) async {
+    final Map<String, List<DoseEntry>> local = _loadLocalHistory(profileId);
 
-    // 2. If authenticated, fetch cloud and MERGE.
     if (_hasAuth) {
       try {
         final cloudHistory =
-            await firestoreDataSource.getRecentHistory(_uid!, days: 30);
+            await firestoreDataSource.getRecentHistory(_uid!, days: 30, profileId: profileId);
         final today = DateTime.now().toIso8601String().substring(0, 10);
         final merged = <String, List<DoseEntry>>{...cloudHistory};
 
-        // Push local missing dates (or today's local updates) to Cloud
         for (final entry in local.entries) {
           if (!merged.containsKey(entry.key) || entry.key == today) {
             merged[entry.key] = entry.value;
-            // Push missing/today to cloud asynchronously
             firestoreDataSource
-                .saveDayHistory(_uid!, entry.key, entry.value)
+                .saveDayHistory(_uid!, entry.key, entry.value, profileId: profileId)
                 .catchError((_) {});
           }
         }
 
-        // Persist merged result locally.
         await localDataSource.setJson(
-          'history',
+          _key('history', profileId),
           merged.map((k, v) => MapEntry(k, v.map((e) => e.toJson()).toList())),
           encrypt: true,
         );
@@ -146,8 +154,8 @@ class MedicationRepositoryImpl implements IMedicationRepository {
     return local;
   }
 
-  Map<String, List<DoseEntry>> _loadLocalHistory() {
-    final j = localDataSource.getJson('history', decrypt: true);
+  Map<String, List<DoseEntry>> _loadLocalHistory(String? profileId) {
+    final j = localDataSource.getJson(_key('history', profileId), decrypt: true);
     if (j == null) return {};
     return (j as Map<String, dynamic>).map(
       (k, v) =>
@@ -157,9 +165,9 @@ class MedicationRepositoryImpl implements IMedicationRepository {
 
   @override
   Future<void> saveHistory(Map<String, List<DoseEntry>> history,
-      {String? onlyDateKey}) async {
+      {String? onlyDateKey, String? profileId}) async {
     await localDataSource.setJson(
-      'history',
+      _key('history', profileId),
       history.map((k, v) => MapEntry(k, v.map((e) => e.toJson()).toList())),
       encrypt: true,
     );
@@ -167,13 +175,12 @@ class MedicationRepositoryImpl implements IMedicationRepository {
       if (onlyDateKey != null) {
         final dayEntries = history[onlyDateKey] ?? [];
         firestoreDataSource
-            .saveDayHistory(_uid!, onlyDateKey, dayEntries)
+            .saveDayHistory(_uid!, onlyDateKey, dayEntries, profileId: profileId)
             .catchError((_) {});
       } else {
-        // Full sync (rarely used except on initial post-login upload).
         for (final entry in history.entries) {
           firestoreDataSource
-              .saveDayHistory(_uid!, entry.key, entry.value)
+              .saveDayHistory(_uid!, entry.key, entry.value, profileId: profileId)
               .catchError((_) {});
         }
       }
@@ -182,24 +189,26 @@ class MedicationRepositoryImpl implements IMedicationRepository {
 
   // ── Taken Today ────────────────────────────────────────────────────
   @override
-  Future<Map<String, bool>> getTakenToday() async {
+  Future<Map<String, bool>> getTakenToday({String? profileId}) async {
+    final key = _key('takenToday', profileId);
     if (_hasAuth) {
-      final cloud = await firestoreDataSource.getTakenToday(_uid!);
+      final cloud = await firestoreDataSource.getTakenToday(_uid!, profileId: profileId);
       if (cloud.isNotEmpty) {
-        await localDataSource.setJson('takenToday', cloud, encrypt: true);
+        await localDataSource.setJson(key, cloud, encrypt: true);
         return cloud;
       }
     }
-    final j = localDataSource.getJson('takenToday', decrypt: true);
+    final j = localDataSource.getJson(key, decrypt: true);
     if (j == null) return {};
     return Map<String, bool>.from(j);
   }
 
   @override
-  Future<void> saveTakenToday(Map<String, bool> takenToday) async {
-    await localDataSource.setJson('takenToday', takenToday, encrypt: true);
+  Future<void> saveTakenToday(Map<String, bool> takenToday, {String? profileId}) async {
+    final key = _key('takenToday', profileId);
+    await localDataSource.setJson(key, takenToday, encrypt: true);
     if (_hasAuth) {
-      firestoreDataSource.saveTakenToday(_uid!, takenToday).catchError((_) {});
+      firestoreDataSource.saveTakenToday(_uid!, takenToday, profileId: profileId).catchError((_) {});
     }
   }
 
@@ -227,7 +236,7 @@ class MedicationRepositoryImpl implements IMedicationRepository {
         firestoreDataSource.saveMedicine(_uid!, med).catchError((_) {});
       }
       // History
-      final localHistory = _loadLocalHistory();
+      final localHistory = _loadLocalHistory(null);
       for (final entry in localHistory.entries) {
         firestoreDataSource
             .saveDayHistory(_uid!, entry.key, entry.value)
@@ -250,13 +259,22 @@ class MedicationRepositoryImpl implements IMedicationRepository {
   }
 
   @override
+  Future<String?> uploadMedicineImage(File imageFile) async {
+    if (!_hasAuth) return null;
+    return await storageService.uploadMedicineImage(_uid!, imageFile);
+  }
+
+  @override
   Future<Result<AISafetyProfile>> analyzeMedicineSafety(Medicine m) async {
     // Structural Placeholder for 1.0 Release
     // Logic: In a real scenario, this would call GeminiService or a Cloud Function.
     // For the initial hardening, we return a successful structural response to ensure the UI works.
     try {
       const profile = AISafetyProfile(
-        warnings: ["Take exactly as prescribed.", "Consult your doctor for side effects."],
+        warnings: [
+          "Take exactly as prescribed.",
+          "Consult your doctor for side effects."
+        ],
         interactions: ["Keep track of all other medications."],
         foodRules: ["Take with a full glass of water."],
         ahaMoments: ["MedAI helps you stay on track!"],

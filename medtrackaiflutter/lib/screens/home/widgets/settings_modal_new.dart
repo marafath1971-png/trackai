@@ -92,7 +92,8 @@ class _SettingsModalState extends State<SettingsModal> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                                color: L.text.withValues(alpha: 0.05), shape: BoxShape.circle),
+                                color: L.text.withValues(alpha: 0.05),
+                                shape: BoxShape.circle),
                             child: Center(
                                 child: Icon(Icons.close_rounded,
                                     color: L.text, size: 20)),
@@ -129,21 +130,30 @@ class _SettingsModalState extends State<SettingsModal> {
                                 horizontal: 18, vertical: 0),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                                color: isAct ? L.text : L.card.withValues(alpha: 0.5),
+                                color: isAct
+                                    ? L.text
+                                    : L.card.withValues(alpha: 0.5),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: isAct ? L.text : L.border.withValues(alpha: 0.08),
+                                    color: isAct
+                                        ? L.text
+                                        : L.border.withValues(alpha: 0.08),
                                     width: 0.5)),
                             child: Row(children: [
-                              Text(t['icon'] as String, 
-                                style: const TextStyle(fontSize: 14))
-                                .animate(target: isAct ? 1 : 0)
-                                .scale(begin: const Offset(1.0, 1.0), end: const Offset(1.2, 1.2), duration: 200.ms),
+                              Text(t['icon'] as String,
+                                      style: const TextStyle(fontSize: 14))
+                                  .animate(target: isAct ? 1 : 0)
+                                  .scale(
+                                      begin: const Offset(1.0, 1.0),
+                                      end: const Offset(1.2, 1.2),
+                                      duration: 200.ms),
                               const SizedBox(width: 8),
                               Text(t['label'] as String,
                                   style: AppTypography.labelSmall.copyWith(
                                       fontWeight: FontWeight.w900,
-                                      color: isAct ? L.bg : L.text.withValues(alpha: 0.4),
+                                      color: isAct
+                                          ? L.bg
+                                          : L.text.withValues(alpha: 0.4),
                                       letterSpacing: 0.5,
                                       fontSize: 10)),
                             ]),

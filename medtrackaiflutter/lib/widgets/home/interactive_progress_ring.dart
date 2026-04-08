@@ -118,7 +118,8 @@ class InteractiveProgressRing extends StatelessWidget {
         decoration: BoxDecoration(
           color: L.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(AppRadius.max),
-          border: Border.all(color: L.primary.withValues(alpha: 0.1), width: 1.5),
+          border:
+              Border.all(color: L.primary.withValues(alpha: 0.1), width: 1.5),
           boxShadow: AppShadows.subtle,
         ),
         child: Row(

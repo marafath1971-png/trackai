@@ -18,7 +18,7 @@ class AppColors {
   // ── Monochrome Base ────────────────────────────────────
   static const Color black = Color(0xFF000000);
   static const Color white = Color(0xFFFFFFFF);
-  static const Color meshBg = Color(0xFFF9F9F9); 
+  static const Color meshBg = Color(0xFFF9F9F9);
 
   static const Color grey50 = Color(0xFFFFFFFF);
   static const Color grey100 = Color(0xFFF5F5F5);
@@ -33,15 +33,15 @@ class AppColors {
   static const Color grey950 = Color(0xFF000000);
 
   // ── Muted Functional Semantics ─────────────────────────
-  static const Color error = Color(0xFF991B1B);   // Crimson Rose (Light)
+  static const Color error = Color(0xFF991B1B); // Crimson Rose (Light)
   static const Color success = Color(0xFF2D6A4F); // Sage Emerald (Light)
   static const Color warning = Color(0xFFB45309); // Amber Ocher (Light)
-  
-  static const Color errorDark = Color(0xFFF87171);   // Light Crimson (Dark Mode)
+
+  static const Color errorDark = Color(0xFFF87171); // Light Crimson (Dark Mode)
   static const Color successDark = Color(0xFF52B788); // Light Sage (Dark Mode)
   static const Color warningDark = Color(0xFFFBBF24); // Light Amber (Dark Mode)
 
-  static const Color info = Color(0xFF1E293B);    // deep slate
+  static const Color info = Color(0xFF1E293B); // deep slate
 
   // ── Compatibility Aliases ─────────────────────────────
   static const Color lRed = error;
@@ -56,7 +56,8 @@ class AppColors {
 
 class AppTheme {
   static ThemeData light({String? accentHex}) {
-    final accent = accentHex != null ? hexToColor(accentHex) : AppColors.primaryBlue;
+    final accent =
+        accentHex != null ? hexToColor(accentHex) : AppColors.primaryBlue;
 
     return ThemeData(
       useMaterial3: true,
@@ -75,10 +76,14 @@ class AppTheme {
       ),
       textTheme: _buildTextTheme(AppColors.black),
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((states) => 
-          states.contains(WidgetState.selected) ? AppColors.white : AppColors.grey400),
-        trackColor: WidgetStateProperty.resolveWith((states) => 
-          states.contains(WidgetState.selected) ? AppColors.black : AppColors.grey200),
+        thumbColor: WidgetStateProperty.resolveWith((states) =>
+            states.contains(WidgetState.selected)
+                ? AppColors.white
+                : AppColors.grey400),
+        trackColor: WidgetStateProperty.resolveWith((states) =>
+            states.contains(WidgetState.selected)
+                ? AppColors.black
+                : AppColors.grey200),
         trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
         splashRadius: 0,
       ),
@@ -149,10 +154,14 @@ class AppTheme {
       ),
       textTheme: _buildTextTheme(AppColors.white),
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((states) => 
-          states.contains(WidgetState.selected) ? AppColors.black : AppColors.grey600),
-        trackColor: WidgetStateProperty.resolveWith((states) => 
-          states.contains(WidgetState.selected) ? AppColors.white : AppColors.grey900),
+        thumbColor: WidgetStateProperty.resolveWith((states) =>
+            states.contains(WidgetState.selected)
+                ? AppColors.black
+                : AppColors.grey600),
+        trackColor: WidgetStateProperty.resolveWith((states) =>
+            states.contains(WidgetState.selected)
+                ? AppColors.white
+                : AppColors.grey900),
         trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
         splashRadius: 0,
       ),
@@ -174,7 +183,8 @@ class AppTheme {
     ).copyWith(
       extensions: [
         AppThemeColors.fromColorScheme(
-          const ColorScheme.dark(primary: AppColors.primaryBlueLight, secondary: accent),
+          const ColorScheme.dark(
+              primary: AppColors.primaryBlueLight, secondary: accent),
           Brightness.dark,
           isAmoled: isAmoled,
         ),
@@ -262,37 +272,49 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     required this.mainGradient,
   });
 
-  factory AppThemeColors.fromColorScheme(ColorScheme colorScheme, Brightness brightness, {bool isAmoled = false}) {
+  factory AppThemeColors.fromColorScheme(
+      ColorScheme colorScheme, Brightness brightness,
+      {bool isAmoled = false}) {
     final isDark = brightness == Brightness.dark;
 
     return AppThemeColors(
-      bg: isDark ? (isAmoled ? Colors.black : AppColors.grey950) : AppColors.meshBg,
+      bg: isDark ? Colors.black : AppColors.meshBg,
       onBg: isDark ? AppColors.white : AppColors.black,
-      card: isDark ? AppColors.grey950 : AppColors.white,
+      card: isDark ? Colors.white.withValues(alpha: 0.06) : AppColors.white,
       onCard: isDark ? AppColors.white : AppColors.black,
-      card2: isDark ? AppColors.grey900 : AppColors.grey50,
+      card2: isDark ? Colors.white.withValues(alpha: 0.03) : AppColors.grey50,
       onCard2: isDark ? AppColors.white : AppColors.black,
-      border: isDark ? AppColors.grey800 : AppColors.grey200,
+      border: isDark ? Colors.white.withValues(alpha: 0.12) : AppColors.grey200,
       text: isDark ? AppColors.white : AppColors.black,
       sub: isDark ? AppColors.grey500 : AppColors.grey500,
-      fill: isDark ? AppColors.grey900 : AppColors.grey100,
+      fill: isDark ? Colors.white.withValues(alpha: 0.10) : AppColors.grey100,
       onFill: isDark ? AppColors.white : AppColors.black,
       primary: colorScheme.primary,
       onPrimary: colorScheme.onPrimary,
       secondary: colorScheme.secondary,
       error: isDark ? AppColors.errorDark : AppColors.error,
       red: isDark ? AppColors.errorDark : AppColors.error,
-      redLight: isDark ? (isDark ? AppColors.errorDark : AppColors.error).withValues(alpha: 0.15) : AppColors.error.withValues(alpha: 0.15),
+      redLight: isDark
+          ? (isDark ? AppColors.errorDark : AppColors.error)
+              .withValues(alpha: 0.15)
+          : AppColors.error.withValues(alpha: 0.15),
       success: isDark ? AppColors.successDark : AppColors.success,
       green: isDark ? AppColors.successDark : AppColors.success,
-      greenLight: isDark ? (isDark ? AppColors.successDark : AppColors.success).withValues(alpha: 0.15) : AppColors.success.withValues(alpha: 0.15),
+      greenLight: isDark
+          ? (isDark ? AppColors.successDark : AppColors.success)
+              .withValues(alpha: 0.15)
+          : AppColors.success.withValues(alpha: 0.15),
       warning: isDark ? AppColors.warningDark : AppColors.warning,
       amber: isDark ? AppColors.warningDark : AppColors.warning,
       info: AppColors.info,
       purple: const Color(0xFF7C3AED),
       meshBg: isDark ? AppColors.black : AppColors.meshBg,
-      glass: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.7),
-      glassBorder: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+      glass: isDark
+          ? Colors.white.withValues(alpha: 0.05)
+          : Colors.white.withValues(alpha: 0.7),
+      glassBorder: isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.black.withValues(alpha: 0.05),
       shadowSoft: [
         BoxShadow(
           color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),

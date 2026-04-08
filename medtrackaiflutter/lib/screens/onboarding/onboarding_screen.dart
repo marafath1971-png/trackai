@@ -87,15 +87,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             field: 'painPoints',
             options: kPainPoints),
         const _OBStep(
-            id: 'social_proof',
-            type: 'social_proof',
-            title: '',
-            subtitle: ''),
+            id: 'social_proof', type: 'social_proof', title: '', subtitle: ''),
         const _OBStep(
-            id: 'solution',
-            type: 'solution',
-            title: '',
-            subtitle: ''),
+            id: 'solution', type: 'solution', title: '', subtitle: ''),
         _OBStep(
             id: 'country',
             type: 'single',
@@ -119,12 +113,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             type: 'health_sync',
             emoji: '📱',
             title: 'Sync Health Data',
-            subtitle: 'Automatically import steps, sleep, and heart rate for deeper AI insights.'),
+            subtitle:
+                'Automatically import steps, sleep, and heart rate for deeper AI insights.'),
         const _OBStep(
             id: 'scan_demo',
             type: 'scan_demo',
             emoji: '✨',
-            title: 'The Magic of Med AI',
+            title: 'The Magic of MedAI',
             subtitle: 'Never type a medicine name again. Just scan the box.'),
         const _OBStep(id: 'notif', type: 'notif'),
         const _OBStep(id: 'plan', type: 'plan'),
@@ -409,10 +404,20 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             step: step, oText: oText, oSub: oSub, oCard: oCard, oLime: oLime);
       case 'health_sync':
         return _HealthSyncStep(
-            step: step, oText: oText, oSub: oSub, oCard: oCard, oLime: oLime, onNext: _next);
+            step: step,
+            oText: oText,
+            oSub: oSub,
+            oCard: oCard,
+            oLime: oLime,
+            onNext: _next);
       case 'lung_test':
         return _LungTestStep(
-            step: step, oText: oText, oSub: oSub, oCard: oCard, oLime: oLime, onComplete: _next);
+            step: step,
+            oText: oText,
+            oSub: oSub,
+            oCard: oCard,
+            oLime: oLime,
+            onComplete: _next);
       case 'pain_points':
         return _PainPointsStep(
             step: step,
@@ -423,9 +428,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             oCard: oCard,
             oLime: oLime);
       case 'social_proof':
-        return _SocialProofStep(oText: oText, oSub: oSub, oCard: oCard, oLime: oLime);
+        return _SocialProofStep(
+            oText: oText, oSub: oSub, oCard: oCard, oLime: oLime);
       case 'solution':
-        return _SolutionStep(form: _form, oText: oText, oSub: oSub, oCard: oCard, oLime: oLime);
+        return _SolutionStep(
+            form: _form, oText: oText, oSub: oSub, oCard: oCard, oLime: oLime);
       default:
         return const SizedBox.shrink();
     }
@@ -525,7 +532,11 @@ class _StepHeader extends StatelessWidget {
         ),
       Text(title,
           style: AppTypography.displayLarge.copyWith(
-              fontSize: 32, color: oText, letterSpacing: -1.0, fontWeight: FontWeight.w800, height: 1.2)),
+              fontSize: 32,
+              color: oText,
+              letterSpacing: -1.0,
+              fontWeight: FontWeight.w800,
+              height: 1.2)),
       if (subtitle.isNotEmpty) ...[
         const SizedBox(height: 6),
         Text(subtitle,
@@ -587,9 +598,8 @@ class _SplashStep extends StatelessWidget {
                           children: [
                             TextSpan(
                                 text: 'Med ',
-                                style: AppTypography.displayLarge.copyWith(
-                                    fontSize: 36,
-                                    color: L.text)),
+                                style: AppTypography.displayLarge
+                                    .copyWith(fontSize: 36, color: L.text)),
                             TextSpan(
                                 text: 'AI',
                                 style: AppTypography.displayLarge
@@ -644,8 +654,10 @@ class _SplashStep extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                 Text(parts[1],
-                                    style: AppTypography.labelLarge
-                                        .copyWith(fontSize: 15, fontWeight: FontWeight.w900, color: L.text)),
+                                    style: AppTypography.labelLarge.copyWith(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w900,
+                                        color: L.text)),
                                 const SizedBox(height: 2),
                                 Text(f.$2,
                                     style: AppTypography.bodySmall
@@ -835,8 +847,7 @@ class _ScanDemoStepState extends State<_ScanDemoStep> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.camera_alt_rounded,
-                              color: L.bg, size: 20),
+                          Icon(Icons.camera_alt_rounded, color: L.bg, size: 20),
                           const SizedBox(width: 12),
                           Text('TEST AI SCANNER',
                               style: AppTypography.labelLarge.copyWith(
@@ -919,7 +930,7 @@ class _ScanDemoStepState extends State<_ScanDemoStep> {
                 style: AppTypography.bodySmall.copyWith(color: widget.oSub)),
 
           if (_isComplete)
-            Text('That\'s the power of Med AI.\nSetup your full schedule next.',
+            Text('That\'s the power of MedAI.\nSetup your full schedule next.',
                 textAlign: TextAlign.center,
                 style: AppTypography.bodySmall.copyWith(
                     color: widget.oLime, fontWeight: FontWeight.w600)),
@@ -1079,18 +1090,20 @@ class _SingleStep extends StatelessWidget {
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
             childAspectRatio: 1.1,
-            children: step.options
-                .map((opt) => _buildOption(opt, selected == opt['v'], true))
-                .toList(),
+            children: step.options.map((opt) {
+              final val = opt['c'] ?? opt['v'];
+              return _buildOption(opt, selected == val, true);
+            }).toList(),
           )
         else
           Column(
-            children: step.options
-                .map((opt) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _buildOption(opt, selected == opt['v'], false),
-                    ))
-                .toList(),
+            children: step.options.map((opt) {
+              final val = opt['c'] ?? opt['v'];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _buildOption(opt, selected == val, false),
+              );
+            }).toList(),
           ),
       ]),
     );
@@ -1105,7 +1118,7 @@ class _SingleStep extends StatelessWidget {
         onTapCancel: () => setState(() => isPressed = false),
         onTap: () {
           HapticEngine.selection();
-          onSelect(step.field!, opt['v']!);
+          onSelect(step.field!, opt['c'] ?? opt['v']!);
         },
         child: AnimatedScale(
           scale: isPressed ? 0.96 : 1.0,
@@ -1142,7 +1155,11 @@ class _SingleStep extends StatelessWidget {
                       Text(opt['v']!,
                           textAlign: TextAlign.center,
                           style: AppTypography.labelLarge.copyWith(
-                              fontSize: 13, fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600, color: isSelected ? oText : oText)),
+                              fontSize: 13,
+                              fontWeight: isSelected
+                                  ? FontWeight.w900
+                                  : FontWeight.w600,
+                              color: isSelected ? oText : oText)),
                     ],
                   )
                 : Row(children: [
@@ -1155,7 +1172,9 @@ class _SingleStep extends StatelessWidget {
                         child: Text(opt['v']!,
                             style: AppTypography.bodySmall.copyWith(
                                 fontSize: 16,
-                                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+                                fontWeight: isSelected
+                                    ? FontWeight.w900
+                                    : FontWeight.w600,
                                 color: isSelected ? oText : oText))),
                     if (isSelected)
                       Container(
@@ -1237,8 +1256,9 @@ class _MultiStep extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color:
-                            isSelected ? oLime.withValues(alpha: 0.1) : Colors.white,
+                        color: isSelected
+                            ? oLime.withValues(alpha: 0.1)
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(AppRadius.max),
                         boxShadow: isSelected
                             ? [
@@ -1247,8 +1267,12 @@ class _MultiStep extends StatelessWidget {
                                     blurRadius: 15,
                                     offset: const Offset(0, 5))
                               ]
-                            : (isPressed ? AppShadows.subtle : AppShadows.neumorphic),
-                        border: isSelected ? Border.all(color: oText, width: 0.5) : null,
+                            : (isPressed
+                                ? AppShadows.subtle
+                                : AppShadows.neumorphic),
+                        border: isSelected
+                            ? Border.all(color: oText, width: 0.5)
+                            : null,
                       ),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
                         if (opt['e'] != null)
@@ -1259,7 +1283,9 @@ class _MultiStep extends StatelessWidget {
                         Text(opt['v']!,
                             style: AppTypography.labelLarge.copyWith(
                                 fontSize: 13,
-                                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+                                fontWeight: isSelected
+                                    ? FontWeight.w900
+                                    : FontWeight.w600,
                                 color: oText)),
                         if (isSelected) ...[
                           const SizedBox(width: 6),
@@ -1328,9 +1354,7 @@ class _TimeStep extends StatelessWidget {
               margin: const EdgeInsets.only(right: 6),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: isActive
-                    ? oLime.withValues(alpha: 0.1)
-                    : Colors.white,
+                color: isActive ? oLime.withValues(alpha: 0.1) : Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: isActive ? null : AppShadows.neumorphic,
                 border: isActive ? Border.all(color: oText, width: 0.5) : null,
@@ -1471,7 +1495,6 @@ class _NotifStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 40, 24, 0),
       child: Column(children: [
@@ -1484,8 +1507,8 @@ class _NotifStep extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: AppShadows.neumorphic,
           ),
-          child: const Center(
-              child: Text('🔔', style: TextStyle(fontSize: 48))),
+          child:
+              const Center(child: Text('🔔', style: TextStyle(fontSize: 48))),
         ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
             begin: const Offset(1, 1),
             end: const Offset(1.05, 1.05),
@@ -1778,7 +1801,7 @@ class _PaywallFeatures extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // ── Header (no skip button here anymore)
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('MED AI PRO',
+          Text('MEDAI PRO',
               style: AppTypography.labelLarge
                   .copyWith(fontSize: 11, color: oLime, letterSpacing: 1.2)),
           Text("World's #1 Advanced AI",
@@ -1836,8 +1859,7 @@ class _PaywallFeatures extends StatelessWidget {
                 color: isSel ? oLime.withValues(alpha: 0.1) : Colors.white,
                 borderRadius: BorderRadius.circular(AppRadius.xl),
                 border: Border.all(
-                    color: isSel ? oText : Colors.transparent,
-                    width: 2.0),
+                    color: isSel ? oText : Colors.transparent, width: 2.0),
                 boxShadow: isSel ? null : AppShadows.neumorphic,
               ),
               child: Stack(clipBehavior: Clip.none, children: [
@@ -1911,10 +1933,13 @@ class _PaywallFeatures extends StatelessWidget {
               borderRadius: BorderRadius.circular(32),
               boxShadow: AppShadows.neumorphic,
             ),
-            child: Text('GET MED AI PRO →',
+            child: Text('GET MEDAI PRO →',
                 textAlign: TextAlign.center,
-                style: AppTypography.labelLarge
-                    .copyWith(fontSize: 14, fontWeight: FontWeight.w900, color: L.bg, letterSpacing: 1.5)),
+                style: AppTypography.labelLarge.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: L.bg,
+                    letterSpacing: 1.5)),
           ),
         ),
         const SizedBox(height: 10),
@@ -2136,8 +2161,11 @@ class _PaywallTrust extends StatelessWidget {
             ),
             child: Text('I UNDERSTAND, CONTINUE →',
                 textAlign: TextAlign.center,
-                style: AppTypography.labelLarge
-                    .copyWith(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.black, letterSpacing: 1.5)),
+                style: AppTypography.labelLarge.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black,
+                    letterSpacing: 1.5)),
           ),
         ),
       ]),
@@ -2165,7 +2193,7 @@ class _PaywallTimeline extends StatelessWidget {
     final timeline = [
       {
         'label': 'Step 1',
-        'title': 'Med AI Activated',
+        'title': 'MedAI Activated',
         'desc': 'Instant access to 3 Free Pro Scans',
         'icon': '🚀',
         'color': oLime
@@ -2336,8 +2364,11 @@ class _PaywallTimeline extends StatelessWidget {
             ),
             child: Text('GET STARTED WITH 3 FREE SCANS 🚀',
                 textAlign: TextAlign.center,
-                style: AppTypography.labelLarge
-                    .copyWith(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.black, letterSpacing: 1.5)),
+                style: AppTypography.labelLarge.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black,
+                    letterSpacing: 1.5)),
           ),
         ),
         const SizedBox(height: 12),
@@ -2422,7 +2453,7 @@ class _CelebrationStep extends StatelessWidget {
               .scale(duration: 800.ms, curve: Curves.elasticOut),
           const SizedBox(height: 48),
           Text(
-            "Med AI Activated!",
+            "MedAI Activated!",
             textAlign: TextAlign.center,
             style: AppTypography.displayLarge.copyWith(
               color: oText,
@@ -2681,7 +2712,8 @@ class _LungTestStepState extends State<_LungTestStep>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.fingerprint_rounded, size: 64, color: L.bg),
+                          Icon(Icons.fingerprint_rounded,
+                              size: 64, color: L.bg),
                           const SizedBox(height: 8),
                           Text(
                             _isHolding ? "RELEASE" : "HOLD HERE",
@@ -2693,12 +2725,10 @@ class _LungTestStepState extends State<_LungTestStep>
                         ],
                       ),
                     ),
-                  )
-                      .animate(onPlay: (c) => c.repeat(reverse: true))
-                      .scale(
+                  ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
                         begin: const Offset(1, 1),
-                        end: Offset(_isHolding ? 1.1 : 1.05,
-                            _isHolding ? 1.1 : 1.05),
+                        end: Offset(
+                            _isHolding ? 1.1 : 1.05, _isHolding ? 1.1 : 1.05),
                         duration: _isHolding ? 1.seconds : 2.seconds,
                         curve: Curves.easeInOut,
                       ),
@@ -2844,11 +2874,11 @@ class _HealthSyncStepState extends State<_HealthSyncStep> {
   Future<void> _handleConnect() async {
     setState(() => _isConnecting = true);
     HapticEngine.selection();
-    
+
     // Use the HealthController from AppState
     final health = context.read<AppState>().health;
     final success = await health.connect();
-    
+
     if (mounted) {
       setState(() {
         _isConnecting = false;
@@ -2874,8 +2904,8 @@ class _HealthSyncStepState extends State<_HealthSyncStep> {
               color: widget.oLime.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Text(widget.step.emoji,
-                style: const TextStyle(fontSize: 56)),
+            child:
+                Text(widget.step.emoji, style: const TextStyle(fontSize: 56)),
           ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
           const SizedBox(height: 32),
           Text(widget.step.title,
@@ -2890,7 +2920,7 @@ class _HealthSyncStepState extends State<_HealthSyncStep> {
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(color: widget.oSub)),
           const SizedBox(height: 48),
-          
+
           // Connect Button
           GestureDetector(
             onTap: _isConnected || _isConnecting ? null : _handleConnect,
@@ -2901,7 +2931,9 @@ class _HealthSyncStepState extends State<_HealthSyncStep> {
               decoration: BoxDecoration(
                 color: _isConnected ? widget.oCard : widget.oLime,
                 borderRadius: BorderRadius.circular(20),
-                border: _isConnected ? Border.all(color: widget.oLime, width: 2) : null,
+                border: _isConnected
+                    ? Border.all(color: widget.oLime, width: 2)
+                    : null,
                 boxShadow: _isConnected ? null : AppShadows.glow(widget.oLime),
               ),
               child: Center(
@@ -2909,7 +2941,8 @@ class _HealthSyncStepState extends State<_HealthSyncStep> {
                     ? const SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.black))
                     : Text(_isConnected ? 'Connected ✅' : 'Connect Health App',
                         style: AppTypography.titleLarge.copyWith(
                           color: _isConnected ? widget.oLime : Colors.black,
@@ -2918,12 +2951,14 @@ class _HealthSyncStepState extends State<_HealthSyncStep> {
               ),
             ),
           ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
-          
+
           const SizedBox(height: 20),
           if (!_isConnected)
             TextButton(
               onPressed: widget.onNext,
-              child: Text("Maybe Later", style: TextStyle(color: widget.oSub, fontWeight: FontWeight.w600)),
+              child: Text("Maybe Later",
+                  style: TextStyle(
+                      color: widget.oSub, fontWeight: FontWeight.w600)),
             ).animate().fadeIn(delay: 600.ms),
         ],
       ),
@@ -2987,7 +3022,8 @@ class _PainPointsStep extends StatelessWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                 decoration: BoxDecoration(
                   color: isSelected ? oLime.withValues(alpha: 0.1) : oCard,
                   borderRadius: BorderRadius.circular(20),
@@ -2997,7 +3033,9 @@ class _PainPointsStep extends StatelessWidget {
                         : Colors.white.withValues(alpha: 0.05),
                     width: 2,
                   ),
-                  boxShadow: isSelected ? AppShadows.glow(oLime, intensity: 0.2) : null,
+                  boxShadow: isSelected
+                      ? AppShadows.glow(oLime, intensity: 0.2)
+                      : null,
                 ),
                 child: Row(
                   children: [
@@ -3019,15 +3057,21 @@ class _PainPointsStep extends StatelessWidget {
                         color: isSelected ? oLime : Colors.transparent,
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                            color: isSelected ? oLime : oSub.withValues(alpha: 0.3)),
+                            color: isSelected
+                                ? oLime
+                                : oSub.withValues(alpha: 0.3)),
                       ),
                       child: isSelected
-                          ? const Icon(Icons.check, color: Colors.black, size: 16)
+                          ? const Icon(Icons.check,
+                              color: Colors.black, size: 16)
                           : null,
                     ),
                   ],
                 ),
-              ).animate().fadeIn(delay: (50 * idx).ms).slideY(begin: 0.2, end: 0),
+              )
+                  .animate()
+                  .fadeIn(delay: (50 * idx).ms)
+                  .slideY(begin: 0.2, end: 0),
             );
           }),
         ],
@@ -3054,17 +3098,20 @@ class _SocialProofStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final testimonials = [
       {
-        'quote': 'Perfect for managing multiple prescriptions. I finally feel in control of my health.',
+        'quote':
+            'Perfect for managing multiple prescriptions. I finally feel in control of my health.',
         'name': 'Sarah T.',
         'persona': 'Managing 4+ daily meds',
       },
       {
-        'quote': 'The clinical export feature is a lifesaver. My doctor was amazed at the data I brought in.',
+        'quote':
+            'The clinical export feature is a lifesaver. My doctor was amazed at the data I brought in.',
         'name': 'James M.',
         'persona': 'Chronic condition',
       },
       {
-        'quote': 'Finally, an app that feels like a real medical tool instead of a toy. Simple, beautiful, and private.',
+        'quote':
+            'Finally, an app that feels like a real medical tool instead of a toy. Simple, beautiful, and private.',
         'name': 'Elena R.',
         'persona': 'Caregiver for parents',
       },
@@ -3078,7 +3125,8 @@ class _SocialProofStep extends StatelessWidget {
           _StepHeader(
             emoji: '⭐️',
             title: 'Trusted by thousands',
-            subtitle: 'Join a community taking back control of their medical routines.',
+            subtitle:
+                'Join a community taking back control of their medical routines.',
             oText: oText,
             oSub: oSub,
           ),
@@ -3093,7 +3141,8 @@ class _SocialProofStep extends StatelessWidget {
               decoration: BoxDecoration(
                 color: oCard,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1.5),
+                border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.05), width: 1.5),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -3101,7 +3150,8 @@ class _SocialProofStep extends StatelessWidget {
                   Row(
                     children: List.generate(
                       5,
-                      (_) => const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 20),
+                      (_) => const Icon(Icons.star_rounded,
+                          color: Color(0xFFFFB800), size: 20),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -3123,21 +3173,30 @@ class _SocialProofStep extends StatelessWidget {
                           color: oLime.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: Text(t['name']![0], style: TextStyle(color: oLime, fontWeight: FontWeight.bold)),
+                        child: Text(t['name']![0],
+                            style: TextStyle(
+                                color: oLime, fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(t['name']!, style: AppTypography.bodyMedium.copyWith(color: oText, fontWeight: FontWeight.bold)),
-                          Text(t['persona']!, style: AppTypography.bodySmall.copyWith(color: oSub)),
+                          Text(t['name']!,
+                              style: AppTypography.bodyMedium.copyWith(
+                                  color: oText, fontWeight: FontWeight.bold)),
+                          Text(t['persona']!,
+                              style: AppTypography.bodySmall
+                                  .copyWith(color: oSub)),
                         ],
                       ),
                     ],
                   ),
                 ],
               ),
-            ).animate().fadeIn(delay: (400 + (100 * idx)).ms).slideX(begin: 0.1, end: 0);
+            )
+                .animate()
+                .fadeIn(delay: (400 + (100 * idx)).ms)
+                .slideX(begin: 0.1, end: 0);
           }),
         ],
       ),
@@ -3169,17 +3228,20 @@ class _SolutionStep extends StatelessWidget {
     final Map<String, Map<String, String>> solutionsMap = {
       'Forgetting to take doses': {
         'title': 'Smart Haptic Reminders',
-        'desc': 'Intelligent alerts that adapt to your morning wake and sleep schedule.',
+        'desc':
+            'Intelligent alerts that adapt to your morning wake and sleep schedule.',
         'icon': '⏰'
       },
       'Complex schedules (e.g. alternating days)': {
         'title': 'Advanced Rituals Engine',
-        'desc': 'Easily handles alternating days, exact intervals, and PRN requirements.',
+        'desc':
+            'Easily handles alternating days, exact intervals, and PRN requirements.',
         'icon': '⚙️'
       },
       'Running out of pills': {
         'title': 'Predictive Refill Warnings',
-        'desc': 'We track your inventory and alert you days before you run out.',
+        'desc':
+            'We track your inventory and alert you days before you run out.',
         'icon': '📦'
       },
       'Not having data for my doctor': {
@@ -3189,7 +3251,8 @@ class _SolutionStep extends StatelessWidget {
       },
       'Managing for someone else': {
         'title': 'Family Syncing',
-        'desc': 'Track adherence for your parents or children from one simple dashboard.',
+        'desc':
+            'Track adherence for your parents or children from one simple dashboard.',
         'icon': '👨‍👩‍👧'
       },
     };
@@ -3236,7 +3299,8 @@ class _SolutionStep extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: Center(
-                      child: Text(sol['icon']!, style: const TextStyle(fontSize: 24)),
+                      child: Text(sol['icon']!,
+                          style: const TextStyle(fontSize: 24)),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -3273,7 +3337,10 @@ class _SolutionStep extends StatelessWidget {
                   ),
                 ],
               ),
-            ).animate().fadeIn(delay: (400 + (150 * idx)).ms).slideX(begin: 0.1, end: 0);
+            )
+                .animate()
+                .fadeIn(delay: (400 + (150 * idx)).ms)
+                .slideX(begin: 0.1, end: 0);
           }),
         ],
       ),

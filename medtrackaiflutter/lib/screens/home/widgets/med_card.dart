@@ -22,11 +22,16 @@ class MedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    final adh = context.select<AppState, int>((s) => s.getAdherenceForMed(med.id));
-    final pct = med.totalCount > 0 ? (med.count / med.totalCount).clamp(0.0, 1.0) : 0.0;
+    final adh =
+        context.select<AppState, int>((s) => s.getAdherenceForMed(med.id));
+    final pct =
+        med.totalCount > 0 ? (med.count / med.totalCount).clamp(0.0, 1.0) : 0.0;
     final isLow = RefillHelper.isCriticallyLow(med);
-    final showGeneric = context.select<AppState, bool>((s) => s.profile?.showGenericNames ?? false);
-    final displayName = (showGeneric && med.genericName.isNotEmpty) ? med.genericName : med.name;
+    final showGeneric = context
+        .select<AppState, bool>((s) => s.profile?.showGenericNames ?? false);
+    final displayName = (showGeneric && med.genericName.isNotEmpty)
+        ? med.genericName
+        : med.name;
     final friendlyName = _toTitleCase(displayName);
 
     return Padding(
@@ -59,13 +64,15 @@ class MedCard extends StatelessWidget {
                               child: Text(
                                 _categoryEmoji(med.category),
                                 style: const TextStyle(fontSize: 26),
-                              ).animate(onPlay: (c) => c.repeat(reverse: true))
-                               .scale(
-                                 begin: const Offset(1.0, 1.0),
-                                 end: const Offset(1.12, 1.12),
-                                 duration: 2200.ms,
-                                 curve: Curves.easeInOut,
-                               ),
+                              )
+                                  .animate(
+                                      onPlay: (c) => c.repeat(reverse: true))
+                                  .scale(
+                                    begin: const Offset(1.0, 1.0),
+                                    end: const Offset(1.12, 1.12),
+                                    duration: 2200.ms,
+                                    curve: Curves.easeInOut,
+                                  ),
                             ),
                             Positioned.fill(
                               child: Container(
@@ -85,8 +92,9 @@ class MedCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                    ).animate(onPlay: (c) => c.repeat())
-                     .shimmer(duration: 3.seconds, color: Colors.white.withValues(alpha: 0.05)),
+                    ).animate(onPlay: (c) => c.repeat()).shimmer(
+                        duration: 3.seconds,
+                        color: Colors.white.withValues(alpha: 0.05)),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -117,9 +125,12 @@ class MedCard extends StatelessWidget {
                     ),
                     if (adh != -1)
                       _AdherenceChip(adh: adh, L: L)
-                        .animate()
-                        .fadeIn(delay: 200.ms)
-                        .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), curve: Curves.easeOutBack),
+                          .animate()
+                          .fadeIn(delay: 200.ms)
+                          .scale(
+                              begin: const Offset(0.9, 0.9),
+                              end: const Offset(1, 1),
+                              curve: Curves.easeOutBack),
                   ],
                 ),
               ),
@@ -145,13 +156,17 @@ class MedCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      isLow ? Icons.warning_amber_rounded : Icons.inventory_2_rounded,
+                      isLow
+                          ? Icons.warning_amber_rounded
+                          : Icons.inventory_2_rounded,
                       size: 13,
                       color: isLow ? L.warning : L.sub.withValues(alpha: 0.3),
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      isLow ? '${med.count} units — refill soon' : '${med.count} units remaining',
+                      isLow
+                          ? '${med.count} units — refill soon'
+                          : '${med.count} units remaining',
                       style: AppTypography.labelSmall.copyWith(
                         color: isLow ? L.warning : L.sub.withValues(alpha: 0.4),
                         fontWeight: FontWeight.w800,
@@ -165,7 +180,8 @@ class MedCard extends StatelessWidget {
                       icon: Icons.remove_rounded,
                       onTap: () {
                         HapticEngine.selection();
-                        context.read<AppState>().updateMed(med.id, count: (med.count - 1).clamp(0, 999));
+                        context.read<AppState>().updateMed(med.id,
+                            count: (med.count - 1).clamp(0, 999));
                       },
                     ),
                     const SizedBox(width: 8),
@@ -173,7 +189,8 @@ class MedCard extends StatelessWidget {
                       icon: Icons.add_rounded,
                       onTap: () {
                         HapticEngine.success();
-                        context.read<AppState>().updateMed(med.id, count: (med.count + 1).clamp(0, 999));
+                        context.read<AppState>().updateMed(med.id,
+                            count: (med.count + 1).clamp(0, 999));
                       },
                     ),
                   ],
@@ -183,9 +200,10 @@ class MedCard extends StatelessWidget {
           ),
         ),
       ),
-    ).animate()
-     .fadeIn(duration: 400.ms)
-     .slideY(begin: 0.04, end: 0, curve: Curves.easeOutBack);
+    )
+        .animate()
+        .fadeIn(duration: 400.ms)
+        .slideY(begin: 0.04, end: 0, curve: Curves.easeOutBack);
   }
 
   String _toTitleCase(String s) {
@@ -200,16 +218,26 @@ class MedCard extends StatelessWidget {
   // 2026 design: expressive emoji per category
   String _categoryEmoji(String category) {
     switch (category.toLowerCase()) {
-      case 'tablet': return '💊';
-      case 'capsule': return '💊';
-      case 'liquid': return '💧';
-      case 'spray': return '💨';
-      case 'injection': return '💉';
-      case 'cream': return '🧴';
-      case 'drops': return '🪷';
-      case 'patch': return '🩹';
-      case 'inhaler': return '🌬️';
-      default: return '💊';
+      case 'tablet':
+        return '💊';
+      case 'capsule':
+        return '💊';
+      case 'liquid':
+        return '💧';
+      case 'spray':
+        return '💨';
+      case 'injection':
+        return '💉';
+      case 'cream':
+        return '🧴';
+      case 'drops':
+        return '🪷';
+      case 'patch':
+        return '🩹';
+      case 'inhaler':
+        return '🌬️';
+      default:
+        return '💊';
     }
   }
 }
@@ -220,14 +248,25 @@ class _AdherenceChip extends StatelessWidget {
   const _AdherenceChip({required this.adh, required this.L});
   @override
   Widget build(BuildContext context) {
-    final chipEmoji = adh >= 90 ? '🎯' : adh >= 70 ? '😊' : adh >= 50 ? '😐' : '😔';
-    final chipColor = adh >= 80 ? L.success : adh >= 50 ? L.warning : Colors.red.shade400;
+    final chipEmoji = adh >= 90
+        ? '🎯'
+        : adh >= 70
+            ? '😊'
+            : adh >= 50
+                ? '😐'
+                : '😔';
+    final chipColor = adh >= 80
+        ? L.success
+        : adh >= 50
+            ? L.warning
+            : Colors.red.shade400;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         color: chipColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: chipColor.withValues(alpha: 0.18), width: 0.5),
+        border:
+            Border.all(color: chipColor.withValues(alpha: 0.18), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -265,7 +304,8 @@ class _StepBtn extends StatelessWidget {
           color: L.text.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Center(child: Icon(icon, size: 18, color: L.text.withValues(alpha: 0.7))),
+        child: Center(
+            child: Icon(icon, size: 18, color: L.text.withValues(alpha: 0.7))),
       ),
     );
   }
@@ -275,7 +315,8 @@ class _SegmentedStockBar extends StatelessWidget {
   final double pct;
   final bool isLow;
   final AppThemeColors L;
-  const _SegmentedStockBar({required this.pct, required this.isLow, required this.L});
+  const _SegmentedStockBar(
+      {required this.pct, required this.isLow, required this.L});
 
   @override
   Widget build(BuildContext context) {
@@ -293,8 +334,8 @@ class _SegmentedStockBar extends StatelessWidget {
                   : L.fill.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(0.5),
             ),
-          ).animate(target: (isLow && isActive) ? 1 : 0)
-           .shimmer(duration: 2.seconds, color: Colors.white.withValues(alpha: 0.2)),
+          ).animate(target: (isLow && isActive) ? 1 : 0).shimmer(
+              duration: 2.seconds, color: Colors.white.withValues(alpha: 0.2)),
         );
       }),
     );

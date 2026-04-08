@@ -7,21 +7,48 @@ import '../../domain/entities/entities.dart';
 // ══════════════════════════════════════════════
 
 class FirestoreDataSource {
+  FirestoreDataSource() {
+    // 🛡️ HARDENING: Explicit offline persistence + performance settings
+    _db.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+  }
+
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   DocumentReference _userDoc(String uid) => _db.collection('users').doc(uid);
-  CollectionReference _meds(String uid) =>
-      _userDoc(uid).collection('medicines');
-  CollectionReference _history(String uid) =>
-      _userDoc(uid).collection('history');
+
+  CollectionReference _meds(String uid, {String? profileId}) {
+    if (profileId != null) {
+      return _userDoc(uid)
+          .collection('dependents')
+          .doc(profileId)
+          .collection('medicines');
+    }
+    return _userDoc(uid).collection('medicines');
+  }
+
+  CollectionReference _history(String uid, {String? profileId}) {
+    if (profileId != null) {
+      return _userDoc(uid)
+          .collection('dependents')
+          .doc(profileId)
+          .collection('history');
+    }
+    return _userDoc(uid).collection('history');
+  }
+
   CollectionReference _caregivers(String uid) =>
       _userDoc(uid).collection('caregivers');
 
   // ── Profile ────────────────────────────────────────────────────────
   Future<UserProfile?> getProfile(String uid) async {
     try {
-      final doc = await _userDoc(uid).get();
+      // 🛡️ HARDENING: Timeout fallback to prevent hangs on DNS/Host errors
+      final doc = await _userDoc(uid).get().timeout(const Duration(seconds: 5));
       final data = doc.data() as Map<String, dynamic>?;
+
       if (data == null || !data.containsKey('profile')) return null;
       return UserProfile.fromJson(data['profile'] as Map<String, dynamic>);
     } catch (_) {
@@ -43,9 +70,11 @@ class FirestoreDataSource {
   }
 
   // ── Medicines ──────────────────────────────────────────────────────
-  Future<List<Medicine>> getMedicines(String uid) async {
+  Future<List<Medicine>> getMedicines(String uid, {String? profileId}) async {
     try {
-      final snap = await _meds(uid).get();
+      // 🛡️ HARDENING: Timeout fallback
+      final snap =
+          await _meds(uid, profileId: profileId).get().timeout(const Duration(seconds: 5));
       return snap.docs
           .map((d) => Medicine.fromJson(d.data() as Map<String, dynamic>))
           .toList();
@@ -54,19 +83,24 @@ class FirestoreDataSource {
     }
   }
 
-  Future<void> saveMedicine(String uid, Medicine med) async {
-    await _meds(uid).doc('${med.id}').set(med.toJson());
+  Future<void> saveMedicine(String uid, Medicine med, {String? profileId}) async {
+    await _meds(uid, profileId: profileId).doc('${med.id}').set(med.toJson());
   }
 
-  Future<void> deleteMedicine(String uid, int medId) async {
-    await _meds(uid).doc('$medId').delete();
+  Future<void> deleteMedicine(String uid, int medId, {String? profileId}) async {
+    await _meds(uid, profileId: profileId).doc('$medId').delete();
   }
 
   // ── History ────────────────────────────────────────────────────────
-  Future<Map<String, List<DoseEntry>>> getHistory(String uid) async {
+  Future<Map<String, List<DoseEntry>>> getHistory(String uid,
+      {String? profileId}) async {
     try {
-      final snap = await _history(uid).get();
+      // 🛡️ HARDENING: Timeout fallback
+      final snap = await _history(uid, profileId: profileId)
+          .get()
+          .timeout(const Duration(seconds: 8));
       final result = <String, List<DoseEntry>>{};
+
       for (final doc in snap.docs) {
         final data = doc.data() as Map<String, dynamic>;
         final entries = (data['entries'] as List? ?? [])
@@ -83,12 +117,15 @@ class FirestoreDataSource {
   /// Fetch only the most recent [days] days of history (ordered by dateKey desc).
   /// This is the preferred method for startup — avoids pulling years of data.
   Future<Map<String, List<DoseEntry>>> getRecentHistory(String uid,
-      {int days = 30}) async {
+      {int days = 30, String? profileId}) async {
     try {
-      // Note: Order by documentId descending often requires an index in subcollections.
-      // We'll fetch and sort locally to avoid index blockers for new users.
-      final snap = await _history(uid).limit(days).get();
+      // 🛡️ HARDENING: Timeout fallback
+      final snap = await _history(uid, profileId: profileId)
+          .limit(days)
+          .get()
+          .timeout(const Duration(seconds: 5));
       final result = <String, List<DoseEntry>>{};
+
       final sortedDocs = snap.docs.toList()
         ..sort((a, b) => b.id.compareTo(a.id));
 
@@ -105,16 +142,21 @@ class FirestoreDataSource {
     }
   }
 
-  Future<void> saveDayHistory(
-      String uid, String dateKey, List<DoseEntry> entries) async {
-    await _history(uid)
+  Future<void> saveDayHistory(String uid, String dateKey, List<DoseEntry> entries,
+      {String? profileId}) async {
+    await _history(uid, profileId: profileId)
         .doc(dateKey)
         .set({'entries': entries.map((e) => e.toJson()).toList()});
   }
 
   // ── Taken Today ────────────────────────────────────────────────────
-  Future<Map<String, bool>> getTakenToday(String uid) async {
+  Future<Map<String, bool>> getTakenToday(String uid, {String? profileId}) async {
     try {
+      if (profileId != null) {
+        final doc = await _userDoc(uid).collection('dependents').doc(profileId).get();
+        final data = doc.data();
+        return Map<String, bool>.from(data?['takenToday'] as Map? ?? {});
+      }
       final doc = await _userDoc(uid).get();
       final data = doc.data() as Map<String, dynamic>?;
       if (data == null || !data.containsKey('takenToday')) return {};
@@ -124,8 +166,16 @@ class FirestoreDataSource {
     }
   }
 
-  Future<void> saveTakenToday(String uid, Map<String, bool> taken) async {
-    await _userDoc(uid).set({'takenToday': taken}, SetOptions(merge: true));
+  Future<void> saveTakenToday(String uid, Map<String, bool> taken,
+      {String? profileId}) async {
+    if (profileId != null) {
+      await _userDoc(uid)
+          .collection('dependents')
+          .doc(profileId)
+          .set({'takenToday': taken}, SetOptions(merge: true));
+    } else {
+      await _userDoc(uid).set({'takenToday': taken}, SetOptions(merge: true));
+    }
   }
 
   // ── Caregivers ─────────────────────────────────────────────────────

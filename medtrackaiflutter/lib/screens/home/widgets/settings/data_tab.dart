@@ -50,7 +50,8 @@ class _DataTabState extends State<DataTab> {
         history.values.expand((e) => e).where((e) => e.taken).length;
     final totalDoses = history.values.expand((e) => e).length;
     final daysTracked = history.keys.length;
-    final symptomsCount = context.select<AppState, int>((s) => s.symptoms.length);
+    final symptomsCount =
+        context.select<AppState, int>((s) => s.symptoms.length);
 
     return SingleChildScrollView(
       physics:
@@ -63,7 +64,8 @@ class _DataTabState extends State<DataTab> {
           decoration: BoxDecoration(
               color: L.card,
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: L.border.withValues(alpha: 0.1), width: 0.5),
+              border: Border.all(
+                  color: L.border.withValues(alpha: 0.1), width: 0.5),
               boxShadow: AppShadows.neumorphic),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -138,7 +140,8 @@ class _DataTabState extends State<DataTab> {
                 color: L.card,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: AppShadows.neumorphic,
-                border: Border.all(color: L.red.withValues(alpha: 0.3), width: 0.5)),
+                border: Border.all(
+                    color: L.red.withValues(alpha: 0.3), width: 0.5)),
             child: Column(children: [
               Text(s.deleteConfirmTitle,
                   style: AppTypography.titleMedium
@@ -195,16 +198,14 @@ class _DataTabState extends State<DataTab> {
                   iconBg: const Color(0xFF0EA5E9).withValues(alpha: 0.1),
                   label: s.privacyPolicy,
                   sub: s.privacyPolicySubtitle,
-                  onClick: () =>
-                      _launchUrl('https://medai.app/privacy'),
+                  onClick: () => _launchUrl('https://medai.app/privacy'),
                   border: true),
               SettingsModalRow(
                   icon: '⚖️',
                   iconBg: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
                   label: s.termsOfService,
                   sub: s.termsOfServiceSubtitle,
-                  onClick: () =>
-                      _launchUrl('https://medai.app/terms'),
+                  onClick: () => _launchUrl('https://medai.app/terms'),
                   border: false),
             ])),
 
@@ -233,7 +234,8 @@ class _SummaryBox extends StatelessWidget {
       decoration: BoxDecoration(
           color: L.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: L.border.withValues(alpha: 0.05), width: 0.5),
+          border:
+              Border.all(color: L.border.withValues(alpha: 0.05), width: 0.5),
           boxShadow: AppShadows.neumorphic),
       child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

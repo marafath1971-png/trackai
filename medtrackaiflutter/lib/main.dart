@@ -31,11 +31,6 @@ import 'data/repositories/user_repository_impl.dart';
 import 'data/repositories/symptom_repository_impl.dart';
 import 'widgets/common/global_error_boundary.dart';
 import 'services/purchases_service.dart';
-import 'providers/controllers/auth_controller.dart';
-import 'providers/controllers/medication_controller.dart';
-import 'providers/controllers/wellness_controller.dart';
-import 'providers/controllers/social_controller.dart';
-import 'providers/controllers/health_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

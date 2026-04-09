@@ -19,23 +19,38 @@ class VoiceService {
     await _tts.speak(text);
   }
 
-  static Future<void> listen({
+  static Future<bool> listen({
     required Function(String) onResult,
     required Function(bool) onListeningChanged,
   }) async {
-    bool available = await _speech.initialize();
-    if (available) {
-      onListeningChanged(true);
-      _speech.listen(
-        onResult: (val) {
-          if (val.finalResult) {
-            onResult(val.recognizedWords);
-            onListeningChanged(false);
-          }
+    try {
+      bool available = await _speech.initialize(
+        onError: (e) {
+          appLogger.e('[VoiceService] Listen Error: $e');
+          onListeningChanged(false);
         },
       );
-    } else {
-      appLogger.w('[VoiceService] Speech recognition not available');
+
+      if (available) {
+        onListeningChanged(true);
+        _speech.listen(
+          onResult: (val) {
+            if (val.finalResult) {
+              onResult(val.recognizedWords);
+              onListeningChanged(false);
+            }
+          },
+        );
+        return true;
+      } else {
+        appLogger.w('[VoiceService] Speech recognition not available');
+        onListeningChanged(false);
+        return false;
+      }
+    } catch (e) {
+      appLogger.e('[VoiceService] Critical failure during listen: $e');
+      onListeningChanged(false);
+      return false;
     }
   }
 

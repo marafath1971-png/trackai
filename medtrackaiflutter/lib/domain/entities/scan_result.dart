@@ -1,3 +1,5 @@
+import 'package:medai/domain/entities/body_impact.dart';
+
 class ScanResult {
   bool identified;
   String name;
@@ -42,6 +44,7 @@ class ScanResult {
       halalStatus; // 'unknown'|'halal'|'contains_gelatin'|'contains_alcohol'|'not_halal'
   String halalNote; // Brief halal advisory message
   String? ahaMoment; // NEW: Quick awareness fact
+  BodyImpactSummary? bodyImpact; // NEW: Full body impact profile
 
   ScanResult({
     this.identified = false,
@@ -82,6 +85,7 @@ class ScanResult {
     this.halalStatus = 'unknown',
     this.halalNote = '',
     this.ahaMoment,
+    this.bodyImpact,
   });
 
   int _parseInt(dynamic v, int fallback) {
@@ -136,6 +140,9 @@ class ScanResult {
       halalStatus: j['halalStatus'] ?? 'unknown',
       halalNote: j['halalNote'] ?? '',
       ahaMoment: j['ahaMoment'],
+      bodyImpact: j['bodyImpact'] != null 
+          ? BodyImpactSummary.fromJson(j['bodyImpact']) 
+          : null,
     );
   }
 
@@ -178,6 +185,7 @@ class ScanResult {
     String? halalStatus,
     String? halalNote,
     String? ahaMoment,
+    BodyImpactSummary? bodyImpact,
   }) =>
       ScanResult(
         identified: identified ?? this.identified,
@@ -218,5 +226,6 @@ class ScanResult {
         halalStatus: halalStatus ?? this.halalStatus,
         halalNote: halalNote ?? this.halalNote,
         ahaMoment: ahaMoment ?? this.ahaMoment,
+        bodyImpact: bodyImpact ?? this.bodyImpact,
       );
 }

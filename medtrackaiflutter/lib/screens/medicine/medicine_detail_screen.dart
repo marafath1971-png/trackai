@@ -9,7 +9,8 @@ import '../../widgets/shared/shared_widgets.dart';
 import '../../widgets/common/unified_header.dart';
 import '../../widgets/common/modern_time_picker.dart';
 import '../../widgets/common/mesh_gradient.dart';
-
+import 'widgets/body_impact_card.dart';
+import 'widgets/inline_ai_coach.dart';
 // ══════════════════════════════════════════════════════════════════════
 // MEDICINE DETAIL SCREEN (Cal AI Industrial Hub Refined)
 // ══════════════════════════════════════════════════════════════════════
@@ -128,7 +129,29 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                     const SizedBox(height: 24),
                   ],
                   _buildBentoMetrics(med, adherence, L),
+                  const SizedBox(height: 16),
+                  _buildQuickActions(med, context.read<AppState>(), L),
                   const SizedBox(height: 24),
+
+                  if (med.aiSafetyProfile != null && (med.aiSafetyProfile!.mechanismOfAction.isNotEmpty && med.aiSafetyProfile!.mechanismOfAction != 'Details about how this medication works in your body will appear here.')) ...[
+                    Builder(builder: (context) {
+                      final impact = BodyImpactSummary(
+                        mechanismOfAction: med.aiSafetyProfile!.mechanismOfAction,
+                        onsetMinutes: med.aiSafetyProfile!.onsetMinutes,
+                        peakHours: med.aiSafetyProfile!.peakHours,
+                        durationHours: med.aiSafetyProfile!.durationHours,
+                        bodySystems: med.aiSafetyProfile!.bodySystems,
+                        timelineEffects: med.aiSafetyProfile!.timelineEffects,
+                        ahaFacts: med.aiSafetyProfile!.ahaFacts,
+                      );
+                      return BodyImpactCard(
+                        impact: impact,
+                        onAskAIPressed: () => InlineAiCoach.show(context, med, impact: impact),
+                      ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
+                    }),
+                    const SizedBox(height: 24),
+                  ],
+
                   _buildSafetyPanel(med, L),
                   const SizedBox(height: 24),
                   _buildHistorySection(med, adherence, historyCount.taken,
@@ -588,6 +611,216 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildQuickActions(Medicine med, AppState state, AppThemeColors L) {
+    final isLow = med.count <= med.refillAt;
+    return Row(
+      children: [
+        // ── RESTOCK ──
+        Expanded(
+          child: BouncingButton(
+            onTap: () => _showRestockSheet(med, state, L),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: isLow
+                    ? Colors.orange.withValues(alpha: 0.08)
+                    : L.card,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isLow
+                      ? Colors.orange.withValues(alpha: 0.3)
+                      : L.border.withValues(alpha: 0.08),
+                  width: isLow ? 1.0 : 0.5,
+                ),
+                boxShadow: AppShadows.neumorphic,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(isLow ? '📦' : '🔄',
+                      style: const TextStyle(fontSize: 22)),
+                  const SizedBox(height: 6),
+                  Text(
+                    isLow ? 'RESTOCK' : 'RESTOCK',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: isLow ? Colors.orange : L.text,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  if (isLow)
+                    Text(
+                      'LOW SUPPLY',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: Colors.orange.withValues(alpha: 0.7),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 9,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // ── LOG FLEXIBLE DOSE ──
+        Expanded(
+          child: BouncingButton(
+            onTap: () {
+              HapticEngine.doseTaken();
+              state.logPrnDose(
+                med.id,
+                'Flexible Dose',
+                TimeOfDay.now().format(context),
+              );
+              state.showToast('Flexible dose logged ✓');
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: L.card,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: L.border.withValues(alpha: 0.08),
+                  width: 0.5,
+                ),
+                boxShadow: AppShadows.neumorphic,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('💊', style: TextStyle(fontSize: 22)),
+                  const SizedBox(height: 6),
+                  Text(
+                    'LOG DOSE',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: L.text,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 10,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  Text(
+                    'AS NEEDED',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: L.sub.withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 9,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showRestockSheet(Medicine med, AppState state, AppThemeColors L) {
+    HapticEngine.selection();
+    int addAmount = 30;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: L.bg,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(28, 20, 28, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: L.border.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(2))),
+                const SizedBox(height: 28),
+                Text('RESTOCK INVENTORY',
+                    style: AppTypography.titleLarge.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: L.text,
+                        letterSpacing: -0.5)),
+                const SizedBox(height: 8),
+                Text('Add units to ${med.name}',
+                    style: AppTypography.bodySmall
+                        .copyWith(color: L.sub, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _RestockBtn(
+                      label: '− 10',
+                      onTap: () =>
+                          setSheetState(() => addAmount = (addAmount - 10).clamp(10, 365)),
+                      L: L,
+                    ),
+                    const SizedBox(width: 20),
+                    Column(
+                      children: [
+                        Text('$addAmount',
+                            style: AppTypography.displayLarge.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: L.text,
+                                fontSize: 52,
+                                letterSpacing: -2.0)),
+                        Text('UNITS',
+                            style: AppTypography.labelSmall.copyWith(
+                                color: L.sub,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2.0,
+                                fontSize: 10)),
+                      ],
+                    ),
+                    const SizedBox(width: 20),
+                    _RestockBtn(
+                      label: '+ 10',
+                      onTap: () =>
+                          setSheetState(() => addAmount = (addAmount + 10).clamp(10, 365)),
+                      L: L,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                BouncingButton(
+                  onTap: () {
+                    HapticEngine.success();
+                    final newCount = med.count + addAmount;
+                    state.updateMedicine(med.copyWith(count: newCount));
+                    state.showToast('+$addAmount units added ✓');
+                    Navigator.pop(ctx);
+                  },
+                  child: Container(
+                    height: 54,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: L.text,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Center(
+                      child: Text('CONFIRM RESTOCK',
+                          style: AppTypography.labelLarge.copyWith(
+                              color: L.bg,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.5)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1469,6 +1702,43 @@ class _ModernTextField extends StatelessWidget {
                 fillColor: Colors.transparent),
           ),
         ]),
+      ),
+    );
+  }
+}
+
+// ── Restock Stepper Button ───────────────────────────────────────────
+class _RestockBtn extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  final AppThemeColors L;
+  const _RestockBtn(
+      {required this.label, required this.onTap, required this.L});
+
+  @override
+  Widget build(BuildContext context) {
+    return BouncingButton(
+      onTap: onTap,
+      child: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: L.card,
+          borderRadius: BorderRadius.circular(14),
+          border:
+              Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+          boxShadow: AppShadows.neumorphic,
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: AppTypography.labelLarge.copyWith(
+              color: L.text,
+              fontWeight: FontWeight.w900,
+              fontSize: 14,
+            ),
+          ),
+        ),
       ),
     );
   }

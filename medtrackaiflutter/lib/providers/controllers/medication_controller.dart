@@ -22,7 +22,7 @@ class MedicationController extends ChangeNotifier {
   List<Medicine> _meds = [];
   Map<String, List<DoseEntry>> _history = {};
   Map<String, bool> _takenToday = {};
-  StreakData _streakData = const StreakData();
+  final StreakData _streakData = const StreakData();
   int _scanCount = 0;
   DateTime? _lastReviewRequest;
   List<double> _inventoryHistory = [];

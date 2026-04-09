@@ -426,20 +426,26 @@ class _TrackCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(topValue,
-                  style: AppTypography.displaySmall.copyWith(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: L.text,
-                    letterSpacing: -0.5,
-                  )),
-              const SizedBox(width: 2),
-              Text(topUnit,
-                  style: AppTypography.labelSmall.copyWith(
-                    fontSize: 10,
-                    color: L.sub.withValues(alpha: 0.45),
-                    fontWeight: FontWeight.w600,
-                  )),
+              Flexible(
+                child: Text(topValue,
+                    style: AppTypography.displaySmall.copyWith(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: L.text,
+                      letterSpacing: -0.5,
+                    )),
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(topUnit,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.labelSmall.copyWith(
+                      fontSize: 10,
+                      color: L.sub.withValues(alpha: 0.45),
+                      fontWeight: FontWeight.w600,
+                    )),
+              ),
             ],
           ),
           const SizedBox(height: 2),
@@ -590,13 +596,17 @@ class _AdherenceScoreCard extends StatelessWidget {
                         curve: Curves.easeInOut,
                       ),
                   const SizedBox(width: 8),
-                  Text('Adherence Score',
-                      style: AppTypography.labelMedium.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: L.text,
-                        fontSize: 15,
-                        letterSpacing: -0.2,
-                      )),
+                  Flexible(
+                    child: Text('Adherence Score',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.labelMedium.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: L.text,
+                          fontSize: 15,
+                          letterSpacing: -0.2,
+                        )),
+                  ),
                 ],
               ),
               Container(

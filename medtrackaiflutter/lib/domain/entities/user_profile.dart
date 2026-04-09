@@ -6,9 +6,13 @@ class UserProfile {
   final String age;
   final String gender;
   final String goal;
+  final String targetUser; // Myself, Family, Both
+  final String height; 
+  final String weight;
   final List<String> conditions;
   final String medCount;
   final String forgetting;
+  final String currentMethods; // Pillbox, Notes, etc.
   final Map<String, int> wakeTime;
   final Map<String, int> breakfastTime;
   final Map<String, int> lunchTime;
@@ -55,9 +59,13 @@ class UserProfile {
     this.age = '',
     this.gender = '',
     this.goal = '',
+    this.targetUser = '',
+    this.height = '',
+    this.weight = '',
     this.conditions = const [],
     this.medCount = '',
     this.forgetting = '',
+    this.currentMethods = '',
     this.wakeTime = const {'h': 7, 'm': 0},
     this.breakfastTime = const {'h': 8, 'm': 0},
     this.lunchTime = const {'h': 12, 'm': 0},
@@ -104,9 +112,13 @@ class UserProfile {
         'age': age,
         'gender': gender,
         'goal': goal,
+        'target_user': targetUser,
+        'height': height,
+        'weight': weight,
         'conditions': conditions,
         'medCount': medCount,
         'forgetting': forgetting,
+        'current_methods': currentMethods,
         'wakeTime': wakeTime,
         'breakfastTime': breakfastTime,
         'lunchTime': lunchTime,
@@ -153,9 +165,13 @@ class UserProfile {
         age: j['age'] ?? '',
         gender: j['gender'] ?? '',
         goal: j['goal'] ?? '',
+        targetUser: j['target_user'] ?? '',
+        height: j['height'] ?? '',
+        weight: j['weight'] ?? '',
         conditions: List<String>.from(j['conditions'] ?? []),
         medCount: j['medCount'] ?? '',
         forgetting: j['forgetting'] ?? '',
+        currentMethods: j['current_methods'] ?? '',
         wakeTime: Map<String, int>.from(j['wakeTime'] ?? {'h': 7, 'm': 0}),
         breakfastTime:
             Map<String, int>.from(j['breakfastTime'] ?? {'h': 8, 'm': 0}),
@@ -212,9 +228,13 @@ class UserProfile {
     String? age,
     String? gender,
     String? goal,
+    String? targetUser,
+    String? height,
+    String? weight,
     List<String>? conditions,
     String? medCount,
     String? forgetting,
+    String? currentMethods,
     Map<String, int>? wakeTime,
     Map<String, int>? breakfastTime,
     Map<String, int>? lunchTime,
@@ -258,9 +278,13 @@ class UserProfile {
         age: age ?? this.age,
         gender: gender ?? this.gender,
         goal: goal ?? this.goal,
+        targetUser: targetUser ?? this.targetUser,
+        height: height ?? this.height,
+        weight: weight ?? this.weight,
         conditions: conditions ?? this.conditions,
         medCount: medCount ?? this.medCount,
         forgetting: forgetting ?? this.forgetting,
+        currentMethods: currentMethods ?? this.currentMethods,
         wakeTime: wakeTime ?? this.wakeTime,
         breakfastTime: breakfastTime ?? this.breakfastTime,
         lunchTime: lunchTime ?? this.lunchTime,

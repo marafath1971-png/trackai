@@ -157,7 +157,7 @@ class _ProfileAvatar extends StatelessWidget {
                             style: const TextStyle(fontSize: 24),
                           )
                         : Text(
-                            name[0].toUpperCase(),
+                            name.isNotEmpty ? name[0].toUpperCase() : '?',
                             style: TextStyle(
                               color: isSelected ? Colors.white : L.text,
                               fontWeight: FontWeight.w900,

@@ -391,16 +391,20 @@ class _AppShellState extends State<AppShell>
                 ],
               ),
               const SizedBox(height: 4),
-              AnimatedOpacity(
-                duration: 180.ms,
-                opacity: selected ? 1.0 : 0.0,
-                child: Text(
-                  label,
-                  style: AppTypography.labelSmall.copyWith(
-                    color: L.text,
-                    fontSize: 9,
-                    letterSpacing: 0.4,
-                    fontWeight: FontWeight.w700,
+              Flexible(
+                child: AnimatedOpacity(
+                  duration: 180.ms,
+                  opacity: selected ? 1.0 : 0.0,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: L.text,
+                      fontSize: 9,
+                      letterSpacing: 0.4,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),

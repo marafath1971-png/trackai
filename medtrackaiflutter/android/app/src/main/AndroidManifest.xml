@@ -16,12 +16,23 @@
     <!-- Notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     
-    <!-- Health Connect Permissions -->
+    <!-- Voice Recognition -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    
+    <!-- Health Connect Permissions (Legacy + Android 14) -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="androidx.health.permission.HealthConnect.READ_STEPS" />
     <uses-permission android:name="androidx.health.permission.HealthConnect.READ_HEART_RATE" />
     <uses-permission android:name="androidx.health.permission.HealthConnect.READ_SLEEP_SESSION" />
     <uses-permission android:name="androidx.health.permission.HealthConnect.READ_BLOOD_GLUCOSE" />
+    <uses-permission android:name="androidx.health.permission.HealthConnect.READ_BLOOD_PRESSURE" />
+    
+    <!-- Android 14 Health Connect Permissions -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_SLEEP_SESSION" />
+    <uses-permission android:name="android.permission.health.READ_BLOOD_GLUCOSE" />
+    <uses-permission android:name="android.permission.health.READ_BLOOD_PRESSURE" />
 
     
     <application

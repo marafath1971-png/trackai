@@ -10,32 +10,52 @@ class HealthController extends ChangeNotifier {
 
   bool _isConnected = false;
   bool _isSyncing = false;
+  bool _autoSync = false;
 
   double _steps = 0;
   double _heartRate = 0;
+  double _bloodGlucose = 0;
+  double _systolic = 0;
+  double _diastolic = 0;
   String _sleepStatus = 'No data';
 
   HealthController(this._prefs) {
     _isConnected = _prefs.getBool('health_connected') ?? false;
-    if (_isConnected) {
+    _autoSync = _prefs.getBool('health_auto_sync') ?? true;
+    if (_isConnected && _autoSync) {
       syncData();
     }
   }
 
   bool get isConnected => _isConnected;
   bool get isSyncing => _isSyncing;
+  bool get autoSync => _autoSync;
   double get steps => _steps;
   double get heartRate => _heartRate;
+  double get bloodGlucose => _bloodGlucose;
+  double get systolic => _systolic;
+  double get diastolic => _diastolic;
   String get sleepStatus => _sleepStatus;
+
+  Future<void> setAutoSync(bool value) async {
+    _autoSync = value;
+    await _prefs.setBool('health_auto_sync', value);
+    notifyListeners();
+    if (_autoSync) await syncData();
+  }
 
   static const List<HealthDataType> _types = [
     HealthDataType.STEPS,
     HealthDataType.HEART_RATE,
     HealthDataType.SLEEP_SESSION,
     HealthDataType.BLOOD_GLUCOSE,
+    HealthDataType.BLOOD_PRESSURE_SYSTOLIC,
+    HealthDataType.BLOOD_PRESSURE_DIASTOLIC,
   ];
 
   static const List<HealthDataAccess> _permissions = [
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
     HealthDataAccess.READ,
     HealthDataAccess.READ,
     HealthDataAccess.READ,
@@ -119,11 +139,42 @@ class HealthController extends ChangeNotifier {
         startTime: yesterday,
         endTime: now,
       );
-      if (sleepData.isNotEmpty) {
-        _sleepStatus = 'Logged';
+      if (sleepData.isNotEmpty) _sleepStatus = 'Logged';
+
+      // Fetch Blood Glucose (latest)
+      List<HealthDataPoint> bgData = await _health.getHealthDataFromTypes(
+        types: [HealthDataType.BLOOD_GLUCOSE],
+        startTime: yesterday,
+        endTime: now,
+      );
+      if (bgData.isNotEmpty) {
+        final val = bgData.last.value;
+        if (val is NumericHealthValue) _bloodGlucose = val.numericValue.toDouble();
       }
 
-      appLogger.i('Health Sync Complete: Steps: $_steps, HR: $_heartRate');
+      // Fetch Blood Pressure (latest)
+      List<HealthDataPoint> sysData = await _health.getHealthDataFromTypes(
+        types: [HealthDataType.BLOOD_PRESSURE_SYSTOLIC],
+        startTime: yesterday,
+        endTime: now,
+      );
+      if (sysData.isNotEmpty) {
+        final val = sysData.last.value;
+        if (val is NumericHealthValue) _systolic = val.numericValue.toDouble();
+      }
+
+      List<HealthDataPoint> diaData = await _health.getHealthDataFromTypes(
+        types: [HealthDataType.BLOOD_PRESSURE_DIASTOLIC],
+        startTime: yesterday,
+        endTime: now,
+      );
+      if (diaData.isNotEmpty) {
+        final val = diaData.last.value;
+        if (val is NumericHealthValue) _diastolic = val.numericValue.toDouble();
+      }
+
+      appLogger.i(
+          'Health Sync Complete: Steps: $_steps, HR: $_heartRate, BG: $_bloodGlucose, BP: $_systolic/$_diastolic');
     } catch (e) {
       appLogger.e('Health Sync Error: $e');
     } finally {

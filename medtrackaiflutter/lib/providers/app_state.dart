@@ -584,13 +584,22 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   // ── Health & Vitals Proxies ─────────────────────────────────────────
   bool get healthConnected => health.isConnected;
   bool get healthSyncing => health.isSyncing;
+  bool get healthAutoSync => health.autoSync;
   double get healthSteps => health.steps;
   double get healthHeartRate => health.heartRate;
+  double get healthBloodGlucose => health.bloodGlucose;
+  double get healthSystolic => health.systolic;
+  double get healthDiastolic => health.diastolic;
 
   Future<bool> connectHealth() async {
     final success = await health.connect();
     if (success) safeNotifyListeners();
     return success;
+  }
+
+  Future<void> setHealthAutoSync(bool value) async {
+    await health.setAutoSync(value);
+    safeNotifyListeners();
   }
 
   Future<void> syncHealthData() async {
@@ -652,7 +661,10 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     final file = File('${output.path}/med_history.csv');
     await file.writeAsString(csv);
 
-    await Share.shareXFiles([XFile(file.path)], subject: 'MedAI Data Export (CSV)');
+    await SharePlus.instance.share(ShareParams(
+      files: [XFile(file.path)],
+      subject: 'MedAI Data Export (CSV)',
+    ));
   }
 
   Future<void> deleteAllData() async {
@@ -776,7 +788,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     safeNotifyListeners();
 
     try {
-      await VoiceService.listen(
+      final available = await VoiceService.listen(
         onResult: (transcript) async {
           voiceTranscript = transcript;
           voiceStatus = 'thinking';
@@ -807,28 +819,40 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
               await VoiceService.speak(confirmation);
             } else {
               voiceStatus = 'error';
-              voiceFeedback = "I couldn't identify that medication. Try saying the name clearly.";
+              voiceFeedback =
+                  "I couldn't identify that medication. Try saying the name clearly.";
               await VoiceService.speak(voiceFeedback);
             }
           } else {
             voiceStatus = 'error';
             voiceFeedback = "Something went wrong. Please try again.";
           }
-          
+
           safeNotifyListeners();
           await Future.delayed(const Duration(seconds: 3));
           closeVoiceAssistant();
         },
         onListeningChanged: (listening) {
           if (!listening && voiceStatus == 'listening') {
-            // If it stopped but we didn't get a final result yet
+            // Signal stopped
+            safeNotifyListeners();
           }
         },
       );
+
+      if (!available) {
+        voiceStatus = 'error';
+        voiceFeedback = 'Speech recognition unavailable. Check permissions.';
+        safeNotifyListeners();
+        await Future.delayed(const Duration(seconds: 3));
+        closeVoiceAssistant();
+      }
     } catch (e) {
-      isVoiceActive = false;
-      voiceStatus = 'idle';
+      voiceStatus = 'error';
+      voiceFeedback = 'Voice Assistant connection lost.';
       safeNotifyListeners();
+      await Future.delayed(const Duration(seconds: 3));
+      closeVoiceAssistant();
     }
   }
 

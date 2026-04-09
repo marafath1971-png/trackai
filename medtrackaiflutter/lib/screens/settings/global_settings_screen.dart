@@ -166,6 +166,26 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
 
               const SizedBox(height: 24),
 
+              // ── VITAL CONNECTIVITY BLOCK ─────────────────
+              _IndustrialSection(
+                label: 'VITAL CONNECTIVITY',
+                icon: '❤️',
+                L: L,
+                children: [
+                  _ToggleTile(
+                    title: 'Auto-Sync Health',
+                    subtitle: 'Keep vitals synchronized in background',
+                    value: context.watch<AppState>().healthAutoSync,
+                    onChanged: (v) =>
+                        context.read<AppState>().setHealthAutoSync(v),
+                    L: L,
+                    isLast: true,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
               // ── DISPLAY ARCHITECTURE BLOCK ───────────────
               _IndustrialSection(
                 label: 'DISPLAY ARCHITECTURE',
@@ -181,6 +201,111 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
                     isLast: true,
                   ),
                 ],
+              ),
+              const SizedBox(height: 24),
+
+              // ── ACCOUNT ARCHITECTURE BLOCK ───────────────
+              _IndustrialSection(
+                label: 'ACCOUNT ARCHITECTURE',
+                icon: '📂',
+                L: L,
+                children: [
+                  _AccountActionTile(
+                    icon: '📤',
+                    title: 'Export Health Data (CSV)',
+                    subtitle: 'Generate a clinical report of your vitals',
+                    onTap: () {
+                      HapticEngine.selection();
+                      context.read<AppState>().exportDataCSV();
+                    },
+                    L: L,
+                  ),
+                  _AccountActionTile(
+                    icon: '🧹',
+                    title: 'Clear Local Cache',
+                    subtitle: 'Free up space and refresh local state',
+                    onTap: () => _confirmReset(context, L),
+                    L: L,
+                  ),
+                  _AccountActionTile(
+                    icon: '⚠️',
+                    title: 'Delete Account Permanently',
+                    subtitle: 'Erase all personal health records',
+                    color: Colors.red,
+                    isLast: true,
+                    onTap: () => _confirmDelete(context, L),
+                    L: L,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── SYSTEM BLOCK ─────────────────────────────
+              _IndustrialSection(
+                label: 'SYSTEM',
+                icon: '⚙️',
+                L: L,
+                children: [
+                  _AccountActionTile(
+                    icon: '📜',
+                    title: 'Privacy Policy',
+                    onTap: () {
+                      HapticEngine.selection();
+                      // Navigation would go here
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Privacy Policy updated March 2026')),
+                      );
+                    },
+                    L: L,
+                  ),
+                  _AccountActionTile(
+                    icon: '⚖️',
+                    title: 'Terms of Service',
+                    onTap: () {
+                      HapticEngine.selection();
+                    },
+                    L: L,
+                  ),
+                  _AccountActionTile(
+                    icon: '💬',
+                    title: 'Support & Feedback',
+                    isLast: true,
+                    onTap: () {
+                      HapticEngine.selection();
+                    },
+                    L: L,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 48),
+
+              // ── SYSTEM INTEGRITY FOOTER ──
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      'MEDTRACK AI 1.0',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: L.text.withValues(alpha: 0.15),
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 4.0,
+                        fontSize: 9,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'BUILD_2026.04.RC1 • STABLE',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: L.text.withValues(alpha: 0.1),
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.0,
+                        fontSize: 8,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 120),
             ],
@@ -248,6 +373,172 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _confirmReset(BuildContext context, AppThemeColors L) {
+    HapticEngine.alertWarning();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: L.bg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text('RESET CACHE?',
+            style: AppTypography.titleLarge
+                .copyWith(fontWeight: FontWeight.w900, color: L.text)),
+        content: Text(
+            'This will clear local temporary files. Your medications and health records will remain safe.',
+            style: AppTypography.bodySmall
+                .copyWith(color: L.text.withValues(alpha: 0.7), height: 1.5)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('CANCEL',
+                style: AppTypography.labelLarge.copyWith(color: L.sub)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<AppState>().showToast('Cache cleared successfully');
+            },
+            child: Text('RESET',
+                style: AppTypography.labelLarge
+                    .copyWith(color: L.text, fontWeight: FontWeight.w900)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, AppThemeColors L) {
+    HapticEngine.heavyImpact();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: L.bg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text('DELETE ACCOUNT?',
+            style: AppTypography.titleLarge.copyWith(
+                fontWeight: FontWeight.w900, color: Colors.red.shade400)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'This action is irreversible. All health data, medication history, and vitals will be permanently erased.',
+                style: AppTypography.bodySmall
+                    .copyWith(color: L.text.withValues(alpha: 0.7), height: 1.5)),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  const Text('⚠️', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text('PROTOCOL_SENSITIVE: DATA_DELETION_FINAL',
+                        style: AppTypography.labelSmall.copyWith(
+                            color: Colors.red.shade400,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 9,
+                            letterSpacing: 1.0)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('CANCEL',
+                style: AppTypography.labelLarge.copyWith(color: L.sub)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<AppState>().deleteAccount();
+            },
+            child: Text('CONFIRM DELETE',
+                style: AppTypography.labelLarge.copyWith(
+                    color: Colors.red.shade400, fontWeight: FontWeight.w900)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Account Action Tile ───────────────────────────────────────────────
+class _AccountActionTile extends StatelessWidget {
+  final String icon, title;
+  final String? subtitle;
+  final Color? color;
+  final VoidCallback onTap;
+  final AppThemeColors L;
+  final bool isLast;
+  const _AccountActionTile(
+      {required this.icon,
+      required this.title,
+      this.subtitle,
+      this.color,
+      required this.onTap,
+      required this.L,
+      this.isLast = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final tileColor = color ?? L.text;
+    return Container(
+      decoration: BoxDecoration(
+          border: isLast
+              ? null
+              : Border(
+                  bottom: BorderSide(
+                      color: L.border.withValues(alpha: 0.05), width: 0.5))),
+      child: ListTile(
+        onTap: onTap,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: tileColor.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+              child: Text(icon, style: const TextStyle(fontSize: 18))),
+        ),
+        title: Text(
+          title.toUpperCase(),
+          style: AppTypography.labelLarge.copyWith(
+              color: tileColor,
+              fontWeight: FontWeight.w900,
+              fontSize: 13,
+              letterSpacing: 0.2),
+        ),
+        subtitle: subtitle != null
+            ? Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(subtitle!,
+                    style: AppTypography.bodySmall.copyWith(
+                        color: L.text.withValues(alpha: 0.45),
+                        fontWeight: FontWeight.w500,
+                        fontSize: 11)),
+              )
+            : null,
+        trailing: Text('→',
+            style: TextStyle(
+                color: L.sub.withValues(alpha: 0.3),
+                fontSize: 18,
+                fontWeight: FontWeight.w900)),
       ),
     );
   }

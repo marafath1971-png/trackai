@@ -398,6 +398,18 @@ Return ONLY valid JSON with NO markdown, NO code fences, NO explanations:
   "halalStatus": "unknown|halal|contains_gelatin|contains_alcohol|not_halal",
   "halalNote": "Brief note on halal status if relevant, else empty string",
   "ahaMoment": "A one-sentence scientific/educational 'Did you know?' fact about this medicine that increases user awareness (e.g. 'Did you know? Taking this with vitamin C increases absorption by 40%')",
+  "bodyImpact": {
+    "mechanismOfAction": "Plain English explanation of exactly how this drug works inside the body's cells.",
+    "onsetMinutes": 30,
+    "peakHours": 2.5,
+    "durationHours": 8.0,
+    "bodySystems": ["digestive", "nervous", "cardiovascular"],
+    "timelineEffects": [
+      {"time": "30 min", "effect": "Starts entering bloodstream"},
+      {"time": "1-2 hrs", "effect": "Pain relief reaches peak levels"}
+    ],
+    "ahaFacts": ["fact 1", "fact 2", "fact 3"]
+  },
   "scheduleSlots": [
     {"label": "Morning", "h": 8, "m": 0, "days": [0,1,2,3,4,5,6], "ritual": "withBreakfast"}
   ],
@@ -1011,6 +1023,19 @@ Your task is to return ONLY valid JSON matching this exact structure containing 
   "ahaMoments": [
     "A fascinating 'Aha!' fact or hack about this medicine (e.g. 'Taking this exactly 30 mins before breakfast boosts absorption by 40%!')",
     "Engaging fact 2"
+  ],
+  "mechanismOfAction": "Detailed but simple explanation of how it works in the body.",
+  "onsetMinutes": 30,
+  "peakHours": 2.0,
+  "durationHours": 8.0,
+  "bodySystems": ["cardiovascular", "renal"],
+  "timelineEffects": [
+    {"time": "30 min", "effect": "Starts working"},
+    {"time": "2 hrs", "effect": "Peak effectiveness"}
+  ],
+  "ahaFacts": [
+    "Wow fact 1",
+    "Wow fact 2"
   ]
 }
 

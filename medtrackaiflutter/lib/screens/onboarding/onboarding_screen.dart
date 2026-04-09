@@ -9,7 +9,6 @@ import '../../theme/app_theme.dart';
 import '../../services/notification_service.dart';
 import '../../services/auth_service.dart';
 import '../../core/utils/date_formatter.dart';
-import '../../l10n/app_localizations.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:async';
 
@@ -34,24 +33,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   final Map<String, dynamic> _form = {
     'name': '',
-    'age': '',
-    'gender': '',
     'goal': '',
-    'painPoints': <String>[],
-    'conditions': <String>[],
-    'medCount': '',
-    'forgetting': '',
+    'target_user': '',
+    'med_count': '',
+    'pain_points': <String>[],
+    'forget_freq': '',
     'wakeTime': {'h': 7, 'm': 0},
-    'breakfastTime': {'h': 8, 'm': 0},
-    'lunchTime': {'h': 12, 'm': 0},
-    'dinnerTime': {'h': 19, 'm': 0},
     'sleepTime': {'h': 22, 'm': 0},
-    'doctorVisits': '',
-    'support': '',
-    'challenge': '',
-    'prevApp': '',
-    'motivation': <String>[],
-    'reminderStyle': '',
     'notifPerm': false,
     'avatar': '👤',
     'country': '',
@@ -61,7 +49,30 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   int _paywallStep = 0; // 0=Features, 1=Trust, 2=Timeline
 
   List<_OBStep> get _steps => [
+        // 1. Splash
         const _OBStep(id: 'splash', type: 'splash'),
+
+        // 2. Goal
+        const _OBStep(
+            id: 'goal',
+            type: 'single',
+            emoji: '🛡️',
+            title: "What's your main health goal?",
+            subtitle: 'This shapes your AI experience',
+            field: 'goal',
+            options: kHealthGoals),
+
+        // 3. Target User
+        const _OBStep(
+            id: 'target_user',
+            type: 'single',
+            emoji: '🎯',
+            title: "Who are you tracking for?",
+            subtitle: 'You can add family members later',
+            field: 'target_user',
+            options: kTrackingTargets),
+
+        // 4. Name
         const _OBStep(
             id: 'name',
             type: 'text',
@@ -70,44 +81,104 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             subtitle: "We'll personalise everything for you",
             field: 'name',
             placeholder: 'Your first name'),
+
+        // 5. Med Count
         const _OBStep(
-            id: 'goal',
+            id: 'med_count',
             type: 'single',
-            emoji: '🛡️',
-            title: "What's your main health goal?",
-            subtitle: 'This shapes your entire experience',
-            field: 'goal',
-            options: kHealthGoals),
+            emoji: '📦',
+            title: "How many medications?",
+            subtitle: 'This helps our AI tailor your schedule',
+            field: 'med_count',
+            options: kMedCounts),
+
+        // 6. Pain Points
         const _OBStep(
             id: 'pain_points',
-            type: 'pain_points',
-            emoji: '🚨',
-            title: 'What\'s the hardest part?',
-            subtitle: 'Select all that apply',
-            field: 'painPoints',
-            options: kPainPoints),
-        const _OBStep(
-            id: 'social_proof', type: 'social_proof', title: '', subtitle: ''),
-        const _OBStep(
-            id: 'solution', type: 'solution', title: '', subtitle: ''),
-        _OBStep(
-            id: 'country',
-            type: 'single',
-            emoji: '🌐',
-            title: AppLocalizations.of(context)?.countrySelectionTitle ??
-                'Where are you located?',
-            subtitle: AppLocalizations.of(context)?.countrySelectionSubtitle ??
-                'Helps us identify local medicine brands',
-            field: 'country',
-            options: kCountries),
-        const _OBStep(
-            id: 'conditions',
             type: 'multi',
-            emoji: '🔬',
-            title: 'Any health conditions?',
-            subtitle: 'Select all that apply — helps us customise',
-            field: 'conditions',
-            options: kConditions),
+            emoji: '📉',
+            title: "Biggest medication struggle?",
+            subtitle: 'Med AI solves these challenges instantly',
+            field: 'pain_points',
+            options: kPainPoints),
+
+        // 7. Forgetfulness Freq
+        const _OBStep(
+            id: 'forget_freq',
+            type: 'single',
+            emoji: '⏰',
+            title: "How often do you forget?",
+            subtitle: 'Be honest—no judgment here',
+            field: 'forget_freq',
+            options: kForgetFreq),
+
+        // 8. Loading Analysis
+        const _OBStep(id: 'loading_analysis_1', type: 'loading_analysis'),
+
+        // 9. Data Truth
+        const _OBStep(
+            id: 'data_truth_1',
+            type: 'data_graph',
+            title: 'Current Adherence',
+            subtitle: 'A fragmented routine increases health risks.'),
+
+        // 10. Data Projection
+        const _OBStep(
+            id: 'data_projection_1',
+            type: 'data_graph',
+            title: 'Projected Adherence',
+            subtitle: 'Med AI users typically reach 98%+ consistency.'),
+
+        // 11. Social Proof 1
+        const _OBStep(
+            id: 'social_proof_1',
+            type: 'social_proof',
+            title: 'A better way to stay healthy'),
+
+        // 12. Scan Demo
+        const _OBStep(
+            id: 'scan_demo',
+            type: 'scan_demo',
+            emoji: '🪄',
+            title: 'The Magic of Med AI',
+            subtitle: 'Never type a medicine name again. Just scan the box.'),
+
+        // 13. Voice Demo
+        const _OBStep(
+            id: 'voice_demo',
+            type: 'voice_demo',
+            emoji: '🎙️',
+            title: 'Log with your voice',
+            subtitle: 'Try saying: "I took my Amoxicillin at 8 AM"'),
+
+        // 14. Wake Time
+        const _OBStep(
+            id: 'wake_time',
+            type: 'time',
+            emoji: '⏰',
+            title: 'When do you usually wake up?',
+            subtitle: 'Used as an anchor for your daily tracking',
+            field: 'wakeTime'),
+
+        // 15. Sleep Time
+        const _OBStep(
+            id: 'sleep_time',
+            type: 'time',
+            emoji: '🌙',
+            title: 'When do you usually go to bed?',
+            subtitle: 'We won\'t disturb you while you sleep',
+            field: 'sleepTime'),
+
+        // 16. Plan Ready
+        const _OBStep(id: 'plan', type: 'plan'),
+
+        // 17. Social Proof 2
+        const _OBStep(
+            id: 'social_proof_2',
+            type: 'social_proof',
+            title: 'Join the community'),
+
+        // 18. Health Sync
         const _OBStep(
             id: 'health_sync',
             type: 'health_sync',
@@ -115,15 +186,21 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             title: 'Sync Health Data',
             subtitle:
                 'Automatically import steps, sleep, and heart rate for deeper AI insights.'),
-        const _OBStep(
-            id: 'scan_demo',
-            type: 'scan_demo',
-            emoji: '🪄',
-            title: 'The Magic of MedAI',
-            subtitle: 'Never type a medicine name again. Just scan the box.'),
+
+        // 19. Notification Permission
         const _OBStep(id: 'notif', type: 'notif'),
-        const _OBStep(id: 'plan', type: 'plan'),
-        const _OBStep(id: 'celebration', type: 'celebration'),
+
+        // 20. Country
+        const _OBStep(
+            id: 'country',
+            type: 'single',
+            emoji: '🌐',
+            title: 'Where are you located?',
+            subtitle: 'Helps us identify local medicine brands',
+            field: 'country',
+            options: kCountries),
+
+        // 21. Paywall
         const _OBStep(id: 'paywall', type: 'paywall'),
       ];
 
@@ -168,25 +245,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   void _complete() {
     final profile = UserProfile(
       name: _form['name'] ?? '',
-      age: _form['age'] ?? '',
-      gender: _form['gender'] ?? '',
       goal: _form['goal'] ?? '',
-      conditions: List<String>.from(_form['conditions'] ?? []),
-      medCount: _form['medCount'] ?? '',
-      forgetting: _form['forgetting'] ?? '',
+      targetUser: _form['target_user'] ?? '',
       wakeTime: Map<String, int>.from(_form['wakeTime'] ?? {'h': 7, 'm': 0}),
-      breakfastTime:
-          Map<String, int>.from(_form['breakfastTime'] ?? {'h': 8, 'm': 0}),
-      lunchTime: Map<String, int>.from(_form['lunchTime'] ?? {'h': 12, 'm': 0}),
-      dinnerTime:
-          Map<String, int>.from(_form['dinnerTime'] ?? {'h': 19, 'm': 0}),
       sleepTime: Map<String, int>.from(_form['sleepTime'] ?? {'h': 22, 'm': 0}),
-      doctorVisits: _form['doctorVisits'] ?? '',
-      support: _form['support'] ?? '',
-      challenge: _form['challenge'] ?? '',
-      prevApp: _form['prevApp'] ?? '',
-      motivation: List<String>.from(_form['motivation'] ?? []),
-      reminderStyle: _form['reminderStyle'] ?? '',
       notifPerm: _form['notifPerm'] ?? false,
       avatar: _form['avatar'] ?? '👤',
       country: _form['country'] ?? '',
@@ -220,13 +282,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Widget build(BuildContext context) {
     final step = _steps[_step];
     final isPaywall = step.type == 'paywall';
-    final L = context.L;
+// L removed
 
-    final oBg = L.bg;
-    final oText = L.text;
-    final oSub = L.sub;
-    final oLime = L.green;
-    final oCard = L.card;
+    
+    final oText = context.L.text;
+    final oSub = context.L.sub;
+    final oLime = context.L.green;
+    final oCard = context.L.card;
 
     final progress = (_step + 1) / _steps.length;
 
@@ -235,20 +297,43 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           ? SystemUiOverlayStyle.light
           : SystemUiOverlayStyle.dark,
       child: Scaffold(
-        backgroundColor: L.meshBg,
+        backgroundColor: context.L.bg,
         body: SafeArea(
           child: Column(children: [
-            // ── Progress bar (not on splash/paywall)
+            // ── Top Navigation (Back + Progress)
             if (step.type != 'splash' && step.type != 'paywall')
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
                 child: Row(
                   children: [
+                    // Back button
+                    if (_step > 0)
+                      GestureDetector(
+                        onTap: _back,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: context.L.sub.withValues(alpha: 0.05),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Icon(Icons.arrow_back_ios_new_rounded,
+                                color: context.L.text, size: 18),
+                          ),
+                        ),
+                      )
+                    else
+                      const SizedBox(width: 40, height: 40),
+
+                    const SizedBox(width: 16),
+
+                    // Sleek Progress Bar
                     Expanded(
                       child: Container(
-                        height: 6,
+                        height: 4,
                         decoration: BoxDecoration(
-                          color: L.sub.withValues(alpha: 0.1),
+                          color: context.L.sub.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(99),
                         ),
                         child: TweenAnimationBuilder<double>(
@@ -261,7 +346,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               widthFactor: value,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  gradient: AppGradients.main,
+                                  color: context.L.text,
                                   borderRadius: BorderRadius.circular(99),
                                 ),
                               ),
@@ -270,27 +355,26 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '${_step + 1} of ${_steps.length}',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: oSub.withValues(alpha: 0.5),
-                        fontWeight: FontWeight.w900,
-                        fontSize: 10,
+
+                    const SizedBox(width: 16),
+
+                    // Step Indicator Pill
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: context.L.sub.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      child: Text(
+                        '${_step + 1} / ${_steps.length}',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: context.L.text,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ],
-                ),
-              ),
-
-            // ── Back button
-            if (_step > 0 && step.type != 'paywall')
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: _back,
-                  icon: Icon(Icons.arrow_back_ios_new_rounded,
-                      color: L.sub, size: 18),
                 ),
               ),
 
@@ -299,7 +383,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               child: Scrollbar(
                 child: FadeTransition(
                   opacity: _fadeAnim,
-                  child: _buildStep(step, oText, oSub, oLime, oCard, oBg)
+                  child: _buildStep(step, oText, oSub, oLime, oCard, context.L.bg)
                       .animate(key: ValueKey(_step))
                       .slideY(
                           begin: 0.05,
@@ -392,54 +476,64 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           oCard: oCard,
           oLime: oLime,
         );
+      case 'health_sync':
+        return _HealthSyncStep(
+          step: step,
+          oText: oText,
+          oSub: oSub,
+          oCard: oCard,
+          oLime: oLime,
+          onNext: _next,
+        );
+      case 'scan_demo':
+        return _ScanDemoStep(
+          step: step,
+          oText: oText,
+          oSub: oSub,
+          oCard: oCard,
+          oLime: oLime,
+        );
+      case 'voice_demo':
+        return _VoiceDemoStep(
+          step: step,
+          oText: oText,
+          oSub: oSub,
+          oCard: oCard,
+          oLime: oLime,
+        );
+      case 'loading_analysis':
+        return _LoadingAnalysisStep(onNext: _next);
+      case 'data_graph':
+        return _DataGraphStep(
+          step: step,
+          onNext: _next,
+          oText: oText,
+          oSub: oSub,
+          oLime: oLime,
+        );
+      case 'social_proof':
+        return _SocialProofStep(
+          step: step,
+          onNext: _next,
+          oText: oText,
+          oSub: oSub,
+          oCard: oCard,
+          oLime: oLime,
+        );
       case 'celebration':
         return _CelebrationStep(
-            onComplete: _next, // Now goes to paywall instead of finishing
+            onComplete: _next,
             oLime: oLime,
             oText: oText,
             oSub: oSub,
             oCard: oCard);
-      case 'scan_demo':
-        return _ScanDemoStep(
-            step: step, oText: oText, oSub: oSub, oCard: oCard, oLime: oLime);
-      case 'health_sync':
-        return _HealthSyncStep(
-            step: step,
-            oText: oText,
-            oSub: oSub,
-            oCard: oCard,
-            oLime: oLime,
-            onNext: _next);
-      case 'lung_test':
-        return _LungTestStep(
-            step: step,
-            oText: oText,
-            oSub: oSub,
-            oCard: oCard,
-            oLime: oLime,
-            onComplete: _next);
-      case 'pain_points':
-        return _PainPointsStep(
-            step: step,
-            form: _form,
-            onSelect: (k, v) => setState(() => _form[k] = v),
-            oText: oText,
-            oSub: oSub,
-            oCard: oCard,
-            oLime: oLime);
-      case 'social_proof':
-        return _SocialProofStep(
-            oText: oText, oSub: oSub, oCard: oCard, oLime: oLime);
-      case 'solution':
-        return _SolutionStep(
-            form: _form, oText: oText, oSub: oSub, oCard: oCard, oLime: oLime);
       default:
         return const SizedBox.shrink();
     }
   }
 
   Widget _buildCTA(_OBStep step, Color oLime, Color oText) {
-    final L = context.L;
+// L removed
     final canGo = _canContinue(step);
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
@@ -460,20 +554,19 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
-            color: canGo ? L.text : L.border.withValues(alpha: 0.3),
+            color: canGo ? context.L.text : context.L.sub.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(32),
-            boxShadow: canGo ? AppShadows.neumorphic : null,
           ),
           child: Text(
             step.type == 'plan'
-                ? 'SEE MY PLAN →'
-                : (step.type == 'notif' ? 'ALLOW NOTIFICATIONS' : 'CONTINUE →'),
+                ? 'Continue'
+                : (step.type == 'notif' ? 'Allow Notifications' : 'Continue'),
             textAlign: TextAlign.center,
             style: AppTypography.labelLarge.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              color: canGo ? L.bg : L.sub,
-              letterSpacing: 1.5,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: canGo ? context.L.bg : context.L.sub.withValues(alpha: 0.5),
+              letterSpacing: 0,
             ),
           ),
         )
@@ -493,7 +586,7 @@ class _OBStep {
   final String emoji;
   final String? field;
   final String? placeholder;
-  final List<Map<String, String>> options;
+  final List<Map<String, String>>? options;
 
   const _OBStep({
     required this.id,
@@ -503,7 +596,7 @@ class _OBStep {
     this.emoji = '',
     this.field,
     this.placeholder,
-    this.options = const [],
+    this.options,
   });
 }
 
@@ -512,38 +605,49 @@ class _OBStep {
 // ════════════════════════════════════════
 class _StepHeader extends StatelessWidget {
   final String emoji, title, subtitle;
+  final bool center;
   final Color oText, oSub;
+
   const _StepHeader(
       {required this.emoji,
       required this.title,
       required this.subtitle,
+      this.center = false,
       required this.oText,
       required this.oSub});
 
   @override
   Widget build(BuildContext context) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (emoji.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: Text(emoji,
-              style: AppTypography.displayLarge
-                  .copyWith(fontSize: 48, height: 1.0)),
-        ),
-      Text(title,
-          style: AppTypography.displayLarge.copyWith(
-              fontSize: 32,
-              color: oText,
-              letterSpacing: -1.0,
-              fontWeight: FontWeight.w800,
-              height: 1.2)),
-      if (subtitle.isNotEmpty) ...[
-        const SizedBox(height: 6),
-        Text(subtitle,
-            style: AppTypography.bodySmall
-                .copyWith(fontSize: 14, color: oSub, height: 1.4)),
-      ],
-    ]);
+    return Column(
+        crossAxisAlignment:
+            center ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        children: [
+          if (emoji.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Text(emoji,
+                  style: AppTypography.displayLarge
+                      .copyWith(fontSize: 48, height: 1.0)),
+            ),
+          Text(title,
+              textAlign: center ? TextAlign.center : TextAlign.start,
+              style: AppTypography.displayLarge.copyWith(
+                  fontSize: 32,
+                  color: oText,
+                  letterSpacing: -0.5,
+                  fontWeight: FontWeight.w800,
+                  height: 1.15)),
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(subtitle,
+                textAlign: center ? TextAlign.center : TextAlign.start,
+                style: AppTypography.bodySmall.copyWith(
+                    fontSize: 16,
+                    color: oSub.withValues(alpha: 0.8),
+                    height: 1.4,
+                    fontWeight: FontWeight.w500)),
+          ],
+        ]);
   }
 }
 
@@ -557,9 +661,9 @@ class _SplashStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
-    final oLime = L.green;
-    final oSub = L.sub;
+// L removed
+    
+    final oSub = context.L.sub;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -581,38 +685,38 @@ class _SplashStep extends StatelessWidget {
                         width: 88,
                         height: 88,
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(AppRadius.xl),
-                          boxShadow: AppShadows.neumorphic,
+                          color: context.L.bg,
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: context.L.sub.withValues(alpha: 0.1), width: 1),
                         ),
                         child: Center(
                             child: Image.asset('assets/images/app_logo.png',
                                 width: 60, height: 60)),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
                       RichText(
                         textAlign: TextAlign.center,
                         text: TextSpan(
                           style: AppTypography.displayLarge.copyWith(
-                              fontSize: 36, letterSpacing: -1.0, height: 1.6),
+                              fontSize: 34, letterSpacing: -0.5, height: 1.3, fontWeight: FontWeight.w800),
                           children: [
                             TextSpan(
                                 text: 'Med ',
                                 style: AppTypography.displayLarge
-                                    .copyWith(fontSize: 36, color: L.text)),
+                                    .copyWith(fontSize: 34, color: context.L.text, fontWeight: FontWeight.w800)),
                             TextSpan(
                                 text: 'AI',
                                 style: AppTypography.displayLarge
-                                    .copyWith(fontSize: 36, color: L.green)),
+                                    .copyWith(fontSize: 34, color: context.L.text, fontWeight: FontWeight.w300)),
                           ],
                         ),
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Your intelligent medicine tracker.\nScan, track, and never miss a dose again.',
+                        'Your intelligent medicine tracker.\nScan, track, and never miss a dose.',
                         textAlign: TextAlign.center,
                         style: AppTypography.bodySmall
-                            .copyWith(fontSize: 16, color: oSub, height: 1.6),
+                            .copyWith(fontSize: 16, color: context.L.sub.withValues(alpha: 0.7), height: 1.5, fontWeight: FontWeight.w500),
                       ),
                     ]),
                   ),
@@ -630,38 +734,38 @@ class _SplashStep extends StatelessWidget {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(AppRadius.l),
-                        boxShadow: AppShadows.neumorphic,
+                        color: context.L.bg,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: context.L.sub.withValues(alpha: 0.1), width: 1),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 16),
+                            horizontal: 20, vertical: 20),
                         child: Row(children: [
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: oLime.withValues(alpha: 0.1),
+                              color: context.L.sub.withValues(alpha: 0.05),
                               shape: BoxShape.circle,
                             ),
                             child: Text(parts[0],
                                 style: AppTypography.displayLarge
-                                    .copyWith(fontSize: 20)),
+                                    .copyWith(fontSize: 22)),
                           ),
-                          const SizedBox(width: 14),
+                          const SizedBox(width: 16),
                           Expanded(
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                 Text(parts[1],
                                     style: AppTypography.labelLarge.copyWith(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w900,
-                                        color: L.text)),
-                                const SizedBox(height: 2),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: context.L.text)),
+                                const SizedBox(height: 4),
                                 Text(f.$2,
                                     style: AppTypography.bodySmall
-                                        .copyWith(fontSize: 13, color: oSub)),
+                                        .copyWith(fontSize: 14, color: context.L.sub.withValues(alpha: 0.6))),
                               ])),
                         ]),
                       ),
@@ -752,7 +856,7 @@ class _ScanDemoStepState extends State<_ScanDemoStep> {
 
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
+// L removed
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -840,21 +944,21 @@ class _ScanDemoStepState extends State<_ScanDemoStep> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 24, vertical: 14),
                       decoration: BoxDecoration(
-                        color: L.text,
+                        color: context.L.text,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: AppShadows.neumorphic,
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.camera_alt_rounded, color: L.bg, size: 20),
+                          Icon(Icons.camera_alt_rounded, color: context.L.bg, size: 20),
                           const SizedBox(width: 12),
                           Text('TEST AI SCANNER',
                               style: AppTypography.labelLarge.copyWith(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: 1.0,
-                                  color: L.bg)),
+                                  color: context.L.bg)),
                         ],
                       ),
                     ),
@@ -1005,13 +1109,12 @@ class _TextStepState extends State<_TextStep> {
             style: AppTypography.bodySmall
                 .copyWith(fontSize: 14, color: widget.oSub)),
         const SizedBox(height: 32),
-        // Input — border turns lime when filled
+        // Input — minimal flat style
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: AppShadows.neumorphic,
-            border: hasVal ? Border.all(color: widget.oText, width: 2.0) : null,
+            color: context.L.bg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: hasVal ? context.L.text : context.L.sub.withValues(alpha: 0.15), width: 1.5),
           ),
           child: TextField(
             controller: _ctrl,
@@ -1068,7 +1171,7 @@ class _SingleStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selected = form[step.field!]?.toString() ?? '';
-    final isGrid = step.options.length > 4;
+    final isGrid = (step.options?.length ?? 0) > 4;
 
     return SingleChildScrollView(
       physics:
@@ -1090,14 +1193,14 @@ class _SingleStep extends StatelessWidget {
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
             childAspectRatio: 1.1,
-            children: step.options.map((opt) {
+            children: (step.options ?? []).map((opt) {
               final val = opt['c'] ?? opt['v'];
               return _buildOption(opt, selected == val, true);
             }).toList(),
           )
         else
           Column(
-            children: step.options.map((opt) {
+            children: (step.options ?? []).map((opt) {
               final val = opt['c'] ?? opt['v'];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -1125,23 +1228,15 @@ class _SingleStep extends StatelessWidget {
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeOutCubic,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
+            duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
             width: double.infinity,
             padding: EdgeInsets.symmetric(
-                horizontal: isGrid ? 12 : 18, vertical: 14),
+                horizontal: isGrid ? 12 : 20, vertical: 16),
             decoration: BoxDecoration(
-              color: isSelected ? oLime.withValues(alpha: 0.1) : Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.xl),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                          color: oLime.withValues(alpha: 0.15),
-                          blurRadius: 24,
-                          offset: const Offset(0, 10))
-                    ]
-                  : (isPressed ? AppShadows.subtle : AppShadows.neumorphic),
-              border: isSelected ? Border.all(color: oText, width: 2.0) : null,
+              color: isSelected ? oText : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: isSelected ? oText : oSub.withValues(alpha: 0.15), width: 1.5),
             ),
             child: isGrid
                 ? Column(
@@ -1155,11 +1250,11 @@ class _SingleStep extends StatelessWidget {
                       Text(opt['v']!,
                           textAlign: TextAlign.center,
                           style: AppTypography.labelLarge.copyWith(
-                              fontSize: 13,
+                              fontSize: 14,
                               fontWeight: isSelected
-                                  ? FontWeight.w900
+                                  ? FontWeight.w800
                                   : FontWeight.w600,
-                              color: isSelected ? oText : oText)),
+                              color: isSelected ? context.L.bg : oText)),
                     ],
                   )
                 : Row(children: [
@@ -1167,26 +1262,19 @@ class _SingleStep extends StatelessWidget {
                       Text(opt['e']!,
                           style: AppTypography.displayLarge
                               .copyWith(fontSize: 24, height: 1.0)),
-                    if (opt['e'] != null) const SizedBox(width: 14),
+                    if (opt['e'] != null) const SizedBox(width: 16),
                     Expanded(
                         child: Text(opt['v']!,
                             style: AppTypography.bodySmall.copyWith(
                                 fontSize: 16,
                                 fontWeight: isSelected
-                                    ? FontWeight.w900
+                                    ? FontWeight.w800
                                     : FontWeight.w600,
-                                color: isSelected ? oText : oText))),
+                                color: isSelected ? context.L.bg : oText))),
                     if (isSelected)
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration:
-                            BoxDecoration(color: oLime, shape: BoxShape.circle),
-                        child: const Center(
-                            child: Text('✅', style: TextStyle(fontSize: 14))),
-                      )
+                      Icon(Icons.check_circle_rounded, color: context.L.bg, size: 20)
                           .animate()
-                          .scale(duration: 250.ms, curve: Curves.easeOutBack),
+                          .scale(duration: 200.ms, curve: Curves.easeOutBack),
                   ]),
           ),
         ),
@@ -1231,7 +1319,7 @@ class _MultiStep extends StatelessWidget {
         Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: step.options.map((opt) {
+            children: (step.options ?? []).map((opt) {
               final isSelected = selected.contains(opt['v']!);
               bool isPressed = false;
               return StatefulBuilder(builder: (context, setState) {
@@ -1257,22 +1345,10 @@ class _MultiStep extends StatelessWidget {
                           horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? oLime.withValues(alpha: 0.1)
-                            : Colors.white,
+                            ? oText
+                            : context.L.bg,
                         borderRadius: BorderRadius.circular(AppRadius.max),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                    color: oLime.withValues(alpha: 0.1),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5))
-                              ]
-                            : (isPressed
-                                ? AppShadows.subtle
-                                : AppShadows.neumorphic),
-                        border: isSelected
-                            ? Border.all(color: oText, width: 0.5)
-                            : null,
+                        border: Border.all(color: isSelected ? oText : oSub.withValues(alpha: 0.15), width: 1.5),
                       ),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
                         if (opt['e'] != null)
@@ -1284,12 +1360,12 @@ class _MultiStep extends StatelessWidget {
                             style: AppTypography.labelLarge.copyWith(
                                 fontSize: 13,
                                 fontWeight: isSelected
-                                    ? FontWeight.w900
+                                    ? FontWeight.w800
                                     : FontWeight.w600,
-                                color: oText)),
+                                color: isSelected ? context.L.bg : oText)),
                         if (isSelected) ...[
                           const SizedBox(width: 6),
-                          const Text('✅', style: TextStyle(fontSize: 14))
+                          Icon(Icons.check_circle_rounded, color: context.L.bg, size: 16)
                               .animate()
                               .scale(
                                   duration: 200.ms, curve: Curves.easeOutBack),
@@ -1354,10 +1430,9 @@ class _TimeStep extends StatelessWidget {
               margin: const EdgeInsets.only(right: 6),
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: isActive ? oLime.withValues(alpha: 0.1) : Colors.white,
+                color: isActive ? oText : context.L.bg,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: isActive ? null : AppShadows.neumorphic,
-                border: isActive ? Border.all(color: oText, width: 0.5) : null,
+                border: Border.all(color: isActive ? oText : oSub.withValues(alpha: 0.15), width: 1.0),
               ),
               child: Column(children: [
                 Text(qt['emoji'] as String,
@@ -1365,7 +1440,7 @@ class _TimeStep extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(qt['label'] as String,
                     style: AppTypography.labelSmall.copyWith(
-                        fontSize: 10, color: isActive ? oLime : oSub)),
+                        fontSize: 11, fontWeight: FontWeight.w700, color: isActive ? context.L.bg : oSub.withValues(alpha: 0.6))),
               ]),
             ),
           ));
@@ -1412,15 +1487,14 @@ class _TimeStep extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: oCard,
+                color: context.L.bg,
                 borderRadius: BorderRadius.circular(AppRadius.m),
                 border: Border.all(
-                    color: oText.withValues(alpha: 0.05), width: 0.5),
-                boxShadow: context.L.shadowSoft,
+                    color: oSub.withValues(alpha: 0.15), width: 1.5),
               ),
               child: Text(h >= 12 ? 'PM' : 'AM',
                   style: AppTypography.labelLarge.copyWith(
-                      fontSize: 16, fontWeight: FontWeight.w800, color: oLime)),
+                      fontSize: 16, fontWeight: FontWeight.w800, color: oText)),
             ),
           ),
         ]),
@@ -1503,9 +1577,9 @@ class _NotifStep extends StatelessWidget {
           width: 110,
           height: 110,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.L.bg,
             shape: BoxShape.circle,
-            boxShadow: AppShadows.neumorphic,
+            border: Border.all(color: context.L.sub.withValues(alpha: 0.1), width: 1.5),
           ),
           child:
               const Center(child: Text('🔔', style: TextStyle(fontSize: 48))),
@@ -1573,10 +1647,11 @@ class _PlanReadyStep extends StatelessWidget {
           width: 90,
           height: 90,
           decoration: BoxDecoration(
-              color: const Color(0x1FA3E635),
+              color: context.L.bg,
+              border: Border.all(color: oSub.withValues(alpha: 0.15), width: 1.5),
               borderRadius: BorderRadius.circular(28)),
           child: Center(
-              child: Text('💎',
+              child: Text('📊',
                   style: AppTypography.displayLarge.copyWith(fontSize: 48))),
         ),
         const SizedBox(height: 24),
@@ -1588,16 +1663,16 @@ class _PlanReadyStep extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           decoration: BoxDecoration(
-            color: oLime.withValues(alpha: 0.1),
-            borderRadius: AppRadius.roundL,
-            border: Border.all(color: oLime.withValues(alpha: 0.3), width: 1.5),
+            color: context.L.bg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: oSub.withValues(alpha: 0.15), width: 1.5),
           ),
           child: Text(
             _generateNarrative(name, goal, wakeTime, motivation),
             textAlign: TextAlign.center,
             style: AppTypography.titleLarge.copyWith(
                 fontSize: 17,
-                color: oLime,
+                color: oText,
                 height: 1.5,
                 fontWeight: FontWeight.w600),
           ),
@@ -1610,24 +1685,24 @@ class _PlanReadyStep extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.l),
-              boxShadow: AppShadows.neumorphic,
+              color: context.L.bg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: oSub.withValues(alpha: 0.15), width: 1.5),
             ),
             child: Row(children: [
               Container(
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                    color: oLime.withValues(alpha: 0.15),
+                    color: oSub.withValues(alpha: 0.05),
                     shape: BoxShape.circle),
-                child: const Text('🛡️', style: TextStyle(fontSize: 14)),
+                child: const Center(child: Text('🛡️', style: TextStyle(fontSize: 14))),
               ),
               const SizedBox(width: 16),
               Expanded(
                   child: Text(h,
                       style: AppTypography.bodySmall.copyWith(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: oText))),
             ]),
@@ -1638,15 +1713,14 @@ class _PlanReadyStep extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(28),
           decoration: BoxDecoration(
-            color: oCard,
-            borderRadius: BorderRadius.circular(AppRadius.l),
-            border: Border.all(color: oLime.withValues(alpha: 0.2), width: 1.5),
-            boxShadow: context.L.shadowSoft,
+            color: context.L.bg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: oSub.withValues(alpha: 0.15), width: 1.5),
           ),
           child: Column(children: [
             Text('94%',
                 style: AppTypography.displayLarge.copyWith(
-                    fontSize: 48, color: oLime, fontWeight: FontWeight.w900)),
+                    fontSize: 48, color: oText, fontWeight: FontWeight.w900, letterSpacing: -1.0)),
             const SizedBox(height: 8),
             Text('of users like you improved adherence in 2 weeks',
                 textAlign: TextAlign.center,
@@ -1655,11 +1729,45 @@ class _PlanReadyStep extends StatelessWidget {
                     color: oSub,
                     height: 1.5,
                     fontWeight: FontWeight.w500)),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _buildUiBar(30, oSub.withValues(alpha: 0.2)),
+                const SizedBox(width: 8),
+                _buildUiBar(45, oSub.withValues(alpha: 0.2)),
+                const SizedBox(width: 8),
+                _buildUiBar(65, oSub.withValues(alpha: 0.2)),
+                const SizedBox(width: 8),
+                _buildUiBar(90, oSub.withValues(alpha: 0.2)),
+                const SizedBox(width: 8),
+                _buildUiBar(120, oText),
+              ],
+            )
           ]),
         )
             .animate(delay: 1.seconds)
-            .shimmer(duration: 2.seconds, color: oLime.withValues(alpha: 0.1)),
+            .shimmer(duration: 2.seconds, color: oSub.withValues(alpha: 0.05)),
       ]),
+    );
+  }
+
+  Widget _buildUiBar(double height, Color color) {
+    return Container(
+      width: 24,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(4),
+      ),
+    ).animate().scaleY(
+      begin: 0,
+      end: 1,
+      alignment: Alignment.bottomCenter,
+      duration: 800.ms,
+      curve: Curves.easeOutBack,
+      delay: 500.ms,
     );
   }
 
@@ -1764,7 +1872,7 @@ class _PaywallFeatures extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
+// L removed because unused
     const feats = [
       "AI Medicine Scanner",
       "Smart Reminders",
@@ -1824,9 +1932,9 @@ class _PaywallFeatures extends StatelessWidget {
           itemBuilder: (c, i) => Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.L.bg,
               borderRadius: BorderRadius.circular(AppRadius.m),
-              boxShadow: AppShadows.neumorphic,
+              border: Border.all(color: context.L.sub.withValues(alpha: 0.15)),
             ),
             child: Row(children: [
               const Text('✅', style: TextStyle(fontSize: 12)),
@@ -1856,11 +1964,10 @@ class _PaywallFeatures extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 14),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: isSel ? oLime.withValues(alpha: 0.1) : Colors.white,
+                color: isSel ? context.L.text : context.L.bg,
                 borderRadius: BorderRadius.circular(AppRadius.xl),
                 border: Border.all(
-                    color: isSel ? oText : Colors.transparent, width: 2.0),
-                boxShadow: isSel ? null : AppShadows.neumorphic,
+                    color: isSel ? context.L.text : context.L.sub.withValues(alpha: 0.15), width: 1.5),
               ),
               child: Stack(clipBehavior: Clip.none, children: [
                 if (p['badge'] != null && isSel)
@@ -1871,11 +1978,12 @@ class _PaywallFeatures extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                            color: oLime,
+                            color: context.L.bg,
+                            border: Border.all(color: context.L.text, width: 2),
                             borderRadius: BorderRadius.circular(99)),
                         child: Text(p['badge'] as String,
                             style: AppTypography.labelLarge.copyWith(
-                                color: Colors.black,
+                                color: context.L.text,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800)),
                       )),
@@ -1903,18 +2011,18 @@ class _PaywallFeatures extends StatelessWidget {
                           children: [
                         Text(p['label'] as String,
                             style: AppTypography.titleLarge.copyWith(
-                                fontSize: 16, color: isSel ? oLime : oText)),
+                                fontSize: 16, color: isSel ? context.L.bg : oText, fontWeight: FontWeight.w700)),
                         Text(p['total'] as String,
                             style: AppTypography.bodySmall
-                                .copyWith(fontSize: 11, color: oSub)),
+                                .copyWith(fontSize: 11, color: isSel ? context.L.bg.withValues(alpha: 0.7) : oSub)),
                       ])),
                   Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                     Text(p['price'] as String,
                         style: AppTypography.displayLarge.copyWith(
-                            fontSize: 22, color: isSel ? oLime : oText)),
+                            fontSize: 22, color: isSel ? context.L.bg : oText)),
                     Text(p['period'] as String,
                         style: AppTypography.labelSmall
-                            .copyWith(fontSize: 11, color: oSub)),
+                            .copyWith(fontSize: 11, color: isSel ? context.L.bg.withValues(alpha: 0.7) : oSub)),
                   ]),
                 ]),
               ]),
@@ -1929,16 +2037,15 @@ class _PaywallFeatures extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 20),
             decoration: BoxDecoration(
-              color: L.text,
+              color: context.L.text,
               borderRadius: BorderRadius.circular(32),
-              boxShadow: AppShadows.neumorphic,
             ),
             child: Text('GET MEDAI PRO →',
                 textAlign: TextAlign.center,
                 style: AppTypography.labelLarge.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
-                    color: L.bg,
+                    color: context.L.bg,
                     letterSpacing: 1.5)),
           ),
         ),
@@ -2086,9 +2193,9 @@ class _PaywallTrust extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.L.bg,
               borderRadius: BorderRadius.circular(AppRadius.xl),
-              boxShadow: AppShadows.neumorphic,
+              border: Border.all(color: context.L.sub.withValues(alpha: 0.15), width: 1.5),
             ),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(t['e']!,
@@ -2155,16 +2262,15 @@ class _PaywallTrust extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 18),
             decoration: BoxDecoration(
-              color: oLime,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: AppShadows.glow(oLime, intensity: 0.3),
+              color: oText,
+              borderRadius: BorderRadius.circular(32),
             ),
             child: Text('I UNDERSTAND, CONTINUE →',
                 textAlign: TextAlign.center,
                 style: AppTypography.labelLarge.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
-                    color: Colors.black,
+                    color: context.L.bg,
                     letterSpacing: 1.5)),
           ),
         ),
@@ -2277,7 +2383,7 @@ class _PaywallTimeline extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(AppRadius.xl),
-                      boxShadow: AppShadows.neumorphic,
+                      border: Border.all(color: oSub.withValues(alpha: 0.15), width: 1.5),
                     ),
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2358,16 +2464,15 @@ class _PaywallTimeline extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 18),
             decoration: BoxDecoration(
-              color: oLime,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: AppShadows.glow(oLime, intensity: 0.3),
+              color: oText,
+              borderRadius: BorderRadius.circular(32),
             ),
             child: Text('GET STARTED WITH 3 FREE SCANS 🚀',
                 textAlign: TextAlign.center,
                 style: AppTypography.labelLarge.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
-                    color: Colors.black,
+                    color: context.L.bg,
                     letterSpacing: 1.5)),
           ),
         ),
@@ -2423,7 +2528,7 @@ class _CelebrationStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
+// L removed because unused
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -2436,7 +2541,7 @@ class _CelebrationStep extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              boxShadow: AppShadows.neumorphic,
+              border: Border.all(color: oSub.withValues(alpha: 0.15), width: 1.5),
             ),
             child: Center(
               child: Text('🎊',
@@ -2486,15 +2591,14 @@ class _CelebrationStep extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 22),
               decoration: BoxDecoration(
-                color: L.text,
+                color: context.L.text,
                 borderRadius: BorderRadius.circular(32),
-                boxShadow: AppShadows.neumorphic,
               ),
               child: Text(
                 "Enter Dashboard",
                 textAlign: TextAlign.center,
                 style: AppTypography.labelLarge.copyWith(
-                  color: L.bg,
+                  color: context.L.bg,
                   fontSize: 16,
                   letterSpacing: 1.5,
                   fontWeight: FontWeight.w900,
@@ -2609,7 +2713,7 @@ class _LungTestStepState extends State<_LungTestStep>
 
   @override
   Widget build(BuildContext context) {
-    final L = context.L;
+// L removed
 
     return Stack(
       children: [
@@ -2620,8 +2724,8 @@ class _LungTestStepState extends State<_LungTestStep>
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    L.primary.withValues(alpha: 0.1),
-                    L.bg.withValues(alpha: 0),
+                    context.L.primary.withValues(alpha: 0.1),
+                    context.L.bg.withValues(alpha: 0),
                   ],
                   radius: 1.2,
                 ),
@@ -2713,12 +2817,12 @@ class _LungTestStepState extends State<_LungTestStep>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.fingerprint_rounded,
-                              size: 64, color: L.bg),
+                              size: 64, color: context.L.bg),
                           const SizedBox(height: 8),
                           Text(
                             _isHolding ? "RELEASE" : "HOLD HERE",
                             style: AppTypography.labelSmall.copyWith(
-                              color: L.bg.withValues(alpha: 0.6),
+                              color: context.L.bg.withValues(alpha: 0.6),
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -2804,15 +2908,14 @@ class _LungTestStepState extends State<_LungTestStep>
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     decoration: BoxDecoration(
-                      color: widget.oLime,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: AppShadows.glow(widget.oLime),
+                      color: context.L.text,
+                      borderRadius: BorderRadius.circular(32),
                     ),
                     child: Text(
                       "Save and Continue →",
                       textAlign: TextAlign.center,
                       style: AppTypography.titleLarge
-                          .copyWith(color: Colors.black),
+                          .copyWith(color: context.L.bg),
                     ),
                   ),
                 )
@@ -2929,23 +3032,22 @@ class _HealthSyncStepState extends State<_HealthSyncStep> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 20),
               decoration: BoxDecoration(
-                color: _isConnected ? widget.oCard : widget.oLime,
-                borderRadius: BorderRadius.circular(20),
+                color: _isConnected ? context.L.bg : context.L.text,
+                borderRadius: BorderRadius.circular(32),
                 border: _isConnected
-                    ? Border.all(color: widget.oLime, width: 2)
+                    ? Border.all(color: context.L.sub.withValues(alpha: 0.15), width: 1.5)
                     : null,
-                boxShadow: _isConnected ? null : AppShadows.glow(widget.oLime),
               ),
               child: Center(
                 child: _isConnecting
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.black))
+                            strokeWidth: 2, color: context.L.bg))
                     : Text(_isConnected ? 'Connected ✅' : 'Connect Health App',
                         style: AppTypography.titleLarge.copyWith(
-                          color: _isConnected ? widget.oLime : Colors.black,
+                          color: _isConnected ? context.L.text : context.L.bg,
                           fontWeight: FontWeight.w800,
                         )),
               ),
@@ -2970,16 +3072,12 @@ class _HealthSyncStepState extends State<_HealthSyncStep> {
 // PAIN POINTS STEP
 // ════════════════════════════════════════
 
-class _PainPointsStep extends StatelessWidget {
+class _VoiceDemoStep extends StatelessWidget {
   final _OBStep step;
-  final Map<String, dynamic> form;
-  final Function(String, dynamic) onSelect;
   final Color oText, oSub, oCard, oLime;
 
-  const _PainPointsStep({
+  const _VoiceDemoStep({
     required this.step,
-    required this.form,
-    required this.onSelect,
     required this.oText,
     required this.oSub,
     required this.oCard,
@@ -2988,10 +3086,174 @@ class _PainPointsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List current = form[step.field!] ?? [];
-
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+      child: Column(
+        children: [
+          _StepHeader(
+            emoji: step.emoji.isNotEmpty ? step.emoji : '🎙️',
+            center: true,
+            title: step.title,
+            subtitle: step.subtitle,
+            oText: oText,
+            oSub: oSub,
+          ),
+          const Spacer(),
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: context.L.text,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.mic_rounded, color: context.L.bg, size: 32),
+          ).animate(onPlay: (c) => c.repeat()).scale(
+            begin: const Offset(1, 1),
+            end: const Offset(1.2, 1.2),
+            duration: 600.ms,
+            curve: Curves.easeInOut,
+          ).then().scale(
+            begin: const Offset(1.2, 1.2),
+            end: const Offset(1, 1),
+          ),
+          const SizedBox(height: 48),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            decoration: BoxDecoration(
+              color: context.L.card,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              '"I just took my 10mg Lisinopril"',
+              style: AppTypography.bodyLarge.copyWith(
+                color: oText,
+                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.w700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
+}
+
+// ── LOADING ANALYSIS STEP ───────────────────────────
+class _LoadingAnalysisStep extends StatefulWidget {
+  final VoidCallback onNext;
+  const _LoadingAnalysisStep({required this.onNext});
+
+  @override
+  State<_LoadingAnalysisStep> createState() => _LoadingAnalysisStepState();
+}
+
+class _LoadingAnalysisStepState extends State<_LoadingAnalysisStep> {
+  int _statusIdx = 0;
+  final List<String> _statuses = [
+    'Analyzing adherence patterns...',
+    'Calculating dose consistency...',
+    'Building your unique health profile...',
+    'Optimizing reminder schedule...',
+    'Generating 30-day projection...',
+    'Finalizing Med AI plan...',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startSequence();
+  }
+
+  void _startSequence() async {
+    for (int i = 0; i < _statuses.length; i++) {
+      await Future.delayed(const Duration(milliseconds: 1200));
+      if (!mounted) return;
+      setState(() => _statusIdx = i);
+    }
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) widget.onNext();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.screenPadding),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Spacer(),
+          Center(
+            child: SizedBox(
+              width: 120,
+              height: 120,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation(context.L.green),
+                    strokeWidth: 2,
+                    strokeCap: StrokeCap.round,
+                  ).animate(onPlay: (c) => c.repeat()).rotate(duration: 2.seconds),
+                  Text(
+                    'AI',
+                    style: AppTypography.displaySmall.copyWith(
+                      color: context.L.text,
+                      fontSize: 32,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 64),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            child: Text(
+              _statuses[_statusIdx],
+              key: ValueKey(_statuses[_statusIdx]),
+              style: AppTypography.headlineSmall.copyWith(
+                color: context.L.text,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'This only takes a moment',
+            style: AppTypography.bodyMedium.copyWith(color: context.L.sub),
+          ),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
+}
+
+// ── DATA GRAPH STEP ────────────────────────────────
+class _DataGraphStep extends StatelessWidget {
+  final _OBStep step;
+  final VoidCallback onNext;
+  final Color oText;
+  final Color oSub;
+  final Color oLime;
+
+  const _DataGraphStep({
+    required this.step,
+    required this.onNext,
+    required this.oText,
+    required this.oSub,
+    required this.oLime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isProjection = step.id.contains('projection');
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.screenPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -3002,348 +3264,307 @@ class _PainPointsStep extends StatelessWidget {
             oText: oText,
             oSub: oSub,
           ),
-          const SizedBox(height: 32),
-          ...step.options.asMap().entries.map((req) {
-            final idx = req.key;
-            final opt = req.value;
-            final isSelected = current.contains(opt['v']);
-
-            return GestureDetector(
-              onTap: () {
-                HapticEngine.selection();
-                final newList = List.from(current);
-                if (isSelected) {
-                  newList.remove(opt['v']);
-                } else {
-                  newList.add(opt['v']);
-                }
-                onSelect(step.field!, newList);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.only(bottom: 12),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                decoration: BoxDecoration(
-                  color: isSelected ? oLime.withValues(alpha: 0.1) : oCard,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSelected
-                        ? oLime
-                        : Colors.white.withValues(alpha: 0.05),
-                    width: 2,
-                  ),
-                  boxShadow: isSelected
-                      ? AppShadows.glow(oLime, intensity: 0.2)
-                      : null,
-                ),
-                child: Row(
+          const SizedBox(height: 48),
+          Container(
+            height: 280,
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: context.L.card,
+              borderRadius: AppRadius.roundXL,
+              border: Border.all(color: context.L.border, width: 0.5),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(opt['e']!, style: const TextStyle(fontSize: 24)),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        opt['v']!,
-                        style: AppTypography.titleLarge.copyWith(
-                          fontSize: 16,
-                          color: isSelected ? oLime : oText,
-                        ),
+                    Text(
+                      isProjection ? '98.4% Adherence' : '62.1% Adherence',
+                      style: AppTypography.headlineSmall.copyWith(
+                        color: isProjection ? oLime : context.L.red,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                     Container(
-                      width: 24,
-                      height: 24,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: isSelected ? oLime : Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                            color: isSelected
-                                ? oLime
-                                : oSub.withValues(alpha: 0.3)),
+                        color: (isProjection ? oLime : context.L.red).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      child: isSelected
-                          ? const Icon(Icons.check,
-                              color: Colors.black, size: 16)
-                          : null,
+                      child: Text(
+                        isProjection ? 'Projected' : 'Truth',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: isProjection ? oLime : context.L.red,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              )
-                  .animate()
-                  .fadeIn(delay: (50 * idx).ms)
-                  .slideY(begin: 0.2, end: 0),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════
-// SOCIAL PROOF STEP
-// ════════════════════════════════════════
-
-class _SocialProofStep extends StatelessWidget {
-  final Color oText, oSub, oCard, oLime;
-
-  const _SocialProofStep({
-    required this.oText,
-    required this.oSub,
-    required this.oCard,
-    required this.oLime,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final testimonials = [
-      {
-        'quote':
-            'Perfect for managing multiple prescriptions. I finally feel in control of my health.',
-        'name': 'Sarah T.',
-        'persona': 'Managing 4+ daily meds',
-      },
-      {
-        'quote':
-            'The clinical export feature is a lifesaver. My doctor was amazed at the data I brought in.',
-        'name': 'James M.',
-        'persona': 'Chronic condition',
-      },
-      {
-        'quote':
-            'Finally, an app that feels like a real medical tool instead of a toy. Simple, beautiful, and private.',
-        'name': 'Elena R.',
-        'persona': 'Caregiver for parents',
-      },
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _StepHeader(
-            emoji: '⭐️',
-            title: 'Trusted by thousands',
-            subtitle:
-                'Join a community taking back control of their medical routines.',
-            oText: oText,
-            oSub: oSub,
+                const Spacer(),
+                SizedBox(
+                  height: 140,
+                  width: double.infinity,
+                  child: CustomPaint(
+                    painter: _AdherencePainter(
+                      color: isProjection ? oLime : context.L.red,
+                      isSmooth: isProjection,
+                    ),
+                  ),
+                ).animate().fadeIn(delay: 400.ms, duration: 800.ms),
+                const Spacer(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(
+                    7,
+                    (i) => Text(
+                      ['M', 'T', 'W', 'T', 'F', 'S', 'S'][i],
+                      style: AppTypography.labelSmall.copyWith(color: oSub),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ).animate().slideY(begin: 0.1, duration: 600.ms),
+          const Spacer(),
+          _BottomButton(
+            title: isProjection ? 'Show me how' : 'Next',
+            onTap: onNext,
+            enabled: true,
           ),
-          const SizedBox(height: 32),
-          ...testimonials.asMap().entries.map((entry) {
-            final idx = entry.key;
-            final t = entry.value;
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: oCard,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.05), width: 1.5),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: List.generate(
-                      5,
-                      (_) => const Icon(Icons.star_rounded,
-                          color: Color(0xFFFFB800), size: 20),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    '"${t['quote']}"',
-                    style: AppTypography.titleLarge.copyWith(
-                      fontSize: 16,
-                      color: oText,
-                      height: 1.4,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: oLime.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(t['name']![0],
-                            style: TextStyle(
-                                color: oLime, fontWeight: FontWeight.bold)),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(t['name']!,
-                              style: AppTypography.bodyMedium.copyWith(
-                                  color: oText, fontWeight: FontWeight.bold)),
-                          Text(t['persona']!,
-                              style: AppTypography.bodySmall
-                                  .copyWith(color: oSub)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            )
-                .animate()
-                .fadeIn(delay: (400 + (100 * idx)).ms)
-                .slideX(begin: 0.1, end: 0);
-          }),
         ],
       ),
     );
   }
 }
 
-// ════════════════════════════════════════
-// SOLUTION STEP
-// ════════════════════════════════════════
+class _AdherencePainter extends CustomPainter {
+  final Color color;
+  final bool isSmooth;
 
-class _SolutionStep extends StatelessWidget {
-  final Map<String, dynamic> form;
-  final Color oText, oSub, oCard, oLime;
-
-  const _SolutionStep({
-    required this.form,
-    required this.oText,
-    required this.oSub,
-    required this.oCard,
-    required this.oLime,
-  });
+  _AdherencePainter({required this.color, required this.isSmooth});
 
   @override
-  Widget build(BuildContext context) {
-    final List painPoints = form['painPoints'] ?? [];
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
 
-    // Map pain points to MedAI solutions
-    final Map<String, Map<String, String>> solutionsMap = {
-      'Forgetting to take doses': {
-        'title': 'Smart Haptic Reminders',
-        'desc':
-            'Intelligent alerts that adapt to your morning wake and sleep schedule.',
-        'icon': '⏰'
-      },
-      'Complex schedules (e.g. alternating days)': {
-        'title': 'Advanced Rituals Engine',
-        'desc':
-            'Easily handles alternating days, exact intervals, and PRN requirements.',
-        'icon': '⚙️'
-      },
-      'Running out of pills': {
-        'title': 'Predictive Refill Warnings',
-        'desc':
-            'We track your inventory and alert you days before you run out.',
-        'icon': '📦'
-      },
-      'Not having data for my doctor': {
-        'title': 'Clinical PDF Export',
-        'desc': 'Generate a physician-ready adherence report in 3 seconds.',
-        'icon': '📄'
-      },
-      'Managing for someone else': {
-        'title': 'Family Syncing',
-        'desc':
-            'Track adherence for your parents or children from one simple dashboard.',
-        'icon': '👨‍👩‍👧'
-      },
-    };
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [color.withValues(alpha: 0.2), color.withValues(alpha: 0.0)],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
-    // Grab up to 3 solutions based on what they selected. If none, grab defaults.
-    List<MapEntry<String, Map<String, String>>> relevantSolutions = [];
-    if (painPoints.isEmpty) {
-      relevantSolutions = solutionsMap.entries.take(3).toList();
+    final path = Path();
+    final fillPath = Path();
+
+    if (isSmooth) {
+      path.moveTo(0, size.height * 0.4);
+      path.quadraticBezierTo(
+        size.width * 0.3,
+        size.height * 0.35,
+        size.width * 0.5,
+        size.height * 0.2,
+      );
+      path.quadraticBezierTo(
+        size.width * 0.8,
+        size.height * 0.05,
+        size.width,
+        0,
+      );
     } else {
-      relevantSolutions = painPoints
-          .map((p) => MapEntry(p as String, solutionsMap[p]!))
-          .take(3)
-          .toList();
+      path.moveTo(0, size.height * 0.4);
+      path.lineTo(size.width * 0.2, size.height * 0.8);
+      path.lineTo(size.width * 0.4, size.height * 0.3);
+      path.lineTo(size.width * 0.6, size.height * 0.9);
+      path.lineTo(size.width * 0.8, size.height * 0.5);
+      path.lineTo(size.width, size.height * 0.7);
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    fillPath.addPath(path, Offset.zero);
+    fillPath.lineTo(size.width, size.height);
+    fillPath.lineTo(0, size.height);
+    fillPath.close();
+
+    canvas.drawPath(fillPath, fillPaint);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ── SOCIAL PROOF STEP ───────────────────────────────
+class _SocialProofStep extends StatelessWidget {
+  final _OBStep step;
+  final VoidCallback onNext;
+  final Color oText;
+  final Color oSub;
+  final Color oCard;
+  final Color oLime;
+
+  const _SocialProofStep({
+    required this.step,
+    required this.onNext,
+    required this.oText,
+    required this.oSub,
+    required this.oCard,
+    required this.oLime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSocial2 = step.id == 'social_proof_2';
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.screenPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _StepHeader(
-            emoji: '🛠️',
-            title: 'Welcome to a smarter way to track',
-            subtitle: "Here's exactly how MedAI solves your challenges.",
+            emoji: step.emoji,
+            title: step.title,
+            subtitle: step.subtitle,
             oText: oText,
             oSub: oSub,
           ),
-          const SizedBox(height: 32),
-          ...relevantSolutions.asMap().entries.map((entry) {
-            final idx = entry.key;
-            final painText = entry.value.key;
-            final sol = entry.value.value;
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 24),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: oLime.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(sol['icon']!,
-                          style: const TextStyle(fontSize: 24)),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          painText,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: oSub,
-                            decoration: TextDecoration.lineThrough,
-                            decorationColor: oSub,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          sol['title']!,
-                          style: AppTypography.titleLarge.copyWith(
-                            fontSize: 18,
-                            color: oLime,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          sol['desc']!,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: oText,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            )
-                .animate()
-                .fadeIn(delay: (400 + (150 * idx)).ms)
-                .slideX(begin: 0.1, end: 0);
-          }),
+          const SizedBox(height: 48),
+          _TestimonialCard(
+            name: isSocial2 ? 'Dr. Sarah Chen' : 'Michael R.',
+            role: isSocial2 ? 'Clinical Lead' : 'Hypertension Patient',
+            text: isSocial2
+                ? "The adherence metrics generated by Med AI provide invaluable data for patient consultations."
+                : "I haven't missed a single dose of my blood pressure meds in 3 months. This app saved my routine.",
+            avatar: isSocial2 ? '🩺' : '🏃‍♂️',
+          ).animate().fadeIn(duration: 600.ms).slideX(begin: 0.1),
+          const SizedBox(height: 20),
+          _TestimonialCard(
+            name: isSocial2 ? 'James K.' : 'Elena W.',
+            role: isSocial2 ? 'Caregiver' : 'Busy Professional',
+            text: isSocial2
+                ? "Managing my father's 8 different prescriptions was a nightmare. Now it's effortless."
+                : "The simple voice logging is a game changer. I just speak and it's done.",
+            avatar: isSocial2 ? '🫂' : '👩‍💼',
+          ).animate().fadeIn(delay: 200.ms, duration: 600.ms).slideX(begin: 0.1),
+          const Spacer(),
+          _BottomButton(
+            title: isSocial2 ? "Let's begin" : 'Continue',
+            onTap: onNext,
+            enabled: true,
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _TestimonialCard extends StatelessWidget {
+  final String name;
+  final String role;
+  final String text;
+  final String avatar;
+
+  const _TestimonialCard({
+    required this.name,
+    required this.role,
+    required this.text,
+    required this.avatar,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: context.L.card,
+        borderRadius: AppRadius.roundL,
+        border: Border.all(color: context.L.border, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: context.L.sub.withValues(alpha: 0.05),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(avatar, style: const TextStyle(fontSize: 20)),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name,
+                      style: AppTypography.titleMedium
+                          .copyWith(color: context.L.text)),
+                  Text(role,
+                      style: AppTypography.labelSmall
+                          .copyWith(color: context.L.sub)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            text,
+            style: AppTypography.bodyMedium.copyWith(
+              color: context.L.text,
+              fontStyle: FontStyle.italic,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BottomButton extends StatelessWidget {
+  final String title;
+  final VoidCallback onTap;
+  final bool enabled;
+
+  const _BottomButton({
+    required this.title,
+    required this.onTap,
+    required this.enabled,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: GestureDetector(
+        onTap: enabled ? onTap : null,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: enabled ? context.L.text : context.L.sub.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(32),
+          ),
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: AppTypography.labelLarge.copyWith(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: enabled ? context.L.bg : context.L.sub.withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+      ).animate(target: enabled ? 1 : 0).shimmer(
+            duration: 2.seconds,
+            curve: Curves.easeInOut,
+          ),
     );
   }
 }

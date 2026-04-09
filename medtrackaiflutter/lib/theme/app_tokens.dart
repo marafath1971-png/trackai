@@ -61,40 +61,40 @@ class AppRadius {
 }
 
 class AppTypography {
-  static TextStyle get displayLarge => GoogleFonts.outfit(
+  static TextStyle get displayLarge => GoogleFonts.inter(
         fontSize: 64,
         fontWeight: FontWeight.w900,
         letterSpacing: -4.5,
         height: 1.0,
       );
-  static TextStyle get displayMedium => GoogleFonts.outfit(
+  static TextStyle get displayMedium => GoogleFonts.inter(
         fontSize: 44,
         fontWeight: FontWeight.w800,
         letterSpacing: -3.0,
         height: 1.1,
       );
-  static TextStyle get displaySmall => GoogleFonts.outfit(
+  static TextStyle get displaySmall => GoogleFonts.inter(
         fontSize: 34,
         fontWeight: FontWeight.w800,
         letterSpacing: -2.0,
         height: 1.2,
       );
-  static TextStyle get headlineLarge => GoogleFonts.outfit(
+  static TextStyle get headlineLarge => GoogleFonts.inter(
         fontSize: 26,
         fontWeight: FontWeight.w800,
         letterSpacing: -1.2,
       );
-  static TextStyle get headlineMedium => GoogleFonts.outfit(
+  static TextStyle get headlineMedium => GoogleFonts.inter(
         fontSize: 22,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.8,
       );
-  static TextStyle get headlineSmall => GoogleFonts.outfit(
+  static TextStyle get headlineSmall => GoogleFonts.inter(
         fontSize: 18,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.5,
       );
-  static TextStyle get titleLarge => GoogleFonts.outfit(
+  static TextStyle get titleLarge => GoogleFonts.inter(
         fontSize: 18,
         fontWeight: FontWeight.w800,
         letterSpacing: -0.4,
@@ -134,7 +134,7 @@ class AppTypography {
         fontSize: 12,
         fontWeight: FontWeight.w500,
         height: 1.4,
-        letterSpacing: 0.2, // increased slightly to counteract small size
+        letterSpacing: 0.2,
       );
 }
 

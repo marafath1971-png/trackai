@@ -536,6 +536,9 @@ class _DashboardTabState extends State<DashboardTab> {
     final steps = state.healthSteps;
     final hr = state.healthHeartRate;
     final syncing = state.healthSyncing;
+    final bg = state.healthBloodGlucose;
+    final systolic = state.healthSystolic;
+    final diastolic = state.healthDiastolic;
 
     if (!connected) {
       return Padding(
@@ -598,34 +601,64 @@ class _DashboardTabState extends State<DashboardTab> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            flex: 3,
-            child: _buildBentoCard(
-              context,
-              'STEPS',
-              '${steps.toInt()}',
-              '👟',
-              L.secondary,
-              syncing: syncing,
-            ),
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: _buildBentoCard(
+                  context,
+                  'STEPS',
+                  '${steps.toInt()}',
+                  '👟',
+                  L.secondary,
+                  syncing: syncing,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: _buildBentoCard(
+                  context,
+                  'BPM',
+                  '${hr.toInt()}',
+                  '💓',
+                  L.error,
+                  syncing: syncing,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 2,
-            child: _buildBentoCard(
-              context,
-              'BPM',
-              '${hr.toInt()}',
-              '💓',
-              L.error,
-              syncing: syncing,
-            ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildBentoCard(
+                  context,
+                  'GLUCOSE',
+                  bg > 0 ? '${bg.toInt()}' : '--',
+                  '🩸',
+                  const Color(0xFF10B981),
+                  syncing: syncing,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildBentoCard(
+                  context,
+                  'PRESSURE',
+                  (systolic > 0 && diastolic > 0) ? '${systolic.toInt()}/${diastolic.toInt()}' : '--/--',
+                  '🩺',
+                  const Color(0xFF3B82F6),
+                  syncing: syncing,
+                ),
+              ),
+            ],
           ),
         ],
-      ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.1, end: 0),
-    );
+      ),
+    ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.1, end: 0);
   }
 
   Widget _buildBentoCard(

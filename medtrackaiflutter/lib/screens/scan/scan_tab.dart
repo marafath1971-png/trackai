@@ -22,7 +22,8 @@ import '../../core/utils/haptic_engine.dart';
 import '../../widgets/common/app_loading_indicator.dart';
 import '../../core/utils/result.dart';
 import '../../widgets/shared/shared_widgets.dart';
-
+import '../medicine/widgets/body_impact_card.dart';
+import '../medicine/widgets/inline_ai_coach.dart';
 class ScanTab extends StatefulWidget {
   final void Function(Medicine)? onSave;
   final VoidCallback? onClose;
@@ -1083,7 +1084,9 @@ class _ResultModalState extends State<_ResultModal> {
 
     // Convert ScanResult slots to ScheduleEntry entities
     if (widget.result.scheduleSlots.isNotEmpty) {
-      _manualSchedule = widget.result.scheduleSlots.map((s) {
+      _manualSchedule = widget.result.scheduleSlots.asMap().entries.map((entry) {
+        final idx = entry.key;
+        final s = entry.value;
         String ritualStr = s['ritual'] ?? 'none';
         Ritual ritual = Ritual.values.firstWhere(
           (r) => r.name == ritualStr,
@@ -1091,7 +1094,7 @@ class _ResultModalState extends State<_ResultModal> {
         );
 
         return ScheduleEntry(
-          id: 'scan_${DateTime.now().millisecondsSinceEpoch}_${_manualSchedule.length}',
+          id: 'scan_${DateTime.now().millisecondsSinceEpoch}_$idx',
           h: s['h'] ?? 8,
           m: s['m'] ?? 0,
           label: s['label'] ?? 'Reminder',
@@ -1302,7 +1305,9 @@ class _ResultModalState extends State<_ResultModal> {
             ),
           ),
           const SizedBox(height: 24),
-          Expanded(
+          // Wrap the scrollable content in a Size-bounded container to avoid layout errors
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.75, // Provide reasonable height for modal content
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               physics: const BouncingScrollPhysics(),
@@ -1335,7 +1340,31 @@ class _ResultModalState extends State<_ResultModal> {
                       .fadeIn(delay: 400.ms, duration: 600.ms)
                       .slideX(begin: -0.1),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
+
+                  if (widget.result.bodyImpact != null) ...[
+                    BodyImpactCard(
+                      impact: widget.result.bodyImpact!,
+                      onAskAIPressed: () {
+                        // Create a temporary Medicine instance for the coach context
+                        final tempMed = Medicine(
+                          id: 0,
+                          name: _nameController.text,
+                          brand: _brandController.text,
+                          dose: _doseController.text,
+                          form: _formController.text,
+                          category: widget.result.category,
+                          count: 0,
+                          totalCount: 0,
+                          courseStartDate: todayStr(),
+                          unit: _unitController.text,
+                          intakeInstructions: _howController.text,
+                        );
+                        InlineAiCoach.show(context, tempMed, impact: widget.result.bodyImpact);
+                      },
+                    ).animate().fadeIn(delay: 500.ms, duration: 600.ms).slideX(begin: -0.1),
+                    const SizedBox(height: 32),
+                  ],
 
                   // ── 3. Quick Actions ──────────────────
                   Row(

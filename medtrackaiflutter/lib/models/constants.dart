@@ -225,3 +225,45 @@ const List<Map<String, String>> kCountries = [
   {'v': 'South Korea', 'e': '🇰🇷', 'c': 'KR'},
   {'v': 'Israel', 'e': '🇮🇱', 'c': 'IL'},
 ];
+
+// ══════════════════════════════════════════════
+// CAL AI STYLE DEMOGRAPHIC CONSTANTS
+// ══════════════════════════════════════════════
+
+// Demographic tracking target
+const List<Map<String, String>> kTrackingTargets = [
+  {'v': 'Just myself', 'e': '🙋'},
+  {'v': 'A family member', 'e': '🫂'},
+  {'v': 'Both', 'e': '👪'},
+];
+
+// Age brackets
+const List<Map<String, String>> kAgeBrackets = [
+  {'v': '18 - 29', 'e': '🌱'},
+  {'v': '30 - 39', 'e': '🌿'},
+  {'v': '40 - 49', 'e': '🌳'},
+  {'v': '50 - 59', 'e': '🍂'},
+  {'v': '60+', 'e': '🏔️'},
+];
+
+// Biological Sex for algorithms
+const List<Map<String, String>> kBiologicalSex = [
+  {'v': 'Male', 'e': '🧬'},
+  {'v': 'Female', 'e': '🧬'},
+  {'v': 'Other / Prefer not to say', 'e': '✨'},
+];
+
+// Current Tracking Methods
+const List<Map<String, String>> kCurrentMethods = [
+  {'v': 'I just try to remember', 'e': '🧠'},
+  {'v': 'Pillbox / Organizer', 'e': '🍱'},
+  {'v': 'Notes app or alarm', 'e': '📱'},
+  {'v': 'Another tracking app', 'e': '🔄'},
+];
+
+// Forget frequency
+const List<Map<String, String>> kForgetFreq = [
+  {'v': 'Rarely (0-1 times/month)', 'e': '🏆'},
+  {'v': 'Sometimes (1-2 times/week)', 'e': '⚠️'},
+  {'v': 'Often (3+ times/week)', 'e': '📉'},
+];

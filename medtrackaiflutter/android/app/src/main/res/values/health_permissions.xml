@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="health_permissions">
+        <item>androidx.health.permission.HealthConnect.READ_STEPS</item>
+        <item>androidx.health.permission.HealthConnect.READ_HEART_RATE</item>
+        <item>androidx.health.permission.HealthConnect.READ_SLEEP_SESSION</item>
+        <item>androidx.health.permission.HealthConnect.READ_BLOOD_GLUCOSE</item>
+        <item>androidx.health.permission.HealthConnect.READ_BLOOD_PRESSURE</item>
+        <item>android.permission.health.READ_STEPS</item>
+        <item>android.permission.health.READ_HEART_RATE</item>
+        <item>android.permission.health.READ_SLEEP_SESSION</item>
+        <item>android.permission.health.READ_BLOOD_GLUCOSE</item>
+        <item>android.permission.health.READ_BLOOD_PRESSURE</item>
+    </string-array>
+</resources>

@@ -114,7 +114,9 @@ class ReportService {
             PdfColor color = PdfColors.grey200;
             if (ad >= 0.95) {
               color = PdfColors.green300;
-            } else if (ad > 0) color = PdfColors.yellow300;
+            } else if (ad > 0) {
+              color = PdfColors.yellow300;
+            }
 
             return pw.Container(
               width: 28,
@@ -286,6 +288,9 @@ class ReportService {
     final file = File('${tempDir.path}/MedAI_Health_Data_${DateTime.now().millisecondsSinceEpoch}.csv');
     await file.writeAsString(buffer.toString());
 
-    await Share.shareXFiles([XFile(file.path)], subject: 'My MedAI Health Data (CSV)');
+    await SharePlus.instance.share(ShareParams(
+      files: [XFile(file.path)],
+      subject: 'My MedAI Health Data (CSV)',
+    ));
   }
 }

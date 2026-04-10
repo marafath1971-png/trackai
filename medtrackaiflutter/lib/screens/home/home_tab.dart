@@ -89,35 +89,6 @@ class _HomeTabState extends State<HomeTab> {
       children: [
         // ── CLINICAL BASE ──
         Container(color: L.meshBg),
-        // ── Subtle Warm Glow (Reference Image Style) ──
-        Positioned(
-          top: -100,
-          right: -50,
-          child: Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  const Color(0xFFFFB347).withValues(alpha: 0.1), // Faint warm orange
-                  const Color(0xFFFFB347).withValues(alpha: 0),
-                ],
-              ),
-            ),
-          ),
-        ),
-        // ── Industrial Grid Overlay ──
-        Positioned.fill(
-          child: IgnorePointer(
-            child: Opacity(
-              opacity: 0.03,
-              child: CustomPaint(
-                painter: _IndustrialGridPainter(),
-              ),
-            ),
-          ),
-        ),
         Positioned.fill(
           child: RefreshIndicator(
             onRefresh: () async {

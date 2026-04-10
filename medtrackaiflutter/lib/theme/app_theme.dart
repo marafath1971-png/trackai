@@ -19,7 +19,7 @@ class AppColors {
   // ── Monochrome Base ────────────────────────────────────
   static const Color black = Color(0xFF000000);
   static const Color white = Color(0xFFFFFFFF);
-  static const Color meshBg = Color(0xFFF8F8F8);
+  static const Color meshBg = Color(0xFFF5F5F7);
 
   static const Color grey50 = Color(0xFFFFFFFF);
   static const Color grey100 = Color(0xFFF5F5F5);

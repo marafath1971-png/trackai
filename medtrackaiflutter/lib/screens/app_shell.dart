@@ -235,7 +235,7 @@ class _AppShellState extends State<AppShell>
   Widget _buildBottomIsland(AppThemeColors L, int unseenAlerts) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final isDark = context.select<AppState, bool>((s) => s.darkMode);
-    const labels = ['Home', 'Progress', 'Settings'];
+    const labels = ['Home', 'Analytics', 'Settings'];
     const activeIcons = [Icons.home_filled, Icons.bar_chart_rounded, Icons.settings_rounded];
     const inactiveIcons = [
       Icons.home_outlined,
@@ -244,35 +244,25 @@ class _AppShellState extends State<AppShell>
     ];
     final badges = [0, 0, unseenAlerts];
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, 12 + bottomPadding),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(35),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
-          child: Container(
-            height: 72,
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-              borderRadius: BorderRadius.circular(36),
-              border: Border.all(
-                color: L.border.withValues(alpha: isDark ? 0.12 : 0.05),
-                width: 0.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-                  blurRadius: 30,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+    return Container(
+      height: 64 + bottomPadding,
+      padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
+      decoration: BoxDecoration(
+        color: L.meshBg, // Blend seamlessly with scaffolding background
+        border: Border(
+          top: BorderSide(
+            color: L.border.withValues(alpha: isDark ? 0.12 : 0.05),
+            width: 0.5,
+          ),
+        ),
+      ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ── Nav Items ──
                 Expanded(
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: List.generate(
                       3,
                       (i) => _buildNavItem(
@@ -286,7 +276,7 @@ class _AppShellState extends State<AppShell>
                     ),
                   ),
                 ),
-
+                const SizedBox(width: 24),
                 // ── Integrated FAB ──
                 _MedScanFAB(
                   pressed: _fabPressed,
@@ -297,12 +287,8 @@ class _AppShellState extends State<AppShell>
                   },
                   onPressUp: () => setState(() => _fabPressed = false),
                 ),
-                const SizedBox(width: 4),
               ],
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -317,7 +303,7 @@ class _AppShellState extends State<AppShell>
             HapticEngine.selection();
             setState(() => _tab = index);
             AnalyticsService.logScreenView(
-                ['Home', 'Progress', 'Settings'][index]);
+                ['Home', 'Analytics', 'Settings'][index]);
           }
         },
         behavior: HitTestBehavior.opaque,

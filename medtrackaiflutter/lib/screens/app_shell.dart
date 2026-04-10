@@ -9,8 +9,10 @@ import '../core/utils/haptic_engine.dart';
 import 'home/home_tab.dart';
 import 'home/widgets/streak_modal.dart';
 import 'scan/scan_tab.dart';
-import 'alarms/alarms_tab.dart';
 import 'dashboard/dashboard_tab.dart';
+import 'family/family_tab.dart';
+import 'alarms/alarms_tab.dart';
+import 'settings/global_settings_screen.dart';
 import 'security/lock_screen.dart';
 import '../services/analytics_service.dart';
 import '../widgets/modals/dose_celebration_modal.dart';
@@ -226,7 +228,9 @@ class _AppShellState extends State<AppShell>
       case 1:
         return const DashboardTab();
       case 2:
-        return const AlarmsTab(); // Using Alarms as a placeholder for Settings or keeping it as is
+        return const AlarmsTab();
+      case 3:
+        return const FamilyTab();
       default:
         return const SizedBox.shrink();
     }
@@ -235,20 +239,26 @@ class _AppShellState extends State<AppShell>
   Widget _buildBottomIsland(AppThemeColors L, int unseenAlerts) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final isDark = context.select<AppState, bool>((s) => s.darkMode);
-    const labels = ['Home', 'Analytics', 'Settings'];
-    const activeIcons = [Icons.home_filled, Icons.bar_chart_rounded, Icons.settings_rounded];
+    const labels = ['Home', 'Analytics', 'Alarms', 'Family'];
+    const activeIcons = [
+      Icons.home_filled,
+      Icons.bar_chart_rounded,
+      Icons.alarm_on_rounded,
+      Icons.group_rounded
+    ];
     const inactiveIcons = [
       Icons.home_outlined,
       Icons.bar_chart_outlined,
-      Icons.settings_outlined
+      Icons.alarm_outlined,
+      Icons.group_outlined
     ];
-    final badges = [0, 0, unseenAlerts];
+    final badges = [0, 0, 0, unseenAlerts];
 
     return Container(
       height: 64 + bottomPadding,
       padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
       decoration: BoxDecoration(
-        color: L.meshBg, // Blend seamlessly with scaffolding background
+        color: isDark ? L.meshBg : Colors.white,
         border: Border(
           top: BorderSide(
             color: L.border.withValues(alpha: isDark ? 0.12 : 0.05),
@@ -264,7 +274,7 @@ class _AppShellState extends State<AppShell>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: List.generate(
-                      3,
+                      4,
                       (i) => _buildNavItem(
                         i,
                         activeIcons[i],
@@ -277,15 +287,18 @@ class _AppShellState extends State<AppShell>
                   ),
                 ),
                 const SizedBox(width: 24),
-                // ── Integrated FAB ──
-                _MedScanFAB(
-                  pressed: _fabPressed,
-                  onTap: _openScan,
-                  onPressDown: () {
-                    HapticEngine.selection();
-                    setState(() => _fabPressed = true);
-                  },
-                  onPressUp: () => setState(() => _fabPressed = false),
+                // ── Integrated FAB (Elevated) ──
+                Transform.translate(
+                  offset: const Offset(0, -20),
+                  child: _MedScanFAB(
+                    pressed: _fabPressed,
+                    onTap: _openScan,
+                    onPressDown: () {
+                      HapticEngine.selection();
+                      setState(() => _fabPressed = true);
+                    },
+                    onPressUp: () => setState(() => _fabPressed = false),
+                  ),
                 ),
               ],
             ),
@@ -303,13 +316,19 @@ class _AppShellState extends State<AppShell>
             HapticEngine.selection();
             setState(() => _tab = index);
             AnalyticsService.logScreenView(
-                ['Home', 'Analytics', 'Settings'][index]);
+                ['Home', 'Analytics', 'Alarms', 'Family'][index]);
           }
         },
         behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.identity()
+            ..scale(selected ? 1.05 : 1.0)
+            ..translate(0.0, selected ? -2.0 : 0.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
             Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,
@@ -349,7 +368,8 @@ class _AppShellState extends State<AppShell>
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
 
@@ -397,7 +417,9 @@ class _MedScanFAB extends StatelessWidget {
           child: const Center(
             child: Icon(Icons.add, color: Colors.white, size: 28),
           ),
-        ),
+        ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+         .shimmer(duration: 2500.ms, color: Colors.white24)
+         .scaleXY(end: 1.05, duration: 1500.ms, curve: Curves.easeInOutSine),
       ),
     );
   }

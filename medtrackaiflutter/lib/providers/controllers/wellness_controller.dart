@@ -160,6 +160,8 @@ class WellnessController extends ChangeNotifier {
 
       // Check if any med was taken on that day within 4 hours prior
       final dayDoses = history[sDateKey] ?? [];
+      if (dayDoses.isEmpty) continue;
+
       for (var dose in dayDoses) {
         if (!dose.taken || dose.takenAt == null) continue;
 

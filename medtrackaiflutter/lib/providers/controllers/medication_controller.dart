@@ -258,6 +258,7 @@ class MedicationController extends ChangeNotifier {
     await _recordInventorySnapshot();
     invalidateCache();
     notifyListeners();
+    HapticEngine.success();
   }
 
   // ── Dose Operations ────────────────────────────────────────────────
@@ -289,7 +290,7 @@ class MedicationController extends ChangeNotifier {
     final key = dose.key;
     final wasTaken = _takenToday[key] ?? false;
     _takenToday = {..._takenToday, key: !wasTaken};
-    HapticEngine.selection();
+    HapticEngine.success();
 
     if (!wasTaken) {
       // 1. Update Inventory

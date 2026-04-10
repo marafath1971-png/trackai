@@ -136,7 +136,11 @@ class AppToggle extends StatelessWidget {
     final L = context.L;
     return GestureDetector(
       onTap: () {
-        HapticEngine.selection();
+        if (!value) {
+          HapticEngine.success();
+        } else {
+          HapticEngine.light();
+        }
         onChanged(!value);
       },
       child: AnimatedContainer(

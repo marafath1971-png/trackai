@@ -625,7 +625,8 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.5,
                       ),
-                    ),
+                    ).animate(onPlay: (c) => c.repeat(reverse: true))
+                     .shimmer(duration: 2.seconds, color: L.secondary.withValues(alpha: 0.5)),
                   ],
                 ),
               ),
@@ -651,7 +652,8 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                     fontWeight: FontWeight.w900,
                     letterSpacing: 2.0,
                   ),
-                ),
+                ).animate(onPlay: (c) => c.repeat(reverse: false))
+                 .shimmer(duration: 3.seconds, delay: 500.ms, color: Colors.white54),
               ],
             ),
           ),
@@ -934,7 +936,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     final used = state.profile?.scansUsed ?? 0;
     final isPremium = state.profile?.isPremium ?? false;
 
-    return Container(
+    Widget pill = Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.65),
@@ -956,7 +958,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
               : const Text("✨", style: TextStyle(fontSize: 12)),
           const SizedBox(width: 10),
           Text(
-            isPremium ? "PREMIUM UNLIMITED" : "$used / 3 SCANS",
+            isPremium ? "PREMIUM UNLIMITED" : (used == 2 ? "1 FREE SCAN LEFT" : "$used / 3 SCANS"),
             style: AppTypography.labelSmall.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w900,
@@ -967,6 +969,14 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
         ],
       ),
     );
+
+    // Apply scarcity retention hook (Loss Aversion)
+    if (!isPremium && used == 2) {
+      return pill.animate(onPlay: (c) => c.repeat(reverse: true))
+          .shimmer(duration: 1500.ms, color: Colors.redAccent.withValues(alpha: 0.8))
+          .scaleXY(end: 1.05, duration: 1000.ms, curve: Curves.easeInOut);
+    }
+    return pill;
   }
 
   Widget _buildCategoryPill() {

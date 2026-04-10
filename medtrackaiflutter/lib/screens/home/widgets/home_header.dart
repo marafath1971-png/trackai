@@ -1,7 +1,5 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../core/utils/date_formatter.dart';
 import '../../../providers/app_state.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../widgets/shared/shared_widgets.dart';
@@ -53,10 +51,17 @@ class HomeHeader extends StatelessWidget {
               onTap: onTap,
               child: Row(
                 children: [
-                  const Icon(Icons.apple, size: 28, color: Colors.black), // Using apple icon as placeholder/style reference
+                  Image.asset(
+                    'assets/images/app_logo.png',
+                    width: 32,
+                    height: 32,
+                  )
+                      .animate()
+                      .fadeIn(duration: 800.ms, curve: Curves.easeOut)
+                      .slideX(begin: -0.2, end: 0, curve: Curves.easeOutBack),
                   const SizedBox(width: 8),
                   Text(
-                    'MedTrack AI',
+                    'Med AI',
                     style: AppTypography.titleMedium.copyWith(
                       color: L.text,
                       fontWeight: FontWeight.w800,
@@ -82,7 +87,8 @@ class HomeHeader extends StatelessWidget {
                       width: 10,
                       height: 10,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981), // matching the notification dot color in image
+                        color: const Color(
+                            0xFF10B981), // matching the notification dot color in image
                         shape: BoxShape.circle,
                         border: Border.all(color: L.bg, width: 2),
                       ),
@@ -201,9 +207,9 @@ class _StreakBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    final isHighStreak = streak >= 7;
+    final isHighStreak = streak >= 3;
 
-    return GestureDetector(
+    final badge = GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -274,6 +280,17 @@ class _StreakBadge extends StatelessWidget {
         ),
       ),
     );
+
+    // Apply intense loss aversion gamification hook
+    if (isHighStreak) {
+      return badge.animate(onPlay: (c) => c.repeat(reverse: true))
+          .shimmer(
+              duration: 2500.ms,
+              color: Colors.white.withValues(alpha: 0.8),
+              angle: 0.5)
+          .scaleXY(end: 1.05, duration: 1200.ms, curve: Curves.easeInOut);
+    }
+    return badge;
   }
 }
 

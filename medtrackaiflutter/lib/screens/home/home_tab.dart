@@ -69,7 +69,9 @@ class _HomeTabState extends State<HomeTab> {
   void _setDate(DateTime date) {
     if (date.year == _selectedDate.year &&
         date.month == _selectedDate.month &&
-        date.day == _selectedDate.day) return;
+        date.day == _selectedDate.day) {
+      return;
+    }
     HapticEngine.selection();
     setState(() => _selectedDate = date);
   }
@@ -142,11 +144,8 @@ class _HomeTabState extends State<HomeTab> {
                       child: _MainProgressCard(
                         remaining: remaining,
                         dosePct: dosePct,
-                      )
-                          .animate()
-                          .fadeIn(duration: 800.ms)
-                          .slideY(
-                              begin: 0.08, end: 0, curve: Curves.easeOutExpo),
+                      ).animate().fadeIn(duration: 800.ms).slideY(
+                          begin: 0.08, end: 0, curve: Curves.easeOutExpo),
                     ),
                   ),
 
@@ -165,8 +164,6 @@ class _HomeTabState extends State<HomeTab> {
                               begin: 0.08, end: 0, curve: Curves.easeOutExpo),
                     ),
                   ),
-
-
 
                   // --- ADHERENCE SCORE CARD ---
                   SliverPadding(
@@ -237,14 +234,20 @@ class _HomeTabState extends State<HomeTab> {
                             final med = meds[index];
                             return MedCard(
                               med: med,
-                              onView: () => setState(() {
-                                _viewingMed = med;
-                                _startInEditMode = false;
-                              }),
-                              onEdit: () => setState(() {
-                                _viewingMed = med;
-                                _startInEditMode = true;
-                              }),
+                              onView: () {
+                                HapticEngine.selection();
+                                setState(() {
+                                  _viewingMed = med;
+                                  _startInEditMode = false;
+                                });
+                              },
+                              onEdit: () {
+                                HapticEngine.selection();
+                                setState(() {
+                                  _viewingMed = med;
+                                  _startInEditMode = true;
+                                });
+                              },
                             );
                           },
                           childCount: meds.length,
@@ -740,22 +743,14 @@ class _AdherenceScoreCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            gradColors[0].withValues(alpha: 0.12),
-            gradColors[1].withValues(alpha: 0.04),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-            color: gradColors[0].withValues(alpha: 0.25), width: 0.5),
+        color: L.card,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: L.glassBorder, width: 0.5),
         boxShadow: [
           BoxShadow(
             color: gradColors[0].withValues(alpha: 0.1),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -767,17 +762,12 @@ class _AdherenceScoreCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: gradColors),
+                  color: gradColors[0].withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: gradColors[0].withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  border: Border.all(
+                      color: gradColors[0].withValues(alpha: 0.2), width: 0.5),
                 ),
-                child: Icon(statusIcon, color: Colors.white, size: 20),
+                child: Icon(statusIcon, color: gradColors[0], size: 20),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -785,15 +775,7 @@ class _AdherenceScoreCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Health Score',
-                      style: AppTypography.titleMedium.copyWith(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18,
-                        color: L.text,
-                      ),
-                    ),
-                    Text(
-                      '$score/10 \u2022 $statusLabel',
+                      statusLabel,
                       style: AppTypography.bodySmall.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
@@ -1066,14 +1048,16 @@ class _AnimatedRingState extends State<_AnimatedRing>
       builder: (context, _) => SizedBox(
         width: widget.size,
         height: widget.size,
-        child: CustomPaint(
-          painter: _RingPainter(
-            percent: _anim.value,
-            color: widget.color,
-            trackColor: widget.trackColor,
-            strokeWidth: widget.strokeWidth,
+        child: RepaintBoundary(
+          child: CustomPaint(
+            painter: _RingPainter(
+              percent: _anim.value,
+              color: widget.color,
+              trackColor: widget.trackColor,
+              strokeWidth: widget.strokeWidth,
+            ),
+            child: Center(child: widget.child),
           ),
-          child: Center(child: widget.child),
         ),
       ),
     );
@@ -1114,9 +1098,25 @@ class _RingPainter extends CustomPainter {
     );
 
     if (percent > 0) {
+      final rect = Rect.fromCircle(center: center, radius: radius);
+      
+      // Outer Glow
+      canvas.drawArc(
+        rect,
+        startAngle,
+        sweepAngle,
+        false,
+        Paint()
+          ..color = color.withValues(alpha: 0.35)
+          ..strokeWidth = strokeWidth + 4
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0),
+      );
+
       // Progress arc
       canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
+        rect,
         startAngle,
         sweepAngle,
         false,
@@ -1285,13 +1285,27 @@ class _MainProgressCard extends StatelessWidget {
       height: 160,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(28),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            L.card,
+            L.card.withValues(alpha: 0.8),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: L.glassBorder, width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 30,
-            offset: const Offset(0, 15),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 40,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: L.text.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+            spreadRadius: -2,
           ),
         ],
       ),
@@ -1304,21 +1318,36 @@ class _MainProgressCard extends StatelessWidget {
             children: [
               Text(
                 '$remaining',
-                style: AppTypography.titleLarge.copyWith(
-                  fontSize: 48,
-                  fontWeight: FontWeight.w800,
+                style: AppTypography.displayLarge.copyWith(
+                  fontSize: 56,
+                  fontWeight: FontWeight.w900,
                   color: L.text,
                   height: 1,
-                  letterSpacing: -2,
+                  letterSpacing: -3,
                 ),
               ),
-              Text(
-                'Doses left',
-                style: AppTypography.labelSmall.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: L.sub.withValues(alpha: 0.5),
-                ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: L.text.withValues(alpha: 0.3),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'DOSES REMAINING',
+                    style: AppTypography.labelSmall.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                      color: L.sub.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1409,33 +1438,35 @@ class _StatItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
       decoration: BoxDecoration(
         color: L.card,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: L.glassBorder, width: 0.5),
       ),
       child: Column(
         children: [
           Text(
             value,
-            style: AppTypography.titleMedium.copyWith(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
+            style: AppTypography.displayLarge.copyWith(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
               color: L.text,
+              letterSpacing: -1,
             ),
           ),
-          const SizedBox(height: 2),
           Text(
-            label,
+            label.toUpperCase(),
             style: AppTypography.labelSmall.copyWith(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
               color: L.sub.withValues(alpha: 0.4),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           _AnimatedRing(
-            percent: 0.7, // Visual placeholder like in image
+            percent: 0.75, // Intentional visual baseline
             color: accent,
             trackColor: accent.withValues(alpha: 0.1),
-            size: 40,
+            size: 36,
             strokeWidth: 4,
             child: Icon(icon, color: accent, size: 14),
           ),
@@ -1465,48 +1496,87 @@ class _DayToggle extends StatelessWidget {
         selectedDate.month == today.month &&
         selectedDate.day == today.day;
 
-    return Row(
-      children: [
-        _SimpleToggleBtn(
-          label: 'Today',
-          selected: isToday,
-          onTap: () => onChanged(today),
-        ),
-        const SizedBox(width: 16),
-        _SimpleToggleBtn(
-          label: 'Yesterday',
-          selected: !isToday,
-          onTap: () => onChanged(yesterday),
-        ),
-      ],
-    );
-  }
-}
-
-class _SimpleToggleBtn extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _SimpleToggleBtn({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final L = context.L;
-    return GestureDetector(
-      onTap: onTap,
-      child: Text(
-        label,
-        style: AppTypography.titleMedium.copyWith(
-          fontSize: 20,
-          fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-          color: selected ? L.text : L.sub.withValues(alpha: 0.4),
-        ),
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: L.meshBg == Colors.white ? const Color(0xFFF3F4F6) : L.card.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1),
       ),
-    );
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final halfWidth = constraints.maxWidth / 2;
+          return Stack(
+            children: [
+              AnimatedPositioned(
+                duration: 350.ms,
+                curve: Curves.easeOutBack,
+                top: 4,
+                bottom: 4,
+                left: isToday ? 4 : halfWidth,
+                width: halfWidth - 4,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: L.text,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticEngine.selection();
+                        onChanged(today);
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Center(
+                        child: AnimatedDefaultTextStyle(
+                          duration: 250.ms,
+                          style: AppTypography.labelLarge.copyWith(
+                            color: isToday ? L.bg : L.text.withValues(alpha: 0.6),
+                            fontWeight: isToday ? FontWeight.w900 : FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                          child: const Text('Today'),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticEngine.selection();
+                        onChanged(yesterday);
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Center(
+                        child: AnimatedDefaultTextStyle(
+                          duration: 250.ms,
+                          style: AppTypography.labelLarge.copyWith(
+                            color: !isToday ? L.bg : L.text.withValues(alpha: 0.6),
+                            fontWeight: !isToday ? FontWeight.w900 : FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                          child: const Text('Yesterday'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.1, end: 0, curve: Curves.easeOutExpo);
   }
 }

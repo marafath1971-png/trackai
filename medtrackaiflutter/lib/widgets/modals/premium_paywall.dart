@@ -166,7 +166,8 @@ class _PremiumPaywallState extends State<PremiumPaywall> {
                         ),
                       ),
               ),
-            ),
+            ).animate(onPlay: (c) => c.repeat(reverse: false))
+             .shimmer(duration: 2500.ms, delay: 1000.ms, color: Colors.white54),
           )
               .animate()
               .scale(delay: 800.ms, duration: 400.ms, curve: Curves.elasticOut),

@@ -28,7 +28,7 @@ class BodyImpactSummary {
       };
 
   factory BodyImpactSummary.fromJson(Map<String, dynamic> json) {
-    num _parseNum(dynamic v) {
+    num parseNum(dynamic v) {
       if (v == null) return 0;
       if (v is num) return v;
       return num.tryParse(v.toString()) ?? 0;
@@ -36,13 +36,14 @@ class BodyImpactSummary {
 
     return BodyImpactSummary(
       mechanismOfAction: json['mechanismOfAction'] ?? 'Unknown mechanism.',
-      onsetMinutes: _parseNum(json['onsetMinutes']).toInt(),
-      peakHours: _parseNum(json['peakHours']).toDouble(),
-      durationHours: _parseNum(json['durationHours']).toDouble(),
+      onsetMinutes: parseNum(json['onsetMinutes']).toInt(),
+      peakHours: parseNum(json['peakHours']).toDouble(),
+      durationHours: parseNum(json['durationHours']).toDouble(),
       bodySystems: List<String>.from(json['bodySystems'] ?? []),
       timelineEffects: List<Map<String, dynamic>>.from(
-        (json['timelineEffects'] as List?)?.map((e) =>
-                e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{}) ??
+        (json['timelineEffects'] as List?)?.map((e) => e is Map
+                ? Map<String, dynamic>.from(e)
+                : <String, dynamic>{}) ??
             [],
       ),
       ahaFacts: List<String>.from(json['ahaFacts'] ?? []),

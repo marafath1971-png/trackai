@@ -316,7 +316,14 @@ class _InlineAiCoachState extends State<InlineAiCoach> {
           if (!isAI) const SizedBox(width: 44), // Spacer for AI avatar width
         ],
       ),
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
+    ).animate()
+     .fadeIn(duration: 300.ms)
+     .slideY(begin: 0.1, end: 0)
+     .scaleXY(
+        begin: isAI ? 0.95 : 1.0, 
+        end: 1.0, 
+        duration: isAI ? 600.ms : 100.ms, 
+        curve: isAI ? Curves.elasticOut : Curves.easeOut);
   }
 
   Widget _buildTypingIndicator(AppThemeColors L) {

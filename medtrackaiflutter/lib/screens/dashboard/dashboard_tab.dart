@@ -35,8 +35,13 @@ class _DashboardTabState extends State<DashboardTab> {
     _scrollController.addListener(_onScroll);
     // Refresh insights when entering the tab
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AppState>().fetchHealthInsights();
-      VoiceService.init();
+      if (!mounted) return;
+      try {
+        context.read<AppState>().fetchHealthInsights();
+        VoiceService.init();
+      } catch (e) {
+        debugPrint('[DashboardTab] Error in post-frame initialization: $e');
+      }
     });
   }
 
@@ -57,7 +62,9 @@ class _DashboardTabState extends State<DashboardTab> {
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    final s = AppLocalizations.of(context)!;
+    final s = AppLocalizations.of(context);
+    if (s == null) return const SizedBox.shrink();
+    
     final state = context.read<AppState>();
     // Granular selection
     final latency = context.select<AppState, List<Map<String, dynamic>>>(
@@ -74,7 +81,7 @@ class _DashboardTabState extends State<DashboardTab> {
         context.select<AppState, List<HealthInsight>>((s) => s.healthInsights);
 
     return Scaffold(
-      backgroundColor: L.meshBg, // Fallback background
+      backgroundColor: L.meshBg,
       body: Stack(children: [
         // ── Ambient Glassmorphism Background ──
         const Positioned.fill(child: AmbientMeshBackground()),
@@ -122,7 +129,10 @@ class _DashboardTabState extends State<DashboardTab> {
                           '%',
                           '📈',
                           L.secondary,
-                          onTap: () => _showTrendDrilldown(context, state, L),
+                          onTap: () {
+                            if (!mounted) return;
+                            _showTrendDrilldown(context, state, L);
+                          },
                         ),
                         const SizedBox(width: 16),
                         _buildSummaryCard(
@@ -132,7 +142,10 @@ class _DashboardTabState extends State<DashboardTab> {
                           'D',
                           '⚡',
                           L.warning,
-                          onTap: () => StreakModal.show(context, state),
+                          onTap: () {
+                            if (!mounted) return;
+                            StreakModal.show(context, state);
+                          },
                         ),
                       ],
                     ),
@@ -203,8 +216,10 @@ class _DashboardTabState extends State<DashboardTab> {
                         : HealthCoachCard(
                             insights: healthInsights,
                             L: L,
-                            onRetry: () =>
-                                context.read<AppState>().fetchHealthInsights(),
+                            onRetry: () {
+                              if (!mounted) return;
+                              context.read<AppState>().fetchHealthInsights();
+                            },
                           ).animate().fadeIn(duration: 800.ms),
                   ),
 
@@ -233,6 +248,7 @@ class _DashboardTabState extends State<DashboardTab> {
                           HapticEngine.selection();
                           final state = context.read<AppState>();
                           if (!state.isPremium) {
+                            if (!mounted) return;
                             PaywallSheet.show(context);
                             return;
                           }
@@ -350,7 +366,7 @@ class _DashboardTabState extends State<DashboardTab> {
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (!_showVoiceAssistant) 
+          if (!_showVoiceAssistant)
             FloatingActionButton(
               onPressed: () {
                 HapticEngine.selection();
@@ -358,6 +374,7 @@ class _DashboardTabState extends State<DashboardTab> {
               },
               backgroundColor: L.secondary,
               mini: true,
+              heroTag: 'dash_mic',
               child: const Icon(Icons.mic_rounded, color: Colors.white),
             ).animate().slideY(begin: 1, end: 0, curve: Curves.easeOutExpo),
           const SizedBox(height: 12),
@@ -378,10 +395,13 @@ class _DashboardTabState extends State<DashboardTab> {
               ],
             ),
             child: FloatingActionButton(
-              onPressed: () => DailyLogSheet.show(context),
+              onPressed: () {
+                if (!mounted) return;
+                DailyLogSheet.show(context);
+              },
               backgroundColor: Colors.transparent,
-              highlightElevation: 0,
               elevation: 0,
+              highlightElevation: 0,
               child: const Center(
                   child: Text('➕',
                       style: TextStyle(color: Colors.white, fontSize: 24))),

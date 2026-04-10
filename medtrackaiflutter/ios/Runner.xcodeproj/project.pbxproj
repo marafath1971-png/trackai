@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -96,7 +96,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		B38C0F122F86AF56006A8157 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		B38C0F122F86AF56006A8157 /* Exceptions for "MedTrackActivityWidget" folder in "MedTrackActivityWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -106,7 +106,18 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		B38C0EFD2F86AF52006A8157 /* MedTrackActivityWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (B38C0F122F86AF56006A8157 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = MedTrackActivityWidget; sourceTree = "<group>"; };
+		B38C0EFD2F86AF52006A8157 /* MedTrackActivityWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B38C0F122F86AF56006A8157 /* Exceptions for "MedTrackActivityWidget" folder in "MedTrackActivityWidgetExtension" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = MedTrackActivityWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -252,11 +263,11 @@
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
+				B38C0F0E2F86AF56006A8157 /* Embed Foundation Extensions */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				F5AE852DE525A26FFB9C6966 /* [CP] Embed Pods Frameworks */,
 				AC39A0BF8B166647E7D979AB /* [CP] Copy Pods Resources */,
-				B38C0F0E2F86AF56006A8157 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -284,8 +295,6 @@
 				B38C0EFD2F86AF52006A8157 /* MedTrackActivityWidget */,
 			);
 			name = MedTrackActivityWidgetExtension;
-			packageProductDependencies = (
-			);
 			productName = MedTrackActivityWidgetExtension;
 			productReference = B38C0EF82F86AF52006A8157 /* MedTrackActivityWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -378,7 +387,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin";
+			shellScript = "export FLUTTER_BUILD_DIR=build\nexport FLUTTER_APPLICATION_PATH=..\n/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin";
 		};
 		76F1CB5D6FCFBBDAE698D001 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -425,13 +434,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -468,13 +473,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

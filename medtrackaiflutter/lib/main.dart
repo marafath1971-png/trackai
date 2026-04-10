@@ -37,29 +37,42 @@ void main() async {
   await dotenv.load(fileName: ".env");
 
   // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
 
-  // Initialize App Check for production security
-  await FirebaseAppCheck.instance.activate(
-    androidProvider:
-        kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
-  );
+    // Initialize App Check for production security
+    await FirebaseAppCheck.instance.activate(
+      androidProvider:
+          kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+      appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
+    );
+  } catch (e) {
+    debugPrint('Firebase/AppCheck initialization failure: $e');
+  }
 
   // Initialize Performance Monitoring
-  FirebasePerformance.instance.setPerformanceCollectionEnabled(!kDebugMode);
+  try {
+    FirebasePerformance.instance.setPerformanceCollectionEnabled(!kDebugMode);
+  } catch (e) {
+    debugPrint('FirebasePerformance initialization failure: $e');
+  }
 
   // Set Production Version Metadata in Crashlytics
-  await FirebaseCrashlytics.instance.setCustomKey('app_version', '1.0.0+1');
+  try {
+    await FirebaseCrashlytics.instance.setCustomKey('app_version', '1.0.0+1');
 
-  // Pass all uncaught "fatal" errors from the framework to Crashlytics
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    // Pass all uncaught "fatal" errors from the framework to Crashlytics
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
-  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
+    // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  } catch (e) {
+    debugPrint('FirebaseCrashlytics initialization failure: $e');
+  }
 
   // Initialize Peripheral Services in Parallel
   final results = await Future.wait([
@@ -112,24 +125,18 @@ class MedAIApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final amoled = context
-        .select<AppState, bool>((state) => state.profile?.amoledMode ?? false);
     final accentHex = context
         .select<AppState, String?>((state) => state.profile?.accentColor);
 
     final lightTheme = AppTheme.light(accentHex: accentHex);
-    final darkTheme = AppTheme.dark(accentHex: accentHex, isAmoled: amoled);
     final language =
         context.select<AppState, String>((state) => state.language);
-    final isDarkMode =
-        context.select<AppState, bool>((state) => state.darkMode);
 
     return MaterialApp(
       title: 'MedAI',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
-      darkTheme: darkTheme,
-      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      themeMode: ThemeMode.light,
       locale: Locale(language),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -143,7 +150,7 @@ class MedAIApp extends StatelessWidget {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 430),
-              child: child,
+              child: child ?? const SizedBox.expand(),
             ),
           ),
         );

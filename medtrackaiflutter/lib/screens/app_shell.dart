@@ -10,13 +10,12 @@ import 'home/home_tab.dart';
 import 'home/widgets/streak_modal.dart';
 import 'scan/scan_tab.dart';
 import 'alarms/alarms_tab.dart';
-import 'family/family_tab.dart';
 import 'dashboard/dashboard_tab.dart';
 import 'security/lock_screen.dart';
 import '../services/analytics_service.dart';
+import '../widgets/modals/dose_celebration_modal.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/common/medical_disclaimer_modal.dart';
-import '../widgets/modals/dose_celebration_modal.dart';
 
 // ══════════════════════════════════════════════
 // APP SHELL — Bottom nav + FAB + overlays
@@ -155,6 +154,7 @@ class _AppShellState extends State<AppShell>
                         s.showToast('${med.name} added!');
                       },
                       onClose: () => setState(() => _showScan = false),
+                      onManualAdd: () => setState(() => _showScan = false),
                     )
                         .animate()
                         .fadeIn(duration: 350.ms, curve: Curves.easeOut)
@@ -222,11 +222,9 @@ class _AppShellState extends State<AppShell>
           onSwitchTab: (i) => setState(() => _tab = i),
         );
       case 1:
-        return const AlarmsTab();
-      case 2:
         return const DashboardTab();
-      case 3:
-        return const FamilyTab();
+      case 2:
+        return const AlarmsTab(); // Using Alarms as a placeholder for Settings or keeping it as is
       default:
         return const SizedBox.shrink();
     }
@@ -235,20 +233,18 @@ class _AppShellState extends State<AppShell>
   Widget _buildBottomIsland(AppThemeColors L, int unseenAlerts) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final isDark = context.select<AppState, bool>((s) => s.darkMode);
-    const labels = ['Home', 'Alarms', 'Health', 'Circle'];
+    const labels = ['Home', 'Analytics', 'Settings'];
     const activeIcons = [
-      Icons.home_rounded,
-      Icons.notifications_rounded,
-      Icons.bar_chart_rounded,
-      Icons.people_rounded
+      Icons.home_filled,
+      Icons.analytics,
+      Icons.settings
     ];
     const inactiveIcons = [
       Icons.home_outlined,
-      Icons.notifications_outlined,
-      Icons.bar_chart_outlined,
-      Icons.people_outline_rounded
+      Icons.analytics_outlined,
+      Icons.settings_outlined
     ];
-    final badges = [0, unseenAlerts, 0, 0];
+    final badges = [0, 0, unseenAlerts];
 
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 0, 16, 12 + bottomPadding),
@@ -275,7 +271,7 @@ class _AppShellState extends State<AppShell>
                   ),
                   child: LayoutBuilder(
                     builder: (ctx, constraints) {
-                      final itemW = constraints.maxWidth / 4;
+                      final itemW = constraints.maxWidth / 3;
                       return Stack(
                         children: [
                           // Animated sliding background pill
@@ -296,7 +292,7 @@ class _AppShellState extends State<AppShell>
                           // Nav items
                           Row(
                             children: List.generate(
-                                4,
+                                3,
                                 (i) => _buildNavItem(
                                       i,
                                       activeIcons[i],
@@ -346,7 +342,7 @@ class _AppShellState extends State<AppShell>
             HapticEngine.selection();
             setState(() => _tab = index);
             AnalyticsService.logScreenView(
-                ['Home', 'Reminders', 'Health', 'Circle'][index]);
+                ['Home', 'Analytics', 'Settings'][index]);
           }
         },
         behavior: HitTestBehavior.opaque,
@@ -464,7 +460,7 @@ class _MedScanFAB extends StatelessWidget {
             ],
           ),
           child: const Center(
-            child: Text('🔬', style: TextStyle(fontSize: 28)),
+            child: Icon(Icons.add, color: Colors.white, size: 30),
           ),
         ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(
             duration: 3.seconds, color: Colors.white.withValues(alpha: 0.10)),

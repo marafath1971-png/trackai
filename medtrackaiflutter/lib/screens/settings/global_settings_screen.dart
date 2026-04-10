@@ -186,22 +186,6 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
 
               const SizedBox(height: 24),
 
-              // ── DISPLAY ARCHITECTURE BLOCK ───────────────
-              _IndustrialSection(
-                label: 'DISPLAY ARCHITECTURE',
-                icon: '🔮',
-                L: L,
-                children: [
-                  _ToggleTile(
-                    title: 'Amoled Optimization',
-                    subtitle: 'Pure Black interface for power efficiency',
-                    value: _profile.amoledMode,
-                    onChanged: (v) => _save(_profile.copyWith(amoledMode: v)),
-                    L: L,
-                    isLast: true,
-                  ),
-                ],
-              ),
               const SizedBox(height: 24),
 
               // ── ACCOUNT ARCHITECTURE BLOCK ───────────────

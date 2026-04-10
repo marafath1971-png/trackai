@@ -753,7 +753,9 @@ Return ONLY valid JSON:
     }
     if (s.contains('socket') ||
         s.contains('timeout') ||
-        s.contains('network')) {
+        s.contains('network') ||
+        s.contains('unable to resolve host') ||
+        s.contains('host lookup')) {
       return "Connection issues? Check your internet and let's try identifying that medicine again. 🌐";
     }
     if (s.contains('safety') || s.contains('finish_reason_safety')) {

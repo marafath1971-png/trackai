@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -5,6 +6,7 @@ import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/shared/shared_widgets.dart';
 import '../../core/utils/haptic_engine.dart';
+import '../../widgets/common/ambient_mesh_bg.dart';
 import 'widgets/home_meds_section.dart';
 import 'widgets/med_card.dart';
 
@@ -31,6 +33,7 @@ class _HomeTabState extends State<HomeTab> {
   Medicine? _viewingMed;
   bool _startInEditMode = false;
   double _scrollOffset = 0;
+  DateTime _selectedDate = DateTime.now();
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _medsHeaderKey = GlobalKey();
   final GlobalKey _medsEmptyKey = GlobalKey();
@@ -63,32 +66,51 @@ class _HomeTabState extends State<HomeTab> {
     HapticEngine.selection();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final doses = context.select<AppState, List<DoseItem>>((s) => s.getDoses());
-    final streak = context.select<AppState, int>((s) => s.getStreak());
-    final takenToday =
-        context.select<AppState, Map<String, bool>>((s) => s.takenToday);
-    final meds = context.select<AppState, List<Medicine>>((s) => s.meds);
+  void _setDate(DateTime date) {
+    if (date.year == _selectedDate.year &&
+        date.month == _selectedDate.month &&
+        date.day == _selectedDate.day) return;
+    HapticEngine.selection();
+    setState(() => _selectedDate = date);
+  }
 
-    final takenCount = doses.where((d) => takenToday[d.key] == true).length;
-    final remaining = doses.length - takenCount;
-    final dosePct = doses.isNotEmpty ? takenCount / doses.length : 0.0;
-
-    final L = context.L;
-
-    final mainContent = Scaffold(
-      backgroundColor: L.meshBg, // Neumorphic: meshBg texture foundation
-      body: Stack(
-        children: [
-          RefreshIndicator(
+  Widget _buildMainDashboard(
+    BuildContext context,
+    AppThemeColors L,
+    List<DoseItem> doses,
+    int streak,
+    Map<String, bool> takenToday,
+    List<Medicine> meds,
+    int takenCount,
+    int remaining,
+    double dosePct,
+  ) {
+    return Stack(
+      children: [
+        // ── SOLID FALLBACK BASE ──
+        Container(color: L.meshBg),
+        const Positioned.fill(child: AmbientMeshBackground()),
+        // ── Industrial Grid Overlay ──
+        Positioned.fill(
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: 0.03,
+              child: CustomPaint(
+                painter: _IndustrialGridPainter(),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: RefreshIndicator(
             onRefresh: () async {
               HapticEngine.selection();
               await context.read<AppState>().loadFromStorage();
             },
             displacement: 110,
-            color: L.text,
-            backgroundColor: Colors.white,
+            color: L.bg,
+            backgroundColor: L.text,
+            strokeWidth: 2.5,
             child: Scrollbar(
               controller: _scrollController,
               child: CustomScrollView(
@@ -114,12 +136,25 @@ class _HomeTabState extends State<HomeTab> {
                             curve: Curves.easeOutCubic),
                   ),
 
+                  // --- DAY TOGGLE (Today | Yesterday) ---
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    sliver: SliverToBoxAdapter(
+                      child: _DayToggle(
+                        selectedDate: _selectedDate,
+                        onChanged: _setDate,
+                      ),
+                    ),
+                  ),
+
                   // --- WEEK STRIP ---
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
                     sliver: SliverToBoxAdapter(
                       child: HomeWeekStrip(
                         state: context.read<AppState>(),
+                        selectedDate: _selectedDate,
+                        onDateSelected: _setDate,
                       ).animate().fadeIn(duration: 600.ms).slideY(
                           begin: 0.05, end: 0, curve: Curves.easeOutCubic),
                     ),
@@ -127,7 +162,7 @@ class _HomeTabState extends State<HomeTab> {
 
                   // --- FAST TRACKING BENTO (3 stat cards) ---
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
                     sliver: SliverToBoxAdapter(
                       child: _FastTrackingBento(
                         doses: doses,
@@ -137,15 +172,15 @@ class _HomeTabState extends State<HomeTab> {
                         streak: streak,
                       )
                           .animate()
-                          .fadeIn(duration: 700.ms, delay: 100.ms)
+                          .fadeIn(duration: 800.ms, delay: 100.ms)
                           .slideY(
-                              begin: 0.04, end: 0, curve: Curves.easeOutExpo),
+                              begin: 0.08, end: 0, curve: Curves.easeOutExpo),
                     ),
                   ),
 
                   // --- ADHERENCE SCORE CARD ---
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
                     sliver: SliverToBoxAdapter(
                       child: _AdherenceScoreCard(
                         dosePct: dosePct,
@@ -153,16 +188,16 @@ class _HomeTabState extends State<HomeTab> {
                         takenCount: takenCount,
                       )
                           .animate()
-                          .fadeIn(duration: 600.ms, delay: 150.ms)
+                          .fadeIn(duration: 800.ms, delay: 200.ms)
                           .slideY(
-                              begin: 0.04, end: 0, curve: Curves.easeOutExpo),
+                              begin: 0.08, end: 0, curve: Curves.easeOutExpo),
                     ),
                   ),
 
                   // --- NEXT DOSE CAROUSEL ---
                   if (doses.isNotEmpty)
                     SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       sliver: SliverToBoxAdapter(
                         child: _NextDoseCarousel(
                           doses: doses,
@@ -174,9 +209,9 @@ class _HomeTabState extends State<HomeTab> {
                           }),
                         )
                             .animate()
-                            .fadeIn(duration: 700.ms, delay: 200.ms)
+                            .fadeIn(duration: 800.ms, delay: 300.ms)
                             .slideY(
-                                begin: 0.04, end: 0, curve: Curves.easeOutExpo),
+                                begin: 0.08, end: 0, curve: Curves.easeOutExpo),
                       ),
                     ),
 
@@ -231,45 +266,63 @@ class _HomeTabState extends State<HomeTab> {
               ),
             ),
           ),
+        ),
 
-          // --- FIXED HEADER ---
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: HomeHeader(
-              state: context.read<AppState>(),
-              streak: streak,
-              scrollOffset: _scrollOffset,
-              onTap: _scrollToTop,
-              onOpenStreak: () => setState(() => _showStreak = true),
-              onOpenSettings: () => setState(() => _showSettings = true),
-            ),
+        // --- FIXED HEADER ---
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: HomeHeader(
+            state: context.read<AppState>(),
+            streak: streak,
+            scrollOffset: _scrollOffset,
+            onTap: _scrollToTop,
+            onOpenStreak: () => setState(() => _showStreak = true),
+            onOpenSettings: () => setState(() => _showSettings = true),
           ),
+        ),
 
-          _buildOverlay(
-              _showStreak,
-              'streak',
-              StreakModal(
-                streak: streak,
-                history: context.select<AppState, Map<String, List<DoseEntry>>>(
-                    (s) => s.history),
-                streakData:
-                    context.select<AppState, StreakData>((s) => s.streakData),
-                onClose: () => setState(() => _showStreak = false),
-                onFreeze: () => context.read<AppState>().useStreakFreeze(),
-              )),
-          _buildOverlay(
-              _showSettings,
-              'settings',
-              SettingsModal(
-                onClose: () => setState(() => _showSettings = false),
-              )),
-          
-          const VoiceAssistantOverlay(),
-        ],
-      ),
+        _buildOverlay(
+            _showStreak,
+            'streak',
+            StreakModal(
+              streak: streak,
+              history: context.select<AppState, Map<String, List<DoseEntry>>>(
+                  (s) => s.history),
+              streakData:
+                  context.select<AppState, StreakData>((s) => s.streakData),
+              onClose: () => setState(() => _showStreak = false),
+              onFreeze: () => context.read<AppState>().useStreakFreeze(),
+            )),
+        _buildOverlay(
+            _showSettings,
+            'settings',
+            SettingsModal(
+              onClose: () => setState(() => _showSettings = false),
+            )),
+
+        const VoiceAssistantOverlay(),
+      ],
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final doses = context.select<AppState, List<DoseItem>>((s) => s.getDoses(date: _selectedDate));
+    final streak = context.select<AppState, int>((s) => s.getStreak());
+    final takenToday =
+        context.select<AppState, Map<String, bool>>((s) => s.takenToday);
+    final meds = context.select<AppState, List<Medicine>>((s) => s.meds);
+
+    final takenCount = doses.where((d) => takenToday[d.key] == true).length;
+    final remaining = doses.length - takenCount;
+    final dosePct = doses.isNotEmpty ? takenCount / doses.length : 0.0;
+
+    final L = context.L;
+
+    final mainContent = _buildMainDashboard(
+        context, L, doses, streak, takenToday, meds, takenCount, remaining, dosePct);
 
     return AnimatedSwitcher(
       duration: 400.ms,
@@ -332,163 +385,128 @@ class _FastTrackingBento extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final noDoses = doses.isEmpty;
-    final skipped = noDoses ? 0 : doses.length - takenCount;
-    final streakEmoji = streak > 10 ? '🔥' : (streak > 0 ? '✨' : '❄️');
 
     return Row(
       children: [
         Expanded(
-            child: _TrackCard(
-          emoji: '💊',
-          topValue: noDoses ? '--' : '$takenCount',
-          topUnit: 'taken',
-          label: 'Doses\ntaken',
-          ringPct: dosePct,
-          ringColor: const Color(0xFF8B5CF6),
-          ringTrack: const Color(0xFFEDE9FE),
-        )),
-        const SizedBox(width: 10),
+          child: _TrackCard(
+            value: noDoses ? '0' : '$takenCount',
+            label: 'Doses today',
+            icon: Icons.check_rounded,
+            pct: dosePct,
+            color: const Color(0xFFC084FC), // Purple
+          ),
+        ),
+        const SizedBox(width: 8),
         Expanded(
-            child: _TrackCard(
-          emoji: '⏱️',
-          topValue: noDoses ? '--' : '$skipped',
-          topUnit: 'left',
-          label: 'Doses\nleft',
-          ringPct: noDoses ? 0 : (skipped / doses.length).clamp(0, 1),
-          ringColor: const Color(0xFFEC4899),
-          ringTrack: const Color(0xFFFCE7F3),
-        )),
-        const SizedBox(width: 10),
+          child: _TrackCard(
+            value: noDoses ? '0' : '$remaining',
+            label: 'Doses left',
+            icon: Icons.timer_outlined,
+            pct: noDoses ? 0 : (remaining / doses.length),
+            color: const Color(0xFFFB7185), // Pink
+          ),
+        ),
+        const SizedBox(width: 8),
         Expanded(
-            child: _TrackCard(
-          emoji: streakEmoji,
-          topValue: '$streak',
-          topUnit: 'd',
-          label: 'Day\nstreak',
-          ringPct: (streak / 30).clamp(0, 1),
-          ringColor: const Color(0xFFF59E0B),
-          ringTrack: const Color(0xFFFEF3C7),
-        )),
+          child: _TrackCard(
+            value: '$streak',
+            label: 'Day streak',
+            icon: Icons.local_fire_department_rounded,
+            pct: (streak / 30).clamp(0, 1),
+            color: const Color(0xFFFBBF24), // Orange
+          ),
+        ),
       ],
     );
   }
 }
 
 class _TrackCard extends StatelessWidget {
-  final String emoji;
-  final String topValue;
-  final String topUnit;
+  final String value;
   final String label;
-  final double ringPct;
-  final Color ringColor;
-  final Color ringTrack;
+  final IconData icon;
+  final double pct;
+  final Color color;
 
   const _TrackCard({
-    required this.emoji,
-    required this.topValue,
-    required this.topUnit,
+    required this.value,
     required this.label,
-    required this.ringPct,
-    required this.ringColor,
-    required this.ringTrack,
+    required this.icon,
+    required this.pct,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final L = context.L;
-    return BouncingButton(
-      onTap: () {
-        HapticEngine.selection();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-        decoration: BoxDecoration(
-          color: L.card,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: L.border.withValues(alpha: 0.15), width: 1.5),
-          boxShadow: AppShadows.glow(ringColor, intensity: 0.12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-          // ── Animated emoji ──
-          Text(emoji, style: const TextStyle(fontSize: 22))
-              .animate(onPlay: (c) => c.repeat(reverse: true))
-              .scale(
-                begin: const Offset(1.0, 1.0),
-                end: const Offset(1.2, 1.2),
-                duration: 1800.ms,
-                curve: Curves.easeInOut,
-              ),
-          const SizedBox(height: 8),
-          // ── Value + unit ──
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
+      decoration: BoxDecoration(
+        color: L.card,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: L.text.withValues(alpha: 0.03), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Flexible(
-                child: Text(topValue,
-                    style: AppTypography.displaySmall.copyWith(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: L.text,
-                      letterSpacing: -0.5,
-                    )),
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(topUnit,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.labelSmall.copyWith(
-                      fontSize: 10,
-                      color: L.sub.withValues(alpha: 0.45),
-                      fontWeight: FontWeight.w600,
-                    )),
-              ),
+              Text(value, 
+                style: AppTypography.titleLarge.copyWith(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 20,
+                  color: L.text,
+                )),
+              const SizedBox(width: 2),
+              Text(label.split(' ').last, 
+                style: AppTypography.labelSmall.copyWith(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                  color: L.sub.withValues(alpha: 0.4),
+                )),
             ],
           ),
           const SizedBox(height: 2),
-          Text(label,
-              style: AppTypography.labelSmall.copyWith(
-                fontSize: 10.5,
-                color: L.sub.withValues(alpha: 0.45),
-                fontWeight: FontWeight.w500,
-                height: 1.3,
-              )),
-          const SizedBox(height: 12),
-          // ── Ring chart with % inside ──
+          Text(label.split(' ').first, 
+            style: AppTypography.labelSmall.copyWith(
+              fontSize: 9, 
+              fontWeight: FontWeight.w800,
+              color: L.sub.withValues(alpha: 0.4),
+            )),
+          const SizedBox(height: 16),
           Center(
             child: SizedBox(
-              width: 52,
-              height: 52,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: ringPct),
-                duration: const Duration(milliseconds: 1200),
-                curve: Curves.easeOutExpo,
-                builder: (ctx, val, _) => CustomPaint(
-                  painter: _MiniRingPainter(
-                    pct: val,
-                    color: ringColor,
-                    track: ringTrack,
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${(ringPct * 100).round()}%',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: ringColor,
-                      ),
+              width: 54,
+              height: 54,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: CircularProgressIndicator(
+                      value: 1,
+                      strokeWidth: 5,
+                      color: color.withValues(alpha: 0.1),
                     ),
                   ),
-                ),
+                  Positioned.fill(
+                    child: CircularProgressIndicator(
+                      value: pct,
+                      strokeWidth: 5,
+                      color: color,
+                      strokeCap: StrokeCap.round,
+                    ),
+                  ),
+                  Icon(icon, size: 20, color: L.text.withValues(alpha: 0.8)),
+                ],
               ),
             ),
           ),
         ],
       ),
-    ));
+    );
   }
 }
 
@@ -548,137 +566,71 @@ class _AdherenceScoreCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final L = context.L;
     final score = doses.isEmpty ? 0 : (dosePct * 10).round();
-    final noDoses = doses.isEmpty;
-    final moodEmoji = noDoses
-        ? '💊'
-        : dosePct == 1.0
-            ? '🎯'
-            : dosePct >= 0.8
-                ? '⭐️'
-                : dosePct >= 0.5
-                    ? '🌤️'
-                    : '🚨';
 
-    final msg = noDoses
-        ? 'Add your medications to start tracking adherence and get AI insights.'
-        : dosePct == 1.0
-            ? "\uD83C\uDF89 Perfect score! All doses taken today. Incredible consistency!"
-            : dosePct >= 0.8
-                ? "Great job \u2014 you're nearly perfect. Don't miss your remaining doses."
-                : dosePct >= 0.5
-                    ? "You're making progress. Take your remaining doses for full adherence."
-                    : "Your adherence is low today. Focus on your scheduled doses to improve.";
-
-    return BouncingButton(
-      onTap: () => HapticEngine.selection(),
-      child: Container(
-        padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(
-          color: L.card,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: L.border.withValues(alpha: 0.15), width: 1.5),
-          boxShadow: AppShadows.glow(L.success, intensity: dosePct > 0.8 ? 0.1 : 0.05),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: L.card,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: L.text.withValues(alpha: 0.04), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Text(moodEmoji, style: const TextStyle(fontSize: 22))
-                      .animate(onPlay: (c) => c.repeat(reverse: true))
-                      .scale(
-                        begin: const Offset(1.0, 1.0),
-                        end: const Offset(1.2, 1.2),
-                        duration: 2000.ms,
-                        curve: Curves.easeInOut,
-                      ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text('Adherence Score',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.labelMedium.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: L.text,
-                          fontSize: 15,
-                          letterSpacing: -0.2,
-                        )),
-                  ),
-                ],
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: L.text.withValues(alpha: 0.07),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text('$score/10',
-                    style: AppTypography.labelLarge.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: L.text,
-                      fontSize: 13,
-                    )),
-              ),
+              Text('Health Score',
+                  style: AppTypography.titleMedium.copyWith(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                    color: L.text,
+                  )),
+              Text('$score/10',
+                  style: AppTypography.titleMedium.copyWith(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                    color: L.text,
+                  )),
             ],
           ),
-          const SizedBox(height: 14),
-          // Gradient progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(100),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: dosePct),
-              duration: const Duration(milliseconds: 1000),
-              curve: Curves.easeOutExpo,
-              builder: (ctx, val, _) {
-                return Stack(
-                  children: [
-                    Container(
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: L.fill.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                    ),
-                    FractionallySizedBox(
-                      widthFactor: noDoses ? 0 : val,
-                      child: Container(
-                        height: 8,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: dosePct >= 0.8
-                                ? [
-                                    const Color(0xFFD4F544),
-                                    const Color(0xFFE8F000)
-                                  ]
-                                : dosePct >= 0.5
-                                    ? [Colors.orange.shade300, Colors.orange]
-                                    : [Colors.red.shade300, Colors.red],
-                          ),
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
+          const SizedBox(height: 12),
+          // Horizontal progress bar
+          Container(
+            height: 6,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: L.text.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: dosePct.clamp(0.01, 1.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFACC15), // Yellow matching Health Score look
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          Text(msg,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.bodySmall.copyWith(
-                color: L.sub.withValues(alpha: 0.65),
-                fontSize: 12.5,
-                height: 1.5,
-              )),
+          const SizedBox(height: 16),
+          Text(
+            doses.isEmpty 
+               ? "No data logged yet. Add medications to start tracking your health consistency score."
+               : dosePct == 1.0
+                  ? "Your medical adherence is flawless. Maintaining this consistency ensures optimal treatment outcomes."
+                  : "You've missed some doses today. Keep focusing on timely medication for effective results.",
+            style: AppTypography.bodySmall.copyWith(
+              color: L.sub.withValues(alpha: 0.5),
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
         ],
       ),
-    ));
+    );
   }
 }
 
@@ -700,143 +652,104 @@ class _NextDoseCarousel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Find upcoming (untaken) doses, fall back to all
+    final L = context.L;
     final upcoming = doses.where((d) => takenToday[d.key] != true).toList();
-    final toShow =
-        upcoming.isEmpty ? doses.take(3).toList() : upcoming.take(3).toList();
+    final toShow = upcoming.isEmpty ? doses.take(3).toList() : upcoming.take(3).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Recently scheduled',
-                  style: AppTypography.labelMedium.copyWith(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                    color: context.L.text,
-                    letterSpacing: -0.2,
-                  )),
-              if (upcoming.isEmpty)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          child: Text('Coming Up Next',
+              style: AppTypography.titleMedium.copyWith(
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+                color: L.text,
+              )),
+        ),
+        SizedBox(
+          height: 100,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: toShow.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final d = toShow[index];
+              final isTaken = takenToday[d.key] == true;
+              final timeStr = '${d.sched.h.toString().padLeft(2, '0')}:${d.sched.m.toString().padLeft(2, '0')}';
+              
+              return BouncingButton(
+                onTap: () => onView(d.med),
+                child: Container(
+                  width: 240,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: context.L.greenLight,
-                    borderRadius: BorderRadius.circular(100),
+                    color: L.card,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: L.text.withValues(alpha: 0.04), width: 1),
                   ),
-                  child: Text('All done ✓',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: context.L.green,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
-                      )),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: L.text,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Center(
+                          child: Text('💊', style: TextStyle(fontSize: 22)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(d.med.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.titleMedium.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  color: L.text,
+                                  fontSize: 14,
+                                )),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text(timeStr,
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: L.sub.withValues(alpha: 0.4),
+                                      fontWeight: FontWeight.w800,
+                                    )),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: L.text.withValues(alpha: 0.05),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text('UNTAKEN', 
+                                    style: AppTypography.labelSmall.copyWith(
+                                      fontSize: 7,
+                                      fontWeight: FontWeight.w900,
+                                      color: L.sub.withValues(alpha: 0.3),
+                                    )),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-            ],
+              );
+            },
           ),
         ),
-        ...toShow.map((d) {
-          final isTaken = takenToday[d.key] == true;
-          final timeStr =
-              '${d.sched.h.toString().padLeft(2, '0')}:${d.sched.m.toString().padLeft(2, '0')}';
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: BouncingButton(
-              onTap: () => onView(d.med),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: context.L.card,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: context.L.shadowSoft,
-                  border: Border.all(
-                      color: context.L.border.withValues(alpha: 0.5)),
-                ),
-                child: Row(
-                  children: [
-                    // Icon
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: isTaken ? context.L.greenLight : context.L.fill,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          isTaken
-                              ? Icons.check_rounded
-                              : Icons.medication_rounded,
-                          color: isTaken ? context.L.green : context.L.sub,
-                          size: 22,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    // Details
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(d.med.name,
-                              style: AppTypography.labelMedium.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: context.L.text,
-                                fontSize: 14,
-                              )),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(Icons.medication_liquid_outlined,
-                                  size: 12, color: context.L.sub),
-                              const SizedBox(width: 4),
-                              Text(d.med.dose,
-                                  style: AppTypography.labelSmall.copyWith(
-                                    fontSize: 11,
-                                    color: context.L.sub,
-                                    fontWeight: FontWeight.w500,
-                                  )),
-                              const SizedBox(width: 10),
-                              Icon(Icons.schedule_outlined,
-                                  size: 12, color: context.L.sub),
-                              const SizedBox(width: 4),
-                              Text(timeStr,
-                                  style: AppTypography.labelSmall.copyWith(
-                                    fontSize: 11,
-                                    color: context.L.sub,
-                                    fontWeight: FontWeight.w500,
-                                  )),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Time badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: isTaken ? context.L.greenLight : context.L.text,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Text(
-                        isTaken ? 'Taken' : timeStr,
-                        style: AppTypography.labelSmall.copyWith(
-                          fontSize: 11,
-                          color: isTaken ? context.L.green : context.L.bg,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }),
       ],
     );
   }
@@ -1073,6 +986,133 @@ class _HomeDoseGroupState extends State<HomeDoseGroup> {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 110),
+      ),
+    );
+  }
+}
+
+class _IndustrialGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 0.5;
+
+    const spacing = 40.0;
+    for (double i = 0; i < size.width; i += spacing) {
+      canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
+    }
+    for (double i = 0; i < size.height; i += spacing) {
+      canvas.drawLine(Offset(0, i), Offset(size.width, i), paint);
+    }
+
+    // Draw some dots at intersections
+    final dotPaint = Paint()..color = Colors.black;
+    for (double i = 0; i < size.width; i += spacing * 2) {
+      for (double j = 0; j < size.height; j += spacing * 2) {
+        canvas.drawCircle(Offset(i, j), 1.0, dotPaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ─────────────────────────────────────────────────────────────
+// DAY TOGGLE — Cal AI style segment control
+// ─────────────────────────────────────────────────────────────
+class _DayToggle extends StatelessWidget {
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onChanged;
+
+  const _DayToggle({required this.selectedDate, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    
+    final isToday = selectedDate.year == today.year &&
+        selectedDate.month == today.month &&
+        selectedDate.day == today.day;
+    final isYesterday = selectedDate.year == yesterday.year &&
+        selectedDate.month == yesterday.month &&
+        selectedDate.day == yesterday.day;
+
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: L.text.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _ToggleItem(
+              label: 'Today',
+              selected: isToday,
+              onTap: () => onChanged(today),
+            ),
+          ),
+          Expanded(
+            child: _ToggleItem(
+              label: 'Yesterday',
+              selected: isYesterday,
+              onTap: () => onChanged(yesterday),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ToggleItem extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ToggleItem({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          color: selected ? L.bg : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: selected ? [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ] : null,
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: AppTypography.labelMedium.copyWith(
+              color: selected ? L.text : L.sub.withValues(alpha: 0.5),
+              fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+              fontSize: 14,
+              letterSpacing: -0.4,
+            ),
+          ),
+        ),
       ),
     );
   }

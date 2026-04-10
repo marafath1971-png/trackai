@@ -24,6 +24,9 @@ import '../../core/utils/result.dart';
 import '../../widgets/shared/shared_widgets.dart';
 import '../medicine/widgets/body_impact_card.dart';
 import '../medicine/widgets/inline_ai_coach.dart';
+import '../../core/utils/logger.dart';
+import '../../core/error/failures.dart';
+import 'package:permission_handler/permission_handler.dart';
 class ScanTab extends StatefulWidget {
   final void Function(Medicine)? onSave;
   final VoidCallback? onClose;
@@ -88,11 +91,19 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
 
   Future<void> _initCamera() async {
     try {
+      // 1. Explicit Permission Check for better DX
+      final status = await Permission.camera.request();
+      if (!status.isGranted) {
+        if (mounted) setState(() => _cameraError = true);
+        return;
+      }
+
       _cameras = await availableCameras();
       if (_cameras != null && _cameras!.isNotEmpty) {
         _controller = CameraController(
           _cameras![0],
-          ResolutionPreset.high,
+          // Downgraded to medium for better stability across emulators/legacy devices
+          ResolutionPreset.medium,
           enableAudio: false,
           imageFormatGroup: ImageFormatGroup.jpeg,
         );
@@ -228,11 +239,23 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     final fileToScan = compressedFile ?? file;
 
     // Parallelize AI scan and Image upload for better UX
-    final results = await Future.wait([
-      GeminiService.scanMedicine(fileToScan,
-          country: state.profile?.country ?? ''),
-      state.uploadImage(fileToScan),
-    ]);
+    // Wrapped in a catch-all to prevent app crashes on network-failure components
+    List<dynamic> results;
+    try {
+      results = await Future.wait([
+        GeminiService.scanMedicine(fileToScan,
+            country: state.profile?.country ?? ''),
+        state.uploadImage(fileToScan),
+      ]).timeout(const Duration(seconds: 40));
+    } catch (e) {
+      appLogger.e('[ScanTab] Processing pipeline failure', error: e);
+      // Fallback to empty results to trigger Manual Entry mode
+      results = [
+        Error<ScanResult>(ScanFailure(
+            'Pipeline failed. Falling back to manual entry. Cause: $e')),
+        null
+      ];
+    }
 
     final response = results[0] as Result<ScanResult>;
     final cloudUrl = results[1] as String?;
@@ -413,7 +436,9 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
       body: Stack(
         children: [
           // 1. Full-screen Camera Preview
-          if (_isCameraInitialized && _controller != null)
+          if (_isCameraInitialized &&
+              _controller != null &&
+              _controller!.value.previewSize != null)
             SizedBox.expand(
               child: FittedBox(
                 fit: BoxFit.cover,

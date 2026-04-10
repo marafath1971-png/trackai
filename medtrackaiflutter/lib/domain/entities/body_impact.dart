@@ -27,20 +27,27 @@ class BodyImpactSummary {
         'ahaFacts': ahaFacts,
       };
 
-  factory BodyImpactSummary.fromJson(Map<String, dynamic> json) =>
-      BodyImpactSummary(
-        mechanismOfAction: json['mechanismOfAction'] ?? 'Unknown mechanism.',
-        onsetMinutes: (json['onsetMinutes'] as num?)?.toInt() ?? 0,
-        peakHours: (json['peakHours'] as num?)?.toDouble() ?? 0.0,
-        durationHours: (json['durationHours'] as num?)?.toDouble() ?? 0.0,
-        bodySystems: List<String>.from(json['bodySystems'] ?? []),
-        timelineEffects: List<Map<String, dynamic>>.from(
-          (json['timelineEffects'] as List?)?.map(
-                  (e) => e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{}) ??
-              [],
-        ),
-        ahaFacts: List<String>.from(json['ahaFacts'] ?? []),
-      );
+  factory BodyImpactSummary.fromJson(Map<String, dynamic> json) {
+    num _parseNum(dynamic v) {
+      if (v == null) return 0;
+      if (v is num) return v;
+      return num.tryParse(v.toString()) ?? 0;
+    }
+
+    return BodyImpactSummary(
+      mechanismOfAction: json['mechanismOfAction'] ?? 'Unknown mechanism.',
+      onsetMinutes: _parseNum(json['onsetMinutes']).toInt(),
+      peakHours: _parseNum(json['peakHours']).toDouble(),
+      durationHours: _parseNum(json['durationHours']).toDouble(),
+      bodySystems: List<String>.from(json['bodySystems'] ?? []),
+      timelineEffects: List<Map<String, dynamic>>.from(
+        (json['timelineEffects'] as List?)?.map((e) =>
+                e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{}) ??
+            [],
+      ),
+      ahaFacts: List<String>.from(json['ahaFacts'] ?? []),
+    );
+  }
 
   factory BodyImpactSummary.empty() => const BodyImpactSummary(
         mechanismOfAction: '',

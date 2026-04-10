@@ -200,8 +200,10 @@ class _AuthScreenState extends State<AuthScreen> {
                   const SizedBox(height: 36),
 
                   // ── Apple Sign In (App Store Requirement to be above others) ──
-                  _AppleBtn(onTap: _appleSignIn, loading: _loadingApple),
-                  const SizedBox(height: 12),
+                  if (Theme.of(context).platform == TargetPlatform.iOS) ...[
+                    _AppleBtn(onTap: _appleSignIn, loading: _loadingApple),
+                    const SizedBox(height: 12),
+                  ],
                   // ── Google Sign In ─────────────────────────────────────
                   _GoogleBtn(onTap: _googleSignIn, loading: _loading),
 
@@ -270,6 +272,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   if (_error != null) ...[
                     const SizedBox(height: 12),
                     Container(
+                      width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
@@ -278,7 +281,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         Icon(Icons.error_outline_rounded,
                             color: L.red, size: 16),
                         const SizedBox(width: 8),
-                        Expanded(
+                        Flexible(
                             child: Text(_error!,
                                 style: AppTypography.bodySmall
                                     .copyWith(fontSize: 13, color: L.red))),

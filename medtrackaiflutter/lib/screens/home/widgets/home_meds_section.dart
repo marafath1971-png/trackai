@@ -11,33 +11,50 @@ class HomeMedsHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final L = context.L;
     return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      Text('ACTIVE_PRESCRIPTIONS',
-          style: AppTypography.labelSmall.copyWith(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              color: L.sub,
-              letterSpacing: 2.0)),
+      Row(
+        children: [
+          Container(
+            width: 4,
+            height: 12,
+            decoration: BoxDecoration(
+              color: L.text,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text('ACTIVE_PRESCRIPTIONS',
+              style: AppTypography.labelSmall.copyWith(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  color: L.text.withValues(alpha: 0.8),
+                  letterSpacing: 2.5)),
+        ],
+      ),
       BouncingButton(
         onTap: onAdd,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: ShapeDecoration(
-            color: L.text.withValues(alpha: 0.05),
-            shape: ContinuousRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: L.border.withValues(alpha: 0.2)),
-            ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: L.text,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: L.text.withValues(alpha: 0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.add_rounded, color: L.text, size: 14),
-              const SizedBox(width: 4),
-              Text('ADD',
+              Icon(Icons.add_rounded, color: L.card, size: 14),
+              const SizedBox(width: 6),
+              Text('ADD_NEW',
                   style: AppTypography.labelLarge.copyWith(
                       fontWeight: FontWeight.w900,
                       fontSize: 10,
-                      color: L.text,
+                      color: L.card,
                       letterSpacing: 1.0)),
             ],
           ),
@@ -54,10 +71,10 @@ class HomeMedsEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PremiumEmptyState(
-      title: 'No medications yet',
-      subtitle: 'Scan a label or add manually to start tracking your adherence',
-      icon: Icons.medication_liquid_rounded,
-      actionLabel: 'SCAN MEDICINE',
+      title: 'PRECISION_LOG_EMPTY',
+      subtitle: 'Scan clinical labels or manually enter medications to begin precision tracking.',
+      icon: Icons.medication_rounded,
+      actionLabel: 'SCAN_NEW_MEDICINE',
       onAction: onAdd,
     );
   }

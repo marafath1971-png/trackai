@@ -101,7 +101,20 @@ class GeminiService {
 
         try {
           appLogger.d('[GeminiService] Trying $modelName via Cloud Proxy...');
+
+          // Validate image file exists and is readable
+          if (!await imageFile.exists()) {
+            throw const FileSystemException(
+                'Image file not found or inaccessible');
+          }
+
           final bytes = await imageFile.readAsBytes();
+
+          // Validate we got actual image data
+          if (bytes.isEmpty) {
+            throw const FileSystemException('Image file is empty or corrupted');
+          }
+
           final base64Image = base64Encode(bytes);
 
           final result = await FirebaseFunctions.instance
@@ -144,7 +157,16 @@ class GeminiService {
               final model =
                   _getModel(modelName, apiVersion: config['version']!);
               final prompt = _buildScanPrompt(hint, country: country);
+
+              // Validate image exists for fallback too
+              if (!await imageFile.exists()) {
+                throw const FileSystemException('Image file not found');
+              }
               final bytes = await imageFile.readAsBytes();
+              if (bytes.isEmpty) {
+                throw const FileSystemException('Image file is empty');
+              }
+
               final response = await _withRetry(() => model.generateContent([
                     Content.multi([
                       TextPart(prompt),
@@ -433,11 +455,11 @@ Notes:
   }
 
   static String _buildInsightPrompt(
-      List<Medicine> meds,
-      int streak,
-      double adherence,
-      List<Map<String, dynamic>> latencyData,
-      List<Symptom> symptoms, {
+    List<Medicine> meds,
+    int streak,
+    double adherence,
+    List<Map<String, dynamic>> latencyData,
+    List<Symptom> symptoms, {
     double? heartRate,
     double? steps,
     List<Map<String, dynamic>> correlations = const [],
@@ -601,8 +623,9 @@ Use emojis ✨.
   }) async {
     final medList = meds.map((m) => '- [ID: ${m.id}] ${m.name}').join('\n');
     final now = DateTime.now();
-    final timeContext = 'Current Time: ${now.hour}:${now.minute.toString().padLeft(2, "0")} on day ${now.weekday % 7} (0=Sun, 6=Sat)';
-    
+    final timeContext =
+        'Current Time: ${now.hour}:${now.minute.toString().padLeft(2, "0")} on day ${now.weekday % 7} (0=Sun, 6=Sat)';
+
     final prompt = '''
 You are MedAI Pro, a clinical voice assistant. 
 User Transcript: "$transcript"
@@ -753,7 +776,9 @@ Return ONLY valid JSON:
     }
     if (s.contains('socket') ||
         s.contains('timeout') ||
-        s.contains('network')) {
+        s.contains('network') ||
+        s.contains('unable to resolve host') ||
+        s.contains('host lookup')) {
       return "Connection issues? Check your internet and let's try identifying that medicine again. 🌐";
     }
     if (s.contains('safety') || s.contains('finish_reason_safety')) {

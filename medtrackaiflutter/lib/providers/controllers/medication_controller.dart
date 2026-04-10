@@ -262,21 +262,26 @@ class MedicationController extends ChangeNotifier {
 
   // ── Dose Operations ────────────────────────────────────────────────
 
-  List<DoseItem> getDoses() {
-    if (!isDosesDirty && _cachedDoses != null) return _cachedDoses!;
-    final today = DateTime.now().weekday % 7;
+  List<DoseItem> getDoses({DateTime? date}) {
+    final targetDate = date ?? DateTime.now();
+    if (!isDosesDirty && _cachedDoses != null && date == null) return _cachedDoses!;
+    
+    final dayOfWeek = targetDate.weekday % 7;
     final items = <DoseItem>[];
     for (final med in _meds) {
       for (final s in med.schedule) {
-        if (s.enabled && s.days.contains(today)) {
+        if (s.enabled && s.days.contains(dayOfWeek)) {
           items.add(DoseItem(med: med, sched: s, key: '${med.id}-${s.label}'));
         }
       }
     }
     items.sort(
         (a, b) => (a.sched.h * 60 + a.sched.m) - (b.sched.h * 60 + b.sched.m));
-    _cachedDoses = items;
-    isDosesDirty = false;
+    
+    if (date == null) {
+      _cachedDoses = items;
+      isDosesDirty = false;
+    }
     return items;
   }
 

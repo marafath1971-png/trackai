@@ -127,7 +127,13 @@ class ScanResult {
           : null,
       courseType: j['courseType'] ?? 'ongoing',
       scheduleSlots: (j['scheduleSlots'] as List?)?.map((e) {
-            if (e is Map) return Map<String, dynamic>.from(e);
+            if (e is Map) {
+              final m = Map<String, dynamic>.from(e);
+              // Ensure h and m are integers even if AI returns them as strings
+              m['h'] = self._parseInt(m['h'], 8);
+              m['m'] = self._parseInt(m['m'], 0);
+              return m;
+            }
             return <String, dynamic>{};
           }).toList() ??
           [],
@@ -140,8 +146,8 @@ class ScanResult {
       halalStatus: j['halalStatus'] ?? 'unknown',
       halalNote: j['halalNote'] ?? '',
       ahaMoment: j['ahaMoment'],
-      bodyImpact: j['bodyImpact'] != null 
-          ? BodyImpactSummary.fromJson(j['bodyImpact']) 
+      bodyImpact: j['bodyImpact'] != null
+          ? BodyImpactSummary.fromJson(j['bodyImpact'])
           : null,
     );
   }

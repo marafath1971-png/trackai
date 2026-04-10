@@ -24,6 +24,10 @@ import '../../core/utils/result.dart';
 import '../../widgets/shared/shared_widgets.dart';
 import '../medicine/widgets/body_impact_card.dart';
 import '../medicine/widgets/inline_ai_coach.dart';
+import '../../core/utils/logger.dart';
+import '../../core/error/failures.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 class ScanTab extends StatefulWidget {
   final void Function(Medicine)? onSave;
   final VoidCallback? onClose;
@@ -88,18 +92,26 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
 
   Future<void> _initCamera() async {
     try {
-      _cameras = await availableCameras();
+      // 1. Explicit Permission Check for better DX
+      final status = await Permission.camera.request().timeout(const Duration(seconds: 5));
+      if (!status.isGranted) {
+        if (mounted) setState(() => _cameraError = true);
+        return;
+      }
+
+      _cameras = await availableCameras().timeout(const Duration(seconds: 5));
       if (_cameras != null && _cameras!.isNotEmpty) {
         _controller = CameraController(
           _cameras![0],
-          ResolutionPreset.high,
+          // Downgraded to medium for better stability across emulators/legacy devices
+          ResolutionPreset.medium,
           enableAudio: false,
           imageFormatGroup: ImageFormatGroup.jpeg,
         );
 
-        await _controller!.initialize();
+        await _controller!.initialize().timeout(const Duration(seconds: 10));
         if (_flashSupported) {
-          await _controller!.setFlashMode(_flashMode);
+          await _controller!.setFlashMode(_flashMode).timeout(const Duration(seconds: 2));
         }
 
         if (mounted) {
@@ -227,12 +239,41 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
     final compressedFile = await _compressImage(file);
     final fileToScan = compressedFile ?? file;
 
+    // Validate file exists before processing
+    if (!await fileToScan.exists()) {
+      setState(() {
+        _isScanning = false;
+        _cameraError = true;
+      });
+      _showErrorDialog(
+          'Unable to access the captured image. Please try again.');
+      return;
+    }
+
     // Parallelize AI scan and Image upload for better UX
-    final results = await Future.wait([
-      GeminiService.scanMedicine(fileToScan,
-          country: state.profile?.country ?? ''),
-      state.uploadImage(fileToScan),
-    ]);
+    // Wrapped in a catch-all to prevent app crashes on network-failure components
+    List<dynamic> results;
+    try {
+      results = await Future.wait([
+        GeminiService.scanMedicine(fileToScan,
+            country: state.profile?.country ?? ''),
+        state.uploadImage(fileToScan),
+      ]).timeout(const Duration(seconds: 40));
+    } catch (e) {
+      appLogger.e('[ScanTab] Processing pipeline failure', error: e);
+
+      // Check for file system errors and provide specific messaging
+      String errorMessage = 'Pipeline failed. Please try again.';
+      if (e.toString().contains('FileSystemException') ||
+          e.toString().contains('not found') ||
+          e.toString().contains('Cannot read')) {
+        errorMessage =
+            'Unable to read the image file. Please try capturing a new photo.';
+      }
+
+      // Fallback to empty results to trigger Manual Entry mode
+      results = [Error<ScanResult>(ScanFailure(errorMessage)), null];
+    }
 
     final response = results[0] as Result<ScanResult>;
     final cloudUrl = results[1] as String?;
@@ -278,6 +319,36 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
           category: _selectedCategory,
         ));
       },
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.L.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.error_outline_rounded, color: context.L.error, size: 24),
+            const SizedBox(width: 12),
+            Text('Scan Error',
+                style: AppTypography.titleMedium.copyWith(
+                    fontWeight: FontWeight.w900, color: context.L.text)),
+          ],
+        ),
+        content: Text(message,
+            style: AppTypography.bodyMedium
+                .copyWith(color: context.L.sub, height: 1.4)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('OK',
+                style: AppTypography.labelLarge.copyWith(
+                    color: context.L.text, fontWeight: FontWeight.w900)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -413,7 +484,9 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
       body: Stack(
         children: [
           // 1. Full-screen Camera Preview
-          if (_isCameraInitialized && _controller != null)
+          if (_isCameraInitialized &&
+              _controller != null &&
+              _controller!.value.previewSize != null)
             SizedBox.expand(
               child: FittedBox(
                 fit: BoxFit.cover,
@@ -450,7 +523,7 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
             left: 0,
             right: 0,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -458,7 +531,11 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                     icon: Icons.close_rounded,
                     onTap: widget.onClose ?? () => Navigator.pop(context),
                   ),
-                  _buildScanLimitPill(context),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Center(child: _buildScanLimitPill(context)),
+                  ),
+                  const SizedBox(width: 8),
                   _buildCircularBtn(
                     icon: Icons.history_rounded,
                     onTap: () {
@@ -928,12 +1005,14 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      Text(
                         cat['icon'],
-                        size: 16,
-                        color: isSelected
-                            ? Colors.black
-                            : Colors.white.withValues(alpha: 0.5),
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: isSelected
+                              ? Colors.black
+                              : Colors.white.withValues(alpha: 0.5),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -975,49 +1054,54 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
         flashIcon = Icons.flash_off_rounded;
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildCircularBtn(
-          icon: Icons.image_outlined,
-          onTap: _pickFromGallery,
-        ),
-        BouncingButton(
-          onTap: _capturePhoto,
-          scaleFactor: 0.95,
-          child: Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 4),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(6.0),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildCircularBtn(
+            icon: Icons.image_outlined,
+            onTap: _pickFromGallery,
+          ),
+          const SizedBox(width: 24),
+          BouncingButton(
+            onTap: _capturePhoto,
+            scaleFactor: 0.95,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 4),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(6.0),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
-            ),
-          )
-              .animate(onPlay: (c) => c.repeat(reverse: true))
-              .scale(
-                begin: const Offset(1, 1),
-                end: const Offset(1.05, 1.05),
-                duration: 1000.ms,
-                curve: Curves.easeInOut,
-              )
-              .shimmer(
-                  delay: 2000.ms, duration: 1500.ms, color: Colors.white24),
-        ),
-        _buildCircularBtn(
-          icon: flashIcon,
-          onTap: _toggleFlash,
-          isActive: _flashMode != FlashMode.off,
-        ),
-      ],
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.05, 1.05),
+                  duration: 1000.ms,
+                  curve: Curves.easeInOut,
+                )
+                .shimmer(
+                    delay: 2000.ms, duration: 1500.ms, color: Colors.white24),
+          ),
+          const SizedBox(width: 24),
+          _buildCircularBtn(
+            icon: flashIcon,
+            onTap: _toggleFlash,
+            isActive: _flashMode != FlashMode.off,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1084,7 +1168,8 @@ class _ResultModalState extends State<_ResultModal> {
 
     // Convert ScanResult slots to ScheduleEntry entities
     if (widget.result.scheduleSlots.isNotEmpty) {
-      _manualSchedule = widget.result.scheduleSlots.asMap().entries.map((entry) {
+      _manualSchedule =
+          widget.result.scheduleSlots.asMap().entries.map((entry) {
         final idx = entry.key;
         final s = entry.value;
         String ritualStr = s['ritual'] ?? 'none';
@@ -1307,7 +1392,8 @@ class _ResultModalState extends State<_ResultModal> {
           const SizedBox(height: 24),
           // Wrap the scrollable content in a Size-bounded container to avoid layout errors
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.75, // Provide reasonable height for modal content
+            height: MediaQuery.of(context).size.height *
+                0.75, // Provide reasonable height for modal content
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               physics: const BouncingScrollPhysics(),
@@ -1360,9 +1446,13 @@ class _ResultModalState extends State<_ResultModal> {
                           unit: _unitController.text,
                           intakeInstructions: _howController.text,
                         );
-                        InlineAiCoach.show(context, tempMed, impact: widget.result.bodyImpact);
+                        InlineAiCoach.show(context, tempMed,
+                            impact: widget.result.bodyImpact);
                       },
-                    ).animate().fadeIn(delay: 500.ms, duration: 600.ms).slideX(begin: -0.1),
+                    )
+                        .animate()
+                        .fadeIn(delay: 500.ms, duration: 600.ms)
+                        .slideX(begin: -0.1),
                     const SizedBox(height: 32),
                   ],
 

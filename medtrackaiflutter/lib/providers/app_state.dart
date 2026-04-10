@@ -231,7 +231,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   // ── Medication Proxies ─────────────────────────────────────────────
   int getStreak() => med.getStreak();
   double getAdherenceScore() => med.getAdherenceScore();
-  List<DoseItem> getDoses() => med.getDoses();
+  List<DoseItem> getDoses({DateTime? date}) => med.getDoses(date: date);
   List<Map<String, dynamic>> getTrendData() => med.getTrendData();
 
   Future<void> toggleDose(DoseItem dose) async {

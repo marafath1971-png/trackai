@@ -6,6 +6,7 @@ import '../../widgets/shared/shared_widgets.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/modals/trend_drilldown_sheet.dart';
 import '../../core/utils/haptic_engine.dart';
+import '../../widgets/common/ambient_mesh_bg.dart';
 import '../../services/report_service.dart';
 import '../../widgets/common/paywall_sheet.dart';
 import '../../l10n/app_localizations.dart';
@@ -73,16 +74,18 @@ class _DashboardTabState extends State<DashboardTab> {
         context.select<AppState, List<HealthInsight>>((s) => s.healthInsights);
 
     return Scaffold(
-      backgroundColor: L.meshBg, // Cal AI Texture foundation
+      backgroundColor: L.meshBg, // Fallback background
       body: Stack(children: [
+        // ── Ambient Glassmorphism Background ──
+        const Positioned.fill(child: AmbientMeshBackground()),
         Positioned(
           top: 0,
           left: 0,
           right: 0,
           height: 120,
           child: Container(
-            decoration: BoxDecoration(
-              color: L.meshBg,
+            decoration: const BoxDecoration(
+              color: Colors.transparent,
             ),
           ),
         ),

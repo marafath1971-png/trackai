@@ -4,7 +4,7 @@ class PredictiveInsight {
   final PredictiveType type;
   final String title;
   final String description;
-  final double impactScore; // 0.0 to 1.0
+  final double impactScore;
 
   PredictiveInsight({
     required this.type,
@@ -12,4 +12,22 @@ class PredictiveInsight {
     required this.description,
     this.impactScore = 0.5,
   });
+
+  Map<String, dynamic> toJson() => {
+        'type': type.name,
+        'title': title,
+        'description': description,
+        'impactScore': impactScore,
+      };
+
+  factory PredictiveInsight.fromJson(Map<String, dynamic> j) =>
+      PredictiveInsight(
+        type: PredictiveType.values.firstWhere(
+          (e) => e.name == j['type'],
+          orElse: () => PredictiveType.eveningRisk,
+        ),
+        title: j['title'] ?? '',
+        description: j['description'] ?? '',
+        impactScore: (j['impactScore'] ?? 0.5).toDouble(),
+      );
 }

@@ -9,6 +9,7 @@ import '../../services/storage_service.dart';
 import '../../core/utils/repository_ext.dart';
 import '../../core/utils/result.dart';
 import '../../core/error/failures.dart';
+import '../../core/utils/logger.dart';
 
 // ══════════════════════════════════════════════
 // MEDICATION REPOSITORY — Offline-First
@@ -127,8 +128,9 @@ class MedicationRepositoryImpl implements IMedicationRepository {
 
     if (_hasAuth) {
       try {
-        final cloudHistory =
-            await firestoreDataSource.getRecentHistory(_uid!, days: 30, profileId: profileId);
+        final cloudHistory = await firestoreDataSource
+            .getRecentHistory(_uid!, days: 30, profileId: profileId)
+            .withHardenedTimeout(taskName: 'getHistory');
         final today = DateTime.now().toIso8601String().substring(0, 10);
         final merged = <String, List<DoseEntry>>{...cloudHistory};
 
@@ -192,10 +194,17 @@ class MedicationRepositoryImpl implements IMedicationRepository {
   Future<Map<String, bool>> getTakenToday({String? profileId}) async {
     final key = _key('takenToday', profileId);
     if (_hasAuth) {
-      final cloud = await firestoreDataSource.getTakenToday(_uid!, profileId: profileId);
-      if (cloud.isNotEmpty) {
-        await localDataSource.setJson(key, cloud, encrypt: true);
-        return cloud;
+      try {
+        final cloud = await firestoreDataSource
+            .getTakenToday(_uid!, profileId: profileId)
+            .withHardenedTimeout(taskName: 'getTakenToday');
+        if (cloud.isNotEmpty) {
+          await localDataSource.setJson(key, cloud, encrypt: true);
+          return cloud;
+        }
+      } catch (e) {
+        // Fallback to local on terminal timeout/error
+        appLogger.w('[MedRepo] takenToday fetch failed: $e');
       }
     }
     final j = localDataSource.getJson(key, decrypt: true);
@@ -204,11 +213,14 @@ class MedicationRepositoryImpl implements IMedicationRepository {
   }
 
   @override
-  Future<void> saveTakenToday(Map<String, bool> takenToday, {String? profileId}) async {
+  Future<void> saveTakenToday(Map<String, bool> takenToday,
+      {String? profileId}) async {
     final key = _key('takenToday', profileId);
     await localDataSource.setJson(key, takenToday, encrypt: true);
     if (_hasAuth) {
-      firestoreDataSource.saveTakenToday(_uid!, takenToday, profileId: profileId).catchError((_) {});
+      firestoreDataSource
+          .saveTakenToday(_uid!, takenToday, profileId: profileId)
+          .catchError((_) {});
     }
   }
 

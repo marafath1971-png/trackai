@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../providers/app_state.dart';
 import '../../../theme/app_theme.dart';
 import '../../../widgets/shared/shared_widgets.dart';
@@ -111,10 +112,20 @@ class MedCard extends StatelessWidget {
                                 color: Colors.blue)),
                         const SizedBox(width: 8),
                         Flexible(
-                            child: _BuildMiniStat(
-                                icon: Icons.calendar_today_rounded,
-                                label: '$adh%',
-                                color: Colors.orange)),
+                          child: _BuildMiniStat(
+                            icon: Icons.calendar_today_rounded,
+                            label: '$adh%',
+                            color: adh >= 100
+                                ? const Color(0xFF10B981)
+                                : (adh >= 80 ? Colors.orange : L.error),
+                          ).animate(
+                            target: adh >= 100 ? 1 : 0,
+                            onPlay: (c) => c.repeat(reverse: true),
+                          ).shimmer(
+                            duration: 2.seconds,
+                            color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                          ),
+                        ),
                         const SizedBox(width: 8),
                         Flexible(
                             child: _BuildMiniStat(

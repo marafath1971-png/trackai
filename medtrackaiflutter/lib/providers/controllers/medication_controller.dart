@@ -15,6 +15,7 @@ class ScheduledMed {
   final int idx;
   ScheduledMed({required this.med, required this.sched, required this.idx});
 }
+
 class MedicationController extends ChangeNotifier {
   final IMedicationRepository medRepo;
 
@@ -265,8 +266,10 @@ class MedicationController extends ChangeNotifier {
 
   List<DoseItem> getDoses({DateTime? date}) {
     final targetDate = date ?? DateTime.now();
-    if (!isDosesDirty && _cachedDoses != null && date == null) return _cachedDoses!;
-    
+    if (!isDosesDirty && _cachedDoses != null && date == null) {
+      return _cachedDoses!;
+    }
+
     final dayOfWeek = targetDate.weekday % 7;
     final items = <DoseItem>[];
     for (final med in _meds) {
@@ -278,7 +281,7 @@ class MedicationController extends ChangeNotifier {
     }
     items.sort(
         (a, b) => (a.sched.h * 60 + a.sched.m) - (b.sched.h * 60 + b.sched.m));
-    
+
     if (date == null) {
       _cachedDoses = items;
       isDosesDirty = false;
@@ -286,10 +289,30 @@ class MedicationController extends ChangeNotifier {
     return items;
   }
 
-  Future<void> toggleDose(DoseItem dose, String todayKey) async {
+  Map<String, bool> getTakenMapForDate(DateTime date) {
+    final dateKey =
+        "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+    final dayHistory = _history[dateKey] ?? [];
+    return {
+      for (var entry in dayHistory) '${entry.medId}-${entry.label}': entry.taken
+    };
+  }
+
+  Future<void> toggleDose(DoseItem dose, String dateKey) async {
     final key = dose.key;
-    final wasTaken = _takenToday[key] ?? false;
-    _takenToday = {..._takenToday, key: !wasTaken};
+    final now = DateTime.now();
+    final realToday =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    final isActualToday = dateKey == realToday;
+
+    // Determine current taken status for THIS specific date
+    final dailyHistory = _history[dateKey] ?? [];
+    final wasTaken = dailyHistory.any((e) =>
+        e.medId == dose.med.id && e.label == dose.sched.label && e.taken);
+
+    if (isActualToday) {
+      _takenToday = {..._takenToday, key: !wasTaken};
+    }
     HapticEngine.success();
 
     if (!wasTaken) {
@@ -300,7 +323,8 @@ class MedicationController extends ChangeNotifier {
         if (m.count > 0) {
           final updatedMed = m.copyWith(count: m.count - 1);
           _meds[idx] = updatedMed;
-          await medRepo.updateMedicine(updatedMed, profileId: _currentProfileId);
+          await medRepo.updateMedicine(updatedMed,
+              profileId: _currentProfileId);
 
           // Auto-Refill Alert Check
           if (updatedMed.count == updatedMed.refillAt) {
@@ -319,8 +343,8 @@ class MedicationController extends ChangeNotifier {
       );
       _history = {
         ..._history,
-        todayKey: [
-          ...(_history[todayKey] ?? []).where(
+        dateKey: [
+          ...(_history[dateKey] ?? []).where(
               (e) => e.label != dose.sched.label || e.medId != dose.med.id),
           entry
         ],
@@ -330,19 +354,19 @@ class MedicationController extends ChangeNotifier {
 
     await medRepo.saveTakenToday(_takenToday, profileId: _currentProfileId);
     await medRepo.saveHistory(_history,
-        onlyDateKey: todayKey, profileId: _currentProfileId);
+        onlyDateKey: dateKey, profileId: _currentProfileId);
     await _recordInventorySnapshot();
     invalidateCache();
-    
+
     // Update Live Activities if on iOS
     if (Platform.isIOS) {
       updateLiveActivityCards();
     }
-    
+
     notifyListeners();
   }
 
-  Future<void> skipDose(DoseItem dose, String todayKey) async {
+  Future<void> skipDose(DoseItem dose, String dateKey) async {
     final entry = DoseEntry(
       medId: dose.med.id,
       label: dose.sched.label,
@@ -354,14 +378,14 @@ class MedicationController extends ChangeNotifier {
     HapticEngine.selection();
     _history = {
       ..._history,
-      todayKey: [
-        ...(_history[todayKey] ?? []).where(
+      dateKey: [
+        ...(_history[dateKey] ?? []).where(
             (e) => e.label != dose.sched.label || e.medId != dose.med.id),
         entry
       ],
     };
     await medRepo.saveHistory(_history,
-        onlyDateKey: todayKey, profileId: _currentProfileId);
+        onlyDateKey: dateKey, profileId: _currentProfileId);
     invalidateCache();
 
     // Update Live Activities if on iOS
@@ -372,13 +396,13 @@ class MedicationController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> undoPrnDose(int medId, String label, String todayKey) async {
-    final dayHistory = List<DoseEntry>.from(_history[todayKey] ?? []);
+  Future<void> undoPrnDose(int medId, String label, String dateKey) async {
+    final dayHistory = List<DoseEntry>.from(_history[dateKey] ?? []);
     final idx =
         dayHistory.indexWhere((e) => e.medId == medId && e.label == label);
     if (idx != -1) {
       dayHistory.removeAt(idx);
-      _history = {..._history, todayKey: dayHistory};
+      _history = {..._history, dateKey: dayHistory};
 
       final mIdx = _meds.indexWhere((m) => m.id == medId);
       if (mIdx != -1) {
@@ -388,7 +412,7 @@ class MedicationController extends ChangeNotifier {
       }
 
       await medRepo.saveHistory(_history,
-          onlyDateKey: todayKey, profileId: _currentProfileId);
+          onlyDateKey: dateKey, profileId: _currentProfileId);
       await _recordInventorySnapshot();
       invalidateCache();
       notifyListeners();
@@ -439,7 +463,8 @@ class MedicationController extends ChangeNotifier {
         final idx = _meds.indexWhere((x) => x.id == m.id);
         if (idx != -1) {
           _meds[idx] = _meds[idx].copyWith(aiSafetyProfile: res.value);
-          await medRepo.updateMedicine(_meds[idx], profileId: _currentProfileId);
+          await medRepo.updateMedicine(_meds[idx],
+              profileId: _currentProfileId);
         }
       }
       return res;
@@ -545,21 +570,22 @@ class MedicationController extends ChangeNotifier {
   }
 
   /// ── Live Activities & Dynamic Island (v1.5) ─────────────────────────
-  
+
   Future<void> updateLiveActivityCards() async {
     if (!Platform.isIOS) return;
 
     try {
       final now = DateTime.now();
       final doses = getDoses();
-      
+
       // Find the next upcoming dose that isn't taken
       final nextDose = doses.where((d) {
         final taken = takenToday[d.key] ?? false;
         if (taken) return false;
-        
+
         // Is it today?
-        final dTime = DateTime(now.year, now.month, now.day, d.sched.h, d.sched.m);
+        final dTime =
+            DateTime(now.year, now.month, now.day, d.sched.h, d.sched.m);
         // Only show if it's within 4 hours or passed
         return dTime.difference(now).inHours <= 4;
       }).toList();
@@ -571,9 +597,10 @@ class MedicationController extends ChangeNotifier {
 
       // We only show the primary "Next" dose on the Dynamic Island
       final d = nextDose.first;
-      final dTime = DateTime(now.year, now.month, now.day, d.sched.h, d.sched.m);
+      final dTime =
+          DateTime(now.year, now.month, now.day, d.sched.h, d.sched.m);
       final diff = dTime.difference(now);
-      
+
       String timeLeft;
       if (diff.isNegative) {
         timeLeft = "LATE";
@@ -598,34 +625,33 @@ class MedicationController extends ChangeNotifier {
   // Gets the average delay minutes in taking medications today
   double getLatencyData() {
     if (_history.isEmpty) return 0.0;
-    
+
     final today = DateTime.now().toIso8601String().substring(0, 10);
     final historyToday = _history[today];
     if (historyToday == null || historyToday.isEmpty) return 0.0;
-    
+
     int totalMinutesLate = 0;
     int count = 0;
     for (var entry in historyToday) {
       if (!entry.taken) continue;
       final takenAtStr = entry.takenAt;
       if (takenAtStr == null) continue;
-      
+
       final dtTaken = DateTime.parse(takenAtStr);
       final timeParts = entry.time.split(':');
       if (timeParts.length < 2) continue;
-      
+
       final sH = int.parse(timeParts[0]);
       final sM = int.parse(timeParts[1]);
-      
-      final scheduledTime = DateTime(
-        dtTaken.year, dtTaken.month, dtTaken.day, sH, sM
-      );
-      
+
+      final scheduledTime =
+          DateTime(dtTaken.year, dtTaken.month, dtTaken.day, sH, sM);
+
       final diff = dtTaken.difference(scheduledTime).inMinutes;
       if (diff > 0) totalMinutesLate += diff;
       count++;
     }
-    
+
     return count == 0 ? 0.0 : totalMinutesLate / count;
   }
 
@@ -634,7 +660,8 @@ class MedicationController extends ChangeNotifier {
     final List<Map<String, dynamic>> result = [];
     final now = DateTime.now();
     for (int i = 0; i < 7; i++) {
-      final dateStr = now.subtract(Duration(days: i)).toIso8601String().substring(0, 10);
+      final dateStr =
+          now.subtract(Duration(days: i)).toIso8601String().substring(0, 10);
       final dayHistory = _history[dateStr];
       if (dayHistory != null) {
         for (var entry in dayHistory) {
@@ -644,9 +671,10 @@ class MedicationController extends ChangeNotifier {
           if (parts.length < 2) continue;
           final sH = int.parse(parts[0]);
           final sM = int.parse(parts[1]);
-          final scheduled = DateTime(dtTaken.year, dtTaken.month, dtTaken.day, sH, sM);
+          final scheduled =
+              DateTime(dtTaken.year, dtTaken.month, dtTaken.day, sH, sM);
           final latency = dtTaken.difference(scheduled).inMinutes;
-          
+
           result.add({
             'date': dateStr,
             'latency': latency,

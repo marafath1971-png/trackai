@@ -232,15 +232,22 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   int getStreak() => med.getStreak();
   double getAdherenceScore() => med.getAdherenceScore();
   List<DoseItem> getDoses({DateTime? date}) => med.getDoses(date: date);
+  Map<String, bool> getTakenMapForDate(DateTime date) =>
+      med.getTakenMapForDate(date);
   List<Map<String, dynamic>> getTrendData() => med.getTrendData();
 
-  Future<void> toggleDose(DoseItem dose) async {
+  Future<void> toggleDose(DoseItem dose, {DateTime? date}) async {
     return PerformanceService.measure('toggle_dose_trace', () async {
+      final targetDate = date ?? DateTime.now();
+      final dateKey =
+          "${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}";
+
       final key = dose.key;
-      final wasTaken = takenToday[key] ?? false;
+      final takenMap = med.getTakenMapForDate(targetDate);
+      final wasTaken = takenMap[key] ?? false;
       final oldStreak = getStreak();
 
-      await med.toggleDose(dose, todayStr());
+      await med.toggleDose(dose, dateKey);
       final newStreak = getStreak();
 
       if (!wasTaken) {
@@ -264,11 +271,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     });
   }
 
-  Future<void> takeDose(int medId, int idx) async {
+  Future<void> takeDose(int medId, int idx, {DateTime? date}) async {
     final m = meds.firstWhere((m) => m.id == medId);
     final sched = m.schedule[idx];
     final dose = DoseItem(med: m, sched: sched, key: '${m.id}_${sched.id}');
-    await toggleDose(dose);
+    await toggleDose(dose, date: date);
   }
 
   void clearMilestone() {
@@ -276,8 +283,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     safeNotifyListeners();
   }
 
-  Future<void> skipDose(DoseItem dose) async {
-    await med.skipDose(dose, todayStr());
+  Future<void> skipDose(DoseItem dose, {DateTime? date}) async {
+    final targetDate = date ?? DateTime.now();
+    final dateKey =
+        "${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}";
+    await med.skipDose(dose, dateKey);
     
     // Task Phase 2.4: Telemetry Alert for Critical Meds
     if (dose.med.isCritical) {
@@ -607,7 +617,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     safeNotifyListeners();
   }
 
-  void recordDose(DoseItem dose) => med.toggleDose(dose, todayStr());
+  void recordDose(DoseItem dose, {DateTime? date}) => toggleDose(dose, date: date);
   Future<void> logPrnDose(int medId, String label, String time) =>
       med.logPrnDose(medId, label, time);
   String getDoseGuidance(Medicine m) => med.getDoseGuidance(m);

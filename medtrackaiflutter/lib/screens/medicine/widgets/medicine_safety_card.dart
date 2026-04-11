@@ -161,7 +161,7 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
         ? L.text.withValues(alpha: 0.1)
         : (isDanger ? L.error.withValues(alpha: 0.2) : Colors.transparent);
 
-    return Container(
+    final section = Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 20),
       padding: isDanger || isAha ? const EdgeInsets.all(16) : EdgeInsets.zero,
@@ -236,6 +236,27 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
         ],
       ),
     );
+
+    if (isDanger) {
+      return section
+          .animate(onPlay: (c) => c.repeat(reverse: true))
+          .shimmer(
+              duration: 2500.ms,
+              color: L.error.withValues(alpha: 0.1),
+              angle: 1.5)
+          .tint(color: L.error.withValues(alpha: 0.03), duration: 2500.ms);
+    }
+
+    if (isAha) {
+      return section
+          .animate(onPlay: (c) => c.repeat(reverse: true))
+          .shimmer(
+              duration: 3500.ms,
+              color: L.text.withValues(alpha: 0.05),
+              angle: 0.5);
+    }
+
+    return section;
   }
 
   Widget _buildErrorState(AppThemeColors L, AppLocalizations s) {

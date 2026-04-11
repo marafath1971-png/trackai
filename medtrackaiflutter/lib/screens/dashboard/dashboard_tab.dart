@@ -16,6 +16,7 @@ import '../home/widgets/streak_modal.dart';
 import 'widgets/dashboard_widgets.dart';
 import '../home/widgets/voice_assistant_overlay.dart';
 import '../../services/voice_service.dart';
+import '../../widgets/modals/clinical_report_modal.dart';
 
 class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key});
@@ -252,18 +253,8 @@ class _DashboardTabState extends State<DashboardTab> {
                             PaywallSheet.show(context);
                             return;
                           }
-                          ReportService.generateAndShareReport(
-                            s: s,
-                            userName: state.profile?.name ?? s.greetingHero,
-                            adherence: adherence,
-                            meds: state.meds,
-                            symptoms: state.symptoms,
-                            history: state.history,
-                            avgHeartRate: state.healthHeartRate,
-                            avgSteps: state.healthSteps,
-                            currentStreak: streak,
-                            trendData: trendData,
-                          );
+                          ClinicalReportModal.show(
+                              context, state, adherence, streak);
                         },
                         scaleFactor: 0.95,
                         child: Center(

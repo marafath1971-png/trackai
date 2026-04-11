@@ -667,19 +667,31 @@ class InventoryStatusCard extends StatelessWidget {
                     ),
                     Expanded(
                       flex: 4,
-                      child: _HighFidelityBar(pct: pct, color: color, L: L),
+                      child: _HighFidelityBar(
+                          pct: pct, color: color, L: L, isLow: isLow),
                     ),
                     const SizedBox(width: 16),
                     SizedBox(
-                      width: 24,
+                      width: 28,
                       child: Text(
                         '${med.count}',
                         style: AppTypography.labelSmall.copyWith(
                           color: color,
                           fontWeight: FontWeight.w900,
-                          fontSize: 10,
+                          fontSize: 11,
                         ),
                         textAlign: TextAlign.right,
+                      ).animate(
+                        target: isLow ? 1 : 0,
+                        onPlay: (c) => c.repeat(reverse: true),
+                      ).shimmer(
+                        duration: 1500.ms,
+                        color: L.error.withValues(alpha: 0.4),
+                        angle: 0.8,
+                      ).shake(
+                        hz: 2,
+                        duration: 1500.ms,
+                        curve: Curves.easeInOut,
                       ),
                     ),
                   ],
@@ -697,8 +709,12 @@ class _HighFidelityBar extends StatelessWidget {
   final double pct;
   final Color color;
   final AppThemeColors L;
+  final bool isLow;
   const _HighFidelityBar(
-      {required this.pct, required this.color, required this.L});
+      {required this.pct,
+      required this.color,
+      required this.L,
+      this.isLow = false});
 
   @override
   Widget build(BuildContext context) {
@@ -732,6 +748,15 @@ class _HighFidelityBar extends StatelessWidget {
                     ),
                   ],
                 ),
+              ).animate(
+                target: isLow ? 1 : 0,
+                onPlay: (c) => c.repeat(reverse: true),
+              ).shimmer(
+                duration: 2.seconds,
+                color: Colors.white.withValues(alpha: 0.3),
+              ).tint(
+                color: Colors.white.withValues(alpha: 0.1),
+                duration: 2.seconds,
               ),
             ],
           );

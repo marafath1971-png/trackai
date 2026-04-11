@@ -289,7 +289,7 @@ class _AppShellState extends State<AppShell>
                 const SizedBox(width: 24),
                 // ── Integrated FAB (Elevated) ──
                 Transform.translate(
-                  offset: const Offset(0, -20),
+                  offset: const Offset(0, -35),
                   child: _MedScanFAB(
                     pressed: _fabPressed,
                     onTap: _openScan,

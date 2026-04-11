@@ -1,4 +1,3 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,7 +5,6 @@ import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/shared/shared_widgets.dart';
 import '../../core/utils/haptic_engine.dart';
-import '../../widgets/common/ambient_mesh_bg.dart';
 import 'widgets/home_meds_section.dart';
 import 'widgets/med_card.dart';
 
@@ -81,7 +79,7 @@ class _HomeTabState extends State<HomeTab> {
     AppThemeColors L,
     List<DoseItem> doses,
     int streak,
-    Map<String, bool> takenToday,
+    Map<String, bool> takenMap,
     List<Medicine> meds,
     int takenCount,
     int remaining,
@@ -181,14 +179,79 @@ class _HomeTabState extends State<HomeTab> {
                     ),
                   ),
 
-                  // --- NEXT DOSE CAROUSEL ---
+                  // --- DOSE TIMELINE ---
+                  if (doses.isNotEmpty)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final groups = [
+                              (
+                                title: 'Morning',
+                                items: doses
+                                    .where(
+                                        (d) => d.sched.h >= 5 && d.sched.h < 11)
+                                    .toList()
+                              ),
+                              (
+                                title: 'Afternoon',
+                                items: doses
+                                    .where((d) =>
+                                        d.sched.h >= 11 && d.sched.h < 17)
+                                    .toList()
+                              ),
+                              (
+                                title: 'Evening',
+                                items: doses
+                                    .where((d) =>
+                                        d.sched.h >= 17 && d.sched.h < 21)
+                                    .toList()
+                              ),
+                              (
+                                title: 'Night',
+                                items: doses
+                                    .where(
+                                        (d) => d.sched.h >= 21 || d.sched.h < 5)
+                                    .toList()
+                              ),
+                            ].where((g) => g.items.isNotEmpty).toList();
+
+                            if (index >= groups.length) return null;
+                            final group = groups[index];
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 24),
+                              child: HomeDoseGroup(
+                                title: group.title,
+                                doses: group.items,
+                                takenToday: takenMap,
+                                state: context.read<AppState>(),
+                                selectedDate: _selectedDate,
+                                onView: (med) => setState(() {
+                                  _viewingMed = med;
+                                  _startInEditMode = false;
+                                }),
+                                onEdit: (med) => setState(() {
+                                  _viewingMed = med;
+                                  _startInEditMode = true;
+                                }),
+                              ),
+                            );
+                          },
+                          childCount: 4, // Max groups
+                        ),
+                      ),
+                    ),
+
+                  // --- NEXT DOSE CAROUSEL (Mini condensed preview) ---
                   if (doses.isNotEmpty)
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                       sliver: SliverToBoxAdapter(
                         child: _NextDoseCarousel(
                           doses: doses,
-                          takenToday: takenToday,
+                          takenToday: takenMap,
                           state: context.read<AppState>(),
                           onView: (med) => setState(() {
                             _viewingMed = med;
@@ -305,18 +368,18 @@ class _HomeTabState extends State<HomeTab> {
     final doses = context.select<AppState, List<DoseItem>>(
         (s) => s.getDoses(date: _selectedDate));
     final streak = context.select<AppState, int>((s) => s.getStreak());
-    final takenToday =
-        context.select<AppState, Map<String, bool>>((s) => s.takenToday);
+    final takenMap = context.select<AppState, Map<String, bool>>(
+        (s) => s.getTakenMapForDate(_selectedDate));
     final meds = context.select<AppState, List<Medicine>>((s) => s.meds);
 
-    final takenCount = doses.where((d) => takenToday[d.key] == true).length;
+    final takenCount = doses.where((d) => takenMap[d.key] == true).length;
     final remaining = doses.length - takenCount;
     final dosePct = doses.isNotEmpty ? takenCount / doses.length : 0.0;
 
     final L = context.L;
 
-    final mainContent = _buildMainDashboard(context, L, doses, streak,
-        takenToday, meds, takenCount, remaining, dosePct);
+    final mainContent = _buildMainDashboard(context, L, doses, streak, takenMap,
+        meds, takenCount, remaining, dosePct);
 
     return AnimatedSwitcher(
       duration: 400.ms,
@@ -1099,7 +1162,7 @@ class _RingPainter extends CustomPainter {
 
     if (percent > 0) {
       final rect = Rect.fromCircle(center: center, radius: radius);
-      
+
       // Outer Glow
       canvas.drawArc(
         rect,
@@ -1143,6 +1206,7 @@ class HomeDoseGroup extends StatefulWidget {
   final Map<String, bool> takenToday;
   final String? globalNextEntryKey;
   final AppState state;
+  final DateTime selectedDate;
   final Function(Medicine) onView;
   final Function(Medicine) onEdit;
   final Duration delayOffset;
@@ -1154,6 +1218,7 @@ class HomeDoseGroup extends StatefulWidget {
     required this.takenToday,
     this.globalNextEntryKey,
     required this.state,
+    required this.selectedDate,
     required this.onView,
     required this.onEdit,
     this.delayOffset = Duration.zero,
@@ -1202,7 +1267,7 @@ class _HomeDoseGroupState extends State<HomeDoseGroup> {
               overdue: isOverdue,
               isNext: isActualNext && !isTaken,
               onTake: () {
-                widget.state.toggleDose(d);
+                widget.state.toggleDose(d, date: widget.selectedDate);
                 _showUndoSnackbar(context, d);
               },
               onSnooze: () => widget.state.snoozeDose(d, 30),
@@ -1226,7 +1291,8 @@ class _HomeDoseGroupState extends State<HomeDoseGroup> {
         closeIconColor: Colors.white70,
         action: SnackBarAction(
           label: 'Undo',
-          onPressed: () => widget.state.toggleDose(d),
+          onPressed: () =>
+              widget.state.toggleDose(d, date: widget.selectedDate),
           textColor: context.L.primary,
         ),
         duration: const Duration(seconds: 4),
@@ -1499,7 +1565,9 @@ class _DayToggle extends StatelessWidget {
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: L.meshBg == Colors.white ? const Color(0xFFF3F4F6) : L.card.withValues(alpha: 0.5),
+        color: L.meshBg == Colors.white
+            ? const Color(0xFFF3F4F6)
+            : L.card.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: L.border.withValues(alpha: 0.05), width: 1),
       ),
@@ -1542,8 +1610,10 @@ class _DayToggle extends StatelessWidget {
                         child: AnimatedDefaultTextStyle(
                           duration: 250.ms,
                           style: AppTypography.labelLarge.copyWith(
-                            color: isToday ? L.bg : L.text.withValues(alpha: 0.6),
-                            fontWeight: isToday ? FontWeight.w900 : FontWeight.w600,
+                            color:
+                                isToday ? L.bg : L.text.withValues(alpha: 0.6),
+                            fontWeight:
+                                isToday ? FontWeight.w900 : FontWeight.w600,
                             letterSpacing: 0.5,
                           ),
                           child: const Text('Today'),
@@ -1562,8 +1632,10 @@ class _DayToggle extends StatelessWidget {
                         child: AnimatedDefaultTextStyle(
                           duration: 250.ms,
                           style: AppTypography.labelLarge.copyWith(
-                            color: !isToday ? L.bg : L.text.withValues(alpha: 0.6),
-                            fontWeight: !isToday ? FontWeight.w900 : FontWeight.w600,
+                            color:
+                                !isToday ? L.bg : L.text.withValues(alpha: 0.6),
+                            fontWeight:
+                                !isToday ? FontWeight.w900 : FontWeight.w600,
                             letterSpacing: 0.5,
                           ),
                           child: const Text('Yesterday'),
@@ -1577,6 +1649,9 @@ class _DayToggle extends StatelessWidget {
           );
         },
       ),
-    ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.1, end: 0, curve: Curves.easeOutExpo);
+    )
+        .animate()
+        .fadeIn(duration: 600.ms)
+        .slideY(begin: -0.1, end: 0, curve: Curves.easeOutExpo);
   }
 }

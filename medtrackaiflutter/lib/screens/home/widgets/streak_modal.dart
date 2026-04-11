@@ -118,50 +118,53 @@ class StreakModal extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                   border: Border.all(color: L.border.withValues(alpha: 0.1), width: 0.5),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 12),
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: L.text.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    _buildHeader(L),
-                    Flexible(
-                      child: RawScrollbar(
-                        thumbColor: L.text.withValues(alpha: 0.1),
-                        radius: const Radius.circular(10),
-                        thickness: 4,
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildHeroMetric(L, streak, best, overallAdh),
-                              const SizedBox(height: 24),
-                              _buildStatsGrid(L, totalDaysTracked, totalTaken, totalDoses),
-                              const SizedBox(height: 32),
-                              _buildSectionTitle(L, '30-DAY STABILITY MATRIX'),
-                              const SizedBox(height: 16),
-                              _Heatmap(history: history, L: L),
-                              const SizedBox(height: 40),
-                              _buildSectionTitle(L, 'ASCENSION PROGRESSION'),
-                              const SizedBox(height: 20),
-                              _AscensionTrack(milestones: milestones, currentStreak: streak),
-                            ],
+                child: Material(
+                  color: Colors.transparent,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 12),
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: L.text.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
                       ),
-                    ),
-                    _buildFooterActions(L, streak),
-                  ],
+                      _buildHeader(L),
+                      Flexible(
+                        child: RawScrollbar(
+                          thumbColor: L.text.withValues(alpha: 0.1),
+                          radius: const Radius.circular(10),
+                          thickness: 4,
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildHeroMetric(L, streak, best, overallAdh),
+                                const SizedBox(height: 24),
+                                _buildStatsGrid(L, totalDaysTracked, totalTaken, totalDoses),
+                                const SizedBox(height: 32),
+                                _buildSectionTitle(L, '30-DAY STABILITY MATRIX'),
+                                const SizedBox(height: 16),
+                                _Heatmap(history: history, L: L),
+                                const SizedBox(height: 40),
+                                _buildSectionTitle(L, 'ASCENSION PROGRESSION'),
+                                const SizedBox(height: 20),
+                                _AscensionTrack(milestones: milestones, currentStreak: streak),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      _buildFooterActions(L, streak),
+                    ],
+                  ),
                 ),
               ),
             ),

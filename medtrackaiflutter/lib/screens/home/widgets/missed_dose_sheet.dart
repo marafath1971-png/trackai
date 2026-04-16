@@ -1,8 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/app_state.dart';
 import '../../../theme/app_theme.dart';
 import '../../../services/notification_service.dart';
+import '../../../core/utils/haptic_engine.dart';
 
 /// Shows smart guidance when a dose is overdue.
 /// Options: Take Now, Skip, Smart Advice.
@@ -41,19 +43,21 @@ class MissedDoseProtocolSheet extends StatelessWidget {
         top: 60,
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 40,
-              offset: const Offset(0, -10),
-              spreadRadius: -10),
-        ],
-      ),
-      child: Padding(
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: L.bg.withValues(alpha: 0.85),
+              border: Border(
+                top: BorderSide(
+                  color: L.border.withValues(alpha: 0.15),
+                  width: 0.5,
+                ),
+              ),
+            ),
+            child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 36),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -239,7 +243,7 @@ class MissedDoseProtocolSheet extends StatelessWidget {
           ],
         ),
       ),
-    );
+    )));
   }
 }
 
@@ -262,7 +266,10 @@ class _ActionBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     final L = context.L;
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticEngine.selection();
+        onTap();
+      },
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),

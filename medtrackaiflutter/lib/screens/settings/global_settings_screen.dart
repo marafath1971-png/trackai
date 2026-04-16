@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../widgets/shared/shared_widgets.dart';
 import '../../core/utils/haptic_engine.dart';
 import '../../models/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // ══════════════════════════════════════════════════════════════════════
 // GLOBAL SETTINGS SCREEN (Cal AI Industrial Authority Refined)
@@ -234,20 +235,36 @@ class _GlobalSettingsScreenState extends State<GlobalSettingsScreen> {
                   _AccountActionTile(
                     icon: '📜',
                     title: 'Privacy Policy',
-                    onTap: () {
+                    onTap: () async {
                       HapticEngine.selection();
-                      // Navigation would go here
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Privacy Policy updated March 2026')),
-                      );
+                      final url = Uri.parse('https://example.com/privacy-policy-2026');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Could not open Privacy Policy.')),
+                          );
+                        }
+                      }
                     },
                     L: L,
                   ),
                   _AccountActionTile(
                     icon: '⚖️',
                     title: 'Terms of Service',
-                    onTap: () {
+                    onTap: () async {
                       HapticEngine.selection();
+                      final url = Uri.parse('https://example.com/terms-of-service-2026');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Could not open Terms of Service.')),
+                          );
+                        }
+                      }
                     },
                     L: L,
                   ),

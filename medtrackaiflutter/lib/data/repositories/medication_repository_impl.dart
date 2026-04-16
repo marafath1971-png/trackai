@@ -272,7 +272,9 @@ class MedicationRepositoryImpl implements IMedicationRepository {
 
   @override
   Future<String?> uploadMedicineImage(File imageFile) async {
-    if (!_hasAuth) return null;
+    if (!_hasAuth) {
+      return await storageService.saveLocalImage(imageFile);
+    }
     return await storageService.uploadMedicineImage(_uid!, imageFile);
   }
 

@@ -1,8 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../providers/app_state.dart';
 import '../../../../theme/app_theme.dart';
 import '../../../../widgets/shared/shared_widgets.dart';
+import '../../../../core/utils/haptic_engine.dart';
 
 // ══════════════════════════════════════════════
 // HOME HEADER — Cal AI 2026 Premium Style
@@ -30,25 +32,37 @@ class HomeHeader extends StatelessWidget {
     final L = context.L;
     final isScrolled = scrollOffset > 20;
 
-    return Container(
-      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-      decoration: BoxDecoration(
-        color: L.meshBg.withValues(alpha: isScrolled ? 0.9 : 0.0),
-        border: Border(
-          bottom: BorderSide(
-            color: L.border
-                .withValues(alpha: (scrollOffset / 300).clamp(0.0, 0.05)),
-            width: 0.5,
-          ),
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: isScrolled ? 16 : 0,
+          sigmaY: isScrolled ? 16 : 0,
         ),
-      ),
-      child: Padding(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+          decoration: BoxDecoration(
+            color: isScrolled 
+                ? L.bg.withValues(alpha: 0.8) 
+                : L.bg.withValues(alpha: 0.0),
+            border: Border(
+              bottom: BorderSide(
+                color: L.border.withValues(
+                    alpha: isScrolled ? 0.08 : 0.0),
+                width: 0.5,
+              ),
+            ),
+          ),
+          child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
         child: Row(
           children: [
             // ── Logo + Brand ──
             GestureDetector(
-              onTap: onTap,
+              onTap: () {
+                HapticEngine.selection();
+                onTap?.call();
+              },
               child: Row(
                 children: [
                   Image.asset(
@@ -75,7 +89,10 @@ class HomeHeader extends StatelessWidget {
             const Spacer(),
             // ── Notification Bell ──
             GestureDetector(
-              onTap: onOpenSettings, // Reusing settings callback for now
+              onTap: () {
+                HapticEngine.selection();
+                onOpenSettings();
+              }, // Reusing settings callback for now
               child: Stack(
                 children: [
                   Icon(Icons.notifications_none_rounded,
@@ -95,13 +112,15 @@ class HomeHeader extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+      ),
+    ),
+  ),
+);
+}
 
   String _getGreeting() {
     final hour = DateTime.now().hour;

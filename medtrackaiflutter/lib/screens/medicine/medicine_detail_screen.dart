@@ -353,9 +353,10 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                         height: 140,
                         borderRadius: 28,
                         placeholder: Center(
-                          child: Text(
-                            _getCategoryEmoji(med.category),
-                            style: const TextStyle(fontSize: 56),
+                          child: Icon(
+                            Icons.medication_rounded,
+                            size: 56,
+                            color: L.text.withValues(alpha: 0.1),
                           ),
                         ),
                       ),
@@ -386,13 +387,16 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                   const SizedBox(height: 12),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: Text(
-                      med.name.toUpperCase(),
-                      textAlign: TextAlign.center,
-                      style: AppTypography.displayMedium.copyWith(
-                        color: L.text,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -1.5,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        med.name.toUpperCase(),
+                        textAlign: TextAlign.center,
+                        style: AppTypography.displayMedium.copyWith(
+                          color: L.text,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1.5,
+                        ),
                       ),
                     ),
                   ),
@@ -447,12 +451,10 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
           Positioned(
             right: -20,
             top: -20,
-            child: Text(
-              "🛡️",
-              style: TextStyle(
-                fontSize: 140,
-                color: L.bg.withValues(alpha: 0.03),
-              ),
+            child: Icon(
+              Icons.shield_rounded,
+              size: 140,
+              color: L.bg.withValues(alpha: 0.1),
             ),
           ),
           Padding(
@@ -523,7 +525,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Text("🛡️", style: TextStyle(fontSize: 16)),
+                            Icon(Icons.shield_rounded, size: 16, color: L.green),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -562,7 +564,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
               child: _DiagnosticCard(
                 label: 'ADHERENCE',
                 value: adherence == -1 ? '••' : '$adherence%',
-                icon: '📈',
+                icon: Icons.trending_up_rounded,
                 color: L.text,
                 L: L,
               ),
@@ -572,7 +574,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
               child: _DiagnosticCard(
                 label: 'NEXT_DOSE',
                 value: nextDose,
-                icon: '⏱️',
+                icon: Icons.timer_rounded,
                 color: L.text,
                 L: L,
               ),
@@ -583,7 +585,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
         _DiagnosticCard(
           label: 'INVENTORY_RESERVE',
           value: '${med.count} UNITS',
-          icon: '📦',
+          icon: Icons.inventory_2_rounded,
           color: L.text,
           L: L,
           child: Column(
@@ -640,8 +642,8 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(isLow ? '📦' : '🔄',
-                      style: const TextStyle(fontSize: 22)),
+                  Icon(isLow ? Icons.inventory_rounded : Icons.sync_rounded,
+                      size: 22, color: isLow ? Colors.orange : L.text),
                   const SizedBox(height: 6),
                   Text(
                     isLow ? 'RESTOCK' : 'RESTOCK',
@@ -694,7 +696,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('💊', style: TextStyle(fontSize: 22)),
+                  Icon(Icons.add_task_rounded, size: 22, color: L.text),
                   const SizedBox(height: 6),
                   Text(
                     'LOG DOSE',
@@ -874,10 +876,10 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
       children: [
         _SectionHeader(
             label: 'FREQUENCY_MATRIX',
-            icon: '⏰',
+            icon: Icons.schedule_rounded,
             L: L,
             trailing: _HeaderAction(
-                icon: '➕',
+                icon: Icons.add_rounded,
                 label: 'ADD_SLOT',
                 onTap: () async {
                   HapticEngine.selection();
@@ -896,7 +898,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                 L: L)),
         const SizedBox(height: 12),
         if (med.schedule.isEmpty)
-          _buildEmptyCard('NO_ACTIVE_REMINDERS', '🔕', L)
+          _buildEmptyCard('NO_ACTIVE_REMINDERS', Icons.notifications_off_rounded, L)
         else
           SquircleCard(
             padding: EdgeInsets.zero,
@@ -946,9 +948,10 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Center(
-            child: Text(
-              s.h < 12 ? "☀️" : "🌙",
-              style: const TextStyle(fontSize: 18),
+            child: Icon(
+              s.h < 12 ? Icons.wb_sunny_rounded : Icons.nightlight_round,
+              size: 18,
+              color: s.enabled ? medColor : L.sub.withValues(alpha: 0.3),
             ),
           ),
         ),
@@ -1001,7 +1004,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'STABILITY_MATRIX', icon: '📊', L: L),
+        _SectionHeader(label: 'STABILITY_MATRIX', icon: Icons.bar_chart_rounded, L: L),
         const SizedBox(height: 12),
         SquircleCard(
           padding: const EdgeInsets.all(24),
@@ -1034,7 +1037,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'TECHNICAL_SPECS', icon: '🔬', L: L),
+        _SectionHeader(label: 'TECHNICAL_SPECS', icon: Icons.biotech_rounded, L: L),
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.only(top: 8),
@@ -1042,12 +1045,12 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
             spacing: 12,
             runSpacing: 12,
             children: [
-              _SpecTile(label: 'FORM', value: med.form, icon: '💊', L: L),
+              _SpecTile(label: 'FORM', value: med.form, icon: Icons.medication_rounded, L: L),
               _SpecTile(
-                  label: 'CATEGORY', value: med.category, icon: '🏷️', L: L),
-              _SpecTile(label: 'UNIT', value: med.unit, icon: '⚖️', L: L),
+                  label: 'CATEGORY', value: med.category, icon: Icons.label_rounded, L: L),
+              _SpecTile(label: 'UNIT', value: med.unit, icon: Icons.scale_rounded, L: L),
               _SpecTile(
-                  label: 'START', value: med.courseStartDate, icon: '🗓️', L: L),
+                  label: 'START', value: med.courseStartDate, icon: Icons.calendar_today_rounded, L: L),
             ],
           ),
         ),
@@ -1059,14 +1062,14 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionHeader(label: 'DATA_MANAGEMENT', icon: '🔐', L: L),
+        _SectionHeader(label: 'DATA_MANAGEMENT', icon: Icons.lock_rounded, L: L),
         const SizedBox(height: 12),
         SquircleCard(
           padding: EdgeInsets.zero,
           child: Column(
             children: [
               _ManagementTile(
-                  icon: '➕',
+                  icon: Icons.add_rounded,
                   title: 'Quick Refill (+10)',
                   color: L.text,
                   onTap: () {
@@ -1075,7 +1078,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
                   },
                   L: L),
               _ManagementTile(
-                  icon: '🗑️',
+                  icon: Icons.delete_outline_rounded,
                   title: 'Decommission Medicine',
                   color: L.error,
                   onTap: () {
@@ -1095,7 +1098,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
   Widget _buildEditForm(Medicine med, AppState state, AppThemeColors L) {
     return Column(
       children: [
-        _FormSection(label: 'IDENTITY', icon: '👤', L: L, children: [
+        _FormSection(label: 'IDENTITY', icon: Icons.person_rounded, L: L, children: [
           _ModernTextField(
               label: 'Medicine Name',
               value: _editFields['name'],
@@ -1109,7 +1112,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
               isLast: true),
         ]),
         const SizedBox(height: 20),
-        _FormSection(label: 'CONFIGURATION', icon: '🧬', L: L, children: [
+        _FormSection(label: 'CONFIGURATION', icon: Icons.settings_rounded, L: L, children: [
           _ModernTextField(
               label: 'Dosage',
               value: _editFields['dose'],
@@ -1123,7 +1126,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
               isLast: true),
         ]),
         const SizedBox(height: 20),
-        _FormSection(label: 'LOGISTICS', icon: '📦', L: L, children: [
+        _FormSection(label: 'LOGISTICS', icon: Icons.inventory_2_rounded, L: L, children: [
           _ModernTextField(
               label: 'Current Count',
               value: _editFields['count'],
@@ -1173,27 +1176,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     return 'Night';
   }
 
-  String _getCategoryEmoji(String category) {
-    switch (category.toLowerCase()) {
-      case 'tablet':
-      case 'pill':
-        return '💊';
-      case 'syrup':
-      case 'liquid':
-        return '🧪';
-      case 'injection':
-        return '💉';
-      case 'cream':
-      case 'ointment':
-        return '🧴';
-      case 'drops':
-        return '💧';
-      case 'inhaler':
-        return '🌬️';
-      default:
-        return '📦';
-    }
-  }
+
 
   void _showRitualPicker(int medId, int scheduleIdx, ScheduleEntry s,
       {bool isNew = false}) {
@@ -1260,28 +1243,19 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
     );
   }
 
-  Widget _buildEmptyCard(String text, String icon, AppThemeColors L) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: L.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border.withValues(alpha: 0.1), width: 0.5),
-        boxShadow: AppShadows.neumorphic,
-      ),
-      child: Column(
+  Widget _buildEmptyCard(String text, IconData icon, AppThemeColors L) {
+    return SquircleCard(
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      child: Center(
+          child: Column(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 24)),
-          const SizedBox(height: 12),
+          Icon(icon, size: 32, color: L.sub.withValues(alpha: 0.2)),
+          const SizedBox(height: 16),
           Text(text,
-              style: AppTypography.bodySmall.copyWith(
-                  color: L.sub,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 11,
-                  letterSpacing: 0.5)),
+              style: AppTypography.labelSmall
+                  .copyWith(color: L.sub, fontWeight: FontWeight.w700)),
         ],
-      ),
+      )),
     );
   }
 }
@@ -1290,7 +1264,7 @@ class _MedicineDetailScreenState extends State<MedicineDetailScreen> {
 
 class _DiagnosticCard extends StatelessWidget {
   final String label, value;
-  final String icon;
+  final IconData icon;
   final Color color;
   final AppThemeColors L;
   final Widget? child;
@@ -1324,7 +1298,7 @@ class _DiagnosticCard extends StatelessWidget {
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.2,
                             fontSize: 10)),
-                    Text(icon, style: const TextStyle(fontSize: 12))
+                    Icon(icon, size: 12, color: L.text.withValues(alpha: 0.5))
                         .animate(onPlay: (c) => c.repeat(reverse: true))
                         .scale(
                             begin: const Offset(1.0, 1.0),
@@ -1333,12 +1307,15 @@ class _DiagnosticCard extends StatelessWidget {
                   ],
                 ),
                 const Spacer(),
-                Text(value,
-                    style: AppTypography.displayLarge.copyWith(
-                        fontSize: 24,
-                        color: color,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -1.0)),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(value,
+                      style: AppTypography.displayLarge.copyWith(
+                          fontSize: 24,
+                          color: color,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1.0)),
+                ),
               ],
             ),
       ),
@@ -1386,7 +1363,7 @@ class _ModernStockBar extends StatelessWidget {
 
 class _SectionHeader extends StatelessWidget {
   final String label;
-  final String icon;
+  final IconData icon;
   final Widget? trailing;
   final AppThemeColors L;
   const _SectionHeader(
@@ -1399,7 +1376,7 @@ class _SectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Row(children: [
-        Text(icon, style: const TextStyle(fontSize: 14)),
+        Icon(icon, size: 14, color: L.sub.withValues(alpha: 0.5)),
         const SizedBox(width: 8),
         Text(label,
             style: AppTypography.labelSmall.copyWith(
@@ -1415,7 +1392,7 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _HeaderAction extends StatelessWidget {
-  final String icon;
+  final IconData icon;
   final String label;
   final VoidCallback onTap;
   final AppThemeColors L;
@@ -1438,7 +1415,7 @@ class _HeaderAction extends StatelessWidget {
             boxShadow: AppShadows.neumorphic,
           ),
           child: Row(children: [
-            Text(icon, style: const TextStyle(fontSize: 12)),
+            Icon(icon, size: 14, color: L.text),
             const SizedBox(width: 4),
             Text(label,
                 style: AppTypography.labelSmall.copyWith(
@@ -1540,7 +1517,7 @@ class _HistoryMatrix extends StatelessWidget {
 
 class _SpecTile extends StatelessWidget {
   final String label, value;
-  final String icon;
+  final IconData icon;
   final AppThemeColors L;
   const _SpecTile(
       {required this.label,
@@ -1565,7 +1542,7 @@ class _SpecTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(icon, style: const TextStyle(fontSize: 10)),
+              Icon(icon, size: 10, color: L.sub.withValues(alpha: 0.5)),
               const SizedBox(width: 6),
               Text(label,
                   style: AppTypography.labelSmall.copyWith(
@@ -1589,7 +1566,7 @@ class _SpecTile extends StatelessWidget {
 }
 
 class _ManagementTile extends StatelessWidget {
-  final String icon;
+  final IconData icon;
   final String title;
   final Color color;
   final VoidCallback onTap;
@@ -1615,7 +1592,7 @@ class _ManagementTile extends StatelessWidget {
             onTap: onTap,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            leading: Text(icon, style: const TextStyle(fontSize: 22)),
+            leading: Icon(icon, size: 22, color: color.withValues(alpha: 0.8)),
             title: Text(title.toUpperCase(),
                 style: AppTypography.labelSmall.copyWith(
                     fontWeight: FontWeight.w900,
@@ -1632,7 +1609,7 @@ class _ManagementTile extends StatelessWidget {
 
 class _FormSection extends StatelessWidget {
   final String label;
-  final String icon;
+  final IconData icon;
   final List<Widget> children;
   final AppThemeColors L;
   const _FormSection(

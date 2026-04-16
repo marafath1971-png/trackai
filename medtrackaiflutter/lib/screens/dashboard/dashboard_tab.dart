@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/app_state.dart';
@@ -86,17 +87,8 @@ class _DashboardTabState extends State<DashboardTab> {
       body: Stack(children: [
         // ── Ambient Glassmorphism Background ──
         const Positioned.fill(child: AmbientMeshBackground()),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 120,
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.transparent,
-            ),
-          ),
-        ),
+        
+        // ── Main Content ──
         RefreshIndicator(
           onRefresh: () async {
             HapticEngine.selection();
@@ -115,7 +107,8 @@ class _DashboardTabState extends State<DashboardTab> {
                   parent: AlwaysScrollableScrollPhysics()),
               child: Column(
                 children: [
-                  SizedBox(height: 110 + MediaQuery.of(context).padding.top),
+                  // Spacer for Header
+                  SizedBox(height: 100 + MediaQuery.of(context).padding.top),
                   const SizedBox(height: AppSpacing.l),
 
                   // --- SUMMARY STATS (Bento) ---
@@ -342,68 +335,169 @@ class _DashboardTabState extends State<DashboardTab> {
                       .fadeIn(duration: 600.ms)
                       .slideY(begin: 0.1, end: 0, curve: Curves.easeOutExpo),
 
-                  const SizedBox(
-                      height: 180), // Expanded clear area for the FAB
+                  const SizedBox(height: 120), // Reduced spacer
                 ],
               ),
             ),
           ),
         ),
+
+        // ── Dashboard Header ──
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _DashboardHeader(
+            isScrolled: _isScrolled,
+            onDailyLog: () {
+              HapticEngine.selection();
+              DailyLogSheet.show(context);
+            },
+            onVoice: () {
+              HapticEngine.selection();
+              setState(() => _showVoiceAssistant = true);
+            },
+          ),
+        ),
+
         if (_showVoiceAssistant)
           VoiceAssistantOverlay(
             onDismiss: () => setState(() => _showVoiceAssistant = false),
           ),
       ]),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (!_showVoiceAssistant)
-            FloatingActionButton(
-              onPressed: () {
-                HapticEngine.selection();
-                setState(() => _showVoiceAssistant = true);
-              },
-              backgroundColor: L.secondary,
-              mini: true,
-              heroTag: 'dash_mic',
-              child: const Icon(Icons.mic_rounded, color: Colors.white),
-            ).animate().slideY(begin: 1, end: 0, curve: Curves.easeOutExpo),
-          const SizedBox(height: 12),
-          Container(
-            height: 64,
-            width: 64,
-            decoration: BoxDecoration(
-              color: L.text,
-              shape: BoxShape.circle,
-              border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.1), width: 0.5),
-              boxShadow: [
-                BoxShadow(
-                  color: L.text.withValues(alpha: 0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                )
-              ],
-            ),
-            child: FloatingActionButton(
-              onPressed: () {
-                if (!mounted) return;
-                DailyLogSheet.show(context);
-              },
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              highlightElevation: 0,
-              child: const Center(
-                  child: Text('➕',
-                      style: TextStyle(color: Colors.white, fontSize: 24))),
+    );
+  }
+}
+
+// ── Dashboard Header Component ──
+class _DashboardHeader extends StatelessWidget {
+  final bool isScrolled;
+  final VoidCallback onDailyLog;
+  final VoidCallback onVoice;
+
+  const _DashboardHeader({
+    required this.isScrolled,
+    required this.onDailyLog,
+    required this.onVoice,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final L = context.L;
+    final topPadding = MediaQuery.of(context).padding.top;
+
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          padding: EdgeInsets.fromLTRB(24, topPadding + 12, 24, 16),
+          decoration: BoxDecoration(
+            color: L.meshBg.withValues(alpha: isScrolled ? 0.8 : 0.0),
+            border: Border(
+              bottom: BorderSide(
+                color: L.border.withValues(alpha: isScrolled ? 0.1 : 0.0),
+                width: 0.5,
+              ),
             ),
           ),
-        ],
+          child: Row(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'PERFORMANCE',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: L.sub.withValues(alpha: 0.6),
+                      fontSize: 10,
+                      letterSpacing: 2.0,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Health Insights',
+                    style: AppTypography.headlineSmall.copyWith(
+                      color: L.text,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1.0,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              // Actions
+              _HeaderActionBtn(
+                icon: Icons.mic_rounded,
+                onTap: onVoice,
+                L: L,
+              ),
+              const SizedBox(width: 12),
+              _HeaderActionBtn(
+                icon: Icons.add_rounded,
+                onTap: onDailyLog,
+                isPrimary: true,
+                L: L,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
+}
 
-  void _showTrendDrilldown(
+class _HeaderActionBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool isPrimary;
+  final AppThemeColors L;
+
+  const _HeaderActionBtn({
+    required this.icon,
+    required this.onTap,
+    this.isPrimary = false,
+    required this.L,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BouncingButton(
+      onTap: onTap,
+      scaleFactor: 0.9,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: isPrimary ? L.text : L.card,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: L.border.withValues(alpha: isPrimary ? 0.0 : 0.1),
+            width: 0.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Icon(
+            icon,
+            color: isPrimary ? L.bg : L.text,
+            size: 22,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+void _showTrendDrilldown(
       BuildContext context, AppState state, AppThemeColors L) {
     HapticEngine.selection();
     showModalBottomSheet(
@@ -461,12 +555,15 @@ class _DashboardTabState extends State<DashboardTab> {
                 duration: 1200.ms,
                 curve: Curves.easeOutExpo,
                 builder: (context, value, child) {
-                  return Text('${value.round()}$suffix',
-                      style: AppTypography.displayLarge.copyWith(
-                          fontSize: 42,
-                          color: L.text,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -2.0));
+                  return FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('${value.round()}$suffix',
+                        style: AppTypography.displayLarge.copyWith(
+                            fontSize: 42,
+                            color: L.text,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -2.0)),
+                  );
                 },
               ),
               const SizedBox(height: 8),
@@ -726,7 +823,6 @@ class _DashboardTabState extends State<DashboardTab> {
       ),
     );
   }
-}
 
 // ------------------------------------------------------------------
 // DASHBOARD QUICK ACTIONS

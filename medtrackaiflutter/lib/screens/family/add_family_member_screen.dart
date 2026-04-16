@@ -17,21 +17,21 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
   final _nameController = TextEditingController();
   final _notesController = TextEditingController();
   String _selectedRole = 'Child';
-  String _selectedIcon = '👶';
+  IconData _selectedIcon = Icons.child_care_rounded;
   String _gender = 'Male';
   DateTime? _dob;
   bool _isCritical = false;
   bool _isSaving = false;
 
-  final List<Map<String, String>> _roles = [
-    {'label': 'Child', 'icon': '👶'},
-    {'label': 'Spouse', 'icon': '💍'},
-    {'label': 'Parent', 'icon': '👵'},
-    {'label': 'Senior', 'icon': '👴'},
-    {'label': 'Sibling', 'icon': '🧑‍🤝‍🧑'},
-    {'label': 'Guardian', 'icon': '🛡️'},
-    {'label': 'Pet', 'icon': '🐾'},
-    {'label': 'Other', 'icon': '👤'},
+  final List<Map<String, dynamic>> _roles = [
+    {'label': 'Child', 'icon': Icons.child_care_rounded},
+    {'label': 'Spouse', 'icon': Icons.favorite_rounded},
+    {'label': 'Parent', 'icon': Icons.family_restroom_rounded},
+    {'label': 'Senior', 'icon': Icons.elderly_rounded},
+    {'label': 'Sibling', 'icon': Icons.people_rounded},
+    {'label': 'Guardian', 'icon': Icons.admin_panel_settings_rounded},
+    {'label': 'Pet', 'icon': Icons.pets_rounded},
+    {'label': 'Other', 'icon': Icons.person_rounded},
   ];
 
   @override
@@ -85,7 +85,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
       id: const Uuid().v4(),
       name: name,
       relation: _selectedRole,
-      avatar: _selectedIcon,
+      avatar: _selectedIcon.codePoint.toString(),
       dateOfBirth: _dob,
       gender: _gender,
       notes: _notesController.text.trim(),
@@ -140,9 +140,10 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       border: Border.all(color: L.border.withValues(alpha: 0.1)),
                     ),
                     child: Center(
-                      child: Text(
+                      child: Icon(
                         _selectedIcon,
-                        style: const TextStyle(fontSize: 42),
+                        size: 42,
+                        color: L.text,
                       ),
                     ),
                   ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
@@ -205,7 +206,7 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                     HapticEngine.selection();
                     setState(() {
                       _selectedRole = role['label']!;
-                      _selectedIcon = role['icon']!;
+                      _selectedIcon = role['icon'];
                     });
                   },
                   child: AnimatedContainer(
@@ -224,7 +225,11 @@ class _AddFamilyMemberScreenState extends State<AddFamilyMemberScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(role['icon']!, style: const TextStyle(fontSize: 16)),
+                          Icon(
+                            role['icon'],
+                            size: 16,
+                            color: isSelected ? L.bg : L.text,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             role['label']!,

@@ -110,7 +110,7 @@ class _AppShellState extends State<AppShell>
           ? const LockScreen()
           : Scaffold(
               backgroundColor: L.meshBg,
-              resizeToAvoidBottomInset: false,
+              resizeToAvoidBottomInset: true,
               body: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -289,7 +289,7 @@ class _AppShellState extends State<AppShell>
                 const SizedBox(width: 24),
                 // ── Integrated FAB (Elevated) ──
                 Transform.translate(
-                  offset: const Offset(0, -35),
+                  offset: const Offset(0, -42),
                   child: _MedScanFAB(
                     pressed: _fabPressed,
                     onTap: _openScan,
@@ -401,21 +401,21 @@ class _MedScanFAB extends StatelessWidget {
         duration: 150.ms,
         curve: Curves.easeOutCubic,
         child: Container(
-          width: 54,
-          height: 54,
+          width: 68,
+          height: 68,
           decoration: const BoxDecoration(
             color: Color(0xFF1C1C1E),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
                 color: Colors.black26,
-                blurRadius: 12,
-                offset: Offset(0, 4),
+                blurRadius: 16,
+                offset: Offset(0, 6),
               ),
             ],
           ),
           child: const Center(
-            child: Icon(Icons.add, color: Colors.white, size: 28),
+            child: Icon(Icons.add, color: Colors.white, size: 32),
           ),
         ).animate(onPlay: (controller) => controller.repeat(reverse: true))
          .shimmer(duration: 2500.ms, color: Colors.white24)

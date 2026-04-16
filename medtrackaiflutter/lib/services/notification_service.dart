@@ -48,6 +48,18 @@ class NotificationService {
         }
       },
     );
+
+    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    if (launchDetails != null && launchDetails.didNotificationLaunchApp) {
+      final response = launchDetails.notificationResponse;
+      if (response != null && response.payload != null) {
+        final action = response.actionId ?? 'tap';
+        // Delay ensures AppState has time to initialize and listen
+        Future.delayed(const Duration(seconds: 2), () {
+          actionStream.add('$action|${response.payload}');
+        });
+      }
+    }
   }
 
   static Future<bool> requestPermission() async {
@@ -317,7 +329,8 @@ class NotificationService {
       category: AndroidNotificationCategory.alarm,
       actions: <AndroidNotificationAction>[
         AndroidNotificationAction('take', 'Take Now', showsUserInterface: true),
-        AndroidNotificationAction('skip', 'Skip', showsUserInterface: true),
+        AndroidNotificationAction('snooze_10', 'Snooze 10m', showsUserInterface: true),
+        AndroidNotificationAction('skip', 'Skip', showsUserInterface: true, cancelNotification: true),
       ],
     );
 

@@ -989,8 +989,10 @@ class _NextDoseCarousel extends StatelessWidget {
                           color: L.text,
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Center(
-                          child: Text('💊', style: TextStyle(fontSize: 22)),
+                        child: Icon(
+                          Icons.medication_rounded,
+                          size: 24,
+                          color: L.bg,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1509,22 +1511,28 @@ class _StatItem extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            value,
-            style: AppTypography.displayLarge.copyWith(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: L.text,
-              letterSpacing: -1,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: AppTypography.displayLarge.copyWith(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: L.text,
+                letterSpacing: -1,
+              ),
             ),
           ),
-          Text(
-            label.toUpperCase(),
-            style: AppTypography.labelSmall.copyWith(
-              fontSize: 9,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.5,
-              color: L.sub.withValues(alpha: 0.4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label.toUpperCase(),
+              style: AppTypography.labelSmall.copyWith(
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+                color: L.sub.withValues(alpha: 0.4),
+              ),
             ),
           ),
           const SizedBox(height: 14),

@@ -70,6 +70,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   bool isLocked = false;
   String? pendingCelebrationMedName;
   int? pendingMilestoneAnimation;
+  int? pendingDetailMedId;
 
   // Voice Assistant State
   bool isVoiceActive = false;
@@ -424,6 +425,16 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  void setPendingDetailMedId(int id) {
+    pendingDetailMedId = id;
+    notifyListeners();
+  }
+
+  void clearPendingDetailMedId() {
+    pendingDetailMedId = null;
+    notifyListeners();
+  }
+
   // ── LAUNCH READINESS: SUPPORT & LEGAL ───────────────────────
 
   Future<void> openPrivacyPolicy() async {
@@ -626,14 +637,25 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> incrementScanCount() => med.incrementScanCount(1);
 
   List<ScheduledMed> getAllSchedules() => med.getAllSchedules();
-  Future<void> toggleSchedule(int medId, int idx) =>
-      med.toggleSchedule(medId, idx);
-  Future<void> removeSchedule(int medId, int idx) =>
-      med.removeSchedule(medId, idx);
-  Future<void> addSchedule(int medId, ScheduleEntry s) =>
-      med.addSchedule(medId, s);
-  Future<void> updateSchedule(int medId, int idx, ScheduleEntry s) =>
-      med.updateSchedule(medId, idx, s);
+  Future<void> toggleSchedule(int medId, int idx) async {
+    await med.toggleSchedule(medId, idx);
+    await _rescheduleNotifications();
+  }
+
+  Future<void> removeSchedule(int medId, int idx) async {
+    await med.removeSchedule(medId, idx);
+    await _rescheduleNotifications();
+  }
+
+  Future<void> addSchedule(int medId, ScheduleEntry s) async {
+    await med.addSchedule(medId, s);
+    await _rescheduleNotifications();
+  }
+
+  Future<void> updateSchedule(int medId, int idx, ScheduleEntry s) async {
+    await med.updateSchedule(medId, idx, s);
+    await _rescheduleNotifications();
+  }
 
   List<Map<String, dynamic>> getLatencyData() => med.getLatencyHistory();
   
@@ -778,8 +800,61 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  void _handleNotificationAction(String payloadStr) {
+  Future<void> _handleNotificationAction(String payloadStr) async {
     appLogger.i('[AppState] Handling notification action: $payloadStr');
+    try {
+      final parts = payloadStr.split('|');
+      if (parts.length < 5) return;
+
+      final action = parts[0];
+      final medId = int.parse(parts[1]);
+      final h = int.parse(parts[2]);
+      final m = int.parse(parts[3]);
+      final label = parts.sublist(4).join('|');
+
+      Medicine? targetMed;
+      for (final med in activeMeds) {
+        if (med.id == medId) {
+          targetMed = med;
+          break;
+        }
+      }
+      if (targetMed == null) return;
+
+      ScheduleEntry? targetSched;
+      for (final s in targetMed.schedule) {
+        if (s.label == label && s.h == h && s.m == m) {
+          targetSched = s;
+          break;
+        }
+      }
+      if (targetSched == null) return;
+
+      final dose = DoseItem(med: targetMed, sched: targetSched, key: '${targetMed.id}-${targetSched.label}');
+
+      if (action == 'take') {
+        // Only toggle if not already taken today
+        final takenMap = getTakenMapForDate(DateTime.now());
+        if (!(takenMap[dose.key] ?? false)) {
+          await toggleDose(dose);
+        }
+      } else if (action == 'skip') {
+        await skipDose(dose);
+      } else if (action == 'snooze_10') {
+        final now = DateTime.now();
+        final snoozeTime = now.add(const Duration(minutes: 10));
+        await NotificationService.scheduleOneOffReminder(
+          id: dose.hashCode.remainder(0x7FFFFFFF), 
+          title: '⏰ Snoozed: Time for ${targetMed.name}', 
+          body: '${targetMed.dose} · $label', 
+          scheduledDate: snoozeTime,
+          payload: '${targetMed.id}|$h|$m|$label'
+        );
+        showToast('Reminding you in 10 minutes');
+      }
+    } catch(e) {
+      appLogger.e('[AppState] Error handling notification action: $e');
+    }
   }
 
   Future<void> _syncPendingActions() async {

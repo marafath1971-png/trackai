@@ -152,10 +152,17 @@ class _ProfileAvatar extends StatelessWidget {
                   ),
                   child: Center(
                     child: avatar != null && avatar!.isNotEmpty
-                        ? Text(
-                            avatar!,
-                            style: const TextStyle(fontSize: 24),
-                          )
+                        ? (int.tryParse(avatar!) != null
+                            ? Icon(
+                                IconData(int.parse(avatar!),
+                                    fontFamily: 'MaterialIcons'),
+                                size: 28,
+                                color: isSelected ? Colors.white : L.text,
+                              )
+                            : Text(
+                                avatar!,
+                                style: const TextStyle(fontSize: 24),
+                              ))
                         : Text(
                             name.isNotEmpty ? name[0].toUpperCase() : '?',
                             style: TextStyle(

@@ -103,7 +103,7 @@ class TrendDrilldownSheet extends StatelessWidget {
                         ),
                         if (i % 7 == 0 || i == trendData.length - 1) ...[
                           const SizedBox(height: 8),
-                          Text(d['label'],
+                          Text(d['date'].toString().split('-')[2],
                               style: AppTypography.labelSmall.copyWith(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w800,

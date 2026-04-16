@@ -154,109 +154,169 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
 
   Widget _buildSection(AppThemeColors L, String title, List<String> items,
       {bool isDanger = false, bool isAha = false}) {
-    final bgColor = isAha
-        ? L.text.withValues(alpha: 0.03)
-        : (isDanger ? L.error.withValues(alpha: 0.05) : Colors.transparent);
-    final borderColor = isAha
-        ? L.text.withValues(alpha: 0.1)
-        : (isDanger ? L.error.withValues(alpha: 0.2) : Colors.transparent);
+    // 2026 Viral premium colors
+    final Color colorToUse = isAha
+        ? const Color(0xFFA855F7) // Purple for Aha
+        : isDanger
+            ? const Color(0xFFEF4444) // Red for Danger
+            : const Color(0xFF34D399); // Teal/Green for normal (food rules)
+
+    // Remove emoji from title if it exists to replace with pure text
+    String cleanTitle = title.replaceAll(RegExp(r'[^\w\s&]'), '').trim();
 
     final section = Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: isDanger || isAha ? const EdgeInsets.all(16) : EdgeInsets.zero,
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
+        color: L.card,
+        gradient: isAha
+            ? LinearGradient(
+                colors: [
+                  const Color(0xFF6366F1).withValues(alpha: 0.15),
+                  const Color(0xFFA855F7).withValues(alpha: 0.05)
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+            color: colorToUse.withValues(alpha: isAha ? 0.3 : 0.15),
+            width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: colorToUse.withValues(alpha: 0.1),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
+          if (isDanger)
+            BoxShadow(
+              color: Colors.redAccent.withValues(alpha: 0.15),
+              blurRadius: 40,
+              spreadRadius: -5,
+            )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text(
-                title.toUpperCase(),
-                style: AppTypography.labelSmall.copyWith(
-                  color: isDanger ? L.error : L.text,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.0,
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                    color: colorToUse.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                          color: colorToUse.withValues(alpha: 0.4),
+                          blurRadius: 10,
+                          spreadRadius: -2)
+                    ]),
+                child: Text(
+                  isAha ? "💡" : (isDanger ? "⚠️" : "🍏"),
+                  style: const TextStyle(fontSize: 22),
+                )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scaleXY(
+                        begin: 1.0,
+                        end: 1.08,
+                        duration: 1.5.seconds,
+                        curve: Curves.easeInOut),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  cleanTitle.toUpperCase(),
+                  style: AppTypography.labelLarge.copyWith(
+                    color: colorToUse,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
                 ),
               ),
-              if (isDanger) ...[
-                const SizedBox(width: 8),
+              if (isDanger)
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: L.error,
-                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.redAccent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: Colors.redAccent.withValues(alpha: 0.4)),
                   ),
-                  child: Text(
-                    "DANGER",
-                    style: AppTypography.labelSmall.copyWith(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                    ),
+                  child: Row(
+                    children: [
+                      const Text("🛑", style: TextStyle(fontSize: 12)),
+                      const SizedBox(width: 6),
+                      Text(
+                        "DANGER",
+                        style: AppTypography.labelSmall.copyWith(
+                          color: Colors.redAccent,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .shimmer(duration: 1.seconds, color: Colors.white54),
             ],
           ),
-          const SizedBox(height: 12),
-          ...items.map((item) {
-            String emoji = "•";
-            if (isDanger) emoji = "⚠️";
-            if (isAha) emoji = "✨";
-            if (title.contains("Side Effects")) emoji = "🤢";
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(emoji, style: const TextStyle(fontSize: 14)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      item,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isDanger ? L.text : L.sub,
-                        height: 1.5,
-                        fontWeight:
-                            isDanger ? FontWeight.w700 : FontWeight.w500,
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: isAha ? Colors.transparent : L.meshBg.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                  color: isAha
+                      ? Colors.transparent
+                      : L.border.withValues(alpha: 0.08)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: items.map((item) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(top: 6, right: 14),
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: colorToUse,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
+                      Expanded(
+                        child: Text(
+                          item,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: L.text.withValues(alpha: 0.95),
+                            height: 1.6,
+                            fontWeight: isDanger ? FontWeight.w700 : FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            );
-          }),
+                );
+              }).toList(),
+            ),
+          ),
         ],
       ),
     );
 
-    if (isDanger) {
-      return section
-          .animate(onPlay: (c) => c.repeat(reverse: true))
-          .shimmer(
-              duration: 2500.ms,
-              color: L.error.withValues(alpha: 0.1),
-              angle: 1.5)
-          .tint(color: L.error.withValues(alpha: 0.03), duration: 2500.ms);
-    }
-
-    if (isAha) {
-      return section
-          .animate(onPlay: (c) => c.repeat(reverse: true))
-          .shimmer(
-              duration: 3500.ms,
-              color: L.text.withValues(alpha: 0.05),
-              angle: 0.5);
-    }
-
-    return section;
+    return section.animate().fadeIn(duration: 600.ms).slideY(
+        begin: 0.1, end: 0, curve: Curves.easeOutQuart);
   }
 
   Widget _buildErrorState(AppThemeColors L, AppLocalizations s) {
@@ -321,65 +381,83 @@ class _MedicineSafetyCardState extends State<MedicineSafetyCard> {
           ),
         ],
       ),
-    ).animate().shake(duration: 400.ms, curve: Curves.easeInOut);
+    ).animate().fadeIn(duration: 600.ms).shake(duration: 400.ms, curve: Curves.easeInOut);
   }
 
   Widget _buildScanPrompt(AppThemeColors L, AppLocalizations s) {
     return BouncingButton(
       onTap: _isLoading ? null : _runScan,
-      scaleFactor: 0.98,
+      scaleFactor: 0.95,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: L.text.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: L.border.withValues(alpha: 0.1)),
+          color: L.card,
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF6366F1).withValues(alpha: 0.1),
+              const Color(0xFFA855F7).withValues(alpha: 0.05)
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: const Color(0xFFA855F7).withValues(alpha: 0.3), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+              blurRadius: 40,
+              spreadRadius: -10,
+              offset: const Offset(0, 10)
+            )
+          ]
         ),
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: L.bg,
+                color: const Color(0xFF6366F1).withValues(alpha: 0.2),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                      color: L.primary.withValues(alpha: 0.1),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4)),
+                      color: const Color(0xFFA855F7).withValues(alpha: 0.5),
+                      blurRadius: 20,
+                      spreadRadius: -5),
                 ],
               ),
               child: _isLoading
-                  ? const AppLoadingIndicator(size: 24)
-                  : Icon(Icons.auto_awesome_rounded, color: L.text, size: 24)
+                  ? const AppLoadingIndicator(size: 32)
+                  : const Text("✨", style: TextStyle(fontSize: 32))
                       .animate(onPlay: (c) => c.repeat(reverse: true))
                       .scaleXY(
                           begin: 1,
-                          end: 1.1,
-                          duration: 1.seconds,
+                          end: 1.15,
+                          duration: 1.5.seconds,
                           curve: Curves.easeInOut),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
               _isLoading ? s.analyzingClinicalLimits : s.generateSafetyProfile,
-              style: AppTypography.titleMedium.copyWith(
+              style: AppTypography.titleLarge.copyWith(
                 color: L.text,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
-              _isLoading ? s.safetyLoadingSubtitle : s.safetyPromptSubtitle,
+              _isLoading ? s.safetyLoadingSubtitle : "Tap to unlock deep clinical insights, potential side-effects, and AHA moments.",
               textAlign: TextAlign.center,
-              style: AppTypography.bodySmall.copyWith(
-                color: L.sub,
-                height: 1.4,
+              style: AppTypography.bodyMedium.copyWith(
+                color: L.text.withValues(alpha: 0.8),
+                height: 1.6,
+                fontWeight: FontWeight.w600
               ),
             ),
           ],
         ),
       ),
-    );
+    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuart);
   }
 }

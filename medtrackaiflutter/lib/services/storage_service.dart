@@ -1,9 +1,32 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import '../core/utils/logger.dart';
 
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  Future<String?> saveLocalImage(File imageFile) async {
+    try {
+      final appDocDir = await getApplicationDocumentsDirectory();
+      final medicineDir = Directory(p.join(appDocDir.path, 'medicines'));
+      
+      if (!await medicineDir.exists()) {
+        await medicineDir.create(recursive: true);
+      }
+
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final permanentFile = File(p.join(medicineDir.path, fileName));
+      
+      await imageFile.copy(permanentFile.path);
+      appLogger.i('[StorageService] Local image saved permanently: ${permanentFile.path}');
+      return permanentFile.path;
+    } catch (e) {
+      appLogger.e('[StorageService] Local image save failed: $e');
+      return null;
+    }
+  }
 
   Future<String?> uploadMedicineImage(String uid, File imageFile) async {
     try {
@@ -58,6 +81,15 @@ class StorageService {
 
   Future<void> deleteImage(String url) async {
     try {
+      if (!url.startsWith('http')) {
+        // Local file
+        final file = File(url);
+        if (await file.exists()) {
+          await file.delete();
+          appLogger.i('[StorageService] Local image deleted: $url');
+        }
+        return;
+      }
       final ref = _storage.refFromURL(url);
       await ref.delete();
       appLogger.i('[StorageService] Image deleted successfully: $url');

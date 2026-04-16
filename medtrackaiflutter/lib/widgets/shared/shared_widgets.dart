@@ -978,8 +978,12 @@ class _DoseCardState extends State<DoseCard> {
                   ),
                   child: Center(
                     child: isDone
-                        ? const Text('✅', style: TextStyle(fontSize: 16))
-                        : const Text('💊', style: TextStyle(fontSize: 18)),
+                        ? Icon(Icons.check_circle_rounded, size: 20, color: medColor)
+                        : MedImage(
+                            imageUrl: widget.med.imageUrl,
+                            borderRadius: 12,
+                            placeholder: Icon(Icons.medication_rounded, size: 18, color: medColor.withValues(alpha: 0.2)),
+                          ),
                   ),
                 )
                     .animate(target: isDone ? 1 : 0)

@@ -67,10 +67,10 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
   ];
 
   final List<Map<String, dynamic>> _categories = [
-    {'name': 'Tablet', 'icon': '💊'},
-    {'name': 'Liquid', 'icon': '🔬'},
-    {'name': 'Spray', 'icon': '🫧'},
-    {'name': 'Beauty', 'icon': '✨'},
+    {'name': 'Tablet', 'icon': Icons.medication_rounded},
+    {'name': 'Liquid', 'icon': Icons.opacity_rounded},
+    {'name': 'Spray', 'icon': Icons.air_rounded},
+    {'name': 'Beauty', 'icon': Icons.auto_awesome_rounded},
   ];
 
   FlashMode _flashMode = FlashMode.off;
@@ -594,7 +594,8 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                     if (_imageFile != null)
                       _buildPulsingThumbnail(L)
                     else
-                      const Text('🔬', style: TextStyle(fontSize: 64)),
+                      Icon(Icons.center_focus_strong_rounded,
+                          color: L.text.withValues(alpha: 0.2), size: 64),
 
                     const SizedBox(height: 64),
 
@@ -1015,14 +1016,12 @@ class _ScanTabState extends State<ScanTab> with TickerProviderStateMixin {
                   ),
                   child: Row(
                     children: [
-                      Text(
-                        cat['icon'],
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: isSelected
-                              ? Colors.black
-                              : Colors.white.withValues(alpha: 0.5),
-                        ),
+                      Icon(
+                        cat['icon'] as IconData,
+                        size: 18,
+                        color: isSelected
+                            ? Colors.black
+                            : Colors.white.withValues(alpha: 0.5),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -1144,7 +1143,8 @@ class _ResultModalState extends State<_ResultModal> {
   late TextEditingController _sideEffectsController;
   late TextEditingController _interactionsController;
   late TextEditingController _warningsController;
-  late TextEditingController _additionalController; // NEW
+  late TextEditingController _storageController;
+  late TextEditingController _additionalController;
 
   // Rx Details Controllers
   late TextEditingController _pharmacyNameController;
@@ -1170,6 +1170,7 @@ class _ResultModalState extends State<_ResultModal> {
     _interactionsController =
         TextEditingController(text: widget.result.interactions);
     _warningsController = TextEditingController(text: widget.result.warnings);
+    _storageController = TextEditingController(text: widget.result.storage);
     _additionalController = TextEditingController();
 
     _pharmacyNameController = TextEditingController();
@@ -1222,6 +1223,7 @@ class _ResultModalState extends State<_ResultModal> {
     _sideEffectsController.dispose();
     _interactionsController.dispose();
     _warningsController.dispose();
+    _storageController.dispose();
     _additionalController.dispose();
 
     _pharmacyNameController.dispose();
@@ -1493,7 +1495,7 @@ class _ResultModalState extends State<_ResultModal> {
                       _BentoMetricTile(
                         flex: 2,
                         title: "ID_NAME",
-                        icon: "📛",
+                        icon: Icons.abc_rounded,
                         child: _buildEditableField(
                           controller: _nameController,
                           fontSize: 22,
@@ -1505,7 +1507,7 @@ class _ResultModalState extends State<_ResultModal> {
                       _BentoMetricTile(
                         flex: 1,
                         title: "ID_BRAND",
-                        icon: "🏷️",
+                        icon: Icons.branding_watermark_rounded,
                         child: _buildEditableField(
                           controller: _brandController,
                           fontSize: 15,
@@ -1517,7 +1519,7 @@ class _ResultModalState extends State<_ResultModal> {
                       _BentoMetricTile(
                         flex: 1,
                         title: "ID_REQD_DOSE",
-                        icon: "📏",
+                        icon: Icons.straighten_rounded,
                         child: _buildEditableField(
                           controller: _doseController,
                           fontSize: 15,
@@ -1529,7 +1531,7 @@ class _ResultModalState extends State<_ResultModal> {
                       _BentoMetricTile(
                         flex: 1,
                         title: "ID_FORM",
-                        icon: "📦",
+                        icon: Icons.layers_rounded,
                         child: _buildEditableField(
                           controller: _formController,
                           fontSize: 15,
@@ -1541,7 +1543,7 @@ class _ResultModalState extends State<_ResultModal> {
                       _BentoMetricTile(
                         flex: 1,
                         title: "ID_UNIT",
-                        icon: "⚖️",
+                        icon: Icons.scale_rounded,
                         child: _buildEditableField(
                           controller: _unitController,
                           fontSize: 15,
@@ -1559,21 +1561,21 @@ class _ResultModalState extends State<_ResultModal> {
                   _buildSectionHeader("🏥 PHARMACY & REFILL", L),
                   _buildExpandableCard(
                     title: "Pharmacy Name",
-                    emoji: "🏥",
+                    icon: Icons.local_hospital_rounded,
                     controller: _pharmacyNameController,
                     L: L,
                     hint: "e.g. CVS, Walgreens (Optional)",
                   ),
                   _buildExpandableCard(
                     title: "Pharmacy Phone",
-                    emoji: "📞",
+                    icon: Icons.phone_rounded,
                     controller: _pharmacyPhoneController,
                     L: L,
                     hint: "e.g. 555-0123 (Optional)",
                   ),
                   _buildExpandableCard(
                     title: "Rx Number",
-                    emoji: "🆔",
+                    icon: Icons.assignment_ind_rounded,
                     controller: _rxNumberController,
                     L: L,
                     hint: "e.g. 1234567-89 (Optional)",
@@ -1585,59 +1587,65 @@ class _ResultModalState extends State<_ResultModal> {
                   _buildSectionHeader(
                       widget.result.category == 'Beauty'
                           ? "✨ PRODUCT INFO"
-                          : "ℹ️ CLINICAL INFO",
+                          : "ℹ️ CLINICAL INSIGHTS",
                       L),
                   _buildExpandableCard(
                     title: "Medical Purpose",
-                    emoji: "ℹ️",
+                    icon: Icons.science_rounded,
                     controller: _descController,
                     L: L,
-                    accentColor: context.L.text,
+                    accentColor: const Color(0xFF4C9EEB),
                   ),
                   _buildExpandableCard(
-                    title: "How to Take",
-                    emoji: "📖",
+                    title: "Dos & Don'ts (How to Take)",
+                    icon: Icons.fact_check_rounded,
                     controller: _howController,
                     L: L,
-                    accentColor: context.L.text,
+                    accentColor: const Color(0xFF34D399),
                   ),
                   _buildExpandableCard(
                     title: "Side Effects",
-                    emoji: "🤮",
+                    icon: Icons.warning_amber_rounded,
                     controller: _sideEffectsController,
                     L: L,
-                    accentColor: context.L.text,
+                    accentColor: const Color(0xFFF87171),
                   ),
                   _buildExpandableCard(
                     title: "Interactions",
-                    emoji: "🔀",
+                    icon: Icons.bolt_rounded,
                     controller: _interactionsController,
                     L: L,
-                    accentColor: context.L.text,
+                    accentColor: const Color(0xFFFBBF24),
                   ),
                   _buildExpandableCard(
                     title: "Warnings",
-                    emoji: "⚠️",
+                    icon: Icons.warning_amber_rounded,
                     controller: _warningsController,
                     L: L,
-                    accentColor: context.L.text,
+                    accentColor: const Color(0xFFEF4444),
+                  ),
+                  _buildExpandableCard(
+                    title: "Storage",
+                    icon: Icons.ac_unit_rounded,
+                    controller: _storageController,
+                    L: L,
+                    accentColor: const Color(0xFF2DD4BF),
                   ),
 
                   // Additional/Personal Notes
                   _buildExpandableCard(
                     title: "Personal Notes",
-                    emoji: "📝",
+                    icon: Icons.edit_note_rounded,
                     controller: _additionalController,
                     L: L,
-                    accentColor: context.L.text,
+                    accentColor: const Color(0xFFA78BFA),
                     hint:
                         "Add any special instructions or doctor's notes here...",
                   ),
 
                   const SizedBox(height: 24),
 
-                  // Dosing Logic Section
-                  _buildSectionHeader("⏰ REMINDER SCHEDULE", L),
+                  _buildSectionHeader("REMINDER SCHEDULE", L),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(6),
@@ -1701,7 +1709,7 @@ class _ResultModalState extends State<_ResultModal> {
                         totalCount: _count,
                         imageUrl: widget.result.imageUrl,
                         notes:
-                            "PURPOSE:\n${_descController.text}\n\nINSTRUCTIONS:\n${_howController.text}\n\nWARNINGS:\n${_warningsController.text}\n\nNOTES:\n${_additionalController.text}",
+                            "PURPOSE:\n${_descController.text}\n\nINSTRUCTIONS:\n${_howController.text}\n\nSIDE EFFECTS:\n${_sideEffectsController.text}\n\nWARNINGS:\n${_warningsController.text}\n\nSTORAGE:\n${_storageController.text}\n\nNOTES:\n${_additionalController.text}",
                         courseStartDate: todayStr(),
                         unit: _unitController.text,
                         schedule: _manualSchedule,
@@ -1905,19 +1913,31 @@ class _ResultModalState extends State<_ResultModal> {
         color: L.card,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
-        image: widget.result.imageUrl != null
-            ? DecorationImage(
-                image: NetworkImage(widget.result.imageUrl!),
-                fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                    Colors.black.withValues(alpha: 0.2), BlendMode.darken),
-              )
-            : null,
       ),
       child: Stack(
         children: [
-          if (widget.result.imageUrl == null)
-            const Center(child: Text('💊', style: TextStyle(fontSize: 64))),
+          Positioned.fill(
+            child: MedImage(
+              imageUrl: widget.result.imageUrl,
+              borderRadius: 24,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.1),
+                    Colors.black.withValues(alpha: 0.3),
+                  ],
+                ),
+              ),
+            ),
+          ),
           Positioned(
             bottom: 0,
             left: 0,
@@ -1949,12 +1969,16 @@ class _ResultModalState extends State<_ResultModal> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      _buildEditableField(
-                        controller: _nameController,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                        hint: "Medicine Name",
-                        L: L,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: _buildEditableField(
+                          controller: _nameController,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          hint: "Medicine Name",
+                          L: L,
+                        ),
                       ),
                     ],
                   ),
@@ -1978,28 +2002,63 @@ class _ResultModalState extends State<_ResultModal> {
         widget.result.ahaMoment != null && widget.result.ahaMoment!.isNotEmpty;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: L.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+        gradient: isAha ? LinearGradient(
+          colors: [
+            const Color(0xFF6366F1).withValues(alpha: 0.15),
+            const Color(0xFFA855F7).withValues(alpha: 0.05)
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ) : null,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: isAha
+              ? const Color(0xFFA855F7).withValues(alpha: 0.3)
+              : L.border.withValues(alpha: 0.08),
+          width: 1.5,
+        ),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
+          if (isAha)
+            BoxShadow(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+              blurRadius: 30,
+              spreadRadius: -5,
+            )
+          else
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            )
         ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-                color: L.text.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child:
-                Text(isAha ? "💡" : "🧠", style: const TextStyle(fontSize: 16)),
+                color: isAha
+                    ? const Color(0xFF6366F1).withValues(alpha: 0.2)
+                    : L.text.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  if (isAha)
+                    BoxShadow(
+                        color: const Color(0xFFA855F7).withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        spreadRadius: -2)
+                ]),
+            child: Text(isAha ? "💡" : "🧠", style: const TextStyle(fontSize: 22))
+                .animate(onPlay: (c) => isAha ? c.repeat(reverse: true) : null)
+                .scaleXY(
+                    begin: 1.0,
+                    end: 1.1,
+                    duration: 1.2.seconds,
+                    curve: Curves.easeInOut),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -2007,22 +2066,26 @@ class _ResultModalState extends State<_ResultModal> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(isAha ? "AHA DISCOVERY" : "AI INSIGHT",
-                    style: AppTypography.labelSmall.copyWith(
-                        color: L.text,
+                    style: AppTypography.labelLarge.copyWith(
+                        color: isAha ? const Color(0xFFA855F7) : L.text,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2)),
-                const SizedBox(height: 6),
+                        letterSpacing: 1.5)),
+                const SizedBox(height: 8),
                 Text(
                   summary,
                   style: AppTypography.bodyMedium.copyWith(
-                      color: L.text, fontWeight: FontWeight.w700, height: 1.4),
+                      color: L.text.withValues(alpha: 0.9),
+                      fontWeight: FontWeight.w600,
+                      height: 1.5,
+                      fontSize: 15),
                 ),
               ],
             ),
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 600.ms).slideY(
+        begin: 0.1, end: 0, curve: Curves.easeOutQuart);
   }
 
   Widget _buildSafetyAdvisory(AppThemeColors L) {
@@ -2033,7 +2096,8 @@ class _ResultModalState extends State<_ResultModal> {
 
     if (!isAntibiotic && !hasWarning) return const SizedBox();
 
-    final Color accent = isAntibiotic ? Colors.orangeAccent : Colors.redAccent;
+    final Color accent =
+        isAntibiotic ? const Color(0xFFF59E0B) : const Color(0xFFEF4444);
     final String label =
         isAntibiotic ? "ANTIBIOTIC COURSE" : "MEDICAL ADVISORY";
     final String msg = isAntibiotic
@@ -2041,16 +2105,16 @@ class _ResultModalState extends State<_ResultModal> {
         : "Safety concerns detected. Review warnings before finalize.";
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: L.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: accent.withValues(alpha: 0.3), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: accent.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: accent.withValues(alpha: 0.15),
+            blurRadius: 30,
+            spreadRadius: -5,
           )
         ],
       ),
@@ -2058,77 +2122,100 @@ class _ResultModalState extends State<_ResultModal> {
         children: [
           Row(
             children: [
-              Text(isAntibiotic ? "🧪" : "⚠️",
-                  style: const TextStyle(fontSize: 18)),
-              const SizedBox(width: 12),
-              Text(label,
-                  style: AppTypography.labelMedium.copyWith(
-                      color: accent,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.5)),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(isAntibiotic ? "🧪" : "⚠️",
+                        style: const TextStyle(fontSize: 20))
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .scaleXY(begin: 1.0, end: 1.1, duration: 1.seconds),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(label,
+                    style: AppTypography.labelLarge.copyWith(
+                        color: accent,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5)),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(msg,
-              style: AppTypography.bodySmall.copyWith(
-                  color: L.text.withValues(alpha: 0.8),
+              style: AppTypography.bodyMedium.copyWith(
+                  color: L.text.withValues(alpha: 0.85),
                   fontWeight: FontWeight.w700,
-                  height: 1.4)),
+                  height: 1.5,
+                  fontSize: 15)),
           if (isAntibiotic) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(16)),
               child: Row(
                 children: [
-                  Text("ℹ️", style: TextStyle(fontSize: 12, color: accent)),
-                  const SizedBox(width: 8),
+                  Icon(Icons.info_outline_rounded, size: 16, color: accent),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       "Completion is vital for effectiveness.",
-                      style: AppTypography.labelSmall
+                      style: AppTypography.labelMedium
                           .copyWith(color: accent, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ],
               ),
-            ),
+            ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(
+                duration: 2.seconds, color: Colors.white38),
           ],
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 600.ms).slideY(
+        begin: 0.1, end: 0, curve: Curves.easeOutQuart);
   }
 
   Widget _buildExpandableCard({
     required String title,
-    required String emoji,
+    required IconData icon,
     required TextEditingController controller,
     required AppThemeColors L,
     Color? accentColor,
     String? hint,
   }) {
-    if (controller.text.isEmpty && title != "Personal Notes") {
+    if (controller.text.isEmpty && title != "Personal Notes" && title != "Storage") {
       return const SizedBox();
     }
 
-    final bool isDengerous = title == "Side Effects" ||
+    final bool isDangerous = title == "Side Effects" ||
         title == "Warnings" ||
         title == "Interactions";
+        
+    final Color colorToUse = isDangerous ? Colors.redAccent : (accentColor ?? L.primary);
+
     return Container(
-      margin: const EdgeInsets.only(top: 12),
+      margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: L.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: L.border.withValues(alpha: 0.08), width: 0.5),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: colorToUse.withValues(alpha: 0.15), width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          )
+            color: colorToUse.withValues(alpha: 0.08),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
+          if (isDangerous)
+            BoxShadow(
+              color: Colors.redAccent.withValues(alpha: 0.15),
+              blurRadius: 40,
+              spreadRadius: -5,
+            )
         ],
       ),
       child: Column(
@@ -2136,61 +2223,86 @@ class _ResultModalState extends State<_ResultModal> {
         children: [
           Row(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 16)),
-              const SizedBox(width: 12),
-              Text(
-                title.toUpperCase(),
-                style: AppTypography.labelSmall.copyWith(
-                  color: isDengerous
-                      ? Colors.redAccent
-                      : L.sub.withValues(alpha: 0.6),
-                  fontWeight: FontWeight.w900,
-                  fontSize: 11,
-                  letterSpacing: 1.2,
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorToUse.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(color: colorToUse.withValues(alpha: 0.4), blurRadius: 10, spreadRadius: -2)
+                  ]
+                ),
+                child: Icon(icon, size: 22, color: colorToUse)
+                  .animate(onPlay: (c) => isDangerous ? c.repeat(reverse: true) : c.repeat(reverse: true))
+                  .scaleXY(begin: 1.0, end: 1.08, duration: 1.5.seconds, curve: Curves.easeInOut),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  style: AppTypography.labelLarge.copyWith(
+                    color: colorToUse,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
                 ),
               ),
-              const Spacer(),
-              if (isDengerous)
+              if (isDangerous)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.redAccent,
-                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.redAccent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
                   ),
-                  child: Text(
-                    "DANGER",
-                    style: AppTypography.labelSmall.copyWith(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                    ),
+                  child: Row(
+                    children: [
+                      const Text("⚠️", style: TextStyle(fontSize: 12)),
+                      const SizedBox(width: 6),
+                      Text(
+                        "DANGER",
+                        style: AppTypography.labelSmall.copyWith(
+                          color: Colors.redAccent,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(duration: 1.seconds, color: Colors.white54),
             ],
           ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: controller,
-            maxLines: null,
-            style: AppTypography.bodyMedium.copyWith(
-              color: L.text,
-              height: 1.6,
-              fontWeight: isDengerous ? FontWeight.w800 : FontWeight.w600,
-              fontSize: 15,
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: L.meshBg.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: L.border.withValues(alpha: 0.08)),
             ),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: AppTypography.bodySmall
-                  .copyWith(color: L.sub.withValues(alpha: 0.3)),
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
+            child: TextField(
+              controller: controller,
+              maxLines: null,
+              style: AppTypography.bodyMedium.copyWith(
+                color: L.text.withValues(alpha: 0.95),
+                height: 1.6,
+                fontWeight: isDangerous ? FontWeight.w700 : FontWeight.w600,
+                fontSize: 16,
+              ),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: AppTypography.bodySmall
+                    .copyWith(color: L.sub.withValues(alpha: 0.4)),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
             ),
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuart);
   }
 
   Widget _buildInventorySelector(AppThemeColors L) {
@@ -2204,19 +2316,24 @@ class _ResultModalState extends State<_ResultModal> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Total Quantity",
-                  style: AppTypography.titleMedium
-                      .copyWith(fontWeight: FontWeight.w800, color: L.text)),
-              Text(
-                  widget.result.category == 'Liquid'
-                      ? "volume detected"
-                      : "${_unitController.text} supply detected",
-                  style: AppTypography.bodySmall
-                      .copyWith(color: L.text.withValues(alpha: 0.5))),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text("Total Quantity",
+                      style: AppTypography.titleMedium
+                          .copyWith(fontWeight: FontWeight.w800, color: L.text)),
+                ),
+                Text(
+                    widget.result.category == 'Liquid'
+                        ? "volume detected"
+                        : "${_unitController.text} supply detected",
+                    style: AppTypography.bodySmall
+                        .copyWith(color: L.text.withValues(alpha: 0.5))),
+              ],
+            ),
           ),
           Row(
             children: [
@@ -2575,7 +2692,7 @@ class _ResultModalState extends State<_ResultModal> {
 
 class _BentoMetricTile extends StatelessWidget {
   final String title;
-  final String icon;
+  final IconData icon;
   final Widget child;
   final int flex;
 
@@ -2613,7 +2730,7 @@ class _BentoMetricTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(icon, style: const TextStyle(fontSize: 14)),
+                Icon(icon, size: 14, color: L.sub.withValues(alpha: 0.5)),
                 const SizedBox(width: 10),
                 Text(
                   title.replaceFirst('ID_', '').toUpperCase(),

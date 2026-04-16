@@ -317,7 +317,7 @@ class _ProfileTabState extends State<ProfileTab> {
                   flex: 2,
                   child: BouncingButton(
                     onTap: () {
-                      HapticEngine.selection();
+                      HapticEngine.success();
                       final newProfile = p?.copyWith(
                               name: _nameCtrl.text,
                               age: _ageCtrl.text,
@@ -504,7 +504,10 @@ class _ProfileTabState extends State<ProfileTab> {
                       icon: '🚪',
                       label: 'Sign Out',
                       sub: AuthService.email,
-                      onClick: () => widget.state.signOut(),
+                      onClick: () {
+                        HapticEngine.selection();
+                        widget.state.signOut();
+                      },
                       first: true,
                       border: true,
                     ),

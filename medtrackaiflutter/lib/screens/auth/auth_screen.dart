@@ -6,6 +6,7 @@ import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/app_loading_indicator.dart';
 import '../../widgets/shared/shared_widgets.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // ══════════════════════════════════════════════
 // AUTH SCREEN — Sign In / Sign Up
@@ -289,6 +290,34 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ],
                   const SizedBox(height: 28),
+
+                  // ── Legal Terms (2026 Compliance) ──────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      children: [
+                        Text('By continuing, you agree to our ', style: AppTypography.bodySmall.copyWith(fontSize: 12, color: L.sub.withValues(alpha: 0.6))),
+                        GestureDetector(
+                          onTap: () async {
+                            final url = Uri.parse('https://example.com/terms-of-service-2026');
+                            if (await canLaunchUrl(url)) launchUrl(url);
+                          },
+                          child: Text('Terms of Service', style: AppTypography.bodySmall.copyWith(fontSize: 12, color: L.text, fontWeight: FontWeight.w700, decoration: TextDecoration.underline)),
+                        ),
+                        Text(' and ', style: AppTypography.bodySmall.copyWith(fontSize: 12, color: L.sub.withValues(alpha: 0.6))),
+                        GestureDetector(
+                          onTap: () async {
+                            final url = Uri.parse('https://example.com/privacy-policy-2026');
+                            if (await canLaunchUrl(url)) launchUrl(url);
+                          },
+                          child: Text('Privacy Policy', style: AppTypography.bodySmall.copyWith(fontSize: 12, color: L.text, fontWeight: FontWeight.w700, decoration: TextDecoration.underline)),
+                        ),
+                        Text('.', style: AppTypography.bodySmall.copyWith(fontSize: 12, color: L.sub.withValues(alpha: 0.6))),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
                   // ── Submit Button ──────────────────────────────────────
                   _PrimaryBtn(
